@@ -1,0 +1,10 @@
+/*
+ * Sticky mobile footer: blurred translucent panel that sits below the form
+ * on small screens. The backdrop-filter rule is the reason this lives in a
+ * CSS module — the design bible §15.5 forbids `backdropFilter` inline, and
+ * Radix props don't cover it.
+ */
+.mobileFooter {
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  backdrop-filter: saturate(180%) blur(12px);
+}

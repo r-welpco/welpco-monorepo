@@ -1,0 +1,14 @@
+{
+  "name": "@welpco/eslint-plugin-design",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ESLint plugin enforcing the Welpco UI/UX bible.",
+  "main": "./src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test src/rules/*.test.js"
+  },
+  "peerDependencies": {
+    "eslint": "^9.0.0"
+  }
+}

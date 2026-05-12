@@ -1,0 +1,149 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
+import { UserAccount, AccountType, AccountStatus } from '../entities/user-account.entity';
+import { Dispute } from '../../dispute/entities/dispute.entity';
+import { SupportTicket } from '../../dispute/entities/support-ticket.entity';
+import { BookingRequest, BookingRequestStatus } from '../../booking/entities/booking-request.entity';
+import { BookingPayment } from '../../payment/entities/booking-payment.entity';
+
+export interface AdminDashboardSnapshot {
+  generatedAt: string;
+  users: {
+    totalUsers: number;
+    activeUsers: number;
+    pendingUsers: number;
+    suspendedUsers: number;
+    deactivatedUsers: number;
+    customers: number;
+    welpers: number;
+    guardians: number;
+  };
+  disputes: {
+    open: number;
+    inReview: number;
+    escalated: number;
+    resolved: number;
+  };
+  supportTickets: {
+    open: number;
+    inProgress: number;
+    closed: number;
+  };
+  bookings: {
+    createdLast24h: number;
+    currentlyDisputed: number;
+  };
+  payments: {
+    capturedCentsLast7d: number;
+    currency: string;
+  };
+}
+
+@Injectable()
+export class AdminDashboardService {
+  constructor(
+    @InjectRepository(UserAccount)
+    private readonly userRepository: Repository<UserAccount>,
+    @InjectRepository(Dispute)
+    private readonly disputeRepository: Repository<Dispute>,
+    @InjectRepository(SupportTicket)
+    private readonly supportTicketRepository: Repository<SupportTicket>,
+    @InjectRepository(BookingRequest)
+    private readonly bookingRepository: Repository<BookingRequest>,
+    @InjectRepository(BookingPayment)
+    private readonly bookingPaymentRepository: Repository<BookingPayment>,
+  ) {}
+
+  async getSnapshot(): Promise<AdminDashboardSnapshot> {
+    const now = Date.now();
+    const since24h = new Date(now - 24 * 60 * 60 * 1000);
+    const since7d = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalUsers,
+      activeUsers,
+      pendingUsers,
+      suspendedUsers,
+      deactivatedUsers,
+      customers,
+      welpers,
+      guardians,
+      disputesOpen,
+      disputesInReview,
+      disputesEscalated,
+      disputesResolved,
+      ticketsOpen,
+      ticketsInProgress,
+      ticketsClosed,
+      bookingsCreated24h,
+      bookingsDisputed,
+      paymentAgg,
+    ] = await Promise.all([
+      this.userRepository.count(),
+      this.userRepository.count({ where: { status: AccountStatus.ACTIVE } }),
+      this.userRepository.count({ where: { status: AccountStatus.PENDING } }),
+      this.userRepository.count({ where: { status: AccountStatus.SUSPENDED } }),
+      this.userRepository.count({ where: { status: AccountStatus.DEACTIVATED } }),
+      this.userRepository.count({ where: { accountType: AccountType.CUSTOMER } }),
+      this.userRepository.count({ where: { accountType: AccountType.WELPER } }),
+      this.userRepository.count({ where: { accountType: AccountType.GUARDIAN } }),
+      this.disputeRepository.count({ where: { status: 'open' } }),
+      this.disputeRepository.count({ where: { status: 'in_review' } }),
+      this.disputeRepository.count({ where: { status: 'escalated' } }),
+      this.disputeRepository.count({ where: { status: 'resolved' } }),
+      this.supportTicketRepository.count({ where: { status: 'open' } }),
+      this.supportTicketRepository.count({ where: { status: 'in_progress' } }),
+      this.supportTicketRepository.count({ where: { status: 'closed' } }),
+      this.bookingRepository.count({
+        where: { createdAt: MoreThanOrEqual(since24h) },
+      }),
+      this.bookingRepository.count({
+        where: { status: BookingRequestStatus.DISPUTED },
+      }),
+      this.bookingPaymentRepository
+        .createQueryBuilder('bp')
+        .select('COALESCE(SUM(bp.amount_cents), 0)', 'total')
+        .addSelect('MAX(bp.currency)', 'currency')
+        .where('bp.captured_at IS NOT NULL')
+        .andWhere('bp.captured_at >= :since', { since: since7d })
+        .getRawOne<{ total: string; currency: string | null }>(),
+    ]);
+
+    const totalCents = paymentAgg?.total != null ? parseInt(String(paymentAgg.total), 10) : 0;
+    const currency = (paymentAgg?.currency ?? 'cad').toLowerCase();
+
+    return {
+      generatedAt: new Date(now).toISOString(),
+      users: {
+        totalUsers,
+        activeUsers,
+        pendingUsers,
+        suspendedUsers,
+        deactivatedUsers,
+        customers,
+        welpers,
+        guardians,
+      },
+      disputes: {
+        open: disputesOpen,
+        inReview: disputesInReview,
+        escalated: disputesEscalated,
+        resolved: disputesResolved,
+      },
+      supportTickets: {
+        open: ticketsOpen,
+        inProgress: ticketsInProgress,
+        closed: ticketsClosed,
+      },
+      bookings: {
+        createdLast24h: bookingsCreated24h,
+        currentlyDisputed: bookingsDisputed,
+      },
+      payments: {
+        capturedCentsLast7d: Number.isFinite(totalCents) ? totalCents : 0,
+        currency,
+      },
+    };
+  }
+}

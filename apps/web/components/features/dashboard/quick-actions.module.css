@@ -1,0 +1,50 @@
+/*
+ * Quick-actions tiles — bible §15.5 escape hatch for the small set of styles
+ * that no Radix prop expresses:
+ *   - the tile link is a full-area click target with native focus-visible
+ *     ring (Radix Card has no asChild, so we wrap rather than embed);
+ *   - a circular icon bubble in the brand-tinted accent step.
+ *
+ * The icon bubble uses --accent-3 / --accent-11 so the colour follows whichever
+ * Radix theme accent is active, matching the rest of the design system.
+ */
+
+.tileLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-3);
+  outline: none;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.tileLink:hover .tileCard,
+.tileLink:focus-visible .tileCard {
+  box-shadow: var(--shadow-3);
+}
+
+.tileLink:focus-visible {
+  outline: 2px solid var(--focus-8);
+  outline-offset: 2px;
+}
+
+.tileLink:active .tileCard {
+  transform: translateY(1px);
+}
+
+.tileCard {
+  height: 100%;
+  transition: box-shadow 120ms ease;
+}
+
+.iconBubble {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background-color: var(--accent-3);
+  color: var(--accent-11);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

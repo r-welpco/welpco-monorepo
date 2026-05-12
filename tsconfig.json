@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "paths": {
+      "@welpco/shared": ["./packages/shared/src"],
+      "@welpco/types": ["./packages/types/src"],
+      "@welpco/database": ["./packages/database/src"],
+      "@welpco/events": ["./packages/events/src"],
+      "@welpco/ui": ["./packages/ui/src"]
+    }
+  },
+  "files": [],
+  "references": []
+}
+

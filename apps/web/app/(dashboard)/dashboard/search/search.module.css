@@ -1,0 +1,11 @@
+/* Performance: tell the browser the results region can skip layout/paint
+   while off-screen. content-visibility/contain-intrinsic-size are not
+   exposed via Radix props or via the §15.5 escape-hatch allow-list, so
+   they live in this module per the bible's "Use Radix props or a CSS
+   module" rule. */
+.results-region {
+  width: 100%;
+  min-width: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}

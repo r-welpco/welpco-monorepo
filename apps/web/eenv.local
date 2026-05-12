@@ -1,0 +1,9 @@
+# Next.js Web App Environment Variables (Local Development)
+# This file is gitignored - safe to use for local secrets
+
+# NextAuth Configuration
+NEXTAUTH_SECRET=development-secret-key-change-in-production
+
+# Backend for Frontend (BFF) API URL
+NEXT_PUBLIC_API_URL=http://localhost:3000
+

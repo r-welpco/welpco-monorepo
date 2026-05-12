@@ -1,0 +1,312 @@
+/* Welpco marketing — responsive overrides.
+ *
+ * The bundle (`.design-reference/`) was authored at 1440px. Its components ship
+ * inline-styled with hard-coded `grid-template-columns: repeat(4, 1fr)` etc.
+ * Reshaping every component into CSS modules would change the port from
+ * "faithful" to "interpretive" — instead, this stylesheet attaches mobile and
+ * tablet overrides via attribute selectors keyed off the bundle's existing
+ * inline styles. Every rule is scoped to `.welpco` so it never bleeds.
+ *
+ * Breakpoints — chosen to match Tailwind's defaults (the rest of the app uses
+ * the same tokens via `packages/ui` Radix Theme):
+ *   - ≤ 640px  : phones (force single-column, tighten paddings/typography)
+ *   - ≤ 1024px : tablets (collapse 4-col grids to 2-col)
+ *
+ * Keep it thin: only override the bundle's hard-coded grid + padding values.
+ * Anything that already uses `clamp()` for type sizes flexes on its own. */
+
+/* ---------- Base container + section padding ---------- */
+@media (max-width: 1024px) {
+  .welpco .container { padding: 0 24px; }
+  .welpco .section { padding: 72px 0; }
+  .welpco .section-tight { padding: 48px 0; }
+}
+
+@media (max-width: 640px) {
+  .welpco .container { padding: 0 18px; }
+  .welpco .section { padding: 56px 0; }
+  .welpco .section-tight { padding: 40px 0; }
+}
+
+/* ---------- Marquee — guard horizontal overflow ---------- */
+@media (max-width: 640px) {
+  .welpco .welpco-marquee-row > span {
+    font-size: 24px !important;
+    gap: 24px !important;
+  }
+}
+
+/* ---------- All grids: tablet 4→2, mobile any-N→1 ----------
+ * The bundle stamps `gridTemplateColumns: "repeat(N, 1fr)"` inline. Since
+ * inline styles take precedence over external CSS in normal cascade, we tag
+ * each section's container with a stable id so we can target it specifically
+ * with `!important`. Components using a non-fr template (e.g. minors banner's
+ * `1.2fr 0.8fr`) get their own rules below. */
+
+@media (max-width: 1024px) {
+  .welpco [data-grid="categories-grid"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .welpco [data-grid="welper-grid"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .welpco [data-grid="howitworks-steps"] {
+    grid-template-columns: 1fr !important;
+  }
+  .welpco [data-grid="testimonials-grid"] {
+    grid-template-columns: 1fr !important;
+  }
+  .welpco [data-grid="footer-cols"] {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 32px !important;
+  }
+  .welpco [data-grid="footer-cols"] > :first-child {
+    grid-column: 1 / -1;
+  }
+  .welpco [data-grid="trust-grid"] {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  .welpco [data-grid="trust-items"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .welpco [data-grid="becomewelper-grid"],
+  .welpco [data-grid="howitworks-page-grid"],
+  .welpco [data-grid="about-hero"],
+  .welpco [data-grid="about-mission"],
+  .welpco [data-grid="personas-grid"],
+  .welpco [data-grid="values-grid"],
+  .welpco [data-grid="contact-grid"],
+  .welpco [data-grid="faq-grid"],
+  .welpco [data-grid="faq-teaser-grid"],
+  .welpco [data-grid="minors-grid"] {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  .welpco [data-sticky="faq-side"],
+  .welpco [data-sticky="faq-teaser-side"] {
+    position: static !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .welpco [data-grid="categories-grid"],
+  .welpco [data-grid="welper-grid"],
+  .welpco [data-grid="trust-items"],
+  .welpco [data-grid="footer-cols"],
+  .welpco [data-grid="contact-name-row"] {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+}
+
+/* ---------- Search bar — stack inputs on mobile ---------- */
+@media (max-width: 640px) {
+  .welpco [data-searchbar] {
+    grid-template-columns: 1fr !important;
+    border-radius: var(--radius-md) !important;
+    padding: 8px !important;
+  }
+  .welpco [data-searchbar] [data-searchbar-zip] {
+    border-left: none !important;
+    border-top: 1px solid rgba(0,73,47,0.16);
+  }
+  .welpco [data-searchbar] button[type="submit"] {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ---------- Become-Welper CTA: image grid stays 2-col on tablet, stacks on mobile ---------- */
+@media (max-width: 640px) {
+  .welpco [data-grid="becomewelper-images"] {
+    grid-template-columns: 1fr !important;
+  }
+  .welpco [data-grid="becomewelper-images"] > div:nth-child(2) {
+    margin-top: 0 !important;
+  }
+}
+
+/* ---------- Minors banner: padding tightens on mobile ---------- */
+@media (max-width: 1024px) {
+  .welpco [data-section="minors-banner"] {
+    padding: 40px 32px !important;
+  }
+}
+@media (max-width: 640px) {
+  .welpco [data-section="minors-banner"] {
+    padding: 32px 24px !important;
+    border-radius: var(--radius-lg) !important;
+  }
+  .welpco [data-section="minors-banner"] [data-floating-card] {
+    left: 50% !important;
+    transform: translateX(-50%);
+    bottom: 16px !important;
+  }
+}
+
+/* ---------- Trust & safety panel: padding tightens on mobile ---------- */
+@media (max-width: 1024px) {
+  .welpco [data-section="trust-panel"] { padding: 40px 32px !important; }
+}
+@media (max-width: 640px) {
+  .welpco [data-section="trust-panel"] {
+    padding: 32px 24px !important;
+    border-radius: var(--radius-lg) !important;
+  }
+}
+
+/* ---------- FAQ-page CTA card: stack on mobile ---------- */
+@media (max-width: 640px) {
+  .welpco [data-section="faq-cta"] {
+    padding: 32px 24px !important;
+    border-radius: var(--radius-lg) !important;
+  }
+}
+
+/* ---------- Section header: keep CTA below copy on mobile ---------- */
+@media (max-width: 768px) {
+  .welpco [data-section-header] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+}
+
+/* ---------- TopNav — desktop links hide ≤ 1024, hamburger shows ----------
+ * The bundle's `<nav>` is rendered as a horizontal pill list. On tablet and
+ * below we hide it and reveal the hamburger toggle.
+ */
+@media (max-width: 1024px) {
+  .welpco [data-topnav-links] { display: none !important; }
+  .welpco [data-topnav-cta-secondary] { display: none !important; }
+  .welpco [data-topnav-burger] { display: inline-flex !important; }
+}
+@media (min-width: 1025px) {
+  .welpco [data-topnav-burger] { display: none !important; }
+}
+
+/* ---------- Visible focus rings ---------- */
+.welpco a:focus-visible,
+.welpco button:focus-visible,
+.welpco input:focus-visible,
+.welpco textarea:focus-visible,
+.welpco select:focus-visible,
+.welpco summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* The bundle's nav-link pills already have a pill background; show the focus
+ * ring outset so it surrounds the pill rather than the inner text. */
+.welpco [data-topnav-link]:focus-visible {
+  outline-offset: 4px;
+}
+
+/* Skip-to-main link — hidden until focused */
+.welpco-skip-link {
+  position: absolute;
+  left: 12px;
+  top: -40px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--evergreen);
+  color: var(--cream);
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: top 160ms ease;
+}
+.welpco-skip-link:focus,
+.welpco-skip-link:focus-visible {
+  top: 12px;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Reduced motion: disable accordion height transition ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .welpco [data-faq-answer] {
+    transition: none !important;
+  }
+}
+
+/* ---------- Mobile-nav drawer ---------- */
+.welpco [data-mobile-drawer] {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,73,47,0.55);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  animation: welpco-fade 160ms ease;
+}
+.welpco [data-mobile-drawer] [data-mobile-panel] {
+  background: var(--bg);
+  margin-top: 76px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-bottom: 1px solid var(--line);
+  animation: welpco-slide 200ms ease;
+}
+.welpco [data-mobile-drawer] a {
+  display: block;
+  padding: 14px 12px;
+  font-size: 18px;
+  font-family: var(--font-display);
+  color: var(--fg);
+  text-decoration: none;
+  border-radius: 12px;
+}
+.welpco [data-mobile-drawer] a[aria-current="page"] {
+  background: var(--pill-bg);
+}
+.welpco [data-mobile-drawer] [data-mobile-cta-row] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+@keyframes welpco-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes welpco-slide {
+  from { transform: translateY(-12px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welpco [data-mobile-drawer],
+  .welpco [data-mobile-drawer] [data-mobile-panel] {
+    animation: none;
+  }
+}
+
+/* ---------- Immersive hero: floating nav responsive ---------- */
+.welpco [data-hero-immersive-nav] [data-immersive-desktop-links] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.welpco [data-hero-immersive-nav] [data-immersive-burger] {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .welpco [data-hero-immersive-nav] [data-immersive-desktop-links] {
+    display: none !important;
+  }
+  .welpco [data-hero-immersive-nav] [data-immersive-burger] {
+    display: inline-flex !important;
+  }
+}

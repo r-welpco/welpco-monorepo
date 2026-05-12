@@ -1,0 +1,141 @@
+/*
+ * Booking detail page CSS module.
+ *
+ * Houses the small set of styles the design bible §15.5 escape-hatch can't
+ * cover inline:
+ *  - `WebkitOverflowScrolling: touch` (iOS momentum scroll on the timeline).
+ *  - The horizontal timeline rail layout (fixed-width step columns + pixel
+ *    connector strokes); these are deliberate medallion-shape geometry that
+ *    Radix props can't express.
+ */
+
+.timelineScroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--space-1);
+}
+
+.timelineRow {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  align-items: flex-start;
+  min-width: min-content;
+}
+
+.timelineStep {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 112px;
+  min-width: 112px;
+}
+
+.timelineDot {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+}
+
+.timelineDotPrimary {
+  background-color: var(--accent-9);
+}
+
+.timelineDotDanger {
+  background-color: var(--red-9);
+}
+
+.timelineConnector {
+  flex-shrink: 0;
+  width: 28px;
+  height: 2px;
+  margin-top: 6px;
+  background-color: var(--gray-a5);
+  align-self: flex-start;
+}
+
+/*
+ * Service-receipt evidence gallery (Wave 2 BFF wire).
+ * - Image grid: ~96px squared thumbnails, responsive auto-fill.
+ * - File row: list of clickable rows for non-image attachments.
+ * - Disabled state for evidence whose `signedUrl` is null (presigner degraded).
+ */
+
+.evidenceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--space-2);
+}
+
+.evidenceThumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: var(--radius-3);
+  background-color: var(--gray-a3);
+  border: 1px solid var(--gray-a5);
+  text-decoration: none;
+  transition: outline-color 120ms ease, transform 120ms ease;
+}
+
+.evidenceThumb:hover {
+  outline: 2px solid var(--accent-a8);
+  outline-offset: 2px;
+}
+
+.evidenceThumb:focus-visible {
+  outline: 2px solid var(--accent-9);
+  outline-offset: 2px;
+}
+
+.evidenceThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.evidenceThumbDisabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.evidenceFileList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.evidenceFileRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-3);
+  background-color: var(--gray-a2);
+  border: 1px solid var(--gray-a4);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 120ms ease, outline-color 120ms ease;
+  min-width: 0;
+}
+
+.evidenceFileRow:hover {
+  background-color: var(--gray-a3);
+}
+
+.evidenceFileRow:focus-visible {
+  outline: 2px solid var(--accent-9);
+  outline-offset: 2px;
+}
+
+.evidenceFileRowDisabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

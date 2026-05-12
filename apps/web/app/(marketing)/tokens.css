@@ -1,0 +1,228 @@
+/* Welpco design tokens — faithful port of `.design-reference/project/styles/tokens.css`.
+ *
+ * The only deliberate deviation from the bundle is the font-family wiring:
+ * the bundle hard-codes `'Fraunces'`, `'Inter Tight'`, `'JetBrains Mono'`
+ * as quoted family names loaded via Google Fonts <link>. In Next.js the same
+ * faces are loaded by `next/font/google` in `(marketing)/layout.tsx` and
+ * exposed as `--font-fraunces`, `--font-inter-tight`, `--font-jetbrains-mono`.
+ * We reference those CSS variables in the type tokens below.
+ *
+ * Every selector is scoped to `.welpco` (matching the bundle's convention) so
+ * this stylesheet never bleeds into the rest of the app.
+ *
+ * Theme variants `[data-theme="plum|wine|dark"]` are kept verbatim so the
+ * design's full surface area is preserved as a future-readiness move; the
+ * layout currently renders only the default Evergreen theme. No runtime
+ * style switcher is shipped (see WEB-APP-PLAN.md §7.5). */
+
+.welpco {
+  /* Primary palette */
+  --evergreen: #00492F;
+  --cream: #FAF1E5;
+  --cream-soft: #FDF9F5;
+  --spring: #79C000;
+  --spring-soft: #AFD966;
+  --ebony: #1B1B1B;
+
+  /* Secondary palette */
+  --grayish-green: #29504D;
+  --mustard: #F1BE48;
+  --plum: #3C1053;
+  --wine: #651D32;
+  --mint: #AFEADC;
+  --pastel-yellow: #F9E5B6;
+  --lilac: #E1B0E8;
+  --bubblegum: #FAC9D1;
+
+  /* Theme tokens (default = white / evergreen) */
+  --bg: #ffffff;
+  --bg-soft: #f5f5f4;
+  --fg: var(--evergreen);
+  --fg-muted: rgba(0, 73, 47, 0.62);
+  --fg-faint: rgba(0, 73, 47, 0.38);
+  --accent: var(--spring);
+  --accent-soft: var(--spring-soft);
+  --line: rgba(0, 73, 47, 0.14);
+  --line-strong: rgba(0, 73, 47, 0.4);
+  --card: #ffffff;
+  --card-2: #f0f0ee;
+  --primary-btn-bg: var(--evergreen);
+  --primary-btn-fg: var(--cream);
+  --pill-bg: rgba(0, 73, 47, 0.06);
+
+  /* Type — wired to next/font/google CSS variables exposed by the layout */
+  --font-display: var(--font-fraunces), 'Fraunces', 'Times New Roman', serif;
+  --font-body: var(--font-inter-tight), 'Inter Tight', 'Inter', system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Sizing */
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --radius-xl: 40px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 73, 47, 0.06), 0 8px 24px -12px rgba(0, 73, 47, 0.10);
+  --shadow-md: 0 2px 4px rgba(0, 73, 47, 0.06), 0 18px 40px -18px rgba(0, 73, 47, 0.18);
+}
+
+/* Color theme variants — kept for completeness; not exposed via UI today. */
+.welpco[data-theme="plum"] {
+  --bg: #F4ECF6;
+  --bg-soft: #FBF7FC;
+  --fg: var(--plum);
+  --fg-muted: rgba(60, 16, 83, 0.62);
+  --fg-faint: rgba(60, 16, 83, 0.38);
+  --accent: var(--lilac);
+  --accent-soft: #EFD6F4;
+  --line: rgba(60, 16, 83, 0.18);
+  --line-strong: rgba(60, 16, 83, 0.45);
+  --card: #FBF7FC;
+  --card-2: #ECDDF1;
+  --primary-btn-bg: var(--plum);
+  --primary-btn-fg: #F4ECF6;
+  --pill-bg: rgba(60, 16, 83, 0.06);
+}
+
+.welpco[data-theme="wine"] {
+  --bg: #F6ECE9;
+  --bg-soft: #FBF6F4;
+  --fg: var(--wine);
+  --fg-muted: rgba(101, 29, 50, 0.62);
+  --fg-faint: rgba(101, 29, 50, 0.38);
+  --accent: var(--bubblegum);
+  --accent-soft: #FBDCE2;
+  --line: rgba(101, 29, 50, 0.18);
+  --line-strong: rgba(101, 29, 50, 0.45);
+  --card: #FBF6F4;
+  --card-2: #EFDDD8;
+  --primary-btn-bg: var(--wine);
+  --primary-btn-fg: #F6ECE9;
+  --pill-bg: rgba(101, 29, 50, 0.06);
+}
+
+.welpco[data-theme="dark"] {
+  --bg: #0F211A;
+  --bg-soft: #16302A;
+  --fg: #FAF1E5;
+  --fg-muted: rgba(250, 241, 229, 0.66);
+  --fg-faint: rgba(250, 241, 229, 0.38);
+  --accent: var(--spring);
+  --accent-soft: var(--spring-soft);
+  --line: rgba(250, 241, 229, 0.16);
+  --line-strong: rgba(250, 241, 229, 0.40);
+  --card: #16302A;
+  --card-2: #1F3D34;
+  --primary-btn-bg: var(--spring);
+  --primary-btn-fg: var(--evergreen);
+  --pill-bg: rgba(250, 241, 229, 0.08);
+}
+
+/* Base resets within page roots */
+.welpco {
+  font-family: var(--font-body);
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'ss01', 'cv11';
+  line-height: 1.5;
+}
+.welpco * { box-sizing: border-box; }
+.welpco h1, .welpco h2, .welpco h3, .welpco h4 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  margin: 0;
+  color: var(--fg);
+}
+.welpco h1 { font-size: clamp(56px, 7vw, 112px); }
+.welpco h2 { font-size: clamp(40px, 4.6vw, 72px); }
+.welpco h3 { font-size: clamp(28px, 2.8vw, 40px); }
+.welpco p { margin: 0; }
+
+.welpco .display-italic { font-style: italic; font-feature-settings: 'ss01'; }
+.welpco .mono { font-family: var(--font-mono); letter-spacing: 0.01em; }
+.welpco .eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+/* Buttons */
+.welpco .btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 16px 26px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 16px;
+  letter-spacing: -0.005em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 120ms ease, background 120ms ease, color 120ms ease;
+  white-space: nowrap;
+}
+.welpco .btn:hover { transform: translateY(-1px); }
+.welpco .btn-primary { background: var(--primary-btn-bg); color: var(--primary-btn-fg); }
+.welpco .btn-primary:hover { background: var(--fg); }
+.welpco .btn-accent  { background: var(--accent); color: var(--evergreen); }
+.welpco[data-theme="plum"] .btn-accent { color: var(--plum); }
+.welpco[data-theme="wine"] .btn-accent { color: var(--wine); }
+.welpco[data-theme="dark"] .btn-accent { color: var(--evergreen); }
+.welpco .btn-ghost {
+  background: transparent; color: var(--fg);
+  border-color: var(--line-strong);
+}
+.welpco .btn-ghost:hover { background: var(--pill-bg); }
+
+/* Pills */
+.welpco .pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: var(--radius-pill);
+  background: var(--pill-bg); color: var(--fg);
+  font-size: 13px; font-weight: 500;
+  border: 1px solid var(--line);
+}
+
+/* Cards */
+.welpco .card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+/* Dividers */
+.welpco .hr {
+  height: 1px; background: var(--line); width: 100%;
+}
+
+/* Layout */
+.welpco .container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.welpco .section { padding: 96px 0; }
+.welpco .section-tight { padding: 64px 0; }
+
+/* Selection */
+.welpco ::selection { background: var(--accent); color: var(--evergreen); }
+
+/* Marquee keyframes — used by MarqueeBand */
+@keyframes welpco-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-33.33%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welpco [style*="welpco-marquee"],
+  .welpco .welpco-marquee-row {
+    animation: none !important;
+  }
+  .welpco .btn:hover { transform: none; }
+}

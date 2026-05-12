@@ -1,0 +1,205 @@
+"use client";
+
+import { CustomerHeader, WelperHeader } from "@welpco/ui/platform/layout";
+import { Box } from "@welpco/ui/box";
+import { Flex } from "@welpco/ui/flex";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/authStore";
+import { usePersonalizationStore } from "@/stores/personalizationStore";
+import { signOut } from "next-auth/react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useDashboardUser } from "@/lib/hooks/use-dashboard-user";
+import { useCustomerProfile, useWelperProfile } from "@/lib/hooks/use-profile";
+import { AuthBackgroundSVG } from "@/components/features/personalization/auth-background-svg";
+import { useUnreadCount } from "@/lib/hooks/use-notifications";
+import { NotificationBellPopover } from "@/components/layout/notification-bell-popover";
+import { VerificationBanner } from "@/components/features/dashboard/verification-banner";
+
+interface DashboardLayoutClientProps {
+  children: React.ReactNode;
+  user: {
+    id: string;
+    email: string;
+    role: string;
+    emailVerified: boolean;
+    /** Day 15 — post signup-merge source of truth. */
+    signupCompleted: boolean;
+    /** Legacy mirror; kept until BFF column drops. */
+    onboardingCompleted: boolean;
+    name?: string | null;
+    image?: string | null;
+  };
+}
+
+export default function DashboardLayoutClient({
+  children,
+  user: serverUser,
+}: DashboardLayoutClientProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user } = useDashboardUser(serverUser);
+  const userRole = user?.role || "customer";
+  const { data: customerProfile } = useCustomerProfile(user.id, userRole === "customer");
+  const { data: welperProfile } = useWelperProfile(user.id, userRole === "welper");
+  const backgroundId = usePersonalizationStore((s) => s.backgroundId);
+  const themeMode = usePersonalizationStore((s) => s.themeMode);
+  const setThemeMode = usePersonalizationStore((s) => s.setThemeMode);
+  const { data: unreadData } = useUnreadCount();
+  const [mounted, setMounted] = useState(false);
+  const notificationCount = unreadData?.count ?? 0;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Determine active tab from pathname
+  const activeTab = useMemo(() => {
+    if (pathname.startsWith("/dashboard/search")) return "search";
+    if (pathname.startsWith("/dashboard/bookings")) return "bookings";
+    if (pathname.startsWith("/dashboard/messages")) return "messages";
+    if (pathname.startsWith("/dashboard/profile")) return "profile";
+    if (pathname.startsWith("/dashboard/settings")) return "settings";
+    return "dashboard";
+  }, [pathname]);
+
+  const handleTabChange = useCallback((tab: string) => {
+    const tabMap: Record<string, string> = {
+      dashboard: "/dashboard",
+      search: "/dashboard/search",
+      bookings: "/dashboard/bookings",
+      messages: "/dashboard/messages",
+      profile: "/dashboard/profile",
+      settings: "/dashboard/settings",
+    };
+    router.push(tabMap[tab] || "/dashboard");
+  }, [router]);
+
+  const handleRoleSwitch = useCallback(() => {
+    router.push("/dashboard");
+  }, [router]);
+
+  const handleSearch = useCallback((query: string) => {
+    const q = (query || "").trim();
+    if (q) {
+      router.push(`/dashboard/search?q=${encodeURIComponent(q)}`);
+    } else {
+      router.push("/dashboard/search");
+    }
+  }, [router]);
+
+  const handleFeedbackClick = useCallback(() => {
+    // TODO: Open feedback modal
+  }, []);
+
+  const handleDocsClick = useCallback(() => {
+    window.open("https://docs.welpco.com", "_blank");
+  }, []);
+
+  const handleThemeChange = useCallback(
+    (mode: "light" | "dark" | "system") => {
+      setThemeMode(mode);
+    },
+    [setThemeMode]
+  );
+
+  const handleProfileClick = useCallback(() => {
+    router.push("/dashboard/profile");
+  }, [router]);
+
+  const handleSettingsClick = useCallback(() => {
+    router.push("/dashboard/settings");
+  }, [router]);
+
+  const handleLogout = useCallback(async () => {
+    useAuthStore.getState().logout();
+    await signOut({ callbackUrl: "/" });
+  }, []);
+
+  const notificationSlot = useMemo(
+    () => <NotificationBellPopover badgeColor={userRole === "welper" ? "green" : "blue"} />,
+    [userRole]
+  );
+
+  if (!mounted) {
+    // Render a lightweight shell to avoid full-page flash / CLS
+    return (
+      <Flex direction="column" style={{ minHeight: "100vh" }}>
+        <Box style={{ height: "64px", backgroundColor: "var(--gray-2)" }} />
+        <Box py="7" px="6" style={{ flex: 1, backgroundColor: "var(--gray-1)" }}>
+          {children}
+        </Box>
+      </Flex>
+    );
+  }
+
+  const profilePhotoUrl =
+    userRole === "customer" ? customerProfile?.photoUrl : userRole === "welper" ? welperProfile?.photoUrl : undefined;
+  const headerDisplayName =
+    userRole === "customer" && customerProfile
+      ? [customerProfile.firstName, customerProfile.lastName].filter(Boolean).join(" ").trim() || user.name || undefined
+      : userRole === "welper" && welperProfile
+        ? welperProfile.displayName?.trim() || user.name || undefined
+        : user.name || undefined;
+
+  const headerProps = {
+    activeTab,
+    themeMode,
+    user: user
+      ? {
+          name: headerDisplayName,
+          email: user.email,
+          image: profilePhotoUrl || user.image || undefined,
+        }
+      : undefined,
+    notificationCount,
+    notificationSlot,
+    onTabChange: handleTabChange,
+    onRoleSwitch: handleRoleSwitch,
+    onSearch: handleSearch,
+    onFeedbackClick: handleFeedbackClick,
+    onDocsClick: handleDocsClick,
+    onThemeChange: handleThemeChange,
+    onProfileClick: handleProfileClick,
+    onSettingsClick: handleSettingsClick,
+    onLogout: handleLogout,
+  };
+
+  return (
+    <Flex direction="column" style={{ minHeight: "100vh", position: "relative" }}>
+      {userRole === "customer" ? (
+        <CustomerHeader {...headerProps} />
+      ) : (
+        <WelperHeader {...headerProps} />
+      )}
+      <Box
+        py={{ initial: "5", sm: "7" }}
+        px={{ initial: "4", sm: "6" }}
+        style={{
+          flex: 1,
+          backgroundColor: "var(--gray-1)",
+          display: "flex",
+          justifyContent: "center",
+          position: "relative",
+          zIndex: 1,
+          overflow: "hidden",
+        }}
+      >
+        <AuthBackgroundSVG backgroundId={backgroundId} />
+        <Box
+          key={pathname}
+          className="animate-fade-in-up"
+          style={{
+            width: "100%",
+            maxWidth: "1200px",
+            minWidth: 0,
+            position: "relative",
+            animationFillMode: "both",
+          }}
+        >
+          <VerificationBanner />
+          {children}
+        </Box>
+      </Box>
+    </Flex>
+  );
+}

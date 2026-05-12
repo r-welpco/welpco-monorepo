@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Welpco — C-Level Project Update</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #3fb950;
+      --accent-dim: #238636;
+      --border: #30363d;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    .deck {
+      height: 100%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 1100px;
+      padding: 3rem 4rem;
+      animation: fade 0.35s ease;
+    }
+
+    .slide.active {
+      display: block;
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: clamp(2.5rem, 5vw, 3.75rem);
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .slide h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .slide h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 1.25rem 0 0.5rem;
+    }
+
+    p, li {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .slide ul {
+      list-style: none;
+      margin: 0.5rem 0 0 1rem;
+    }
+
+    .slide ul li {
+      position: relative;
+      padding-left: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .slide ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.6em;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem 2rem;
+      margin-top: 1rem;
+    }
+
+    .tech-grid span {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .tech-grid strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .arch-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-top: 1.5rem;
+      font-family: 'DM Sans', monospace;
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.8;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .arch-diagram .comment { color: var(--muted); }
+    .arch-diagram .layer { color: var(--accent); }
+    .arch-diagram .arrow { color: var(--accent-dim); }
+
+    .subtitle {
+      font-size: 1.25rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .nav {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.35rem 0.5rem;
+      z-index: 10;
+    }
+
+    .nav button {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 0.4rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .nav button:hover, .nav button.active-nav {
+      color: var(--accent);
+      background: rgba(63, 185, 80, 0.12);
+    }
+
+    .slide-indicator {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 0 0.25rem;
+    }
+
+    .title-slide {
+      text-align: center;
+      padding-top: 8rem;
+    }
+
+    .title-slide .subtitle {
+      font-size: 1.35rem;
+    }
+
+    .demo-slide .card {
+      margin-top: 1rem;
+    }
+
+    .demo-slide .card + .card {
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .slide { padding: 2rem 1.5rem; }
+      .two-col { grid-template-columns: 1fr; }
+      .tech-grid { grid-template-columns: 1fr; }
+      .arch-diagram { font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <!-- 1. Title -->
+    <section class="slide active" data-slide="1">
+      <div class="title-slide">
+        <h1>Welpco</h1>
+        <p class="subtitle">Platform progress & architecture — C-Level update</p>
+        <p style="margin-top: 3rem; font-size: 0.95rem; color: var(--muted);">Use ← → or click dots to navigate</p>
+      </div>
+    </section>
+
+    <!-- 2. Agenda -->
+    <section class="slide" data-slide="2">
+      <h2>Agenda</h2>
+      <ul>
+        <li>Project overview & progress</li>
+        <li>Architecture & technology stack</li>
+        <li>What was developed (features & capabilities)</li>
+        <li>Demo</li>
+        <li>Next steps & Q&A</li>
+      </ul>
+    </section>
+
+    <!-- 3. Project overview -->
+    <section class="slide" data-slide="3">
+      <h2>Project overview</h2>
+      <h3>What is Welpco?</h3>
+      <p>Welpco is a platform that connects <strong style="color: var(--text);">customers</strong> with <strong style="color: var(--text);">Welpers</strong> — service providers who offer local, bookable services. Customers search, view profiles, and book; Welpers manage offerings, availability, and bookings.</p>
+      <h3>Current state</h3>
+      <ul>
+        <li>Single monorepo: backend (BFF), web app, design system, shared packages</li>
+        <li>End-to-end flows implemented: auth, search, profiles, booking lifecycle</li>
+        <li>Simplified architecture: one backend, one database, no Kafka/Redis/OpenSearch</li>
+      </ul>
+    </section>
+
+    <!-- 4. Architecture -->
+    <section class="slide" data-slide="4">
+      <h2>Architecture</h2>
+      <p>Single backend (BFF) with domain modules; frontend talks only to this API.</p>
+      <div class="arch-diagram">
+<span class="comment"># Monorepo</span>
+welpco-monorepo/
+├── <span class="layer">apps/bff</span>        → NestJS backend (port 3000) — all domain logic in-process
+├── <span class="layer">apps/web</span>        → Next.js 16 frontend (port 8080)
+├── <span class="layer">apps/design-system</span> → Storybook UI component library
+└── <span class="layer">packages/</span>       → ui, types, database, auth, events, shared
+
+<span class="arrow">Frontend (Next.js)</span>  →  <span class="arrow">BFF (NestJS)</span>  →  <span class="arrow">PostgreSQL</span>
+                              ↓
+                    <span class="comment">Geocoding: Google Maps API</span>
+      </div>
+      <p style="margin-top: 1rem; font-size: 0.95rem;">No microservices, no message queues. Cache is in-memory; search uses PostgreSQL full-text + pg_trgm.</p>
+    </section>
+
+    <!-- 5. Domain modules (BFF) -->
+    <section class="slide" data-slide="5">
+      <h2>Backend — domain modules</h2>
+      <div class="two-col">
+        <div class="card">
+          <h3>User & auth</h3>
+          <ul>
+            <li>Auth: login, register, verify email, reset password, refresh token</li>
+            <li>Users: current user, update</li>
+            <li>Referrals, guardians, admin (e.g. background check)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Profiles & discovery</h3>
+          <ul>
+            <li>Profiles: onboarding, services/offerings, availability</li>
+            <li>Service discovery: full-text + pg_trgm search</li>
+            <li>Content: categories, service questions, static content</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Booking & ops</h3>
+          <ul>
+            <li>Booking: create, list, detail, accept, decline, cancel, check-in, check-out</li>
+            <li>State machine for booking lifecycle</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Supporting</h3>
+          <ul>
+            <li>Geocode: Google Maps Geocoding API (rate-limited)</li>
+            <li>Notifications: preferences, list</li>
+            <li>Health check</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. What was developed - frontend -->
+    <section class="slide" data-slide="6">
+      <h2>What was developed — frontend</h2>
+      <h3>Web app (Next.js 16, React 19)</h3>
+      <ul>
+        <li><strong style="color: var(--text);">Auth:</strong> login, register (customer / Welper), forgot password, reset password, email verification, onboarding</li>
+        <li><strong style="color: var(--text);">Dashboard:</strong> search, welper profile (view in dialog), book-now wizard (service questions → confirm), bookings list & detail, profile, settings</li>
+        <li><strong style="color: var(--text);">Notifications:</strong> notification center, list, preferences (in-app)</li>
+        <li><strong style="color: var(--text);">Public:</strong> search page, welper public profile page</li>
+        <li><strong style="color: var(--text);">PWA:</strong> install prompt, offline fallback, service worker (Serwist)</li>
+      </ul>
+      <h3>Design system (Storybook)</h3>
+      <ul>
+        <li>Shared components: typography, layout, forms, platform-specific (service discovery, booking, notifications, payments, reviews, etc.)</li>
+      </ul>
+    </section>
+
+    <!-- 7. Tech stack -->
+    <section class="slide" data-slide="7">
+      <h2>Technology stack</h2>
+      <div class="tech-grid">
+        <span><strong>Frontend</strong> — Next.js 16, React 19, TypeScript</span>
+        <span><strong>Backend</strong> — NestJS 11, TypeORM, TypeScript</span>
+        <span><strong>Database</strong> — PostgreSQL 16.6</span>
+        <span><strong>Search</strong> — PostgreSQL full-text + pg_trgm</span>
+        <span><strong>Auth</strong> — JWT (Passport) + NextAuth.js v5</span>
+        <span><strong>UI</strong> — Radix UI Themes, TanStack Query, Zustand</span>
+        <span><strong>Monorepo</strong> — Turborepo, pnpm workspaces</span>
+        <span><strong>Infrastructure</strong> — AWS CDK (RDS placeholder)</span>
+      </div>
+      <p style="margin-top: 1.5rem;">API docs: Swagger at <code style="background: var(--surface); padding: 0.2rem 0.4rem; border-radius: 4px;">/api/docs</code>. Test accounts: customer@welpco.com / welper@welpco.com (see README for passwords).</p>
+    </section>
+
+    <!-- 8. Demo -->
+    <section class="slide demo-slide" data-slide="8">
+      <h2>Demo</h2>
+      <p>Live walkthrough of the platform.</p>
+      <div class="card">
+        <h3>Suggested demo flow</h3>
+        <ol style="list-style: decimal; margin-left: 1.5rem; color: var(--muted);">
+          <li style="margin-bottom: 0.4rem;">Landing / search (public or logged-in)</li>
+          <li style="margin-bottom: 0.4rem;">Login as customer → Dashboard → Search Welpers</li>
+          <li style="margin-bottom: 0.4rem;">View profile (dialog) → Book now → Wizard (questions + confirm)</li>
+          <li style="margin-bottom: 0.4rem;">Bookings list & booking detail (status, actions)</li>
+          <li style="margin-bottom: 0.4rem;">Optional: login as Welper → Profile, availability, incoming bookings</li>
+          <li>Optional: PWA install prompt (if on supported device)</li>
+        </ol>
+      </div>
+      <div class="card">
+        <p style="color: var(--muted); margin: 0;"><strong style="color: var(--text);">Local:</strong> Frontend http://localhost:8080 — Backend http://localhost:3000 — Swagger http://localhost:3000/api/docs</p>
+      </div>
+    </section>
+
+    <!-- 9. Next steps -->
+    <section class="slide" data-slide="9">
+      <h2>Next steps</h2>
+      <h3>Domain focus</h3>
+      <p>Several domains are still missing or only partially covered. Priority areas:</p>
+      <ul>
+        <li><strong style="color: var(--text);">Real-time messaging</strong> — No messaging domain yet; needed for customer–Welper conversation (design system has chat/conversation UI; backend domain to add).</li>
+        <li>Other domains to consider: payments, reviews & ratings, dispute resolution (aligned with design-system capabilities).</li>
+      </ul>
+      <h3>Other</h3>
+      <ul>
+        <li>Booking: availability check at create, timezone handling, conflict handling (transactions / locking).</li>
+        <li>Content & search: expand categories, refine search relevance.</li>
+        <li>Infrastructure: staging deployment, AWS CDK (RDS, compute), monitoring & runbooks.</li>
+      </ul>
+    </section>
+
+    <!-- 10. Q&A -->
+    <section class="slide" data-slide="10">
+      <div class="title-slide">
+        <h1>Q & A</h1>
+        <p class="subtitle">Thank you</p>
+      </div>
+    </section>
+  </div>
+
+  <nav class="nav" aria-label="Slide navigation">
+    <button type="button" id="prev" aria-label="Previous">← Prev</button>
+    <span class="slide-indicator" id="counter">1 / 10</span>
+    <button type="button" id="next" aria-label="Next">Next →</button>
+  </nav>
+
+  <script>
+    (function () {
+      var slides = document.querySelectorAll('.slide');
+      var total = slides.length;
+      var current = 0;
+
+      function show(i) {
+        current = (i + total) % total;
+        slides.forEach(function (s, k) {
+          s.classList.toggle('active', k === current);
+        });
+        document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+        document.querySelectorAll('.nav button').forEach(function (btn) {
+          btn.classList.remove('active-nav');
+          if (btn.id === 'prev' && current > 0) btn.classList.add('active-nav');
+          if (btn.id === 'next' && current < total - 1) btn.classList.add('active-nav');
+        });
+      }
+
+      document.getElementById('next').addEventListener('click', function () { show(current + 1); });
+      document.getElementById('prev').addEventListener('click', function () { show(current - 1); });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(current + 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+      });
+
+      show(0);
+    })();
+  </script>
+</body>
+</html>

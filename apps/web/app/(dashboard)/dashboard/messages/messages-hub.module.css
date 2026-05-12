@@ -1,0 +1,126 @@
+/* Messages hub layout — split pane with sidebar (conversation list) + thread.
+   Uses CSS module per bible §15.5 escape-hatch (custom layout that has no
+   Radix prop equivalent: dynamic flex sizing, scroll regions, sticky composer). */
+
+.shell {
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+  min-height: min(720px, 85vh);
+  border: 1px solid var(--gray-a5);
+  border-radius: var(--radius-3);
+  background: var(--color-panel);
+  overflow: hidden;
+}
+
+.sidebar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-color: var(--gray-a5);
+  border-style: solid;
+  border-width: 0;
+}
+
+.sidebar.split {
+  border-right-width: 1px;
+}
+
+.sidebar.stacked {
+  max-height: min(40vh, 320px);
+  border-bottom-width: 1px;
+}
+
+.sidebarHeader {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--gray-a5);
+}
+
+.sidebarBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.threadPane {
+  flex: 1 1 0%;
+  min-width: 0;
+  min-height: min(560px, 70vh);
+  overflow: auto;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.row {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+}
+
+.rowInner {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: var(--radius-3);
+  background-color: var(--gray-a2);
+  outline: none;
+  transition: background-color 120ms ease, outline-color 120ms ease;
+}
+
+.rowInner:hover {
+  background-color: var(--gray-a3);
+}
+
+.rowInnerSelected {
+  background-color: var(--accent-a3);
+  outline: 2px solid var(--accent-9);
+  outline-offset: -2px;
+}
+
+.row:focus-visible .rowInner {
+  outline: 2px solid var(--accent-9);
+  outline-offset: -2px;
+}
+
+.unreadDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background-color: var(--accent-9);
+  flex-shrink: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.threadFlex {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.threadInnerBox {
+  flex: 1 1 auto;
+  min-height: 400px;
+  width: 100%;
+}
+
+.headerBlock {
+  flex-shrink: 0;
+}
+
+.emptyState {
+  text-align: center;
+}

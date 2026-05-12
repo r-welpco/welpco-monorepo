@@ -1,0 +1,40 @@
+/*
+ * Recent activity — bible §15.5 escape hatch:
+ *   - the row is a full-width clickable area; styling-an-anchor as a row needs
+ *     a few CSS rules (no underline, inherit colour, hover/focus background)
+ *     that no Radix prop expresses.
+ *   - the empty-state icon medallion uses the gray-3 / gray-11 step pair
+ *     so it follows the active theme.
+ */
+
+.activityRowLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-2);
+  margin: 0 calc(var(--space-2) * -1);
+  padding: 0 var(--space-2);
+  transition: background-color 120ms ease;
+}
+
+.activityRowLink:hover {
+  background-color: var(--gray-2);
+}
+
+.activityRowLink:focus-visible {
+  outline: 2px solid var(--focus-8);
+  outline-offset: 2px;
+  background-color: var(--gray-2);
+}
+
+.iconMedallion {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background-color: var(--gray-3);
+  color: var(--gray-11);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

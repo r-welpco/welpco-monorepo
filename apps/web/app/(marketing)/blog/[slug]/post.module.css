@@ -1,0 +1,87 @@
+/* /blog/[slug] — Direction D, warm community.
+ *
+ * Narrow editorial column for prose on cream ground. Title in Fraunces
+ * serif. Byline + back link in Geist sans (no mono). Soft warm rules
+ * above and below the body. */
+
+.article {
+  background-color: var(--gray-1);
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--default-font-family, var(--font-geist-sans)),
+    system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-11);
+  text-decoration: none;
+  border-radius: 4px;
+  padding: 6px 4px;
+  transition: color 0.15s ease;
+}
+
+.backLink:hover {
+  color: var(--gray-12);
+}
+
+.backLink:focus-visible {
+  outline: 2px solid var(--focus-8);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backLink {
+    transition: none;
+  }
+}
+
+.title {
+  font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.012em;
+  line-height: 1.1;
+  color: var(--gray-12);
+}
+
+.byline {
+  font-family: var(--default-font-family, var(--font-geist-sans)),
+    system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.rule {
+  height: 1px;
+  background-color: var(--gray-a4);
+  margin: var(--space-6) 0;
+}
+
+.content {
+  color: var(--gray-12);
+}
+
+.categoryPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background-color: var(--grass-3);
+  color: var(--grass-11);
+  border-radius: 9999px;
+  font-family: var(--default-font-family, var(--font-geist-sans)),
+    system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.morePostsLabel {
+  font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--gray-11);
+}

@@ -1,0 +1,91 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ServiceAreaInfo } from '../../../common/types';
+
+export class PublicServiceOfferingDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  serviceCategoryId!: string;
+
+  @ApiProperty({ description: 'Category display name (subcategory)' })
+  categoryName!: string;
+
+  @ApiPropertyOptional({ description: 'Parent (level-1) category name' })
+  parentCategoryName?: string;
+
+  @ApiProperty()
+  serviceDescription!: string;
+
+  @ApiProperty()
+  hourlyRate!: number;
+
+  @ApiProperty()
+  experienceYears!: number;
+}
+
+export class PublicWelperProfileDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  welperId!: string;
+
+  @ApiPropertyOptional()
+  firstName!: string | null;
+
+  @ApiPropertyOptional()
+  lastName!: string | null;
+
+  @ApiPropertyOptional()
+  bio!: string | null;
+
+  @ApiPropertyOptional()
+  profilePhotoUrl!: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Legacy GeoJSON / dashboard service-area JSON. Kept for backward compatibility ' +
+      'with older clients; new code should consume `serviceAreaInfo` instead.',
+  })
+  serviceArea!: unknown;
+
+  @ApiPropertyOptional({
+    description:
+      'Structured service-area shape — { city, province, country, postalCodes }. ' +
+      'Null when the welper has not supplied a location yet.',
+    nullable: true,
+  })
+  serviceAreaInfo!: ServiceAreaInfo | null;
+
+  @ApiProperty({
+    description:
+      'Wave 1 trust signal: KYC-verified flag. False until ops/product flips it via the KYC workflow. ' +
+      'Bible §22.6 forbids defaulting to true.',
+  })
+  verified!: boolean;
+
+  @ApiProperty({
+    description:
+      'Average review rating (2-decimal precision). Null when the welper has zero reviews — ' +
+      'bible §22.6 forbids fake social proof.',
+    nullable: true,
+    example: 4.92,
+  })
+  averageRating!: number | null;
+
+  @ApiProperty({ description: 'Number of completed reviews received.', example: 12 })
+  reviewCount!: number;
+
+  @ApiProperty({
+    description:
+      'Median accept-latency in integer minutes over accepted bookings in the last 90 days. ' +
+      'Null when fewer than 5 accepted bookings — bible §22.6 forbids inflated SLA signals.',
+    nullable: true,
+    example: 23,
+  })
+  responseTimeMinutes!: number | null;
+
+  @ApiProperty({ type: [PublicServiceOfferingDto], description: 'Active service offerings' })
+  serviceOfferings!: PublicServiceOfferingDto[];
+}
