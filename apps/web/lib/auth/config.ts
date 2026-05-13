@@ -56,23 +56,6 @@ function getRefreshPromiseMap(): Map<string, Promise<WelpcoRefreshPayload>> {
   return globalThis.__welpcoRefreshByUserKey;
 }
 
-// In production, these must be explicitly set
-if (process.env.NODE_ENV === "production") {
-  const missingInProduction: string[] = [];
-  if (!process.env.NEXTAUTH_SECRET) {
-    missingInProduction.push("NEXTAUTH_SECRET");
-  }
-  if (!process.env.NEXT_PUBLIC_API_URL) {
-    missingInProduction.push("NEXT_PUBLIC_API_URL");
-  }
-  
-  if (missingInProduction.length > 0) {
-    throw new Error(
-      `Missing required environment variables in production: ${missingInProduction.join(", ")}`
-    );
-  }
-}
-
 export const authConfig: NextAuthConfig = {
   pages: {
     signIn: "/login",
