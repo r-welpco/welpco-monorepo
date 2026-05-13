@@ -1,5 +1,7 @@
 "use client";
 
+import { useId, useMemo } from "react";
+
 /** Fixed hero video look — blur, darken, grain (marketing only). */
 export type HeroVideoTreatmentValues = {
   blurPx: number;
@@ -10,17 +12,24 @@ export type HeroVideoTreatmentValues = {
 export const HERO_VIDEO_TREATMENT: HeroVideoTreatmentValues = {
   blurPx: 10,
   darken: 0.3,
-  grain: 0.50,
+  grain: 0.5,
 };
 
-const GRAIN_FILTER_ID = "welpcoHeroGrainFilter";
+export type HeroVideoTreatmentProps = {
+  /** When omitted, uses {@link HERO_VIDEO_TREATMENT} (shipped defaults). */
+  values?: HeroVideoTreatmentValues;
+};
 
 /**
  * Absolute overlays on the hero media stack: blur → darken → grain.
- * Does not include any tuning UI.
  */
-export function HeroVideoTreatment() {
-  const v = HERO_VIDEO_TREATMENT;
+export function HeroVideoTreatment({ values: vProp }: HeroVideoTreatmentProps) {
+  const v = vProp ?? HERO_VIDEO_TREATMENT;
+  const reactId = useId();
+  const grainFilterId = useMemo(
+    () => `welpcoHeroGrain-${reactId.replace(/[^a-zA-Z0-9_-]/g, "")}`,
+    [reactId],
+  );
 
   return (
     <>
@@ -62,12 +71,12 @@ export function HeroVideoTreatment() {
         >
           <svg width="100%" height="100%" preserveAspectRatio="none" style={{ display: "block" }} aria-hidden>
             <defs>
-              <filter id={GRAIN_FILTER_ID} x="0" y="0" width="100%" height="100%">
+              <filter id={grainFilterId} x="0" y="0" width="100%" height="100%">
                 <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch" result="n" />
                 <feColorMatrix in="n" type="saturate" values="0" result="g" />
               </filter>
             </defs>
-            <rect width="100%" height="100%" filter={`url(#${GRAIN_FILTER_ID})`} fill="rgba(128,128,128,0.5)" />
+            <rect width="100%" height="100%" filter={`url(#${grainFilterId})`} fill="rgba(128,128,128,0.5)" />
           </svg>
         </div>
       ) : null}
