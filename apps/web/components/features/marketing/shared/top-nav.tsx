@@ -92,7 +92,9 @@ export function TopNav() {
         <div
           style={{ display: "flex", gap: 10, alignItems: "center" }}
         >
-          <LanguageSwitcher />
+          <div data-topnav-lang-desktop>
+            <LanguageSwitcher />
+          </div>
           <Link
             href="/login"
             data-topnav-cta-secondary
@@ -164,8 +166,10 @@ export function TopNav() {
                 );
               })}
             </nav>
-            <div data-mobile-cta-row>
+            <div data-mobile-lang>
               <LanguageSwitcher />
+            </div>
+            <div data-mobile-cta-row>
               <Link
                 href="/login"
                 className="btn btn-ghost"

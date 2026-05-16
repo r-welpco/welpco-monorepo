@@ -101,9 +101,12 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
         </nav>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          <LanguageSwitcher />
+          <div data-immersive-header-lang>
+            <LanguageSwitcher />
+          </div>
           <Link
             href="/login"
+            data-immersive-header-cta
             className="btn btn-ghost"
             style={{
               padding: "8px 14px",
@@ -117,6 +120,7 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
           </Link>
           <Link
             href="/search"
+            data-immersive-header-cta
             className="btn btn-primary"
             style={{ padding: "8px 16px", fontSize: 13, fontWeight: 700, fontFamily: headlineFontCss }}
           >
@@ -211,7 +215,13 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
                 );
               })}
             </nav>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
+            <div data-immersive-mobile-lang style={{ marginTop: 16 }}>
+              <LanguageSwitcher />
+            </div>
+            <div
+              data-immersive-mobile-cta-row
+              style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}
+            >
               <Link
                 href="/login"
                 className="btn btn-ghost"
