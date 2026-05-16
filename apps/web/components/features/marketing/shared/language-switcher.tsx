@@ -8,6 +8,14 @@ import { updatePreferredLocale } from "@/lib/services/user-service";
 
 const LOCALES = ["en", "fr"] as const;
 
+const LOCALE_COOKIE = "NEXT_LOCALE";
+const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+/** Set before navigation so proxy (geo / French login) sees the new locale immediately. */
+function persistLocaleCookie(locale: (typeof LOCALES)[number]) {
+  document.cookie = `${LOCALE_COOKIE}=${locale};path=/;max-age=${LOCALE_COOKIE_MAX_AGE};SameSite=Lax`;
+}
+
 export function LanguageSwitcher({ className }: { className?: string }) {
   const locale = useLocale();
   const { status } = useSession();
@@ -16,6 +24,8 @@ export function LanguageSwitcher({ className }: { className?: string }) {
   const t = useTranslations("marketing.languageSwitcher");
 
   const handleLocaleChange = (code: (typeof LOCALES)[number]) => {
+    if (code === locale) return;
+    persistLocaleCookie(code);
     router.replace(pathname, { locale: code });
     if (status === "authenticated") {
       void updatePreferredLocale(localeFromUseLocale(code)).catch(() => {

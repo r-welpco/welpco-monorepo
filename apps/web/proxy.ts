@@ -54,6 +54,11 @@ function applyGeoRedirect(request: NextRequest): NextResponse | null {
     return null;
   }
 
+  // Honor explicit choice from the language switcher (NEXT_LOCALE cookie).
+  if (request.cookies.get("NEXT_LOCALE")?.value) {
+    return null;
+  }
+
   const { country, region } = readGeoFromHeaders(request.headers);
   const locale = getLocaleFromGeo(country, region);
   if (locale !== "fr") return null;
