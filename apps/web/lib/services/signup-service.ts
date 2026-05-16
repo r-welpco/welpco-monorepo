@@ -84,10 +84,8 @@ export interface WelperAvailabilityStepParams {
 }
 
 export interface WelperPayoutStepParams {
-  /** True once the welper finishes Stripe Connect onboarding. */
-  stripeOnboardingCompleted?: boolean;
-  /** Explicit skip; the welper acknowledges they cannot receive payouts yet. */
-  skip?: boolean;
+  /** True once the welper finishes Stripe Connect onboarding (required). */
+  stripeOnboardingCompleted: true;
 }
 
 export interface NotificationPrefsStepParams {
@@ -202,7 +200,7 @@ export async function submitWelperBackgroundCheckStep(): Promise<SignupStateDto>
   );
 }
 
-/** Optional legacy call — payout step removed from required wizard flow. */
+/** Welper-only: Stripe Connect Express onboarding complete (required). */
 export async function submitWelperPayoutStep(
   params: WelperPayoutStepParams,
 ): Promise<SignupStateDto> {

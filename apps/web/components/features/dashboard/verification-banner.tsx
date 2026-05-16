@@ -55,7 +55,7 @@ export function VerificationBanner() {
         <Callout.Icon>
           <ShieldCheck size={16} aria-hidden="true" />
         </Callout.Icon>
-        <Callout.Text>
+        <Callout.Text asChild>
           <Flex
             direction={{ initial: "column", sm: "row" }}
             justify="between"

@@ -38,6 +38,7 @@ import { NotificationPreference } from '../../notification/entities/notification
 import { NotificationModule } from '../../notification/notification.module';
 import { SafetyVerificationModule } from '../../safety-verification/safety-verification.module';
 import { GeocodeModule } from '../../geocode/geocode.module';
+import { PaymentModule } from '../../payment/payment.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { GeocodeModule } from '../../geocode/geocode.module';
     NotificationModule,
     SafetyVerificationModule,
     GeocodeModule,
+    PaymentModule,
   ],
   controllers: [AuthController],
   providers: [

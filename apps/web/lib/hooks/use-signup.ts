@@ -18,7 +18,9 @@ import {
   submitWelperBioStep,
   submitWelperOfferingStep,
   submitWelperServiceAreaStep,
+  submitWelperPayoutStep,
   type BeginSignupParams,
+  type WelperPayoutStepParams,
   type IdentityStepParams,
   type NotificationPrefsStepParams,
   type OptionalProfileStepParams,
@@ -32,8 +34,12 @@ import {
   confirmBackgroundCheckReturn,
   createBackgroundCheckCheckoutSession,
   getBackgroundCheckStatus,
-  retryBackgroundCheckCertnInvite,
 } from "@/lib/services/background-check-service";
+import {
+  createStripeConnectAccountLink,
+  getStripeConnectStatus,
+  syncStripeConnectAccount,
+} from "@/lib/services/stripe-connect-service";
 import type { BeginSignupResponseDto, SignupStateDto } from "@welpco/types";
 
 /**
@@ -182,7 +188,7 @@ export function useBackgroundCheckStatus(enabled = true) {
 
 export function useCreateBackgroundCheckCheckout() {
   return useMutation({
-    mutationFn: createBackgroundCheckCheckoutSession,
+    mutationFn: (locale: "en" | "fr") => createBackgroundCheckCheckoutSession(locale),
   });
 }
 
@@ -197,15 +203,37 @@ export function useConfirmBackgroundCheckReturn() {
   });
 }
 
-export function useRetryBackgroundCheckCertnInvite() {
+const STRIPE_CONNECT_STATUS_KEY = ["payment", "connect", "status"] as const;
+
+export function useStripeConnectStatus(enabled = true) {
+  const isAuthenticated = useIsAuthenticated();
+  return useQuery({
+    queryKey: STRIPE_CONNECT_STATUS_KEY,
+    queryFn: getStripeConnectStatus,
+    enabled: isAuthenticated && enabled,
+    staleTime: 10_000,
+  });
+}
+
+export function useCreateStripeConnectLink() {
+  return useMutation({
+    mutationFn: (locale: "en" | "fr") => createStripeConnectAccountLink(locale),
+  });
+}
+
+export function useSyncStripeConnect() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: retryBackgroundCheckCertnInvite,
+    mutationFn: syncStripeConnectAccount,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: BACKGROUND_CHECK_STATUS_KEY });
+      queryClient.invalidateQueries({ queryKey: STRIPE_CONNECT_STATUS_KEY });
       queryClient.invalidateQueries({ queryKey: SIGNUP_STATE_KEY });
     },
   });
+}
+
+export function useCompleteWelperPayoutStep() {
+  return useStepMutation<WelperPayoutStepParams>(submitWelperPayoutStep);
 }
 
 export function useCompleteNotificationPrefsStep() {

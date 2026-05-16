@@ -446,6 +446,30 @@ export const DEFAULT_WELPER_BACKGROUND_CHECK_LABELS: WelperBackgroundCheckStepLa
       "We could not start Certn verification. Try again below, or contact support if it keeps failing.",
   };
 
+export interface WelperPayoutStepLabels extends SignupCommonLabels {
+  title: string;
+  description: string;
+  successDescription: string;
+  connectTitle: string;
+  connectDescription: string;
+  connectCta: string;
+  connectInProgress: string;
+}
+
+export const DEFAULT_WELPER_PAYOUT_LABELS: WelperPayoutStepLabels = {
+  ...DEFAULT_SIGNUP_COMMON,
+  title: "Set up your payouts",
+  description:
+    "We use Stripe to send your earnings to your bank. The setup takes a couple of minutes — you'll need a piece of ID and your banking info handy.",
+  successDescription:
+    "Your Stripe account is connected. Continue to the next step.",
+  connectTitle: "Connect with Stripe",
+  connectDescription:
+    "Bank-grade identity and account verification, hosted by Stripe. Once it's done, you can accept paying bookings.",
+  connectCta: "Set up payouts with Stripe",
+  connectInProgress: "Opening Stripe…",
+};
+
 const DEFAULT_OPTIONAL_PROFILE_PHOTO: ProfilePhotoUploadLabels = {
   title: "Profile photo",
   description: "A clear, friendly photo of you. JPEG, PNG, or WebP up to 5 MB.",

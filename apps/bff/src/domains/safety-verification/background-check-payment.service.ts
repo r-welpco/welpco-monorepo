@@ -16,8 +16,17 @@ import {
 } from './entities/background-check-order.entity';
 import { BackgroundCheckPricingService } from './background-check-pricing.service';
 import { BackgroundCheckService } from './background-check.service';
+import {
+  E2E_BG_CHECK_SESSION_PREFIX,
+  signupE2eBypassAllowed,
+} from '../../common/signup-e2e-bypass';
 
 export const BACKGROUND_CHECK_CHECKOUT_PURPOSE = 'background_check';
+
+export interface BackgroundCheckCheckoutOptions {
+  locale?: 'en' | 'fr';
+  e2eBypass?: boolean;
+}
 
 @Injectable()
 export class BackgroundCheckPaymentService {
@@ -41,7 +50,16 @@ export class BackgroundCheckPaymentService {
     return createStripeClient(key);
   }
 
-  async createCheckoutSession(userId: string): Promise<{ url: string; sessionId: string }> {
+  private backgroundCheckStepPath(locale: string): string {
+    const prefix = locale === 'fr' ? '/fr' : '';
+    return `${prefix}/register/step/background-check`;
+  }
+
+  async createCheckoutSession(
+    userId: string,
+    options: BackgroundCheckCheckoutOptions = {},
+  ): Promise<{ url: string; sessionId: string }> {
+    const locale = options.locale ?? 'en';
     await this.backgroundCheckService.assertAdultWelper(userId);
     await this.backgroundCheckService.markAdultPendingIfNeeded(userId);
 
@@ -67,9 +85,20 @@ export class BackgroundCheckPaymentService {
       await this.orderRepo.save(order);
     }
 
-    const baseUrl = this.config.get<string>('FRONTEND_URL') || 'http://localhost:8080';
-    const successUrl = `${baseUrl}/register/step/background-check?payment=success&session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${baseUrl}/register/step/background-check?payment=cancelled`;
+    const baseUrl = this.config.get<string>('FRONTEND_URL') || 'http://localhost:8081';
+    const stepPath = this.backgroundCheckStepPath(locale);
+    const successUrl = `${baseUrl}${stepPath}?payment=success&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${baseUrl}${stepPath}?payment=cancelled`;
+
+    if (signupE2eBypassAllowed(options.e2eBypass === true)) {
+      const sessionId = `${E2E_BG_CHECK_SESSION_PREFIX}${order.id}`;
+      order.stripeCheckoutSessionId = sessionId;
+      await this.orderRepo.save(order);
+      return {
+        url: `${baseUrl}${stepPath}?payment=success&session_id=${sessionId}`,
+        sessionId,
+      };
+    }
 
     const stripe = this.stripe();
     const session = await stripe.checkout.sessions.create({
@@ -123,7 +152,28 @@ export class BackgroundCheckPaymentService {
     await this.markOrderPaidFromSession(session, userId, orderId);
   }
 
-  async confirmReturn(userId: string, sessionId: string): Promise<void> {
+  async confirmReturn(
+    userId: string,
+    sessionId: string,
+    options: { e2eBypass?: boolean } = {},
+  ): Promise<void> {
+    if (
+      signupE2eBypassAllowed(options.e2eBypass === true) &&
+      sessionId.startsWith(E2E_BG_CHECK_SESSION_PREFIX)
+    ) {
+      const orderId = sessionId.slice(E2E_BG_CHECK_SESSION_PREFIX.length);
+      const order = await this.orderRepo.findOne({ where: { id: orderId, userId } });
+      if (!order) {
+        throw new BadRequestException('E2E background check order not found');
+      }
+      await this.markOrderPaidFromSession(
+        { id: sessionId, payment_intent: null } as Stripe.Checkout.Session,
+        userId,
+        order.id,
+      );
+      return;
+    }
+
     const stripe = this.stripe();
     let session = await stripe.checkout.sessions.retrieve(sessionId);
     if (session.metadata?.userId !== userId) {

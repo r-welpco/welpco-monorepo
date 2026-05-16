@@ -44,6 +44,7 @@ import { WelperPayoutStepDto } from '../../../modules/auth/dto/welper-payout-ste
 import { NotificationPrefsStepDto } from '../../../modules/auth/dto/notification-prefs-step.dto';
 import { OptionalProfileStepDto } from '../../../modules/auth/dto/optional-profile-step.dto';
 import { BackgroundCheckService } from '../../safety-verification/background-check.service';
+import { StripeConnectService } from '../../payment/stripe-connect.service';
 import { isAdultWelper } from '../../safety-verification/background-check-age.util';
 import { GEOCODE_SERVICE } from '../../geocode/geocode.interface';
 import type { IGeocodeService } from '../../geocode/geocode.interface';
@@ -129,7 +130,6 @@ interface SignupFilledData {
   };
   welperPayout?: {
     stripeOnboardingCompleted?: boolean;
-    skip?: boolean;
   };
   notificationPrefs?: {
     preferences: Array<{
@@ -176,6 +176,7 @@ const WELPER_REQUIRED_STEPS: SignupStepName[] = [
   'welperOffering',
   'welperAvailability',
   'welperBackgroundCheck',
+  'welperPayout',
   'optionalProfile',
 ];
 
@@ -238,6 +239,7 @@ export class SignupOrchestratorService {
     private readonly referralService: ReferralService,
     private readonly dataSource: DataSource,
     private readonly backgroundCheckService: BackgroundCheckService,
+    private readonly stripeConnectService: StripeConnectService,
     @Inject(GEOCODE_SERVICE)
     private readonly geocodeService: IGeocodeService,
   ) {}
@@ -521,15 +523,10 @@ export class SignupOrchestratorService {
           photoUrl: welper.profilePhotoUrl ?? undefined,
         };
       }
-      // Welper-payout step is "complete" when the welper has made an explicit
-      // choice — either kicked off Stripe Connect or explicitly skipped. NULL
-      // means the step hasn't been visited yet.
-      if (welper?.payoutMethodChoice) {
+      if (welper?.payoutMethodChoice === PayoutMethodChoice.STRIPE) {
         completed.add('welperPayout');
         filledData.welperPayout = {
-          stripeOnboardingCompleted:
-            welper.payoutMethodChoice === PayoutMethodChoice.STRIPE,
-          skip: welper.payoutMethodChoice === PayoutMethodChoice.SKIPPED,
+          stripeOnboardingCompleted: true,
         };
       }
     }
@@ -783,26 +780,26 @@ export class SignupOrchestratorService {
     dto: WelperPayoutStepDto,
   ): Promise<SignupState> {
     await this.assertWelper(userId);
-    // Persist the choice so `getState()` can mark the step complete on
-    // subsequent reads. Without this, the step was a no-op write — `nextStep`
-    // kept returning `welperPayout` and the wizard re-routed to the same
-    // step in a loop. Day 15 follow-up #2 (finally landed 2026-05-06).
-    //
-    // The actual Stripe Connect account state is still verified out-of-band
-    // when the welper finishes the hosted onboarding flow (`WELPER-PAYOUTS-001`).
-    // For now, `STRIPE` means "the welper clicked Set up payouts and we trust
-    // the click as the signal" until the real Connect round-trip lands.
-    const choice =
-      dto.skip === true
-        ? PayoutMethodChoice.SKIPPED
-        : PayoutMethodChoice.STRIPE;
     const profile = await this.welperProfileRepo.findOne({
       where: { welperId: userId },
     });
-    if (profile) {
-      profile.payoutMethodChoice = choice;
-      await this.welperProfileRepo.save(profile);
+    if (!profile) throw new NotFoundException('Welper profile missing');
+
+    if (dto.stripeOnboardingCompleted !== true) {
+      throw new BadRequestException(
+        'stripeOnboardingCompleted must be true to complete the payout step.',
+      );
     }
+
+    const complete = await this.stripeConnectService.isOnboardingComplete(userId);
+    if (!complete) {
+      throw new BadRequestException(
+        'Finish Stripe Connect onboarding before continuing.',
+      );
+    }
+
+    profile.payoutMethodChoice = PayoutMethodChoice.STRIPE;
+    await this.welperProfileRepo.save(profile);
     return this.getState(userId);
   }
 

@@ -76,7 +76,8 @@ export default function LoginPageClient() {
         }
 
         if (!session?.user || !session?.accessToken) {
-          router.push(nextPath);
+          router.push(withNext("/register", nextRaw));
+          setLoading(false);
           return;
         }
 
@@ -96,6 +97,7 @@ export default function LoginPageClient() {
               user: {
                 emailVerified,
                 signupCompleted,
+                role: session.user.role,
               },
             });
           } catch {

@@ -15,8 +15,10 @@ import {
   useWelperBackgroundCheckStepLabels,
   useWelperBioStepLabels,
   useWelperOfferingStepLabels,
+  useWelperPayoutStepLabels,
   useWelperServiceAreaStepLabels,
 } from "@/lib/i18n/use-auth-labels";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import type { Locale } from "@/i18n/routing";
 import { Box } from "@welpco/ui/box";
 import { Card } from "@welpco/ui/card";
@@ -41,6 +43,8 @@ import {
   WelperServiceAreaStep,
   type WelperServiceAreaStepValues,
   WelperBackgroundCheckStep,
+  WelperPayoutStep,
+  type WelperPayoutStepValues,
 } from "@welpco/ui/platform/user-management";
 import {
   useBackgroundCheckStatus,
@@ -48,10 +52,13 @@ import {
   useCompleteOptionalProfileStep,
   useCompleteSelectRoleStep,
   useConfirmBackgroundCheckReturn,
-  useRetryBackgroundCheckCertnInvite,
   useCreateBackgroundCheckCheckout,
   useCompleteWelperAvailabilityStep,
   useCompleteWelperBackgroundCheckStep,
+  useCompleteWelperPayoutStep,
+  useCreateStripeConnectLink,
+  useStripeConnectStatus,
+  useSyncStripeConnect,
   useCompleteWelperBioStep,
   useCompleteWelperOfferingStep,
   useCompleteWelperServiceAreaStep,
@@ -80,7 +87,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
   const locale = useLocale() as Locale;
   const searchParams = useSearchParams();
   const nextRaw = searchParams.get("next");
-  const { status } = useSession();
+  const { status, update: updateSession } = useSession();
   const isAuthenticated = status === "authenticated";
   const tPage = useTranslations("auth.register.steps.page");
   const tCommon = useTranslations("auth.common");
@@ -89,8 +96,10 @@ export default function StepPageClient({ slug }: { slug: string }) {
   const welperBioLabels = useWelperBioStepLabels();
   const welperServiceAreaLabels = useWelperServiceAreaStepLabels();
   const welperOfferingLabels = useWelperOfferingStepLabels(MAX_OFFERINGS);
+  const getCategoryDisplayName = useCategoryDisplayName();
   const welperAvailabilityLabels = useWelperAvailabilityStepLabels();
   const welperBackgroundCheckLabels = useWelperBackgroundCheckStepLabels();
+  const welperPayoutLabels = useWelperPayoutStepLabels();
   const optionalProfileLabels = useOptionalProfileStepLabels();
 
   const queryClient = useQueryClient();
@@ -98,6 +107,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
   const stepName = stepSlugToName(slug);
   const paymentReturn = searchParams.get("payment");
   const checkoutSessionId = searchParams.get("session_id");
+  const connectReturn = searchParams.get("connect");
 
   const completeSelectRole = useCompleteSelectRoleStep();
   const completeIdentity = useCompleteIdentityStep();
@@ -106,6 +116,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
   const completeWelperOffering = useCompleteWelperOfferingStep();
   const completeWelperAvailability = useCompleteWelperAvailabilityStep();
   const completeWelperBackgroundCheck = useCompleteWelperBackgroundCheckStep();
+  const completeWelperPayout = useCompleteWelperPayoutStep();
   const completeOptionalProfile = useCompleteOptionalProfileStep();
   const pendingStripeReturn =
     paymentReturn === "success" && Boolean(checkoutSessionId);
@@ -114,7 +125,11 @@ export default function StepPageClient({ slug }: { slug: string }) {
   );
   const createBgCheckout = useCreateBackgroundCheckCheckout();
   const confirmBgReturn = useConfirmBackgroundCheckReturn();
-  const retryBgCertn = useRetryBackgroundCheckCertnInvite();
+  const stripeConnectStatus = useStripeConnectStatus(
+    stepName === "welperPayout" || connectReturn !== null,
+  );
+  const createConnectLink = useCreateStripeConnectLink();
+  const syncConnect = useSyncStripeConnect();
 
   // Categories are needed only for the welper-offering step, but React Query
   // caches by key so an early call is essentially free.
@@ -150,6 +165,8 @@ export default function StepPageClient({ slug }: { slug: string }) {
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const confirmedStripeSessionRef = useRef<string | null>(null);
+  const syncedConnectReturnRef = useRef(false);
+  const localeForStripe = (locale === "fr" ? "fr" : "en") as "en" | "fr";
 
   // Stripe success_url must land on the background-check step — never skip ahead to optional profile.
   useEffect(() => {
@@ -189,6 +206,25 @@ export default function StepPageClient({ slug }: { slug: string }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per session_id
   }, [stepName, pendingStripeReturn, checkoutSessionId]);
+
+  // After Stripe Connect return, refresh onboarding status once.
+  useEffect(() => {
+    if (stepName !== "welperPayout") return;
+    if (connectReturn !== "return" && connectReturn !== "refresh") return;
+    if (syncedConnectReturnRef.current) return;
+    syncedConnectReturnRef.current = true;
+
+    void (async () => {
+      setSubmitError(null);
+      try {
+        await syncConnect.mutateAsync();
+      } catch (err) {
+        syncedConnectReturnRef.current = false;
+        setSubmitError(messageFor(err, tCommon("somethingWentWrong")));
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per return
+  }, [stepName, connectReturn]);
 
   // Photo state for the optional-profile step. Wires `<ProfilePhotoUpload>`
   // through the existing presigned-S3 upload service (the same one the
@@ -342,6 +378,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
         onSubmit={(values: { role: SelectedRole }) =>
           guard(async () => {
             const next = await completeSelectRole.mutateAsync(values);
+            await updateSession({ user: { role: values.role } });
             advanceTo(next.nextStep);
           })
         }
@@ -426,6 +463,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
     return (
       <WelperOfferingStep
         labels={welperOfferingLabels}
+        getCategoryDisplayName={getCategoryDisplayName}
         state={liteState}
         categories={categoryOptions}
         categoriesLoading={categoriesQuery.isLoading}
@@ -483,7 +521,6 @@ export default function StepPageClient({ slug }: { slug: string }) {
         loading={
           createBgCheckout.isPending ||
           confirmBgReturn.isPending ||
-          retryBgCertn.isPending ||
           completeWelperBackgroundCheck.isPending
         }
         pricingLoading={bgCheckStatus.isPending && !filledBg}
@@ -492,7 +529,6 @@ export default function StepPageClient({ slug }: { slug: string }) {
           bgCheckStatus.error?.message ??
           createBgCheckout.error?.message ??
           confirmBgReturn.error?.message ??
-          retryBgCertn.error?.message ??
           completeWelperBackgroundCheck.error?.message ??
           null
         }
@@ -500,28 +536,58 @@ export default function StepPageClient({ slug }: { slug: string }) {
         promoPriceCents={bg?.pricing.promoPriceCents ?? filledBg?.promoPriceCents}
         promoEnabled={bg?.pricing.promoEnabled ?? filledBg?.promoEnabled ?? true}
         paymentStatus={bg?.paymentStatus ?? null}
-        certnStatus={bg?.certnStatus ?? null}
-        certnApplicantUrl={bg?.certnApplicantUrl ?? null}
-        certnInviteSentViaEmail={bg?.certnInviteSentViaEmail ?? false}
-        certnInviteReady={bg?.certnInviteReady ?? false}
         failureReason={bg?.failureReason ?? null}
         signupStepComplete={bg?.signupStepComplete ?? false}
         confirmingReturn={confirmBgReturn.isPending}
-        onRetryInvite={() =>
-          guard(async () => {
-            await retryBgCertn.mutateAsync();
-            await Promise.all([bgCheckStatus.refetch(), refetchSignupState()]);
-          })
-        }
         onPay={() =>
           guard(async () => {
-            const { url } = await createBgCheckout.mutateAsync();
+            const { url } = await createBgCheckout.mutateAsync(localeForStripe);
             window.location.href = url;
           })
         }
         onContinue={() =>
           guard(async () => {
             const next = await completeWelperBackgroundCheck.mutateAsync();
+            advanceTo(next.nextStep);
+          })
+        }
+      />
+    );
+  }
+
+  if (stepName === "welperPayout") {
+    const connect = stripeConnectStatus.data;
+    const filledPayout = liteState.filledData.welperPayout as
+      | { stripeOnboardingCompleted?: boolean }
+      | undefined;
+    const onboardingComplete =
+      connect?.onboardingComplete === true ||
+      filledPayout?.stripeOnboardingCompleted === true;
+
+    return (
+      <WelperPayoutStep
+        labels={welperPayoutLabels}
+        state={liteState}
+        onboardingComplete={onboardingComplete}
+        connectLoading={createConnectLink.isPending || syncConnect.isPending}
+        loading={completeWelperPayout.isPending}
+        error={
+          submitError ??
+          stripeConnectStatus.error?.message ??
+          createConnectLink.error?.message ??
+          syncConnect.error?.message ??
+          completeWelperPayout.error?.message ??
+          null
+        }
+        onStripeOnboardingStart={() =>
+          guard(async () => {
+            const { url } = await createConnectLink.mutateAsync(localeForStripe);
+            window.location.href = url;
+          })
+        }
+        onSubmit={(values: WelperPayoutStepValues) =>
+          guard(async () => {
+            const next = await completeWelperPayout.mutateAsync(values);
             advanceTo(next.nextStep);
           })
         }
@@ -593,7 +659,9 @@ function stepLabel(
           ? "labels.welperAvailability"
           : name === "welperBackgroundCheck"
             ? "labels.welperBackgroundCheck"
-            : name === "optionalProfile"
+            : name === "welperPayout"
+              ? "labels.welperPayout"
+              : name === "optionalProfile"
               ? "labels.optionalProfile"
               : "labels.default";
   return t(key);

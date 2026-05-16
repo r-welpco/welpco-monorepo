@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Post,
@@ -13,6 +14,11 @@ import { CurrentUser, CurrentUserData } from '../../common/auth/decorators/curre
 import { BackgroundCheckService } from './background-check.service';
 import { BackgroundCheckPaymentService } from './background-check-payment.service';
 import { ConfirmBackgroundCheckReturnDto } from './dto/confirm-background-check-return.dto';
+import { CreateBackgroundCheckCheckoutDto } from './dto/create-background-check-checkout.dto';
+import {
+  parseSignupE2eBypassHeader,
+  SIGNUP_E2E_BYPASS_HEADER,
+} from '../../common/signup-e2e-bypass';
 
 @ApiTags('Verification')
 @Controller('verification/background-check')
@@ -40,8 +46,16 @@ export class VerificationController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Stripe Checkout session for background check fee' })
-  async createCheckoutSession(@CurrentUser() user: CurrentUserData) {
-    return this.paymentService.createCheckoutSession(user.userId);
+  async createCheckoutSession(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: CreateBackgroundCheckCheckoutDto,
+    @Headers(SIGNUP_E2E_BYPASS_HEADER) e2eHeader?: string,
+  ) {
+    const e2eBypass = parseSignupE2eBypassHeader(e2eHeader);
+    return this.paymentService.createCheckoutSession(user.userId, {
+      locale: dto.locale ?? 'en',
+      e2eBypass,
+    });
   }
 
   @Post('confirm-return')
@@ -54,8 +68,12 @@ export class VerificationController {
   async confirmReturn(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: ConfirmBackgroundCheckReturnDto,
+    @Headers(SIGNUP_E2E_BYPASS_HEADER) e2eHeader?: string,
   ) {
-    await this.paymentService.confirmReturn(user.userId, dto.sessionId);
+    const e2eBypass = parseSignupE2eBypassHeader(e2eHeader);
+    await this.paymentService.confirmReturn(user.userId, dto.sessionId, {
+      e2eBypass,
+    });
     return this.backgroundCheckService.getStatus(user.userId);
   }
 

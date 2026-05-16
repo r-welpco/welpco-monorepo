@@ -118,6 +118,11 @@ export const authConfig: NextAuthConfig = {
       if (trigger === "update" && token) {
         // Persist updated session fields into the JWT token
         if (session?.user) {
+          if (typeof session.user.role === "string") {
+            token.role = session.user.role;
+            token.accountType =
+              session.user.role === "welper" ? "Welper" : "Customer";
+          }
           if (typeof session.user.emailVerified !== "undefined") {
             token.emailVerified = session.user.emailVerified as boolean;
           }
@@ -265,6 +270,10 @@ export const authConfig: NextAuthConfig = {
           }
           if (typeof token.signupCompleted !== "undefined") {
             session.user.signupCompleted = token.signupCompleted as boolean;
+          }
+          if (typeof token.role === "string") {
+            session.user.role = token.role;
+            session.user.accountType = token.accountType as string;
           }
         }
       }

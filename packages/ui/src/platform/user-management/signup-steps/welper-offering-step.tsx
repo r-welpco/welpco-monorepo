@@ -73,6 +73,8 @@ export interface WelperOfferingStepProps {
   loading?: boolean;
   error?: string | null;
   labels?: WelperOfferingStepLabels;
+  /** Maps canonical English category names to the active locale. */
+  getCategoryDisplayName?: (englishName: string) => string;
   onSubmit: (values: WelperOfferingStepValues) => void | Promise<void>;
   onBack?: () => void;
 }
@@ -96,10 +98,12 @@ export function WelperOfferingStep({
   loading,
   error,
   labels: labelsProp,
+  getCategoryDisplayName: getCategoryDisplayNameProp,
   onSubmit,
   onBack,
 }: WelperOfferingStepProps) {
   const labels = labelsProp ?? DEFAULT_WELPER_OFFERING_LABELS;
+  const displayName = getCategoryDisplayNameProp ?? ((n: string) => n);
   const offeringDraftSchema = useMemo(() => createOfferingDraftSchema(labels), [labels]);
 
   const filled = state.filledData.welperOffering as
@@ -156,8 +160,10 @@ export function WelperOfferingStep({
     ? (subcategoriesByParent.get(parentCategoryId) ?? [])
     : [];
 
-  const subcategoryName = (id: string) =>
-    categories.find((c) => c.id === id)?.name ?? "Service";
+  const subcategoryName = (id: string) => {
+    const raw = categories.find((c) => c.id === id)?.name ?? "Service";
+    return displayName(raw);
+  };
 
   const addOfferingToList = form.handleSubmit((values) => {
     setListError(null);
@@ -317,7 +323,7 @@ export function WelperOfferingStep({
                 <SelectContent>
                   {parentCategories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.name}
+                      {displayName(c.name)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -371,7 +377,7 @@ export function WelperOfferingStep({
                 <SelectContent>
                   {subcategoryOptions.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.name}
+                      {displayName(c.name)}
                     </SelectItem>
                   ))}
                 </SelectContent>

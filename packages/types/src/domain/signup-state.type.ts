@@ -132,7 +132,6 @@ export interface SignupFilledData {
   };
   welperPayout?: {
     stripeOnboardingCompleted?: boolean;
-    skip?: boolean;
   };
   notificationPrefs?: {
     preferences: Array<{

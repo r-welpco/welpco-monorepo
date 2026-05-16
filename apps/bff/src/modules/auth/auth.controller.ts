@@ -316,7 +316,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
-      'Optional legacy endpoint: payout choice during signup is disabled — wizard skips this step. Kept for old clients until Stripe Connect ships.',
+      'Wizard step (welper-only): complete Stripe Connect Express onboarding (required).',
   })
   @ApiBody({ type: WelperPayoutStepDto })
   async submitWelperPayoutStep(

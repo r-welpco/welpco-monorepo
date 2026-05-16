@@ -34,12 +34,15 @@ export async function getBackgroundCheckStatus(): Promise<BackgroundCheckStatusR
   );
 }
 
-export async function createBackgroundCheckCheckoutSession(): Promise<{
+export async function createBackgroundCheckCheckoutSession(
+  locale: "en" | "fr" = "en",
+): Promise<{
   url: string;
   sessionId: string;
 }> {
   return apiClient.post<{ url: string; sessionId: string }>(
     "/api/verification/background-check/checkout-session",
+    { locale },
   );
 }
 

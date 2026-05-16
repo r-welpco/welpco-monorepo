@@ -56,8 +56,13 @@ export default function FinishPageClient() {
 
     void (async () => {
       try {
-        await finish.mutateAsync();
-        await updateSession({ user: { signupCompleted: true } });
+        const finalState = await finish.mutateAsync();
+        await updateSession({
+          user: {
+            signupCompleted: true,
+            role: finalState.selectedRole === "welper" ? "welper" : "customer",
+          },
+        });
         router.replace(safeNextPath(nextRaw, "/dashboard"));
       } catch (err) {
         if (err instanceof ApiClientError && err.code === "INCOMPLETE_SIGNUP") {

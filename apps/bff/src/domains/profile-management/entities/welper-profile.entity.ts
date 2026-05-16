@@ -146,6 +146,15 @@ export class WelperProfile extends BaseEntity {
   })
   payoutMethodChoice!: PayoutMethodChoice | null;
 
+  /** Stripe Connect Express account id (`acct_…`). */
+  @Column({
+    name: 'stripe_connect_account_id',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
+  stripeConnectAccountId!: string | null;
+
   // Relations
   // Note: ServiceOffering doesn't have @ManyToOne relationship to avoid FK constraint issues
   // We query service offerings by welperId directly

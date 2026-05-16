@@ -12,6 +12,7 @@ import type {
   SelectRoleStepLabels,
   WelperAvailabilityStepLabels,
   WelperBackgroundCheckStepLabels,
+  WelperPayoutStepLabels,
   WelperBioStepLabels,
   WelperOfferingStepLabels,
   WelperServiceAreaStepLabels,
@@ -283,17 +284,35 @@ export function useWelperBackgroundCheckStepLabels(): WelperBackgroundCheckStepL
     description: t("description"),
     limitedTimeRate: t("limitedTimeRate"),
     payAndContinue: bg.payAndContinue,
-    startCertnVerification: t("startCertnVerification"),
-    openCertnVerification: t("openCertnVerification"),
+    startCertnVerification: "",
+    openCertnVerification: "",
     certnEmailInvite: t("certnEmailInvite"),
     footer: t("footer"),
     paymentReceivedPrefix: t("paymentReceivedPrefix"),
-    paymentInviteReady: t("paymentInviteReady"),
-    paymentFailureStart: t("paymentFailureStart"),
-    paymentInvitePending: t("paymentInvitePending"),
+    paymentInviteReady: "",
+    paymentFailureStart: "",
+    paymentInvitePending: "",
     failureMissingProfile: t("failureMissingProfile"),
-    failureCertnFailed: bg.failureCertnFailed,
-    failureGeneric: t("failureGeneric"),
+    failureCertnFailed: "",
+    failureGeneric: "",
+  };
+}
+
+export function useWelperPayoutStepLabels(): WelperPayoutStepLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.register.steps.welperPayout");
+  return {
+    back: tc("back"),
+    continue: tc("continue"),
+    saving: tc("saving"),
+    requiredMarker: "*",
+    title: t("title"),
+    description: t("description"),
+    successDescription: t("successDescription"),
+    connectTitle: t("connectTitle"),
+    connectDescription: t("connectDescription"),
+    connectCta: t("connectCta"),
+    connectInProgress: t("connectInProgress"),
   };
 }
 

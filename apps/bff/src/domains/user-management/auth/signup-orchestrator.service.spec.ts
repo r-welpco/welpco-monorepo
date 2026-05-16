@@ -11,6 +11,8 @@ import {
   SignupOrchestratorService,
   type SignupStepName,
 } from './signup-orchestrator.service';
+import { GEOCODE_SERVICE } from '../../geocode/geocode.interface';
+import { StripeConnectService } from '../../payment/stripe-connect.service';
 import {
   UserAccount,
   AccountStatus,
@@ -215,6 +217,20 @@ describe('SignupOrchestratorService', () => {
             }),
           },
         },
+        {
+          provide: GEOCODE_SERVICE,
+          useValue: { geocode: jest.fn() },
+        },
+        {
+          provide: StripeConnectService,
+          useValue: {
+            isOnboardingComplete: jest.fn().mockResolvedValue(false),
+            getStatus: jest.fn().mockResolvedValue({
+              hasAccount: false,
+              onboardingComplete: false,
+            }),
+          },
+        },
       ],
     }).compile();
 
@@ -253,6 +269,7 @@ describe('SignupOrchestratorService', () => {
         'welperOffering',
         'welperAvailability',
         'welperBackgroundCheck',
+        'welperPayout',
         'optionalProfile',
       ]);
     });
