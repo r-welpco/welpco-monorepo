@@ -42,9 +42,8 @@ export function isWelperServiceAreaStepComplete(welper: WelperProfile): boolean 
 }
 
 export function buildWelperServiceAreaFilledData(welper: WelperProfile) {
-  const sa = isRadiusServiceAreaPayload(welper.serviceArea)
-    ? welper.serviceArea
-    : undefined;
+  const raw: unknown = welper.serviceArea;
+  const sa = isRadiusServiceAreaPayload(raw) ? raw : undefined;
   return {
     city: welper.serviceAreaCity ?? sa?.centerAddress.city ?? '',
     province: welper.provinceCode ?? sa?.centerAddress.stateProvince ?? '',

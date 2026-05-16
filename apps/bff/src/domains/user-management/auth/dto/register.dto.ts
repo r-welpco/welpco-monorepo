@@ -1,11 +1,5 @@
 import { ApiProperty, ApiSchema } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsString,
-  IsIn,
-  IsOptional,
-  IsIn,
-} from 'class-validator';
+import { IsEmail, IsString, IsIn, IsOptional } from 'class-validator';
 import { AccountType } from '../../entities/user-account.entity';
 import { IsStrongPassword } from '../validators/password.validator';
 

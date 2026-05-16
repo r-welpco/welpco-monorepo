@@ -268,10 +268,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
     if (!state) return;
     if (state.signupCompleted) {
       router.replace(
-        postSignupDestination({
-          signupCompleted: true,
-          platformAccessEnabled: state.platformAccessEnabled,
-        }) === "/dashboard"
+        postSignupDestination({ signupCompleted: true }) === "/dashboard"
           ? safeNextPath(nextRaw, "/dashboard")
           : "/register/complete",
       );

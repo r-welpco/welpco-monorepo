@@ -55,51 +55,50 @@ export function VerificationBanner() {
         <Callout.Icon>
           <ShieldCheck size={16} aria-hidden="true" />
         </Callout.Icon>
-        <Callout.Text asChild>
-          <Flex
-            direction={{ initial: "column", sm: "row" }}
-            justify="between"
-            align={{ initial: "start", sm: "center" }}
-            gap="3"
-            wrap="wrap"
-          >
-            <Box style={{ flex: 1, minWidth: 0 }}>
-              <Text size="2" as="div" weight="bold">
-                Verify your email to start booking and receiving payments.
+        <Flex
+          direction={{ initial: "column", sm: "row" }}
+          justify="between"
+          align={{ initial: "start", sm: "center" }}
+          gap="3"
+          wrap="wrap"
+          style={{ flex: 1 }}
+        >
+          <Box style={{ flex: 1, minWidth: 0 }}>
+            <Text size="2" as="p" weight="bold">
+              Verify your email to start booking and receiving payments.
+            </Text>
+            {resendNote ? (
+              <Text
+                size="1"
+                as="p"
+                color={resend.isError ? SEMANTIC_COLOR.danger : "gray"}
+                mt="1"
+              >
+                {resendNote}
               </Text>
-              {resendNote && (
-                <Text
-                  size="1"
-                  as="div"
-                  color={resend.isError ? SEMANTIC_COLOR.danger : "gray"}
-                  mt="1"
-                >
-                  {resendNote}
-                </Text>
-              )}
-            </Box>
-            <Flex gap="2">
-              <Button
-                size="2"
-                variant="soft"
-                color={SEMANTIC_COLOR.primary}
-                disabled={resend.isPending}
-                onClick={handleResend}
-              >
-                {resend.isPending ? "Sending..." : "Resend verification"}
-              </Button>
-              <Button
-                size="2"
-                variant="ghost"
-                color="gray"
-                onClick={() => setDismissed(true)}
-                aria-label="Dismiss verification reminder"
-              >
-                Dismiss
-              </Button>
-            </Flex>
+            ) : null}
+          </Box>
+          <Flex gap="2">
+            <Button
+              size="2"
+              variant="soft"
+              color={SEMANTIC_COLOR.primary}
+              disabled={resend.isPending}
+              onClick={handleResend}
+            >
+              {resend.isPending ? "Sending..." : "Resend verification"}
+            </Button>
+            <Button
+              size="2"
+              variant="ghost"
+              color="gray"
+              onClick={() => setDismissed(true)}
+              aria-label="Dismiss verification reminder"
+            >
+              Dismiss
+            </Button>
           </Flex>
-        </Callout.Text>
+        </Flex>
       </Callout.Root>
     </Box>
   );

@@ -60,10 +60,7 @@ export default function FinishPageClient() {
     void (async () => {
       try {
         const finalState = await finish.mutateAsync();
-        const destination = postSignupDestination({
-          signupCompleted: true,
-          platformAccessEnabled: finalState.platformAccessEnabled,
-        });
+        const destination = postSignupDestination({ signupCompleted: true });
         const role =
           roleFromSelectedRole(finalState.selectedRole) ?? "customer";
         await updateSession({
