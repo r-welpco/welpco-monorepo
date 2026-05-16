@@ -1,13 +1,16 @@
-import Link from "next/link";
+"use client";
+
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { MarketingImage } from "../shared/marketing-image";
 
 /**
  * MinorsBanner — guardian-managed minors call-out (April 2026).
- *
- * Faithful port of `.design-reference/project/components/sections.jsx` `MinorsBanner`.
  */
 
 export function MinorsBanner() {
+  const t = useTranslations("marketing.home.minors");
+
   return (
     <section className="section-tight" id="minors">
       <div className="container">
@@ -65,12 +68,12 @@ export function MinorsBanner() {
                   background: "var(--accent)",
                 }}
               />
-              New · April 2026
+              {t("badge")}
             </div>
             <h2 style={{ color: "var(--evergreen)" }}>
-              Service-provider accounts
+              {t("titleLine1")}
               <br />
-              <span className="display-italic">for minors.</span>
+              <span className="display-italic">{t("titleLine2")}</span>
             </h2>
             <p
               style={{
@@ -81,18 +84,18 @@ export function MinorsBanner() {
                 lineHeight: 1.55,
               }}
             >
-              Welpers aged 14 and up can now sign up under a guardian-managed account. Background checks are waived; guardians review every booking.
+              {t("body")}
             </p>
             <div style={{ display: "flex", gap: 12, marginTop: 28, flexWrap: "wrap" }}>
-              <Link href="/welper/onboarding" className="btn btn-primary">
-                Set up a guardian account <span aria-hidden="true">→</span>
+              <Link href="/register" className="btn btn-primary">
+                {t("ctaPrimary")} <span aria-hidden="true">→</span>
               </Link>
               <Link
                 href="/faq"
                 className="btn btn-ghost"
                 style={{ borderColor: "var(--evergreen)", color: "var(--evergreen)" }}
               >
-                Read the FAQ
+                {t("ctaFaq")}
               </Link>
             </div>
           </div>
@@ -100,7 +103,7 @@ export function MinorsBanner() {
             <div style={{ position: "relative", width: "100%", maxWidth: 320 }}>
               <MarketingImage
                 src="/marketing/minors-guardian-teen.jpg"
-                alt="Guardian and teen walking together in the neighborhood"
+                alt={t("imageAlt")}
                 ratio="4 / 5"
                 radius="var(--radius-lg)"
                 sizes="(max-width: 900px) 90vw, 320px"
@@ -148,9 +151,10 @@ export function MinorsBanner() {
                 </div>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 13, color: "var(--evergreen)" }}>
-                    Guardian-verified
+                    {t("cardTitle")}
                   </div>
-                  <div style={{ fontSize: 11, color: "rgba(0,73,47,0.6)" }}>Approved · monitored</div>
+                  <div style={{ fontSize: 11, color: "rgba(0,73,47,0.6)" }}>{t("cardSub")}
+                  </div>
                 </div>
               </div>
             </div>

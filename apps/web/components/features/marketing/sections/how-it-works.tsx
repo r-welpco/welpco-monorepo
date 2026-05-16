@@ -1,65 +1,34 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { SectionHeader } from "./section-header";
 
 /**
  * HowItWorks — Customer ↔ Welper toggle, three steps each side.
- *
- * Faithful port of `.design-reference/project/components/sections.jsx` `HowItWorks`.
  */
 
-const CUSTOMER_STEPS = [
-  {
-    n: "01",
-    title: "Search nearby",
-    body: "Enter the service you need and your zip code. Browse vetted Welpers in your area in seconds.",
-  },
-  {
-    n: "02",
-    title: "Book & schedule",
-    body: "Pick a Welper, set a time, and confirm. Pay securely — funds are held until the job is complete.",
-  },
-  {
-    n: "03",
-    title: "Confirm & rate",
-    body: "Welper confirms the job is done and submits end time. Payment is taken and the customer is sent the final invoice. Leave a rating for the Welper, which helps keep the platform accountable.",
-  },
-];
-
-const WELPER_STEPS = [
-  {
-    n: "01",
-    title: "Build your profile",
-    body: "Sign up, list your services, set your rates and weekly availability. Adults complete a background check.",
-  },
-  {
-    n: "02",
-    title: "Accept jobs that fit",
-    body: "Get matched with requests that match your skills and schedule. Part-time, full-time, or occasional — your call.",
-  },
-  {
-    n: "03",
-    title: "Get paid",
-    body: "Welper confirms job is complete and submits end time. Invoice is sent to the customer and payment is taken. Welpco transfers weekly payouts to Welper’s Stripe account the following week on the Friday.",
-  },
-];
+type Step = { n: string; title: string; body: string };
 
 export function HowItWorks() {
+  const t = useTranslations("marketing.home.howItWorks");
   const [tab, setTab] = useState<"customer" | "welper">("customer");
-  const steps = tab === "customer" ? CUSTOMER_STEPS : WELPER_STEPS;
+
+  const customerSteps = t.raw("customerSteps") as Step[];
+  const welperSteps = t.raw("welperSteps") as Step[];
+  const steps = tab === "customer" ? customerSteps : welperSteps;
 
   return (
     <section className="section" id="how" style={{ background: "var(--bg-soft)" }}>
       <div className="container">
         <SectionHeader
-          eyebrow="How it works"
+          eyebrow={t("eyebrow")}
           title={
             <>
-              Three steps. <span className="display-italic">No friction.</span>
+              {t("titleLine1")} <span className="display-italic">{t("titleLine2")}</span>
             </>
           }
-          subtitle="Whether you’re booking a service or providing one, getting started takes minutes."
+          subtitle={t("subtitle")}
           cta={
             <div
               style={{
@@ -72,14 +41,14 @@ export function HowItWorks() {
             >
               {(
                 [
-                  { id: "customer", label: "I need help" },
-                  { id: "welper", label: "I want to Welp" },
+                  { id: "customer" as const, label: t("tabCustomer") },
+                  { id: "welper" as const, label: t("tabWelper") },
                 ] as const
-              ).map((t) => (
+              ).map((item) => (
                 <button
-                  key={t.id}
+                  key={item.id}
                   type="button"
-                  onClick={() => setTab(t.id)}
+                  onClick={() => setTab(item.id)}
                   style={{
                     padding: "10px 18px",
                     borderRadius: 999,
@@ -88,12 +57,12 @@ export function HowItWorks() {
                     fontWeight: 500,
                     fontSize: 14,
                     cursor: "pointer",
-                    background: tab === t.id ? "var(--fg)" : "transparent",
-                    color: tab === t.id ? "var(--bg)" : "var(--fg-muted)",
+                    background: tab === item.id ? "var(--fg)" : "transparent",
+                    color: tab === item.id ? "var(--bg)" : "var(--fg-muted)",
                     transition: "all 160ms ease",
                   }}
                 >
-                  {t.label}
+                  {item.label}
                 </button>
               ))}
             </div>

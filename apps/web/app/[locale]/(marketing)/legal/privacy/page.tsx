@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { PrivacyPageContent } from "@/components/features/marketing/legal/privacy-page-content";
 
 /**
- * /legal/privacy — Welpco privacy policy (English).
- * French: /fr/legal/privacy. The #cookies anchor is referenced from the marketing footer.
+ * /fr/legal/privacy — Politique de confidentialité Welpco (French).
+ * English canonical URL: /legal/privacy
  */
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,7 +15,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function PrivacyPage() {
-  setRequestLocale("en");
+export default function LocalizedPrivacyPage() {
   return <PrivacyPageContent />;
 }

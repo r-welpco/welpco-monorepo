@@ -1,25 +1,23 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
+import { isMarketingNavActive } from "@/i18n/path-utils";
 import { MarketingLogo } from "../shared/marketing-logo";
-import { MARKETING_PRIMARY_NAV_LINKS } from "../shared/marketing-nav-links";
+import {
+  MARKETING_NAV_KEY_BY_HREF,
+  MARKETING_PRIMARY_NAV_HREFS,
+} from "../shared/marketing-nav-links";
+import { LanguageSwitcher } from "../shared/language-switcher";
 import { IMMERSIVE_SHELL_LOGO_PAD_PX } from "./immersive-shell";
 
-function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(href + "/");
-}
-
-/**
- * Centered pill nav over the immersive hero (not full-bleed width).
- * Uses the same headline font stack as the hero for cohesion; weight is bold throughout.
- */
 export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss: string }) {
   const pathname = usePathname() ?? "/";
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const t = useTranslations("marketing");
+  const tNav = useTranslations("marketing.nav");
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -60,12 +58,12 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
           fontWeight: 700,
         }}
       >
-        <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }} aria-label="Welpco — home">
+        <Link href="/" style={{ textDecoration: "none", flexShrink: 0 }} aria-label={t("a11y.home")}>
           <MarketingLogo height={32} />
         </Link>
 
         <nav
-          aria-label="Primary"
+          aria-label={t("a11y.primaryNav")}
           data-immersive-desktop-links
           style={{
             flex: 1,
@@ -77,12 +75,13 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
             minWidth: 0,
           }}
         >
-          {MARKETING_PRIMARY_NAV_LINKS.map((l) => {
-            const active = isActive(pathname, l.href);
+          {MARKETING_PRIMARY_NAV_HREFS.map((href) => {
+            const active = isMarketingNavActive(pathname, href);
+            const key = MARKETING_NAV_KEY_BY_HREF[href];
             return (
               <Link
-                key={l.href}
-                href={l.href}
+                key={href}
+                href={href}
                 aria-current={active ? "page" : undefined}
                 style={{
                   padding: "8px 12px",
@@ -95,15 +94,16 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
                   whiteSpace: "nowrap",
                 }}
               >
-                {l.label}
+                {tNav(key)}
               </Link>
             );
           })}
         </nav>
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <LanguageSwitcher />
           <Link
-            href="/auth/signin"
+            href="/login"
             className="btn btn-ghost"
             style={{
               padding: "8px 14px",
@@ -113,14 +113,14 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
               fontFamily: headlineFontCss,
             }}
           >
-            Sign in
+            {tNav("signIn")}
           </Link>
           <Link
             href="/search"
             className="btn btn-primary"
             style={{ padding: "8px 16px", fontSize: 13, fontWeight: 700, fontFamily: headlineFontCss }}
           >
-            Find help
+            {tNav("findHelp")}
             <span aria-hidden="true" style={{ display: "inline-block", transform: "translateY(-1px)" }}>
               →
             </span>
@@ -130,7 +130,7 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
             data-immersive-burger
             aria-expanded={drawerOpen}
             aria-controls="welpco-immersive-mobile-nav"
-            aria-label={drawerOpen ? "Close menu" : "Open menu"}
+            aria-label={drawerOpen ? t("a11y.closeMenu") : t("a11y.openMenu")}
             onClick={() => setDrawerOpen((o) => !o)}
             style={{
               alignItems: "center",
@@ -155,7 +155,7 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
           data-immersive-mobile-drawer
           role="dialog"
           aria-modal="true"
-          aria-label="Mobile menu"
+          aria-label={t("a11y.mobileNav")}
           onClick={(e) => {
             if (e.target === e.currentTarget) setDrawerOpen(false);
           }}
@@ -184,13 +184,14 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <nav aria-label="Mobile">
-              {MARKETING_PRIMARY_NAV_LINKS.map((l) => {
-                const active = isActive(pathname, l.href);
+            <nav aria-label={t("a11y.mobileNav")}>
+              {MARKETING_PRIMARY_NAV_HREFS.map((href) => {
+                const active = isMarketingNavActive(pathname, href);
+                const key = MARKETING_NAV_KEY_BY_HREF[href];
                 return (
                   <Link
-                    key={l.href}
-                    href={l.href}
+                    key={href}
+                    href={href}
                     aria-current={active ? "page" : undefined}
                     onClick={() => setDrawerOpen(false)}
                     style={{
@@ -205,19 +206,19 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
                       background: active ? "var(--pill-bg)" : undefined,
                     }}
                   >
-                    {l.label}
+                    {tNav(key)}
                   </Link>
                 );
               })}
             </nav>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
               <Link
-                href="/auth/signin"
+                href="/login"
                 className="btn btn-ghost"
                 style={{ justifyContent: "center", fontSize: 14, fontWeight: 700, fontFamily: headlineFontCss }}
                 onClick={() => setDrawerOpen(false)}
               >
-                Sign in
+                {tNav("signIn")}
               </Link>
               <Link
                 href="/search"
@@ -225,7 +226,7 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
                 style={{ justifyContent: "center", fontSize: 14, fontWeight: 700, fontFamily: headlineFontCss }}
                 onClick={() => setDrawerOpen(false)}
               >
-                Find help
+                {tNav("findHelp")}
               </Link>
             </div>
           </div>

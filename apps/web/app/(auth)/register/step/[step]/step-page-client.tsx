@@ -186,6 +186,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
     return (
       <SelectRoleStep
         state={liteState}
+        customerRegistrationEnabled={false}
         loading={completeSelectRole.isPending}
         error={submitError ?? completeSelectRole.error?.message ?? null}
         onSubmit={(values: { role: SelectedRole }) =>

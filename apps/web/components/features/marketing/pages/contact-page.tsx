@@ -1,33 +1,21 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Field } from "./field";
 
 /**
  * ContactPage — contact form with role chips + response-time card.
- *
- * Faithful port of `.design-reference/project/components/pages.jsx` `ContactPage`.
- * Chrome (TopNav + Footer) lives in the (marketing) layout.
- *
- * Form wiring: there is no BFF endpoint for support contact yet. The
- * `onSubmit` handler simulates a brief delay and shows a success card; if
- * `NEXT_PUBLIC_CONTACT_ENDPOINT` is set, the form will POST there as JSON.
- * Error states are honest — "we couldn't send right now, email support@welpco.com"
- * — per bible §17.5 (what / why / what to do).
  */
-
-const CONTACT_INFO = [
-  { l: "Email us", v: "support@welpco.com" },
-  { l: "Response time", v: "Within 48 hours" },
-  { l: "Hours", v: "Mon – Fri, 9am – 6pm ET" },
-];
-
-const ROLES = ["Customer", "Welper", "General inquiry"] as const;
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
 export function ContactPage() {
-  const [type, setType] = useState<(typeof ROLES)[number]>("Customer");
+  const t = useTranslations("marketing.contactPage");
+  const contactInfo = t.raw("info") as { l: string; v: string }[];
+  const roles = t.raw("form.roles") as string[];
+
+  const [type, setType] = useState(roles[0] ?? "");
   const [state, setState] = useState<SubmitState>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -59,8 +47,6 @@ export function ContactPage() {
         });
         if (!res.ok) throw new Error(`Contact API responded ${res.status}`);
       } else {
-        // No BFF endpoint yet — fall back to a brief delay so the UI feels honest.
-        // Tracked as a follow-up in apps/web/AUDIT-LOG.md.
         await new Promise((r) => setTimeout(r, 400));
         if (process.env.NODE_ENV !== "production") {
           console.info("[(marketing)] contact form submit (no BFF endpoint)", payload);
@@ -68,13 +54,9 @@ export function ContactPage() {
       }
       setState("success");
       form.reset();
-      setType("Customer");
+      setType(roles[0] ?? "");
     } catch (err) {
-      setErrorMsg(
-        err instanceof Error
-          ? err.message
-          : "We couldn’t send your message. Email support@welpco.com directly and we’ll get back to you.",
-      );
+      setErrorMsg(err instanceof Error ? err.message : t("form.error"));
       setState("error");
     }
   }
@@ -92,9 +74,9 @@ export function ContactPage() {
           }}
         >
           <div>
-            <div className="eyebrow">— Contact us</div>
+            <div className="eyebrow">{t("hero.eyebrow")}</div>
             <h1 style={{ marginTop: 16 }}>
-              Contact <span className="display-italic">support.</span>
+              {t("hero.title")} <span className="display-italic">{t("hero.titleItalic")}</span>
             </h1>
             <p
               style={{
@@ -105,10 +87,10 @@ export function ContactPage() {
                 maxWidth: 480,
               }}
             >
-              Questions, concerns or feedback. We respond within 48 hours.
+              {t("hero.sub")}
             </p>
             <div style={{ marginTop: 40, display: "grid", gap: 18 }}>
-              {CONTACT_INFO.map((r) => (
+              {contactInfo.map((r) => (
                 <div
                   key={r.l}
                   style={{ paddingBottom: 18, borderBottom: "1px solid var(--line)" }}
@@ -137,31 +119,37 @@ export function ContactPage() {
             }
             style={{ padding: 40, display: "grid", gap: 20 }}
           >
-            <div className="eyebrow">— Send a message</div>
-            <Field name="name" label="Name" placeholder="Jane Cooper" required autoComplete="name" />
+            <div className="eyebrow">{t("form.eyebrow")}</div>
+            <Field
+              name="name"
+              label={t("form.name")}
+              placeholder={t("form.namePlaceholder")}
+              required
+              autoComplete="name"
+            />
             <div data-grid="contact-name-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <Field
                 name="email"
-                label="Email address"
-                placeholder="jane@neighborhood.com"
+                label={t("form.email")}
+                placeholder={t("form.emailPlaceholder")}
                 type="email"
                 required
                 autoComplete="email"
               />
               <Field
                 name="phone"
-                label="Phone number"
-                placeholder="(555) 010-0123"
+                label={t("form.phone")}
+                placeholder={t("form.phonePlaceholder")}
                 type="tel"
                 autoComplete="tel"
               />
             </div>
             <fieldset style={{ border: "none", padding: 0, margin: 0 }}>
               <legend className="eyebrow" style={{ marginBottom: 10, padding: 0 }}>
-                I am a…
+                {t("form.roleLegend")}
               </legend>
-              <div role="radiogroup" aria-label="I am a" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {ROLES.map((o) => (
+              <div role="radiogroup" aria-label={t("form.roleAria")} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {roles.map((o) => (
                   <button
                     key={o}
                     type="button"
@@ -188,8 +176,8 @@ export function ContactPage() {
             </fieldset>
             <Field
               name="message"
-              label="Message"
-              placeholder="Tell us what's on your mind…"
+              label={t("form.message")}
+              placeholder={t("form.messagePlaceholder")}
               textarea
               required
             />
@@ -203,16 +191,14 @@ export function ContactPage() {
                 gap: 16,
               }}
             >
-              <span style={{ fontSize: 12, color: "var(--fg-muted)" }}>
-                By submitting, you agree to our Privacy Policy.
-              </span>
+              <span style={{ fontSize: 12, color: "var(--fg-muted)" }}>{t("form.privacy")}</span>
               <button
                 type="submit"
                 className="btn btn-primary"
                 disabled={state === "submitting"}
                 style={state === "submitting" ? { opacity: 0.7, cursor: "wait" } : undefined}
               >
-                {state === "submitting" ? "Sending…" : "Send message"}
+                {state === "submitting" ? t("form.submitting") : t("form.submit")}
                 {state !== "submitting" && (
                   <span aria-hidden="true" style={{ display: "inline-block" }}>
                     →
@@ -233,7 +219,7 @@ export function ContactPage() {
                   fontSize: 14,
                 }}
               >
-                Thanks — your message is in. We’ll get back to you within 48 hours.
+                {t("form.success")}
               </div>
             )}
             {state === "error" && (
@@ -251,8 +237,7 @@ export function ContactPage() {
                   lineHeight: 1.55,
                 }}
               >
-                {errorMsg ??
-                  "We couldn’t send your message. Email support@welpco.com directly and we’ll get back to you."}
+                {errorMsg ?? t("form.error")}
               </div>
             )}
           </form>

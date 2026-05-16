@@ -3,9 +3,8 @@ import type { MetadataRoute } from "next";
 /**
  * `sitemap.xml` for the public site.
  *
- * Covers the 5 canonical marketing routes plus the public blog/legal stubs.
- * The dashboard, auth, search and welper onboarding are intentionally
- * excluded. Add new public routes here as they ship.
+ * Core marketing routes include English (unprefixed) URLs with French
+ * `/fr` alternates. Blog and legal stubs are English-only for now.
  */
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://welpco.com";
@@ -16,31 +15,78 @@ interface RouteEntry {
   priority?: number;
 }
 
-const ROUTES: RouteEntry[] = [
+const CORE_MARKETING_ROUTES: RouteEntry[] = [
   { path: "/", changeFrequency: "weekly", priority: 1.0 },
   { path: "/about", changeFrequency: "monthly", priority: 0.8 },
   { path: "/how-it-works", changeFrequency: "monthly", priority: 0.8 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.7 },
   { path: "/contact", changeFrequency: "yearly", priority: 0.6 },
-  { path: "/blog", changeFrequency: "weekly", priority: 0.5 },
-  { path: "/legal/terms", changeFrequency: "yearly", priority: 0.3 },
-  { path: "/legal/privacy", changeFrequency: "yearly", priority: 0.3 },
 ];
 
-/**
- * Use a build-time constant so the sitemap can prerender statically. Next 16
- * cache-components mode treats `new Date()` as a dynamic data source and
- * forces the route to ƒ; the resulting timestamp would only update on each
- * deploy regardless. A static fallback is the same effective behavior with
- * better edge-cache headers.
- */
+const OTHER_ROUTES: RouteEntry[] = [
+  { path: "/blog", changeFrequency: "weekly", priority: 0.5 },
+  { path: "/legal/terms", changeFrequency: "yearly", priority: 0.3 },
+];
+
+const LEGAL_PRIVACY_ROUTE: RouteEntry = {
+  path: "/legal/privacy",
+  changeFrequency: "yearly",
+  priority: 0.3,
+};
+
 const LAST_MODIFIED = "2026-04-24";
 
+function localePath(path: string, locale: "en" | "fr"): string {
+  if (locale === "fr") {
+    return path === "/" ? "/fr" : `/fr${path}`;
+  }
+  return path;
+}
+
+function absoluteUrl(path: string): string {
+  return `${SITE_URL}${path}`;
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  return ROUTES.map((r) => ({
-    url: `${SITE_URL}${r.path}`,
+  const coreEntries: MetadataRoute.Sitemap = CORE_MARKETING_ROUTES.map((route) => {
+    const enPath = localePath(route.path, "en");
+    const frPath = localePath(route.path, "fr");
+
+    return {
+      url: absoluteUrl(enPath),
+      lastModified: LAST_MODIFIED,
+      changeFrequency: route.changeFrequency,
+      priority: route.priority,
+      alternates: {
+        languages: {
+          en: absoluteUrl(enPath),
+          fr: absoluteUrl(frPath),
+          "x-default": absoluteUrl(enPath),
+        },
+      },
+    };
+  });
+
+  const otherEntries: MetadataRoute.Sitemap = OTHER_ROUTES.map((route) => ({
+    url: absoluteUrl(route.path),
     lastModified: LAST_MODIFIED,
-    changeFrequency: r.changeFrequency,
-    priority: r.priority,
+    changeFrequency: route.changeFrequency,
+    priority: route.priority,
   }));
+
+  const privacyEntry: MetadataRoute.Sitemap[number] = {
+    url: absoluteUrl(localePath(LEGAL_PRIVACY_ROUTE.path, "en")),
+    lastModified: LAST_MODIFIED,
+    changeFrequency: LEGAL_PRIVACY_ROUTE.changeFrequency,
+    priority: LEGAL_PRIVACY_ROUTE.priority,
+    alternates: {
+      languages: {
+        en: absoluteUrl(localePath(LEGAL_PRIVACY_ROUTE.path, "en")),
+        fr: absoluteUrl(localePath(LEGAL_PRIVACY_ROUTE.path, "fr")),
+        "x-default": absoluteUrl(localePath(LEGAL_PRIVACY_ROUTE.path, "en")),
+      },
+    },
+  };
+
+  return [...coreEntries, ...otherEntries, privacyEntry];
 }

@@ -25,6 +25,8 @@ import type { SelectedRole, SignupStateLite } from "./types";
 export interface SelectRoleStepProps {
   /** Current wizard state. Used to pre-select if the role is already on file. */
   state: SignupStateLite;
+  /** When false, the customer ("Find help") card is visible but not selectable. */
+  customerRegistrationEnabled?: boolean;
   loading?: boolean;
   error?: string | null;
   onSubmit: (values: { role: SelectedRole }) => void | Promise<void>;
@@ -54,34 +56,46 @@ const OPTIONS: readonly RoleOption[] = [
 
 export function SelectRoleStep({
   state,
+  customerRegistrationEnabled = true,
   loading,
   error,
   onSubmit,
   onBack,
 }: SelectRoleStepProps) {
-  const [selected, setSelected] = useState<SelectedRole | null>(
-    state.selectedRole ?? null,
-  );
+  const [selected, setSelected] = useState<SelectedRole | null>(() => {
+    if (state.selectedRole) return state.selectedRole;
+    if (!customerRegistrationEnabled) return "welper";
+    return null;
+  });
   const [submitted, setSubmitted] = useState(false);
 
+  const selectableOptions = customerRegistrationEnabled
+    ? OPTIONS
+    : OPTIONS.filter((o) => o.value === "welper");
+
+  const selectRole = (value: SelectedRole) => {
+    if (!customerRegistrationEnabled && value === "customer") return;
+    setSelected(value);
+  };
+
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>, value: SelectedRole) => {
-    // WAI-ARIA APG: arrow keys move between radios; Space/Enter selects.
-    const idx = OPTIONS.findIndex((o) => o.value === value);
+    if (!customerRegistrationEnabled && value === "customer") return;
+    const idx = selectableOptions.findIndex((o) => o.value === value);
+    if (idx < 0) return;
     if (event.key === "ArrowDown" || event.key === "ArrowRight") {
       event.preventDefault();
-      const next = OPTIONS[(idx + 1) % OPTIONS.length];
-      setSelected(next.value);
-      const nextEl = document.getElementById(`role-${next.value}`);
-      nextEl?.focus();
+      const next = selectableOptions[(idx + 1) % selectableOptions.length];
+      selectRole(next.value);
+      document.getElementById(`role-${next.value}`)?.focus();
     } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
       event.preventDefault();
-      const prev = OPTIONS[(idx - 1 + OPTIONS.length) % OPTIONS.length];
-      setSelected(prev.value);
-      const prevEl = document.getElementById(`role-${prev.value}`);
-      prevEl?.focus();
+      const prev =
+        selectableOptions[(idx - 1 + selectableOptions.length) % selectableOptions.length];
+      selectRole(prev.value);
+      document.getElementById(`role-${prev.value}`)?.focus();
     } else if (event.key === " " || event.key === "Enter") {
       event.preventDefault();
-      setSelected(value);
+      selectRole(value);
     }
   };
 
@@ -127,23 +141,32 @@ export function SelectRoleStep({
             mb={FORM_SPACING.fieldGap}
           >
             {OPTIONS.map((option) => {
-              const isSelected = selected === option.value;
+              const isDisabled =
+                !customerRegistrationEnabled && option.value === "customer";
+              const isSelected = !isDisabled && selected === option.value;
+              const defaultFocusRole = customerRegistrationEnabled
+                ? OPTIONS[0].value
+                : "welper";
               return (
                 <Box
                   key={option.value}
                   id={`role-${option.value}`}
                   role="radio"
+                  aria-disabled={isDisabled || undefined}
                   tabIndex={
-                    isSelected || (selected === null && option.value === OPTIONS[0].value)
-                      ? 0
-                      : -1
+                    isDisabled
+                      ? -1
+                      : isSelected ||
+                          (selected === null && option.value === defaultFocusRole)
+                        ? 0
+                        : -1
                   }
-                  aria-checked={isSelected}
-                  onClick={() => setSelected(option.value)}
-                  onKeyDown={(e) => handleKeyDown(e, option.value)}
+                  aria-checked={isDisabled ? false : isSelected}
+                  onClick={() => !isDisabled && selectRole(option.value)}
+                  onKeyDown={(e) => !isDisabled && handleKeyDown(e, option.value)}
                   style={{
                     flex: 1,
-                    cursor: loading ? "not-allowed" : "pointer",
+                    cursor: isDisabled || loading ? "not-allowed" : "pointer",
                     padding: "var(--space-4)",
                     borderRadius: "var(--radius-3)",
                     border: isSelected
@@ -152,6 +175,7 @@ export function SelectRoleStep({
                     backgroundColor: isSelected
                       ? "var(--grass-a3)"
                       : "var(--color-surface)",
+                    opacity: isDisabled ? 0.45 : 1,
                     outline: "none",
                   }}
                   onFocus={(e) => {
@@ -167,7 +191,9 @@ export function SelectRoleStep({
                       {option.title}
                     </Heading>
                     <Text size="2" color="gray">
-                      {option.description}
+                      {isDisabled
+                        ? "Customer sign-up is coming soon. For now, Welpco is open to Welpers."
+                        : option.description}
                     </Text>
                   </Flex>
                 </Box>

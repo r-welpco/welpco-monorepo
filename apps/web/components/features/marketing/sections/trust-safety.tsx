@@ -1,33 +1,14 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 /**
  * TrustSafety — dark Evergreen panel with 4 trust pillars.
- *
- * Faithful port of `.design-reference/project/components/sections.jsx` `TrustSafety`.
  */
 
 type IconName = "shield" | "lock" | "chat" | "star";
 
-const ITEMS: { title: string; body: string; icon: IconName }[] = [
-  {
-    title: "Background-checked Welpers",
-    body: "Every adult Welper passes a background check before they can take their first booking.",
-    icon: "shield",
-  },
-  {
-    title: "Funds held until done",
-    body: "You pay upfront, but we hold the money until you confirm the job is complete.",
-    icon: "lock",
-  },
-  {
-    title: "On-platform messaging",
-    body: "All communication runs through Welpco — transparent, respectful, and on the record.",
-    icon: "chat",
-  },
-  {
-    title: "Two-way ratings",
-    body: "Customers and Welpers rate each other after every job. The community keeps itself accountable.",
-    icon: "star",
-  },
-];
+const ITEM_ICONS: IconName[] = ["shield", "lock", "chat", "star"];
 
 function Icon({ name }: { name: IconName }) {
   const c = {
@@ -69,6 +50,9 @@ function Icon({ name }: { name: IconName }) {
 }
 
 export function TrustSafety() {
+  const t = useTranslations("marketing.home.trust");
+  const items = t.raw("items") as { title: string; body: string }[];
+
   return (
     <section className="section" id="trust">
       <div className="container">
@@ -117,10 +101,13 @@ export function TrustSafety() {
                   marginBottom: 18,
                 }}
               >
-                — Trust & safety
+                {t("eyebrow")}
               </div>
               <h2 style={{ color: "var(--cream)" }}>
-                Trust, <span className="display-italic" style={{ color: "var(--accent-soft)" }}>by design.</span>
+                {t("titleLine1")}{" "}
+                <span className="display-italic" style={{ color: "var(--accent-soft)" }}>
+                  {t("titleLine2")}
+                </span>
               </h2>
               <p
                 style={{
@@ -131,13 +118,13 @@ export function TrustSafety() {
                   lineHeight: 1.6,
                 }}
               >
-                Background checks, escrow payments, on-platform messaging, and two-way ratings — baked into every booking.
+                {t("subtitle")}
               </p>
             </div>
             <div data-grid="trust-items" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-              {ITEMS.map((i) => (
+              {items.map((item, index) => (
                 <div
-                  key={i.title}
+                  key={item.title}
                   style={{
                     padding: 24,
                     borderRadius: "var(--radius-md)",
@@ -156,9 +143,9 @@ export function TrustSafety() {
                       justifyContent: "center",
                     }}
                   >
-                    <Icon name={i.icon} />
+                    <Icon name={ITEM_ICONS[index] ?? "shield"} />
                   </div>
-                  <h4 style={{ color: "var(--cream)", fontSize: 20, marginTop: 16 }}>{i.title}</h4>
+                  <h4 style={{ color: "var(--cream)", fontSize: 20, marginTop: 16 }}>{item.title}</h4>
                   <p
                     style={{
                       color: "rgba(250,241,229,0.72)",
@@ -167,7 +154,7 @@ export function TrustSafety() {
                       lineHeight: 1.55,
                     }}
                   >
-                    {i.body}
+                    {item.body}
                   </p>
                 </div>
               ))}

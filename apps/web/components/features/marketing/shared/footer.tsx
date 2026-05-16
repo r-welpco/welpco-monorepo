@@ -1,91 +1,64 @@
-import Link from "next/link";
+"use client";
+
 import { Facebook, Instagram, Linkedin } from "lucide-react";
+import { useTranslations } from "next-intl";
+import NextLink from "next/link";
+import { Link } from "@/i18n/navigation";
 import { MarketingLogo } from "./marketing-logo";
 
-/**
- * Footer — dark Evergreen footer with link columns + social links.
- */
-
-interface FooterLink {
-  label: string;
-  href?: string;
-}
-
 const SOCIAL_LINKS = [
-  {
-    label: "Facebook",
-    href: "https://www.facebook.com/welpco",
-    Icon: Facebook,
-  },
-  {
-    label: "Instagram",
-    href: "https://www.instagram.com/welpco",
-    Icon: Instagram,
-  },
-  {
-    label: "LinkedIn",
-    href: "https://www.linkedin.com/company/welpco",
-    Icon: Linkedin,
-  },
-  {
-    label: "X",
-    href: "https://x.com/welpco",
-    Icon: XIcon,
-  },
+  { label: "Facebook", href: "https://www.facebook.com/welpco", Icon: Facebook },
+  { label: "Instagram", href: "https://www.instagram.com/welpco", Icon: Instagram },
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/welpco", Icon: Linkedin },
+  { label: "X", href: "https://x.com/welpco", Icon: XIcon },
 ] as const;
 
 function XIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden
-    >
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
     </svg>
   );
 }
 
-const COLS: { title: string; links: FooterLink[] }[] = [
-  {
-    title: "Welpco",
-    links: [
-      { label: "About us", href: "/about" },
-      { label: "Our mission", href: "/about#mission" },
-    ],
-  },
-  {
-    title: "For customers",
-    links: [
-      { label: "Find a Welper", href: "/search" },
-      { label: "Categories", href: "/#categories" },
-      { label: "How it works", href: "/how-it-works" },
-      { label: "Trust & safety", href: "/#trust" },
-    ],
-  },
-  {
-    title: "For Welpers",
-    links: [
-      { label: "Welper handbook" },
-      {
-        label: "Weekly payouts (Friday)",
-        href: "/how-it-works",
-      },
-      { label: "Community" },
-    ],
-  },
-  {
-    title: "Support",
-    links: [
-      { label: "FAQ", href: "/faq" },
-      { label: "Contact us", href: "/contact" },
-    ],
-  },
-];
-
 export function Footer() {
+  const t = useTranslations("marketing.footer");
+  const tA11y = useTranslations("marketing.a11y");
+
+  const cols: { titleKey: "welpco" | "customers" | "welpers" | "support"; links: { labelKey: string; href?: string }[] }[] = [
+    {
+      titleKey: "welpco",
+      links: [
+        { labelKey: "aboutUs", href: "/about" },
+        { labelKey: "ourMission", href: "/about#mission" },
+      ],
+    },
+    {
+      titleKey: "customers",
+      links: [
+        { labelKey: "findWelper", href: "/search" },
+        { labelKey: "categories", href: "/#categories" },
+        { labelKey: "howItWorks", href: "/how-it-works" },
+        { labelKey: "trustSafety", href: "/#trust" },
+      ],
+    },
+    {
+      titleKey: "welpers",
+      links: [
+        { labelKey: "welperHandbook" },
+        { labelKey: "weeklyPayouts", href: "/how-it-works" },
+        { labelKey: "community" },
+      ],
+    },
+    {
+      titleKey: "support",
+      links: [
+        { labelKey: "faq", href: "/faq" },
+        { labelKey: "contactUs", href: "/contact" },
+      ],
+    },
+  ];
+
   return (
     <footer
       aria-labelledby="footer-heading"
@@ -110,7 +83,7 @@ export function Footer() {
           clip: "rect(0,0,0,0)",
         }}
       >
-        Site footer
+        {tA11y("siteFooter")}
       </h2>
       <div
         aria-hidden="true"
@@ -147,7 +120,7 @@ export function Footer() {
                 lineHeight: 1.55,
               }}
             >
-              A local-services marketplace. Vetted providers, escrow payments, on-platform messaging.
+              {t("tagline")}
             </p>
             <nav aria-label="Social media" style={{ marginTop: 24 }}>
               <ul
@@ -177,7 +150,6 @@ export function Footer() {
                         justifyContent: "center",
                         color: "rgba(250,241,229,0.92)",
                         textDecoration: "none",
-                        transition: "background 160ms ease, border-color 160ms ease",
                       }}
                     >
                       {label === "X" ? (
@@ -191,8 +163,8 @@ export function Footer() {
               </ul>
             </nav>
           </div>
-          {COLS.map((col) => (
-            <nav key={col.title} aria-label={col.title}>
+          {cols.map((col) => (
+            <nav key={col.titleKey} aria-label={t(`cols.${col.titleKey}`)}>
               <div
                 style={{
                   fontFamily: "var(--font-mono)",
@@ -203,11 +175,11 @@ export function Footer() {
                   marginBottom: 18,
                 }}
               >
-                {col.title}
+                {t(`cols.${col.titleKey}`)}
               </div>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
                 {col.links.map((l) => (
-                  <li key={l.label}>
+                  <li key={l.labelKey}>
                     {l.href ? (
                       <Link
                         href={l.href}
@@ -217,7 +189,7 @@ export function Footer() {
                           fontSize: 15,
                         }}
                       >
-                        {l.label}
+                        {t(`links.${l.labelKey}`)}
                       </Link>
                     ) : (
                       <span
@@ -227,9 +199,9 @@ export function Footer() {
                           cursor: "not-allowed",
                         }}
                         aria-disabled="true"
-                        title="Coming soon"
+                        title={tA11y("comingSoon")}
                       >
-                        {l.label}
+                        {t(`links.${l.labelKey}`)}
                       </span>
                     )}
                   </li>
@@ -249,22 +221,19 @@ export function Footer() {
           }}
         >
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(250,241,229,0.72)" }}>
-            © 2026 Welpco — Built for community
+            {t("copyright")}
           </div>
           <div style={{ display: "flex", gap: 24, fontSize: 13, color: "rgba(250,241,229,0.86)" }}>
-            <Link href="/legal/terms" style={{ color: "inherit", textDecoration: "none" }}>
-              Terms
-            </Link>
+            <NextLink href="/legal/terms" style={{ color: "inherit", textDecoration: "none" }}>
+              {t("terms")}
+            </NextLink>
             <Link href="/legal/privacy" style={{ color: "inherit", textDecoration: "none" }}>
-              Privacy
+              {t("privacy")}
             </Link>
-            <Link href="/legal/privacy" style={{ color: "inherit", textDecoration: "none" }}>
-              Cookies
+            <Link href="/legal/privacy#cookies" style={{ color: "inherit", textDecoration: "none" }}>
+              {t("cookies")}
             </Link>
-            <a
-              href="mailto:support@welpco.com"
-              style={{ color: "inherit", textDecoration: "none" }}
-            >
+            <a href="mailto:support@welpco.com" style={{ color: "inherit", textDecoration: "none" }}>
               support@welpco.com
             </a>
           </div>

@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import type { CSSProperties } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { HeroVideoMedia } from "./hero-video-media";
 import { HeroImmersiveFloatingNav } from "./hero-immersive-floating-nav";
 import {
@@ -14,17 +15,14 @@ import {
   IMMERSIVE_SHELL_WIDTH,
 } from "./immersive-shell";
 
-/** Immersive hero headline typography — Inter Tight (body) by default. */
 const HERO_TYPO = {
   headlineFont: "body" as const,
   headlineWeight: 400,
   subheadWeight: 420,
 };
 
-/**
- * Full-viewport hero with floating pill nav and edge-to-edge video.
- */
 export function HeroImmersive() {
+  const t = useTranslations("marketing.home.hero");
   const headlineFamily = IMMERSIVE_HEADLINE_FONT_CSS[HERO_TYPO.headlineFont];
   const accentLineFont = immersiveHeadlineItalicFont(HERO_TYPO.headlineFont);
 
@@ -102,7 +100,7 @@ export function HeroImmersive() {
             fontWeight: HERO_TYPO.headlineWeight,
           }}
         >
-          Local help.
+          {t("line1")}
           <br />
           <span
             style={{
@@ -111,7 +109,7 @@ export function HeroImmersive() {
               fontStyle: "italic",
             }}
           >
-            Real neighbours.
+            {t("line2")}
           </span>
         </h1>
         <p
@@ -125,7 +123,7 @@ export function HeroImmersive() {
             fontWeight: HERO_TYPO.subheadWeight,
           }}
         >
-          Connect with trusted Welpers in your community — childcare, lawn care, tutoring, tech help, and more.
+          {t("subhead")}
         </p>
         <div
           style={{
@@ -138,10 +136,10 @@ export function HeroImmersive() {
           }}
         >
           <Link href="/search" className="btn btn-accent" style={{ justifyContent: "center", padding: "14px 22px" }}>
-            Find help <span aria-hidden="true">→</span>
+            {t("findHelp")} <span aria-hidden="true">→</span>
           </Link>
           <Link
-            href="/welper/onboarding"
+            href="/register"
             className="btn"
             style={{
               justifyContent: "center",
@@ -152,7 +150,7 @@ export function HeroImmersive() {
               fontWeight: 600,
             }}
           >
-            Become a Welper
+            {t("becomeWelper")}
           </Link>
         </div>
       </div>

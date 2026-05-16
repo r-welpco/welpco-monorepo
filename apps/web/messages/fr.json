@@ -1,0 +1,658 @@
+{
+  "marketing": {
+    "a11y": {
+      "skipToContent": "Passer au contenu principal",
+      "siteFooter": "Pied de page",
+      "primaryNav": "Principal",
+      "mobileNav": "Menu mobile",
+      "openMenu": "Ouvrir le menu",
+      "closeMenu": "Fermer le menu",
+      "home": "Welpco — accueil",
+      "comingSoon": "Bientôt disponible"
+    },
+    "languageSwitcher": {
+      "en": "EN",
+      "fr": "FR",
+      "english": "English",
+      "french": "Français"
+    },
+    "nav": {
+      "home": "Accueil",
+      "about": "À propos",
+      "howItWorks": "Comment ça marche",
+      "faq": "FAQ",
+      "contact": "Contact",
+      "signIn": "Connexion",
+      "findHelp": "Trouver de l'aide"
+    },
+    "footer": {
+      "tagline": "Une place de marché de services locaux. Prestataires vérifiés, paiements sous séquestre, messagerie sur la plateforme.",
+      "cols": {
+        "welpco": "Welpco",
+        "customers": "Pour les clients",
+        "welpers": "Pour les Welpers",
+        "support": "Soutien"
+      },
+      "links": {
+        "aboutUs": "À propos",
+        "ourMission": "Notre mission",
+        "findWelper": "Trouver un Welper",
+        "categories": "Catégories",
+        "howItWorks": "Comment ça marche",
+        "trustSafety": "Confiance et sécurité",
+        "welperHandbook": "Guide du Welper",
+        "weeklyPayouts": "Paiements hebdomadaires (vendredi)",
+        "community": "Communauté",
+        "faq": "FAQ",
+        "contactUs": "Nous joindre"
+      },
+      "copyright": "© 2026 Welpco — Construit pour la communauté",
+      "terms": "Conditions",
+      "privacy": "Confidentialité",
+      "cookies": "Témoins"
+    },
+    "home": {
+      "hero": {
+        "line1": "De l'aide locale.",
+        "line2": "De vrais voisins.",
+        "subhead": "Connectez-vous à des Welpers de confiance dans votre communauté — garde d'enfants, entretien de pelouse, tutorat, aide technologique et plus.",
+        "findHelp": "Trouver de l'aide",
+        "becomeWelper": "Devenir Welper"
+      },
+      "categories": {
+        "eyebrow": "Catégories",
+        "titleLine1": "Huit catégories.",
+        "titleLine2": "Des centaines de services.",
+        "subtitle": "Exemples de services offerts par les Welpers dans chaque catégorie.",
+        "hideServices": "Masquer les services dans {name}",
+        "showServices": "Afficher {count} services dans {name}",
+        "items": {
+          "care": {
+            "name": "Soins",
+            "services": [
+              "Gardienne",
+              "Garde d'enfants",
+              "Soins aux aînés",
+              "Besoins particuliers"
+            ]
+          },
+          "pet": {
+            "name": "Soins aux animaux",
+            "services": [
+              "Promenades de chiens",
+              "Toilettage",
+              "Garde d'animaux",
+              "Entretien d'aquariums et terrariums",
+              "Dressage canin"
+            ]
+          },
+          "learning": {
+            "name": "Learning & Lessons",
+            "services": [
+              "Tutoring",
+              "Music lessons",
+              "Cooking lessons",
+              "Swimming lessons"
+            ]
+          },
+          "exterior": {
+            "name": "Exterior maintenance",
+            "services": [
+              "Lawn-mowing",
+              "Tree-planting",
+              "Gardening",
+              "Car washing",
+              "Gutter cleaning",
+              "Window cleaning",
+              "Exterior property cleaning",
+              "Snow removal",
+              "Pool opening/closing",
+              "Leaf cleanup",
+              "Summer/winter preparation"
+            ]
+          },
+          "health": {
+            "name": "Health and wellness",
+            "services": [
+              "Meal preparation",
+              "Personal trainer",
+              "Wellness support",
+              "Nutritionist"
+            ]
+          },
+          "events": {
+            "name": "Events & Hospitality",
+            "services": [
+              "Catering help",
+              "Bartending",
+              "Serving",
+              "Party assistance",
+              "Entertainer"
+            ]
+          },
+          "cleaning": {
+            "name": "Home Cleaning",
+            "services": [
+              "Housekeeping",
+              "Deep cleaning",
+              "Organizing",
+              "Laundry",
+              "Move-in/move-out cleaning"
+            ]
+          },
+          "homeHelp": {
+            "name": "Home Help",
+            "services": [
+              "Furniture assembly",
+              "TV & shelf mounting",
+              "Smart home setup",
+              "Small repairs",
+              "Appliance installation",
+              "Moving help",
+              "Heavy lifting",
+              "Home organization",
+              "Painting touch-ups",
+              "Picture hanging"
+            ]
+          }
+        }
+      },
+      "howItWorks": {
+        "eyebrow": "Comment ça marche",
+        "titleLine1": "Trois étapes.",
+        "titleLine2": "Sans friction.",
+        "subtitle": "Que vous réserviez un service ou que vous en offriez un, la mise en route prend quelques minutes.",
+        "tabCustomer": "J'ai besoin d'aide",
+        "tabWelper": "Je veux Welper",
+        "customerSteps": [
+          {
+            "n": "01",
+            "title": "Rechercher à proximité",
+            "body": "Indiquez le service dont vous avez besoin et votre code postal. Parcourez les Welpers vérifiés près de chez vous en quelques secondes."
+          },
+          {
+            "n": "02",
+            "title": "Réserver et planifier",
+            "body": "Choisissez un Welper, fixez un horaire et confirmez. Payez en toute sécurité — les fonds sont retenus jusqu'à la fin du travail."
+          },
+          {
+            "n": "03",
+            "title": "Confirmer et évaluer",
+            "body": "Le Welper confirme que le travail est terminé et soumet l'heure de fin. Le paiement est prélevé et la facture finale est envoyée au client. Laissez une évaluation pour maintenir la responsabilité sur la plateforme."
+          }
+        ],
+        "welperSteps": [
+          {
+            "n": "01",
+            "title": "Créez votre profil",
+            "body": "Inscrivez-vous, listez vos services, fixez vos tarifs et votre disponibilité hebdomadaire. Les adultes passent une vérification des antécédents."
+          },
+          {
+            "n": "02",
+            "title": "Acceptez les mandats qui vous conviennent",
+            "body": "Recevez des demandes qui correspondent à vos compétences et à votre horaire. Temps partiel, temps plein ou occasionnel — c'est vous qui décidez."
+          },
+          {
+            "n": "03",
+            "title": "Recevez votre paiement",
+            "body": "Le Welper confirme que le travail est terminé et soumet l'heure de fin. La facture est envoyée au client et le paiement est prélevé. Welpco transfère les paiements hebdomadaires au compte Stripe du Welper le vendredi de la semaine suivante."
+          }
+        ]
+      },
+      "minors": {
+        "badge": "Nouveau · avril 2026",
+        "titleLine1": "Comptes prestataires",
+        "titleLine2": "pour les mineurs.",
+        "body": "Les Welpers de 14 ans et plus peuvent s'inscrire sous un compte géré par un tuteur. Pas de vérification des antécédents; le tuteur approuve chaque réservation.",
+        "ctaPrimary": "Configurer un compte tuteur",
+        "ctaFaq": "Lire la FAQ",
+        "cardTitle": "Vérifié par le tuteur",
+        "cardSub": "Approuvé · surveillé",
+        "imageAlt": "Tuteur et adolescent marchant ensemble dans le quartier"
+      },
+      "trust": {
+        "eyebrow": "— Confiance et sécurité",
+        "titleLine1": "La confiance,",
+        "titleLine2": "par conception.",
+        "subtitle": "Vérifications, paiements sous séquestre, messagerie sur la plateforme et évaluations bidirectionnelles — intégrés à chaque réservation.",
+        "items": [
+          {
+            "title": "Welpers vérifiés",
+            "body": "Chaque Welper adulte passe une vérification des antécédents avant sa première réservation."
+          },
+          {
+            "title": "Fonds retenus jusqu'à la fin",
+            "body": "Vous payez à l'avance, mais l'argent est retenu jusqu'à ce que vous confirmiez que le travail est terminé."
+          },
+          {
+            "title": "Messagerie sur la plateforme",
+            "body": "Toute communication passe par Welpco — transparente, respectueuse et consignée."
+          },
+          {
+            "title": "Évaluations bidirectionnelles",
+            "body": "Clients et Welpers s'évaluent après chaque travail. La communauté se responsabilise."
+          }
+        ]
+      },
+      "becomeWelper": {
+        "eyebrow": "— Pour les prestataires",
+        "titleLine1": "Fixez vos tarifs.",
+        "titleLine2": "Fixez vos heures.",
+        "body": "Un premier emploi, un revenu d'appoint flexible ou une retraite active — le Welping s'adapte à votre vie.",
+        "points": [
+          "Choisissez les services qui correspondent à vos compétences",
+          "Fixez vos tarifs et votre disponibilité hebdomadaire",
+          "Recevez votre paiement le vendredi de la semaine suivante",
+          "Bâtissez un profil, des évaluations et une clientèle régulière"
+        ],
+        "ctaPrimary": "Devenir Welper",
+        "ctaSecondary": "Voir comment les Welpers sont payés",
+        "footnote": "Créez votre profil aujourd'hui · Welpez demain",
+        "images": {
+          "lawn": "Welper entretenant une pelouse",
+          "baking": "Welper cuisinant",
+          "tutoring": "Welper donnant des cours"
+        }
+      },
+      "faqTeaser": {
+        "eyebrow": "— FAQ",
+        "titleLine1": "Questions",
+        "titleLine2": "fréquentes.",
+        "subtitle": "Sur le Welping, la réservation, les paiements et la sécurité.",
+        "readAll": "Voir toutes les FAQ",
+        "items": [
+          {
+            "q": "Comment devenir Welper?",
+            "a": "Inscrivez-vous, créez votre profil, listez vos services et configurez Stripe pour les paiements hebdomadaires."
+          },
+          {
+            "q": "Comment suis-je payé comme Welper?",
+            "a": "Confirmez « Travail terminé ». Paiement hebdomadaire chaque vendredi de la semaine suivante."
+          },
+          {
+            "q": "Quand et comment payer un service?",
+            "a": "Paiement à la confirmation, retenu jusqu'à la fin du travail."
+          },
+          {
+            "q": "Est-ce sécuritaire d'avoir un Welper chez moi?",
+            "a": "Vérification pour les adultes; badge Mineur et compte tuteur pour les mineurs."
+          }
+        ]
+      }
+    },
+    "about": {
+      "meta": {
+        "title": "À propos",
+        "description": "Welpco connecte les personnes qui ont besoin de services du quotidien à des prestataires vérifiés dans leur région."
+      },
+      "hero": {
+        "eyebrow": "— À propos",
+        "titleLine1": "Une place de marché",
+        "titleLine2": "de services locaux.",
+        "lead": "Welpco connecte les personnes qui ont besoin de services du quotidien à des prestataires vérifiés dans leur région.",
+        "sub": "De la garde de dernière minute à l'entretien saisonnier de la cour, Welpco gère la recherche, la planification, le paiement et les évaluations — il ne reste que le travail lui-même.",
+        "imageAlt": "Voisins qui s'entraident dans la communauté par une après-midi ensoleillée"
+      },
+      "mission": {
+        "eyebrow": "— Notre mission",
+        "title": "Connecter les voisins qui ont besoin d'aide",
+        "titleItalic": "à ceux qui sont prêts à Welper.",
+        "paragraphs": [
+          "Welpco est spécialement conçu pour mettre en relation les personnes ayant besoin de services avec celles qui les offrent au sein de leur communauté. Qu'il s'agisse de parents cherchant une gardienne à la dernière minute ou de quelqu'un ayant besoin d'un coup de main pour l'entretien de la maison, Welpco facilite vos besoins en vous connectant à un visage amical de votre communauté prêt à vous aider. Notre mission est d'offrir une plateforme conviviale où chacun peut mettre à profit ses compétences et offrir des services dans sa communauté, tout en choisissant librement son horaire et en répondant aux besoins des autres. Nous offrons un environnement sécuritaire autant pour nos prestataires de services, que nous appelons nos Welpers, que pour nos clients.",
+          "Être un Welper comporte de nombreux avantages. Vous décidez quels services vous souhaitez offrir. Vous choisissez votre horaire de travail, puisque vous nous indiquez vos disponibilités. Vous pouvez donc être Welper à temps partiel ou à temps plein. Pour certains, devenir Welper peut être un premier emploi. Cela peut enseigner aux adolescents et aux jeunes adultes des compétences essentielles telles que la responsabilité, l'engagement, la communication et la bienveillance. Pour d'autres, devenir Welper est une façon de gagner un revenu supplémentaire en dehors des heures de leur emploi principal. Pour les retraités qui souhaitent augmenter leurs revenus en utilisant leur temps libre, tout en faisant quelque chose qu'ils aiment, devenir Welper est idéal. Welpco propose de nombreux services offerts par nos Welpers, tels que : gardiennage, tutorat, tonte de pelouse, entretien extérieur saisonnier, tâches ménagères, déménagement, promenade de chiens, assistance technologique, installations diverses, et bien plus.",
+          "Dans la société actuelle où tout va vite, il peut être difficile d'accomplir tout ce que l'on doit faire en une seule journée. Nous avons tous des obligations, que ce soit envers notre travail, notre famille, notre maison ou notre communauté. Welpco facilite votre quotidien en vous permettant de planifier les services dont vous avez besoin pour réduire votre stress ou libérer du temps précieux. Vous pouvez planifier des services quotidiens, hebdomadaires ou mensuels via notre plateforme. Qu'il s'agisse de réserver un tutorat pour vos enfants le mercredi soir ou de faire tondre votre pelouse le dimanche matin, Welpco est là. Trop occupé pour cuisiner durant la semaine? Pourquoi ne pas demander à un Welper de préparer vos repas à l'avance? Vous pouvez planifier vos services à l'avance, mais nous comprenons aussi que certains besoins sont urgents. Grâce à une simple recherche sur notre plateforme, vous trouverez rapidement un Welper prêt à vous aider."
+        ]
+      },
+      "personas": {
+        "eyebrow": "Qui Welpe",
+        "titleLine1": "Trois types de",
+        "titleLine2": "Welper.",
+        "items": [
+          {
+            "label": "Adolescents et jeunes adultes",
+            "body": "Welper comme premier emploi structuré — horaires flexibles, revenus réels et historique de travail vérifiable.",
+            "imageAlt": "Jeune adulte travaillant de façon flexible sur un ordinateur portable"
+          },
+          {
+            "label": "Adultes actifs",
+            "body": "Un revenu d'appoint en plus d'une carrière. Des réservations les soirs et fins de semaine.",
+            "imageAlt": "Adulte gérant un projet parallèle depuis un bureau à domicile"
+          },
+          {
+            "label": "Retraités",
+            "body": "Utilisez vos compétences pour compléter vos revenus de retraite, à votre rythme.",
+            "imageAlt": "Retraité profitant d'un travail significatif au jardin"
+          }
+        ]
+      },
+      "values": {
+        "eyebrow": "Ce en quoi nous croyons",
+        "titleLine1": "Quatre principes",
+        "titleLine2": "directeurs.",
+        "items": [
+          {
+            "n": "01",
+            "t": "Local d'abord",
+            "b": "Le produit est conçu autour de la proximité. La recherche privilégie votre code postal et les Welpers à proximité."
+          },
+          {
+            "n": "02",
+            "t": "Confiance par le système",
+            "b": "Vérifications, paiements sous séquestre, messagerie sur la plateforme, évaluations bidirectionnelles."
+          },
+          {
+            "n": "03",
+            "t": "Autonomie des prestataires",
+            "b": "Les Welpers contrôlent ce qu'ils offrent, quand ils travaillent et ce qu'ils facturent."
+          },
+          {
+            "n": "04",
+            "t": "Travail humain direct",
+            "b": "Pas de sous-traitance. Chaque réservation implique un Welper identifiable avec profil et évaluations."
+          }
+        ]
+      }
+    },
+    "howItWorksPage": {
+      "meta": {
+        "title": "Comment ça marche",
+        "description": "Comment Welpco fonctionne pour les clients et les Welpers."
+      },
+      "hero": {
+        "eyebrow": "— Comment ça marche",
+        "title": "Comment Welpco",
+        "titleItalic": "fonctionne.",
+        "sub": "Deux parcours — réserver et offrir un service. Trois étapes chacun."
+      },
+      "welper": {
+        "eyebrow": "— Devenir Welper",
+        "title": "Ce qu'il faut pour",
+        "titleItalic": "rejoindre la communauté.",
+        "steps": [
+          [
+            "Inscription et profil",
+            "Ajoutez votre expérience, vos services et vos tarifs."
+          ],
+          [
+            "Vérification des antécédents",
+            "Obligatoire pour les Welpers adultes — rassure les clients et crédibilise les Welpers."
+          ],
+          [
+            "Définir votre disponibilité",
+            "Temps partiel, temps plein, fins de semaine — vous décidez."
+          ],
+          [
+            "Accepter votre première réservation",
+            "Parcourez les demandes, acceptez ce qui vous convient."
+          ],
+          [
+            "Être payé et évalué",
+            "Paiement hebdomadaire le vendredi suivant; le client évalue à la fin du travail."
+          ]
+        ],
+        "cta": "Créer votre profil Welper",
+        "images": {
+          "onboarding": "Welper complétant son inscription sur un ordinateur portable",
+          "profile": "Photo professionnelle amicale pour un profil Welper",
+          "verification": "Documents de vérification d'identité et d'antécédents"
+        }
+      }
+    },
+    "faqPage": {
+      "meta": {
+        "title": "FAQ",
+        "description": "Foire aux questions sur Welpco pour clients et Welpers."
+      },
+      "hero": {
+        "eyebrow": "— FAQ",
+        "title": "Foire aux",
+        "titleItalic": "questions."
+      },
+      "groups": [
+        {
+          "label": "Welper",
+          "heading": "Welper",
+          "headingItalic": "",
+          "items": [
+            [
+              "Comment devenir Welper?",
+              "Pour devenir Welper, inscrivez-vous simplement via notre site web ou notre application et créez votre profil. Vous pouvez y indiquer votre expérience et les types de services que vous offrez. Vous devrez également choisir le tarif que vous souhaitez demander pour vos services."
+            ],
+            [
+              "Pourquoi ai-je besoin d'une vérification d'antécédents?",
+              "Welpco se définit comme une plateforme sécuritaire et conviviale. Nous voulons assurer, du mieux possible, un environnement sécuritaire pour nos clients. Une vérification d'antécédents offre la tranquillité d'esprit nécessaire aux clients lorsqu'un Welper entre dans leur domicile ou sur leur propriété. Si vous réussissez la vérification, un badge certifié apparaîtra sur votre profil. Si vous échouez, vous n'aurez pas le badge, mais vous pourrez tout de même être Welper."
+            ],
+            [
+              "Comment suis-je payé?",
+              [
+                "Une fois le travail terminé, le Welper confirme « Travail terminé » via l'application ou le site web. Un reçu est automatiquement envoyé au client, puis le paiement est finalisé.",
+                "Les Welpers reçoivent leur paiement chaque semaine, le vendredi de la semaine suivante.",
+                "Exemple : Si vous commencez à effectuer des tâches un lundi et continuez toute la semaine, vous serez payé le vendredi de la semaine suivante.",
+                "Lors de la création de votre profil, vous devrez également configurer votre propre compte Stripe pour recevoir vos paiements hebdomadaires. Une fois votre paiement disponible dans Stripe, vous pouvez transférer vos fonds vers votre compte bancaire sans frais."
+              ]
+            ],
+            [
+              "Un mineur peut-il devenir Welper?",
+              "Les mineurs de plus de 14 ans peuvent devenir Welper via notre plateforme, mais leur compte doit être créé et géré par un tuteur légal. Les Welpers mineurs ne sont pas soumis à la vérification d'antécédents."
+            ],
+            [
+              "Que se passe-t-il si un client refuse de payer?",
+              "Le client doit avoir une raison valable et tenter de résoudre le problème directement avec vous. Si aucune solution n'est trouvée, les deux parties doivent nous contacter afin que nous puissions analyser la situation et trancher selon les faits fournis."
+            ]
+          ]
+        },
+        {
+          "label": "Client",
+          "heading": "Client",
+          "headingItalic": "",
+          "items": [
+            [
+              "Comment m'inscrire pour utiliser vos services?",
+              "Inscrivez-vous simplement via notre site web ou notre application. Vous pourrez ensuite commencer à rechercher les services offerts dans votre communauté."
+            ],
+            [
+              "Quand et comment dois-je payer?",
+              "Lorsque la réservation est confirmée entre vous et un Welper, vous effectuez le paiement, mais nous retenons les fonds jusqu'à ce que le travail soit terminé. Une fois le travail confirmé comme complété, nous libérons le paiement au Welper."
+            ],
+            [
+              "Que se passe-t-il si un Welper fait un travail insatisfaisant?",
+              "Discutez d'abord du problème avec le Welper. Si aucune solution n'est trouvée, contactez-nous directement. Nous déterminerons si un remboursement ou un crédit doit être émis et si des mesures disciplinaires doivent être prises. Vous pouvez également évaluer le Welper, et cette note apparaîtra sur son profil."
+            ],
+            [
+              "Comment savoir si un Welper est sécuritaire?",
+              "Welpco met l'accent sur la sécurité. Les Welpers doivent réussir une vérification d'antécédents pour obtenir un badge certifié. Les Welpers mineurs ne passent pas cette vérification et auront un badge « Mineur »."
+            ],
+            [
+              "Et si un service dont j'ai besoin n'est pas offert?",
+              "Vous pouvez publier la description du service recherché dans la section prévue à cet effet sur la plateforme. Les Welpers vous contacteront s'ils peuvent effectuer le travail. Vous pouvez aussi nous contacter via la page « Contactez-nous »."
+            ],
+            [
+              "Que se passe-t-il si je contacte un Welper en dehors de la plateforme?",
+              "Cela peut entraîner des risques et un manque de sécurité. Toute communication ou transaction effectuée en dehors de la plateforme n'est pas autorisée et ne sera pas couverte par Welpco. Les échanges doivent se faire via notre messagerie interne pour assurer transparence et sécurité."
+            ]
+          ]
+        }
+      ],
+      "cta": {
+        "title": "Encore des questions?",
+        "sub": "Nous répondons sous 48 heures.",
+        "button": "Nous joindre →"
+      }
+    },
+    "contactPage": {
+      "meta": {
+        "title": "Contact",
+        "description": "Communiquez avec le soutien Welpco — réponse sous 48 heures."
+      },
+      "hero": {
+        "eyebrow": "— Nous joindre",
+        "title": "Communiquer avec le",
+        "titleItalic": "soutien.",
+        "sub": "Questions, préoccupations ou commentaires. Nous répondons sous 48 heures."
+      },
+      "info": [
+        {
+          "l": "Courriel",
+          "v": "support@welpco.com"
+        },
+        {
+          "l": "Délai de réponse",
+          "v": "Sous 48 heures"
+        },
+        {
+          "l": "Heures",
+          "v": "Tous les jours, 8 h – 17 h HE"
+        }
+      ],
+      "form": {
+        "eyebrow": "— Envoyer un message",
+        "name": "Nom",
+        "namePlaceholder": "Jane Cooper",
+        "email": "Adresse courriel",
+        "emailPlaceholder": "jane@voisinage.com",
+        "phone": "Téléphone",
+        "phonePlaceholder": "(555) 010-0123",
+        "roleLegend": "Je suis…",
+        "roleAria": "Je suis",
+        "roles": [
+          "Client",
+          "Welper",
+          "Question générale"
+        ],
+        "message": "Message",
+        "messagePlaceholder": "Dites-nous ce qui vous préoccupe…",
+        "privacy": "En envoyant, vous acceptez notre politique de confidentialité.",
+        "submit": "Envoyer le message",
+        "submitting": "Envoi…",
+        "success": "Merci — votre message est bien reçu. Nous vous répondrons sous 48 heures.",
+        "error": "Impossible d'envoyer votre message. Écrivez à support@welpco.com directement."
+      }
+    },
+    "legal": {
+      "privacy": {
+        "meta": {
+          "title": "Welpco — Politique de confidentialité",
+          "description": "Politique de confidentialité de Welpco — comment nous collectons, utilisons et protégeons vos renseignements personnels."
+        },
+        "hero": {
+          "title": "Politique de confidentialité — Welpco",
+          "subtitle": "Comment nous collectons, utilisons et protégeons vos renseignements personnels."
+        },
+        "sections": [
+          {
+            "numeral": "01",
+            "title": "Introduction",
+            "paragraphs": [
+              "Welpco inc. (« Welpco », « nous », « notre ») s'engage à protéger la confidentialité des renseignements personnels de ses utilisateurs. La présente politique explique comment nous collectons, utilisons, divulguons et protégeons vos informations."
+            ]
+          },
+          {
+            "numeral": "02",
+            "title": "Renseignements collectés",
+            "intro": "Nous pouvons collecter :",
+            "list": [
+              "Nom, prénom",
+              "Adresse courriel",
+              "Numéro de téléphone",
+              "Adresse",
+              "Informations de paiement (via des fournisseurs tiers comme Stripe)",
+              "Informations de vérification (ex. : antécédents via Certn)",
+              "Données d'utilisation (IP, navigation, cookies)"
+            ]
+          },
+          {
+            "numeral": "03",
+            "title": "Utilisation des renseignements",
+            "intro": "Nous utilisons vos données pour :",
+            "list": [
+              "Fournir et améliorer la plateforme",
+              "Mettre en relation Clients et Prestataires",
+              "Traiter les paiements",
+              "Effectuer des vérifications de sécurité",
+              "Prévenir la fraude",
+              "Communiquer avec vous",
+              "Respecter nos obligations légales"
+            ]
+          },
+          {
+            "numeral": "04",
+            "title": "Partage des renseignements",
+            "intro": "Nous pouvons partager vos informations avec :",
+            "list": [
+              "Fournisseurs de services (paiement, vérification, hébergement)",
+              "Autorités légales si requis",
+              "Partenaires technologiques"
+            ],
+            "paragraphs": [
+              "Nous ne vendons jamais vos données."
+            ]
+          },
+          {
+            "numeral": "05",
+            "title": "Conservation des données",
+            "intro": "Les données sont conservées aussi longtemps que nécessaire pour :",
+            "list": [
+              "Fournir les services",
+              "Respecter les obligations légales",
+              "Résoudre les litiges"
+            ]
+          },
+          {
+            "numeral": "06",
+            "title": "Sécurité",
+            "intro": "Nous mettons en place des mesures de sécurité raisonnables pour protéger vos données contre :",
+            "list": [
+              "accès non autorisé",
+              "perte",
+              "divulgation"
+            ]
+          },
+          {
+            "numeral": "07",
+            "title": "Vos droits (Québec – Loi 25)",
+            "intro": "Vous avez le droit de :",
+            "list": [
+              "accéder à vos données",
+              "corriger vos données",
+              "demander leur suppression",
+              "retirer votre consentement"
+            ],
+            "paragraphs": [
+              "Contact : support@welpco.com"
+            ]
+          },
+          {
+            "numeral": "08",
+            "id": "cookies",
+            "title": "Cookies",
+            "intro": "Le Site utilise des cookies pour :",
+            "list": [
+              "améliorer l'expérience",
+              "analyser l'utilisation",
+              "personnaliser le contenu"
+            ]
+          },
+          {
+            "numeral": "09",
+            "title": "Modifications",
+            "paragraphs": [
+              "Welpco peut modifier cette politique en tout temps. Les changements prennent effet dès leur publication."
+            ]
+          },
+          {
+            "numeral": "10",
+            "title": "Contact",
+            "companyLine": "Welpco inc.",
+            "contactEmail": true
+          }
+        ]
+      }
+    },
+    "layout": {
+      "title": "Welpco — Services locaux, vrais voisins",
+      "description": "Welpco vous connecte à des Welpers vérifiés dans votre communauté.",
+      "ogDescription": "Prestataires locaux vérifiés — garde, pelouse, tutorat, aide tech et plus.",
+      "twitterDescription": "Prestataires locaux vérifiés pour les services du quotidien dans votre quartier."
+    }
+  }
+}

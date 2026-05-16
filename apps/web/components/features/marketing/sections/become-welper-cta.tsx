@@ -1,20 +1,17 @@
-import Link from "next/link";
+"use client";
+
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { MarketingImage } from "../shared/marketing-image";
 
 /**
  * BecomeWelperCTA — provider-side recruiting block.
- *
- * Faithful port of `.design-reference/project/components/sections.jsx` `BecomeWelperCTA`.
  */
 
-const POINTS = [
-  "Pick the services that match your skills",
-  "Set your own rates and weekly availability",
-  "Get paid the following week on the Friday on a weekly basis",
-  "Build a profile, ratings, and a regular client base",
-];
-
 export function BecomeWelperCTA() {
+  const t = useTranslations("marketing.home.becomeWelper");
+  const points = t.raw("points") as string[];
+
   return (
     <section className="section">
       <div className="container">
@@ -32,20 +29,20 @@ export function BecomeWelperCTA() {
             <div data-grid="becomewelper-images" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <MarketingImage
                 src="/marketing/become-welper-lawncare.jpg"
-                alt="Welper providing lawn care in a neighborhood yard"
+                alt={t("images.lawn")}
                 ratio="3 / 4"
                 radius="var(--radius-md)"
               />
               <div style={{ display: "grid", gap: 16, marginTop: 32 }}>
                 <MarketingImage
                   src="/marketing/become-welper-baking.jpg"
-                  alt="Welper baking in a home kitchen"
+                  alt={t("images.baking")}
                   ratio="1 / 1"
                   radius="var(--radius-md)"
                 />
                 <MarketingImage
                   src="/marketing/become-welper-tutoring.jpg"
-                  alt="Welper tutoring a student at home"
+                  alt={t("images.tutoring")}
                   ratio="1 / 1"
                   radius="var(--radius-md)"
                 />
@@ -54,12 +51,12 @@ export function BecomeWelperCTA() {
           </div>
           <div>
             <div className="eyebrow" style={{ marginBottom: 18 }}>
-              — For service providers
+              {t("eyebrow")}
             </div>
             <h2>
-              Set your rates.
+              {t("titleLine1")}
               <br />
-              <span className="display-italic">Set your hours.</span>
+              <span className="display-italic">{t("titleLine2")}</span>
             </h2>
             <p
               style={{
@@ -70,7 +67,7 @@ export function BecomeWelperCTA() {
                 maxWidth: 480,
               }}
             >
-              A first job, a flexible side income, or a structured way to use free time in retirement — Welping fits around your life. You decide what you offer, when you work, and what you charge.
+              {t("body")}
             </p>
             <ul
               style={{
@@ -81,7 +78,7 @@ export function BecomeWelperCTA() {
                 gap: 14,
               }}
             >
-              {POINTS.map((s) => (
+              {points.map((s) => (
                 <li
                   key={s}
                   style={{
@@ -113,11 +110,11 @@ export function BecomeWelperCTA() {
               ))}
             </ul>
             <div style={{ display: "flex", gap: 12, marginTop: 36, flexWrap: "wrap" }}>
-              <Link href="/welper/onboarding" className="btn btn-primary">
-                Become a Welper <span aria-hidden="true">→</span>
+              <Link href="/register" className="btn btn-primary">
+                {t("ctaPrimary")} <span aria-hidden="true">→</span>
               </Link>
               <Link href="/how-it-works" className="btn btn-ghost">
-                See how Welpers get paid
+                {t("ctaSecondary")}
               </Link>
             </div>
             <div
@@ -130,7 +127,7 @@ export function BecomeWelperCTA() {
                 color: "var(--fg-faint)",
               }}
             >
-              Create your profile today · Welp tomorrow
+              {t("footnote")}
             </div>
           </div>
         </div>

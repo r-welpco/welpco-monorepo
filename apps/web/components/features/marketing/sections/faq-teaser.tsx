@@ -1,32 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 /**
  * FAQTeaser — homepage FAQ accordion (split layout, sticky left intro).
  */
 
-const ITEMS = [
-  {
-    q: "How can I become a Welper?",
-    a: "Sign up via our website or app, create your profile, list your services and rates, and set up Stripe for weekly payouts.",
-  },
-  {
-    q: "How do I get paid as a Welper?",
-    a: "Confirm \"Job Done\" when the work is finished. Customers are charged, and Welpers receive weekly payouts every Friday of the following week.",
-  },
-  {
-    q: "When and how do I pay for a service?",
-    a: "Payment is taken when your booking is confirmed and held until the job is complete. Once you confirm completion, funds are released to the Welper.",
-  },
-  {
-    q: "How do I know that having a Welper at my home is safe?",
-    a: "Adult Welpers complete background checks and earn a certified badge on their profile. Minor Welpers display a Minor badge and sign up under a guardian-managed account.",
-  },
-];
+type FaqItem = { q: string; a: string };
 
 export function FAQTeaser() {
+  const t = useTranslations("marketing.home.faqTeaser");
+  const items = t.raw("items") as FaqItem[];
   const [open, setOpen] = useState(0);
+
   return (
     <section className="section" id="faq-teaser" style={{ background: "var(--bg-soft)" }}>
       <div className="container">
@@ -41,12 +29,12 @@ export function FAQTeaser() {
         >
           <div data-sticky="faq-teaser-side" style={{ position: "sticky", top: 100 }}>
             <div className="eyebrow" style={{ marginBottom: 18 }}>
-              — FAQ
+              {t("eyebrow")}
             </div>
             <h2>
-              Common
+              {t("titleLine1")}
               <br />
-              <span className="display-italic">questions.</span>
+              <span className="display-italic">{t("titleLine2")}</span>
             </h2>
             <p
               style={{
@@ -57,14 +45,14 @@ export function FAQTeaser() {
                 lineHeight: 1.55,
               }}
             >
-              On Welping, booking, payments and platform safety.
+              {t("subtitle")}
             </p>
-            <a href="/faq" className="btn btn-ghost" style={{ marginTop: 28 }}>
-              Read all FAQs <span>→</span>
-            </a>
+            <Link href="/faq" className="btn btn-ghost" style={{ marginTop: 28 }}>
+              {t("readAll")} <span>→</span>
+            </Link>
           </div>
           <div>
-            {ITEMS.map((item, i) => {
+            {items.map((item, i) => {
               const isOpen = open === i;
               const id = `faq-teaser-${i}`;
               return (
@@ -72,7 +60,7 @@ export function FAQTeaser() {
                   key={i}
                   style={{
                     borderTop: "1px solid var(--line)",
-                    borderBottom: i === ITEMS.length - 1 ? "1px solid var(--line)" : "none",
+                    borderBottom: i === items.length - 1 ? "1px solid var(--line)" : "none",
                   }}
                 >
                   <button

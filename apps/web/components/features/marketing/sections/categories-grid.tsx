@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { SectionHeader } from "./section-header";
 import { CategoryIcon, type CategoryIconName } from "./category-icon";
 
@@ -11,106 +12,31 @@ import { CategoryIcon, type CategoryIconName } from "./category-icon";
 
 type Tone = "spring" | "yellow" | "mint" | "pink" | "lilac";
 
-interface Category {
-  key: string;
-  name: string;
+type CategoryKey =
+  | "care"
+  | "pet"
+  | "learning"
+  | "exterior"
+  | "health"
+  | "events"
+  | "cleaning"
+  | "homeHelp";
+
+interface CategoryMeta {
+  key: CategoryKey;
   tone: Tone;
-  services: string[];
   icon: CategoryIconName;
 }
 
-const CATEGORIES: Category[] = [
-  {
-    key: "care",
-    name: "Care",
-    tone: "spring",
-    icon: "heart",
-    services: ["Babysitter", "Child care", "Elderly care", "Special needs"],
-  },
-  {
-    key: "pet",
-    name: "Pet care",
-    tone: "yellow",
-    icon: "paw",
-    services: [
-      "Dog walks",
-      "Pet grooming",
-      "Pet sitting",
-      "Aquarium and terrarium cleaning/maintenance",
-      "Dog training",
-    ],
-  },
-  {
-    key: "learning",
-    name: "Learning & Lessons",
-    tone: "mint",
-    icon: "book",
-    services: ["Tutoring", "Music lessons", "Cooking lessons", "Swimming lessons"],
-  },
-  {
-    key: "exterior",
-    name: "Exterior maintenance",
-    tone: "lilac",
-    icon: "leaf",
-    services: [
-      "Lawn-mowing",
-      "Tree-planting",
-      "Gardening",
-      "Car washing",
-      "Gutter cleaning",
-      "Window cleaning",
-      "Exterior property cleaning",
-      "Snow removal",
-      "Pool opening/closing",
-      "Leaf cleanup",
-      "Summer/winter preparation",
-    ],
-  },
-  {
-    key: "health",
-    name: "Health and wellness",
-    tone: "spring",
-    icon: "apple",
-    services: ["Meal preparation", "Personal trainer", "Wellness support", "Nutritionist"],
-  },
-  {
-    key: "events",
-    name: "Events & Hospitality",
-    tone: "yellow",
-    icon: "star",
-    services: ["Catering help", "Bartending", "Serving", "Party assistance", "Entertainer"],
-  },
-  {
-    key: "cleaning",
-    name: "Home Cleaning",
-    tone: "pink",
-    icon: "home",
-    services: [
-      "Housekeeping",
-      "Deep cleaning",
-      "Organizing",
-      "Laundry",
-      "Move-in/move-out cleaning",
-    ],
-  },
-  {
-    key: "home-help",
-    name: "Home Help",
-    tone: "mint",
-    icon: "plug",
-    services: [
-      "Furniture assembly",
-      "TV & shelf mounting",
-      "Smart home setup",
-      "Small repairs",
-      "Appliance installation",
-      "Moving help",
-      "Heavy lifting",
-      "Home organization",
-      "Painting touch-ups",
-      "Picture hanging",
-    ],
-  },
+const CATEGORY_META: CategoryMeta[] = [
+  { key: "care", tone: "spring", icon: "heart" },
+  { key: "pet", tone: "yellow", icon: "paw" },
+  { key: "learning", tone: "mint", icon: "book" },
+  { key: "exterior", tone: "lilac", icon: "leaf" },
+  { key: "health", tone: "spring", icon: "apple" },
+  { key: "events", tone: "yellow", icon: "star" },
+  { key: "cleaning", tone: "pink", icon: "home" },
+  { key: "homeHelp", tone: "mint", icon: "plug" },
 ];
 
 const TONE_BG: Record<Tone, string> = {
@@ -122,19 +48,26 @@ const TONE_BG: Record<Tone, string> = {
 };
 
 export function CategoriesGrid() {
+  const t = useTranslations("marketing.home.categories");
+
+  const categories = CATEGORY_META.map((meta) => {
+    const item = t.raw(`items.${meta.key}`) as { name: string; services: string[] };
+    return { ...meta, name: item.name, services: item.services };
+  });
+
   return (
     <section className="section" id="categories">
       <div className="container">
         <SectionHeader
-          eyebrow="Categories"
+          eyebrow={t("eyebrow")}
           title={
             <>
-              Eight categories.
+              {t("titleLine1")}
               <br />
-              <span className="display-italic">Hundreds of services.</span>
+              <span className="display-italic">{t("titleLine2")}</span>
             </>
           }
-          subtitle="Examples of services Welpers offer within each category."
+          subtitle={t("subtitle")}
         />
         <div
           data-grid="categories-grid"
@@ -145,8 +78,8 @@ export function CategoriesGrid() {
             marginTop: 56,
           }}
         >
-          {CATEGORIES.map((cat) => (
-            <CategoryCard key={cat.key} cat={cat} />
+          {categories.map((cat) => (
+            <CategoryCard key={cat.key} cat={cat} t={t} />
           ))}
         </div>
       </div>
@@ -154,7 +87,13 @@ export function CategoriesGrid() {
   );
 }
 
-function CategoryCard({ cat }: { cat: Category }) {
+function CategoryCard({
+  cat,
+  t,
+}: {
+  cat: CategoryMeta & { name: string; services: string[] };
+  t: (key: string, values?: Record<string, string | number>) => string;
+}) {
   const [expanded, setExpanded] = useState(false);
   const headingId = `category-${cat.key}-title`;
   const listId = `category-${cat.key}-services`;
@@ -204,8 +143,8 @@ function CategoryCard({ cat }: { cat: Category }) {
           aria-controls={listId}
           aria-label={
             expanded
-              ? `Hide services in ${cat.name}`
-              : `Show ${cat.services.length} services in ${cat.name}`
+              ? t("hideServices", { name: cat.name })
+              : t("showServices", { count: cat.services.length, name: cat.name })
           }
           style={{
             width: 36,

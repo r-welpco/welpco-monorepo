@@ -14,9 +14,8 @@ import { useSignupState } from "@/lib/hooks/use-signup";
 /**
  * Day 15 — Phase 2 Dispatch A. Live wizard chrome.
  *
- * - Progress indicator at the top: "Step N of M" + visual bar.
- *   - Pre-auth (no session yet, step 1) shows "Step 1 of 7" without a bar
- *     (we don't know the role's full step count until select-role).
+ * - Progress indicator at the top: "Step N of M" + visual bar (hidden on the
+ *     email/password step before sign-in).
  *   - Authenticated reads `useSignupState()` and computes position from the
  *     server-owned `requiredSteps`/`completedSteps`.
  * - "Save and continue later" sign-out link (warm copy per bible §22).
@@ -30,6 +29,8 @@ export default function RegisterLayoutClient({
   const isAuthenticated = status === "authenticated";
   const { data: state } = useSignupState();
 
+  const showProgressChrome = isAuthenticated && state;
+
   const totalSteps = state?.requiredSteps?.length ?? 7;
   const stepIndex = state
     ? Math.min(state.completedSteps.length + 1, totalSteps)
@@ -42,6 +43,7 @@ export default function RegisterLayoutClient({
     <AuthBackground>
       <Container size="2" style={{ width: "100%" }}>
         <Flex direction="column" gap="5" style={{ width: "100%" }}>
+          {showProgressChrome ? (
           <Box
             mx="auto"
             style={{
@@ -75,7 +77,7 @@ export default function RegisterLayoutClient({
                 </Link>
               )}
             </Flex>
-            {isAuthenticated && state ? (
+            {state ? (
               <Progress
                 value={progressPct}
                 size="1"
@@ -83,17 +85,16 @@ export default function RegisterLayoutClient({
                 aria-label={`Signup progress: ${progressPct}%`}
               />
             ) : null}
-            {isAuthenticated && (
-              <Text
-                size="1"
-                color="gray"
-                mt="2"
-                style={{ display: "block" }}
-              >
-                Your progress is saved. Sign back in to pick up here.
-              </Text>
-            )}
+            <Text
+              size="1"
+              color="gray"
+              mt="2"
+              style={{ display: "block" }}
+            >
+              Your progress is saved. Sign back in to pick up here.
+            </Text>
           </Box>
+          ) : null}
 
           <Flex justify="center" style={{ width: "100%" }}>
             {children}

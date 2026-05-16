@@ -1,44 +1,23 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
+import { isMarketingNavActive } from "@/i18n/path-utils";
 import { MarketingLogo } from "./marketing-logo";
-import { MARKETING_PRIMARY_NAV_LINKS } from "./marketing-nav-links";
-
-/**
- * Sticky marketing bar for **subpages only** (`/faq`, `/about`, …). The homepage
- * uses `HeroImmersive` floating nav — this component is not mounted on `/`
- * (see `MarketingTopNavGate`).
- *
- * Bundle deviation: the bundle uses `window.dispatchEvent` to swap artboards
- * inside the design canvas. We have a real router, so links use `next/link`
- * and active state is computed via `usePathname()`.
- *
- * Day 9 production-ready additions:
- *   - Hamburger drawer for ≤ 1024px (the bundle had no mobile nav).
- *   - Hamburger reveal/hide rules live in `app/(marketing)/responsive.css`
- *     (`[data-topnav-burger]` shows ≤ 1024, the desktop link list hides at the
- *     same breakpoint), so the inline-styled bundle stays unchanged on
- *     desktop.
- *   - `aria-label` on the primary `<nav>` and `aria-current` on active links.
- */
-
-function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
-  return pathname === href || pathname.startsWith(href + "/");
-}
+import {
+  MARKETING_NAV_KEY_BY_HREF,
+  MARKETING_PRIMARY_NAV_HREFS,
+} from "./marketing-nav-links";
+import { LanguageSwitcher } from "./language-switcher";
 
 export function TopNav() {
   const pathname = usePathname() ?? "/";
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const t = useTranslations("marketing");
+  const tNav = useTranslations("marketing.nav");
 
-  // Drawer closes via per-link `onClick` handlers below. We don't watch
-  // pathname here because that pattern triggers
-  // `react-hooks/set-state-in-effect` in our lint config.
-
-  // Lock body scroll while the drawer is open + close on Escape.
   useEffect(() => {
     if (!drawerOpen) return;
     const prev = document.body.style.overflow;
@@ -75,21 +54,22 @@ export function TopNav() {
           gap: 16,
         }}
       >
-        <Link href="/" style={{ textDecoration: "none" }} aria-label="Welpco — home">
+        <Link href="/" style={{ textDecoration: "none" }} aria-label={t("a11y.home")}>
           <MarketingLogo height={46} />
         </Link>
 
         <nav
-          aria-label="Primary"
+          aria-label={t("a11y.primaryNav")}
           data-topnav-links
           style={{ display: "flex", gap: 6, alignItems: "center" }}
         >
-          {MARKETING_PRIMARY_NAV_LINKS.map((l) => {
-            const active = isActive(pathname, l.href);
+          {MARKETING_PRIMARY_NAV_HREFS.map((href) => {
+            const active = isMarketingNavActive(pathname, href);
+            const key = MARKETING_NAV_KEY_BY_HREF[href];
             return (
               <Link
-                key={l.href}
-                href={l.href}
+                key={href}
+                href={href}
                 data-topnav-link
                 aria-current={active ? "page" : undefined}
                 style={{
@@ -103,27 +83,30 @@ export function TopNav() {
                   transition: "all 120ms ease",
                 }}
               >
-                {l.label}
+                {tNav(key)}
               </Link>
             );
           })}
         </nav>
 
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div
+          style={{ display: "flex", gap: 10, alignItems: "center" }}
+        >
+          <LanguageSwitcher />
           <Link
-            href="/auth/signin"
+            href="/login"
             data-topnav-cta-secondary
             className="btn btn-ghost"
             style={{ padding: "10px 18px", fontSize: 14 }}
           >
-            Sign in
+            {tNav("signIn")}
           </Link>
           <Link
             href="/search"
             className="btn btn-primary"
             style={{ padding: "10px 18px", fontSize: 14 }}
           >
-            Find help
+            {tNav("findHelp")}
             <span aria-hidden="true" style={{ display: "inline-block", transform: "translateY(-1px)" }}>
               →
             </span>
@@ -134,7 +117,7 @@ export function TopNav() {
             data-topnav-burger
             aria-expanded={drawerOpen}
             aria-controls="welpco-mobile-nav"
-            aria-label={drawerOpen ? "Close menu" : "Open menu"}
+            aria-label={drawerOpen ? t("a11y.closeMenu") : t("a11y.openMenu")}
             style={{
               display: "none",
               alignItems: "center",
@@ -159,36 +142,37 @@ export function TopNav() {
           data-mobile-drawer
           role="dialog"
           aria-modal="true"
-          aria-label="Mobile menu"
+          aria-label={t("a11y.mobileNav")}
           onClick={(e) => {
-            // Click on the dim backdrop (not the panel) closes the drawer.
             if (e.target === e.currentTarget) setDrawerOpen(false);
           }}
         >
           <div data-mobile-panel>
-            <nav aria-label="Mobile">
-              {MARKETING_PRIMARY_NAV_LINKS.map((l) => {
-                const active = isActive(pathname, l.href);
+            <nav aria-label={t("a11y.mobileNav")}>
+              {MARKETING_PRIMARY_NAV_HREFS.map((href) => {
+                const active = isMarketingNavActive(pathname, href);
+                const key = MARKETING_NAV_KEY_BY_HREF[href];
                 return (
                   <Link
-                    key={l.href}
-                    href={l.href}
+                    key={href}
+                    href={href}
                     aria-current={active ? "page" : undefined}
                     onClick={() => setDrawerOpen(false)}
                   >
-                    {l.label}
+                    {tNav(key)}
                   </Link>
                 );
               })}
             </nav>
             <div data-mobile-cta-row>
+              <LanguageSwitcher />
               <Link
-                href="/auth/signin"
+                href="/login"
                 className="btn btn-ghost"
                 style={{ justifyContent: "center", fontSize: 14, padding: "12px 16px" }}
                 onClick={() => setDrawerOpen(false)}
               >
-                Sign in
+                {tNav("signIn")}
               </Link>
               <Link
                 href="/search"
@@ -196,7 +180,7 @@ export function TopNav() {
                 style={{ justifyContent: "center", fontSize: 14, padding: "12px 16px" }}
                 onClick={() => setDrawerOpen(false)}
               >
-                Find help
+                {tNav("findHelp")}
               </Link>
             </div>
           </div>

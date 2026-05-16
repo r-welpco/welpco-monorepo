@@ -60,6 +60,36 @@
   outline-offset: 3px;
 }
 
+.sectionBody {
+  font-size: var(--font-size-3);
+  line-height: 1.65;
+  color: var(--gray-12);
+}
+
+.sectionBody p {
+  margin: 0;
+}
+
+.sectionBody p + p,
+.sectionBody p + ul,
+.sectionBody ul + p {
+  margin-top: var(--space-3);
+}
+
+.sectionList {
+  margin: var(--space-2) 0 0;
+  padding-left: 1.35rem;
+  list-style: disc;
+}
+
+.sectionList li {
+  margin-top: var(--space-2);
+}
+
+.sectionList li:first-child {
+  margin-top: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .inlineLink {
     transition: none;
