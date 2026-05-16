@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -37,7 +38,9 @@ function buildAllowedCorsOrigins(): string[] {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
 
   // Security headers (API is called cross-origin from Next apps; avoid blocking fetch)
   app.use(
@@ -59,13 +62,11 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   });
 
-  // Request body size limits to prevent payload-based DoS
-  // The rawBody option on NestFactory.create already parses raw bodies for webhooks;
-  // these limits apply to the parsed JSON/urlencoded payloads.
-  const expressApp = app.getHttpAdapter().getInstance();
-  const express = await import('express');
-  expressApp.use(express.json({ limit: '1mb' }));
-  expressApp.use(express.urlencoded({ limit: '1mb', extended: false }));
+  // Body parsers must use Nest's useBodyParser (not raw express.json) so req.rawBody is
+  // set for Stripe webhook signature verification. Custom express.json() in bootstrap
+  // runs before Nest registers parsers on listen() and breaks webhooks.
+  app.useBodyParser('json', { limit: '1mb' });
+  app.useBodyParser('urlencoded', { limit: '1mb', extended: false });
 
   // Global prefix
   app.setGlobalPrefix('api');

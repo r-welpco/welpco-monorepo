@@ -14,8 +14,25 @@ export interface AddressValues {
   country?: string;
 }
 
+export interface AddressInputLabels {
+  streetAddress: string;
+  city: string;
+  stateProvince: string;
+  zipPostalCode: string;
+  streetPlaceholder: string;
+}
+
+const DEFAULT_ADDRESS_INPUT_LABELS: AddressInputLabels = {
+  streetAddress: "Street address",
+  city: "City",
+  stateProvince: "Province / state",
+  zipPostalCode: "Postal / ZIP code",
+  streetPlaceholder: "123 Main Street",
+};
+
 export interface AddressInputProps {
   values?: AddressValues;
+  labels?: AddressInputLabels;
   onChange?: (values: AddressValues) => void;
   errors?: {
     streetAddress?: string;
@@ -26,6 +43,8 @@ export interface AddressInputProps {
   };
   loading?: boolean;
   required?: boolean;
+  /** When false, hides the country field (e.g. signup — Canada only for now). */
+  showCountry?: boolean;
 }
 
 export function AddressInput({
@@ -36,11 +55,14 @@ export function AddressInput({
     zipPostalCode: "",
     country: "",
   },
+  labels: labelsProp,
   onChange,
   errors,
   loading,
   required = true,
+  showCountry = true,
 }: AddressInputProps) {
+  const labels = labelsProp ?? DEFAULT_ADDRESS_INPUT_LABELS;
   const handleChange = (field: keyof AddressValues, value: string) => {
     onChange?.({
       ...values,
@@ -52,12 +74,12 @@ export function AddressInput({
     <Flex direction="column" gap="3">
       <Box>
         <Text as="label" size="2" weight="bold" htmlFor="address-street" mb="1">
-          Street address
+          {labels.streetAddress}
           {required && <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>}
         </Text>
         <TextField.Root
           id="address-street"
-          placeholder="123 Main Street"
+          placeholder={labels.streetPlaceholder}
           autoComplete="street-address"
           size="2"
           disabled={loading}
@@ -77,7 +99,7 @@ export function AddressInput({
       <Flex gap="3" direction={{ initial: "column", sm: "row" }}>
         <Box style={{ flex: 2 }}>
           <Text as="label" size="2" weight="bold" htmlFor="address-city" mb="1">
-            City
+            {labels.city}
             {required && <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>}
           </Text>
           <TextField.Root
@@ -101,7 +123,7 @@ export function AddressInput({
 
         <Box style={{ flex: 1 }}>
           <Text as="label" size="2" weight="bold" htmlFor="address-state" mb="1">
-            State/Province
+            {labels.stateProvince}
             {required && <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>}
           </Text>
           <TextField.Root
@@ -125,7 +147,7 @@ export function AddressInput({
 
         <Box style={{ flex: 1 }}>
           <Text as="label" size="2" weight="bold" htmlFor="address-zip" mb="1">
-            ZIP/Postal code
+            {labels.zipPostalCode}
             {required && <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>}
           </Text>
           <TextField.Root
@@ -148,20 +170,22 @@ export function AddressInput({
         </Box>
       </Flex>
 
-      <Box>
-        <Text as="label" size="2" weight="bold" htmlFor="address-country" mb="1">
-          Country (optional)
-        </Text>
-        <TextField.Root
-          id="address-country"
-          placeholder="United States"
-          autoComplete="country-name"
-          size="2"
-          disabled={loading}
-          value={values.country || ""}
-          onChange={(e) => handleChange("country", e.target.value)}
-        />
-      </Box>
+      {showCountry ? (
+        <Box>
+          <Text as="label" size="2" weight="bold" htmlFor="address-country" mb="1">
+            Country (optional)
+          </Text>
+          <TextField.Root
+            id="address-country"
+            placeholder="United States"
+            autoComplete="country-name"
+            size="2"
+            disabled={loading}
+            value={values.country || ""}
+            onChange={(e) => handleChange("country", e.target.value)}
+          />
+        </Box>
+      ) : null}
     </Flex>
   );
 }

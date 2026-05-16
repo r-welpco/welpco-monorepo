@@ -17,6 +17,7 @@ import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { PaymentService } from './payment.service';
 import { createStripeClient } from './stripe-client';
+import { BackgroundCheckPaymentService } from '../safety-verification/background-check-payment.service';
 
 @ApiTags('Webhooks')
 @Controller('webhooks')
@@ -26,6 +27,7 @@ export class StripeWebhookController {
   constructor(
     private readonly config: ConfigService,
     private readonly paymentService: PaymentService,
+    private readonly backgroundCheckPaymentService: BackgroundCheckPaymentService,
   ) {}
 
   @Post('stripe')
@@ -33,7 +35,7 @@ export class StripeWebhookController {
   @ApiOperation({
     summary: 'Stripe webhook (signature verified)',
     description:
-      'Configure events including payment_intent.*, setup_intent.succeeded, and charge.refunded so refunds sync to booking_payments.',
+      'Configure events including checkout.session.completed (background check), payment_intent.*, setup_intent.succeeded, and charge.refunded.',
   })
   async handleStripe(
     @Req() req: RequestWithRawBody,
@@ -66,6 +68,13 @@ export class StripeWebhookController {
       throw new BadRequestException('Invalid webhook signature');
     }
     try {
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object as Stripe.Checkout.Session;
+        if (session.metadata?.purpose === 'background_check') {
+          await this.backgroundCheckPaymentService.handleCheckoutSessionCompleted(session);
+          return { received: true };
+        }
+      }
       await this.paymentService.processWebhookEvent(event);
     } catch (e) {
       this.logger.error(`Webhook processing failed: ${(e as Error).message}`);

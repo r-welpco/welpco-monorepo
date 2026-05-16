@@ -10,13 +10,64 @@ import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useState, useRef, useEffect } from "react";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Upload, X } from "lucide-react";
+
+export interface ProfilePhotoUploadLabels {
+  title: string;
+  description: string;
+  photoAlt: string;
+  uploadPhoto: string;
+  changePhoto: string;
+  removePhoto: string;
+  acceptedHint: string;
+  errors: {
+    invalidFormat: string;
+    fileTooLarge: string;
+    imageTooSmall: string;
+    imageTooLarge: string;
+    invalidImage: string;
+    uploadFailed: string;
+    removeFailed: string;
+  };
+}
+
+const DEFAULT_PROFILE_PHOTO_UPLOAD_LABELS: ProfilePhotoUploadLabels = {
+  title: "Profile photo",
+  description:
+    "Upload a clear photo of yourself. This helps customers recognize you.",
+  photoAlt: "Profile photo",
+  uploadPhoto: "Upload photo",
+  changePhoto: "Change photo",
+  removePhoto: "Remove photo",
+  acceptedHint: "Accepted: {formats}. Max {maxSizeMB} MB. Min {minWidth}×{minHeight} px.",
+  errors: {
+    invalidFormat: "File must be one of: {formats}",
+    fileTooLarge: "File size must be less than {maxSizeMB} MB",
+    imageTooSmall: "Image must be at least {minWidth}×{minHeight} pixels",
+    imageTooLarge: "Image must be at most {maxWidth}×{maxHeight} pixels",
+    invalidImage: "Invalid image file",
+    uploadFailed:
+      "We couldn't upload your photo. Try again, or pick a different file.",
+    removeFailed: "Failed to remove photo",
+  },
+};
+
+function formatLabel(
+  template: string,
+  vars: Record<string, string | number>,
+): string {
+  return Object.entries(vars).reduce(
+    (s, [k, v]) => s.replaceAll(`{${k}}`, String(v)),
+    template,
+  );
+}
 
 export interface ProfilePhotoUploadProps {
   currentPhotoUrl?: string | null;
   currentPhotoAlt?: string;
   /** Replaces the default helper text under the heading. */
   description?: string;
+  labels?: ProfilePhotoUploadLabels;
   loading?: boolean;
   onUpload?: (file: File) => void | Promise<void>;
   onRemove?: () => void | Promise<void>;
@@ -35,8 +86,9 @@ const DEFAULT_MAX_DIMENSIONS = { width: 2000, height: 2000 };
 
 export function ProfilePhotoUpload({
   currentPhotoUrl,
-  currentPhotoAlt = "Profile photo",
-  description = "Upload a clear photo of yourself. This helps customers recognize you.",
+  currentPhotoAlt,
+  description,
+  labels: labelsProp,
   loading,
   onUpload,
   onRemove,
@@ -46,6 +98,10 @@ export function ProfilePhotoUpload({
   minDimensions = DEFAULT_MIN_DIMENSIONS,
   maxDimensions = DEFAULT_MAX_DIMENSIONS,
 }: ProfilePhotoUploadProps) {
+  const labels = labelsProp ?? DEFAULT_PROFILE_PHOTO_UPLOAD_LABELS;
+  const photoAlt = currentPhotoAlt ?? labels.photoAlt;
+  const helperText = description ?? labels.description;
+
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -55,16 +111,18 @@ export function ProfilePhotoUpload({
     setPreview(null);
   }, [currentPhotoUrl]);
 
+  const formatList = acceptedFormats
+    .map((f) => f.split("/")[1]?.toUpperCase() ?? f)
+    .join(", ");
+
   const validateFile = (file: File): string | null => {
-    // Check file type
     if (!acceptedFormats.includes(file.type)) {
-      return `File must be one of: ${acceptedFormats.join(", ")}`;
+      return formatLabel(labels.errors.invalidFormat, { formats: formatList });
     }
 
-    // Check file size
     const sizeMB = file.size / (1024 * 1024);
     if (sizeMB > maxSizeMB) {
-      return `File size must be less than ${maxSizeMB}MB`;
+      return formatLabel(labels.errors.fileTooLarge, { maxSizeMB });
     }
 
     return null;
@@ -80,11 +138,17 @@ export function ProfilePhotoUpload({
         
         if (img.width < minDimensions.width || img.height < minDimensions.height) {
           resolve(
-            `Image must be at least ${minDimensions.width}x${minDimensions.height} pixels`
+            formatLabel(labels.errors.imageTooSmall, {
+              minWidth: minDimensions.width,
+              minHeight: minDimensions.height,
+            }),
           );
         } else if (img.width > maxDimensions.width || img.height > maxDimensions.height) {
           resolve(
-            `Image must be at most ${maxDimensions.width}x${maxDimensions.height} pixels`
+            formatLabel(labels.errors.imageTooLarge, {
+              maxWidth: maxDimensions.width,
+              maxHeight: maxDimensions.height,
+            }),
           );
         } else {
           resolve(null);
@@ -93,7 +157,7 @@ export function ProfilePhotoUpload({
       
       img.onerror = () => {
         URL.revokeObjectURL(objectUrl);
-        resolve("Invalid image file");
+        resolve(labels.errors.invalidImage);
       };
       
       img.src = objectUrl;
@@ -146,7 +210,9 @@ export function ProfilePhotoUpload({
         try {
           await onUpload(file);
         } catch (err) {
-          setError(err instanceof Error ? err.message : "We couldn't upload your photo. Try again, or pick a different file.");
+          setError(
+            err instanceof Error ? err.message : labels.errors.uploadFailed,
+          );
         }
       }
     } finally {
@@ -166,7 +232,7 @@ export function ProfilePhotoUpload({
           fileInputRef.current.value = "";
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to remove photo");
+        setError(err instanceof Error ? err.message : labels.errors.removeFailed);
       } finally {
         setUploading(false);
       }
@@ -189,10 +255,10 @@ export function ProfilePhotoUpload({
       <Flex direction="column" gap="3">
         <Box>
           <Heading size="4" mb="1">
-            Profile photo
+            {labels.title}
           </Heading>
           <Text size="2" color="gray" highContrast>
-            {description}
+            {helperText}
           </Text>
         </Box>
 
@@ -210,8 +276,8 @@ export function ProfilePhotoUpload({
           <Box>
             <Avatar
               src={displayPhoto || undefined}
-              alt={currentPhotoAlt}
-              fallback={currentPhotoAlt?.[0] || "U"}
+              alt={photoAlt}
+              fallback={photoAlt[0] || "U"}
               size="8"
               width="120px"
               height="120px"
@@ -239,7 +305,7 @@ export function ProfilePhotoUpload({
               >
                 <Flex align="center" gap="2">
                   <Upload aria-hidden="true" style={{ width: "16px", height: "16px" }} />
-                  {displayPhoto ? "Change photo" : "Upload photo"}
+                  {displayPhoto ? labels.changePhoto : labels.uploadPhoto}
                 </Flex>
               </Button>
             </Text>
@@ -256,14 +322,18 @@ export function ProfilePhotoUpload({
               >
                 <Flex align="center" gap="2">
                   <X style={{ width: "16px", height: "16px" }} />
-                  Remove photo
+                  {labels.removePhoto}
                 </Flex>
               </Button>
             )}
 
             <Text size="1" color="gray" highContrast>
-              Accepted: {acceptedFormats.map((f) => f.split("/")[1].toUpperCase()).join(", ")}.
-              Max {maxSizeMB}MB. Min {minDimensions.width}x{minDimensions.height}px.
+              {formatLabel(labels.acceptedHint, {
+                formats: formatList,
+                maxSizeMB,
+                minWidth: minDimensions.width,
+                minHeight: minDimensions.height,
+              })}
             </Text>
           </Flex>
         </Flex>

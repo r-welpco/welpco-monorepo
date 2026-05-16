@@ -17,7 +17,7 @@ export type SelectedRole = 'customer' | 'welper';
  * this enum. Any new step must be added here AND in
  * `SignupOrchestratorService` step-required logic.
  */
-export type SignupStepName = 'selectRole' | 'identity' | 'welperBio' | 'welperServiceArea' | 'welperOffering' | 'welperAvailability' | 'welperPayout' | 'notificationPrefs' | 'optionalProfile';
+export type SignupStepName = 'selectRole' | 'identity' | 'welperBio' | 'welperServiceArea' | 'welperOffering' | 'welperAvailability' | 'welperBackgroundCheck' | 'welperPayout' | 'optionalProfile';
 /**
  * Server-driven snapshot of a user's progress through the wizard. Returned
  * by `GET /auth/signup/state` on every step entry — the wizard does not
@@ -80,12 +80,27 @@ export interface SignupFilledData {
         province: string;
         country: string;
         postalCodes: string[];
+        radiusMiles?: number;
+        serviceArea?: {
+            type: 'radius';
+            centerAddress: {
+                streetAddress?: string;
+                city: string;
+                stateProvince: string;
+                zipPostalCode?: string;
+                country?: string;
+            };
+            radiusMiles: number;
+            radiusKm?: number;
+        };
     };
     welperOffering?: {
-        categoryId: string;
-        title: string;
-        hourlyRate: number;
-        description: string;
+        offerings: Array<{
+            subcategoryId: string;
+            title: string;
+            hourlyRate: number;
+            description: string;
+        }>;
     };
     welperAvailability?: {
         weeklySlots?: Array<{
@@ -94,6 +109,15 @@ export interface SignupFilledData {
             endTime: string;
         }>;
         acceptsAdHocOnly?: boolean;
+    };
+    welperBackgroundCheck?: {
+        paid: boolean;
+        certnStatus: string;
+        applicantUrl?: string;
+        listPriceCents: number;
+        promoPriceCents: number;
+        promoEnabled: boolean;
+        skipped?: boolean;
     };
     welperPayout?: {
         stripeOnboardingCompleted?: boolean;

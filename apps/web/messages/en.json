@@ -584,7 +584,9 @@
               "Legal authorities when required",
               "Technology partners"
             ],
-            "paragraphs": ["We never sell your data."]
+            "paragraphs": [
+              "We never sell your data."
+            ]
           },
           {
             "numeral": "05",
@@ -600,7 +602,11 @@
             "numeral": "06",
             "title": "Security",
             "intro": "We implement reasonable security measures to protect your data against:",
-            "list": ["Unauthorized access", "Loss", "Disclosure"]
+            "list": [
+              "Unauthorized access",
+              "Loss",
+              "Disclosure"
+            ]
           },
           {
             "numeral": "07",
@@ -612,7 +618,9 @@
               "Request deletion",
               "Withdraw your consent"
             ],
-            "paragraphs": ["Contact: support@welpco.com"]
+            "paragraphs": [
+              "Contact: support@welpco.com"
+            ]
           },
           {
             "numeral": "08",
@@ -646,6 +654,354 @@
       "description": "Welpco connects you with vetted Welpers in your community — for the everyday services you need.",
       "ogDescription": "Vetted local providers for everyday services — childcare, lawn care, tutoring, tech help and more.",
       "twitterDescription": "Vetted local providers for everyday services in your neighborhood."
+    }
+  },
+  "auth": {
+    "common": {
+      "back": "Back",
+      "continue": "Continue",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "pleaseWait": "Please wait…",
+      "somethingWentWrong": "Something went wrong. Try again in a moment.",
+      "emailPlaceholder": "you@example.com",
+      "passwordPlaceholder": "••••••••"
+    },
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to continue.",
+      "email": "Email",
+      "password": "Password",
+      "forgotPassword": "Forgot password?",
+      "rememberMe": "Remember me",
+      "signIn": "Sign in",
+      "signingIn": "Signing in...",
+      "newToWelpco": "New to Welpco?",
+      "createAccount": "Create an account",
+      "verifiedBanner": "Your email is verified. Sign in to continue.",
+      "validation": {
+        "emailInvalid": "Enter a valid email",
+        "passwordMinLength": "Password must be at least 8 characters"
+      },
+      "errors": {
+        "invalidCredentials": "Invalid email or password",
+        "signInFailed": "Failed to sign in. Please try again."
+      }
+    },
+    "register": {
+      "begin": {
+        "title": "Create your account",
+        "description": "Set your email and password. We'll send a verification link in the background — you can keep going while it arrives.",
+        "email": "Email",
+        "password": "Password",
+        "passwordPlaceholder": "At least 8 characters",
+        "passwordStrengthAria": "Password strength",
+        "strengthTooShort": "Too short",
+        "strengthWeak": "Weak",
+        "strengthFair": "Fair",
+        "strengthGood": "Good",
+        "strengthStrong": "Strong",
+        "strengthHint": ". Mix in numbers, symbols, and a longer length to strengthen it.",
+        "creatingAccount": "Creating your account...",
+        "alreadyHaveAccount": "Already have an account?",
+        "signInLink": "Sign in",
+        "validation": {
+          "emailInvalid": "Enter a valid email address",
+          "passwordMinLength": "Password must be at least 8 characters",
+          "passwordMaxLength": "Password must be 128 characters or fewer"
+        },
+        "errors": {
+          "accountExists": "An account already exists for that email. Sign in instead, or use a different email.",
+          "createFailed": "We couldn't create your account. Try again in a moment."
+        }
+      },
+      "chrome": {
+        "stepOf": "Step {current} of {total}",
+        "saveAndContinueLater": "Save and continue later",
+        "saveAndContinueLaterAria": "Save and continue later",
+        "progressSavedHint": "Your progress is saved. Sign back in to pick up here.",
+        "signupProgressAria": "Signup progress: {percent}%"
+      },
+      "finish": {
+        "title": "Almost there",
+        "description": "We need a couple more details before your account's ready.",
+        "missingFieldsPrefix": "The following are still missing:",
+        "continueSetup": "Continue setup",
+        "errors": {
+          "finishFailed": "We couldn't finish your signup. Try again in a moment."
+        }
+      },
+      "steps": {
+        "selectRole": {
+          "title": "What brings you to Welpco?",
+          "description": "Pick one. You can switch later by creating a new account with a different email — most people stick with what they pick here.",
+          "radiogroupAriaLabel": "Choose your role",
+          "customerTitle": "Find help",
+          "customerDescription": "Book trusted Welpers in your area for cleaning, care, errands, and more.",
+          "welperTitle": "Become a Welper",
+          "welperDescription": "Set your own hours, your own rates, and earn from clients who need your skills.",
+          "customerDisabledDescription": "Customer sign-up is coming soon. For now, Welpco is open to Welpers.",
+          "validation": {
+            "required": "Pick one to continue."
+          }
+        },
+        "identity": {
+          "title": "Tell us who you are",
+          "description": "We use these details to confirm bookings and reach you about your account. They're never shown publicly without your say-so.",
+          "firstName": "First name",
+          "lastName": "Last name",
+          "phone": "Phone",
+          "countryPlaceholder": "Country",
+          "phonePlaceholder": "416 555 1234",
+          "dateOfBirth": "Date of birth",
+          "dobHint": "You must be at least 13.",
+          "tosPrefix": "I agree to the",
+          "tosLink": "Terms of Service",
+          "privacyPrefix": "I've read the",
+          "privacyLink": "Privacy Policy",
+          "countries": {
+            "CA": "Canada (+1)",
+            "US": "United States (+1)",
+            "GB": "United Kingdom (+44)",
+            "AU": "Australia (+61)",
+            "FR": "France (+33)",
+            "DE": "Germany (+49)",
+            "IN": "India (+91)",
+            "MX": "Mexico (+52)"
+          },
+          "validation": {
+            "firstNameRequired": "First name is required",
+            "firstNameMax": "First name must be 80 characters or fewer",
+            "lastNameRequired": "Last name is required",
+            "lastNameMax": "Last name must be 80 characters or fewer",
+            "countryRequired": "Pick a country",
+            "phoneRequired": "Phone number is required",
+            "phoneInvalid": "Enter a valid phone number for the selected country",
+            "dobRequired": "Date of birth is required",
+            "dobInvalid": "Enter a valid date",
+            "dobMinAge": "You must be at least 13 to sign up",
+            "tosRequired": "Accept the Terms of Service to continue",
+            "privacyRequired": "Accept the Privacy Policy to continue"
+          }
+        },
+        "welperBio": {
+          "title": "Tell customers who you are",
+          "description": "A few sentences about your work, what you love about it, and who you're a great fit for. This is the first thing people read on your profile — speak in your own voice.",
+          "bioLabel": "Your bio",
+          "bioPlaceholder": "What do you do, who do you do it for, and why are you good at it?",
+          "charCount": "{count} characters",
+          "charsRemaining": "{count} left",
+          "minCharsRemaining": "{count} more to go ({min} min)",
+          "validation": {
+            "bioMin": "Bio must be at least {min} characters",
+            "bioMax": "Bio must be {max} characters or fewer"
+          }
+        },
+        "welperServiceArea": {
+          "title": "Where do you work?",
+          "description": "Set the center of your service area and how far you are willing to travel. Customers nearby will be able to find you in search.",
+          "validation": {
+            "required": "Set your service area and radius to continue.",
+            "cityRequired": "City is required.",
+            "provinceRequired": "Province / state is required.",
+            "postalRequired": "Postal code is required so we can place you on the map.",
+            "radiusRange": "Choose a radius between 1 and 100 miles."
+          },
+          "selector": {
+            "centerAddress": "Center address",
+            "serviceRadius": "Service radius (miles)",
+            "radiusHint": "Services will be available within {miles} miles of the center address."
+          },
+          "address": {
+            "streetAddress": "Street address",
+            "city": "City",
+            "stateProvince": "Province / state",
+            "zipPostalCode": "Postal / ZIP code",
+            "streetPlaceholder": "123 Main Street"
+          }
+        },
+        "welperOffering": {
+          "title": "Add your services",
+          "description": "Choose a category and subcategory for each service you offer, then add pricing and a description. You can add up to {max} services now and more later from your profile.",
+          "yourServices": "Your services ({count}/{max})",
+          "remove": "Remove",
+          "addAnother": "Add another service",
+          "firstService": "First service",
+          "category": "Category",
+          "subcategory": "Subcategory",
+          "serviceTitle": "Service title",
+          "hourlyRate": "Hourly rate ($)",
+          "descriptionLabel": "Description",
+          "addToList": "Add to list",
+          "loadingCategories": "Loading categories...",
+          "chooseCategory": "Choose a category",
+          "chooseCategoryFirst": "Choose a category first",
+          "noSubcategories": "No subcategories available",
+          "chooseSubcategory": "Choose a subcategory",
+          "addAtLeastOne": "Add at least one service before continuing.",
+          "validation": {
+            "parentRequired": "Choose a category",
+            "subcategoryRequired": "Choose a subcategory",
+            "titleRequired": "Give this service a title",
+            "rateRequired": "Set an hourly rate",
+            "rateMin": "Rate must be at least $1",
+            "descriptionRequired": "Add a short description"
+          }
+        },
+        "welperAvailability": {
+          "title": "When are you available?",
+          "description": "Add the times you can normally take work. Customers see these ranges in search and at booking time. You can change them anytime.",
+          "addSlotLabel": "Add a weekly slot",
+          "dayPlaceholder": "Day",
+          "addSlotButton": "Add slot",
+          "yourWeeklyHours": "Your weekly hours",
+          "remove": "Remove",
+          "days": {
+            "monday": "Monday",
+            "tuesday": "Tuesday",
+            "wednesday": "Wednesday",
+            "thursday": "Thursday",
+            "friday": "Friday",
+            "saturday": "Saturday",
+            "sunday": "Sunday"
+          },
+          "validation": {
+            "endAfterStart": "End time must be after start time",
+            "maxSlots": "That's the cap — 50 slots max",
+            "duplicateSlot": "That slot is already in your list",
+            "addAtLeastOne": "Add at least one slot to continue."
+          }
+        },
+        "welperBackgroundCheck": {
+          "title": "Background check",
+          "under18Description": "Because you are under 18, a criminal background check is not required at this time.",
+          "description": "Adult Welpers must complete a Basic Canadian criminal record check before going live. Pay the fee below, then finish identity verification with our screening partner.",
+          "limitedTimeRate": "Limited-time rate",
+          "payAndContinue": "Pay {amount} and continue",
+          "startCertnVerification": "Start Certn verification",
+          "openCertnVerification": "Open Certn verification",
+          "certnEmailInvite": "We sent a Certn screening link to your signup email. Open that message to complete your background check (it is not the Certn admin login at demo-app.certn.co).",
+          "footer": "Results are usually ready within a few business days. You can finish signup while your check is processing; search and bookings unlock once you are cleared.",
+          "continue": "Continue",
+          "paymentReceivedPrefix": "Payment received.",
+          "paymentInviteReady": "Continue verification on Certn if you have not already, then proceed with signup.",
+          "paymentFailureStart": "Payment is complete. Start Certn below if verification has not begun.",
+          "paymentInvitePending": "Payment is complete. We are sending your Certn invite — you can continue signup while it processes.",
+          "failureMissingProfile": "We could not start Certn — your name and date of birth from the identity step are required.",
+          "failureCertnFailed": "Certn could not start: {detail}",
+          "failureGeneric": "We could not start Certn verification. Try again below, or contact support if it keeps failing."
+        },
+        "optionalProfile": {
+          "title": "Finish your profile",
+          "description": "Add a profile photo so customers and Welpers know who they're working with. You can update it anytime from your profile.",
+          "photoUpload": {
+            "title": "Profile photo",
+            "description": "A clear, friendly photo of you. JPEG, PNG, or WebP up to 5 MB.",
+            "photoAlt": "Profile photo",
+            "uploadPhoto": "Upload photo",
+            "changePhoto": "Change photo",
+            "removePhoto": "Remove photo",
+            "acceptedHint": "Accepted: {formats}. Max {maxSizeMB} MB. Min {minWidth}×{minHeight} px.",
+            "errors": {
+              "invalidFormat": "File must be one of: {formats}",
+              "fileTooLarge": "File size must be less than {maxSizeMB} MB",
+              "imageTooSmall": "Image must be at least {minWidth}×{minHeight} pixels",
+              "imageTooLarge": "Image must be at most {maxWidth}×{maxHeight} pixels",
+              "invalidImage": "Invalid image file",
+              "uploadFailed": "We couldn't upload your photo. Try again, or pick a different file.",
+              "removeFailed": "Failed to remove photo"
+            }
+          },
+          "addressTitle": "Where do you live?",
+          "addressDescription": "We use this to find Welpers near you. Optional — you can enter it later from your profile.",
+          "address": {
+            "streetAddress": "Street address",
+            "city": "City",
+            "stateProvince": "Province",
+            "zipPostalCode": "Postal code",
+            "streetPlaceholder": "123 Main Street"
+          },
+          "finishSignup": "Finish signup"
+        },
+        "page": {
+          "loadProgressTitle": "Could not load your signup progress",
+          "loadProgressMessage": "Something went wrong loading signup state. Check that the API is running and try again.",
+          "stepNotFoundTitle": "Step not found",
+          "stepNotFoundMessage": "That URL doesn't match a wizard step. Head back to where you left off.",
+          "comingSoonDefault": "We're putting the finishing touches on this step. Your progress is saved — sign out and check back shortly, or stay tuned and refresh in a few.",
+          "photoUploadFailed": "We couldn't upload that photo. Try again, or skip and add it from your profile later.",
+          "labels": {
+            "selectRole": "Choose your role",
+            "identity": "Tell us who you are",
+            "welperBio": "Tell people about yourself",
+            "welperServiceArea": "Where do you work?",
+            "welperOffering": "Add your first service",
+            "welperAvailability": "When are you available?",
+            "welperBackgroundCheck": "Background check",
+            "welperPayout": "Payout setup",
+            "optionalProfile": "Finish your profile",
+            "default": "Next step"
+          }
+        }
+      }
+    },
+    "forgotPassword": {
+      "title": "Forgot your password?",
+      "description": "Enter the email on your account. We'll send you a link to set a new one.",
+      "email": "Email",
+      "submit": "Send reset link",
+      "submitting": "Sending...",
+      "backToSignIn": "Back to sign in",
+      "successMessage": "If an account exists for {email}, we just sent a reset link. Check your inbox — the link expires in 15 minutes.",
+      "validation": {
+        "emailInvalid": "Enter a valid email"
+      },
+      "errors": {
+        "sendFailed": "We couldn't send the reset link. Check the email and try again."
+      }
+    },
+    "resetPassword": {
+      "title": "Reset password",
+      "description": "Enter your email and a new password.",
+      "email": "Email",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "submit": "Update password",
+      "submitting": "Updating...",
+      "invalidLinkTitle": "This reset link won't work",
+      "invalidLinkDescription": "The link may be expired or already used. Request a new password reset and we'll send a fresh link.",
+      "invalidLinkCallout": "Reset links are valid for 30 minutes after they're issued.",
+      "requestNewLink": "Request a new link",
+      "successTitle": "Your password is set",
+      "successRedirecting": "Taking you to sign in…",
+      "successCallout": "You can now sign in with your new password.",
+      "validation": {
+        "emailInvalid": "Enter a valid email",
+        "passwordMinLength": "Password must be at least 8 characters",
+        "confirmPasswordMinLength": "Confirm your password",
+        "passwordsMustMatch": "Passwords must match"
+      },
+      "errors": {
+        "invalidToken": "This reset link is invalid. Request a new one to continue.",
+        "resetFailed": "We couldn't reset your password. The link may have expired — request a new one."
+      }
+    },
+    "verification": {
+      "title": "Verify your account",
+      "codeSentPrefix": "We sent a 6-digit code to",
+      "codeLabel": "Verification code",
+      "codeDigitAria": "Verification code digit {index} of {total}",
+      "resendCode": "Resend code",
+      "verify": "Verify",
+      "verifying": "Verifying…",
+      "validation": {
+        "codeFormat": "Enter the 6-digit code"
+      },
+      "errors": {
+        "codeRequired": "Enter the 6-digit code we sent you.",
+        "verifyFailed": "That code didn't work. It may have expired — request a new one and try again.",
+        "resendFailed": "We couldn't send a new code. Try again in a moment."
+      }
     }
   }
 }

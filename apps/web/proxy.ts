@@ -5,9 +5,11 @@ import type { NextRequest } from "next/server";
 import { getLocaleFromGeo, readGeoFromHeaders } from "@/i18n/geo";
 import {
   hasFrenchPrefix,
+  isLocaleAwareRoute,
   isMarketingRoute,
+  localizedPathFromRequest,
   stripLocale,
-} from "@/i18n/marketing-routes";
+} from "@/i18n/locale-routes";
 import { routing } from "@/i18n/routing";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 
@@ -19,6 +21,30 @@ type AuthUser = {
   signupCompleted?: boolean;
   onboardingCompleted?: boolean;
 };
+
+/** Unprefixed legal URLs when NEXT_LOCALE is French → `/fr/legal/...`. */
+function applyFrenchLegalRedirect(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  if (hasFrenchPrefix(pathname)) return null;
+  if (!pathname.startsWith("/legal")) return null;
+  if (request.cookies.get("NEXT_LOCALE")?.value !== "fr") return null;
+
+  const url = request.nextUrl.clone();
+  url.pathname = `/fr${pathname}`;
+  return NextResponse.redirect(url);
+}
+
+/** NextAuth `pages.signIn` is `/login` (default locale). Honor NEXT_LOCALE for French users. */
+function applyFrenchLoginRedirect(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  if (pathname !== "/login") return null;
+  if (hasFrenchPrefix(pathname)) return null;
+  if (request.cookies.get("NEXT_LOCALE")?.value !== "fr") return null;
+
+  const url = request.nextUrl.clone();
+  url.pathname = "/fr/login";
+  return NextResponse.redirect(url);
+}
 
 function applyGeoRedirect(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
@@ -42,9 +68,17 @@ export default auth((req) => {
   const pathname = nextUrl.pathname;
   let intlResponse: NextResponse | null = null;
 
-  if (isMarketingRoute(pathname)) {
-    const geo = applyGeoRedirect(req);
-    if (geo) return geo;
+  if (isLocaleAwareRoute(pathname)) {
+    const frenchLegal = applyFrenchLegalRedirect(req);
+    if (frenchLegal) return frenchLegal;
+
+    const frenchLogin = applyFrenchLoginRedirect(req);
+    if (frenchLogin) return frenchLogin;
+
+    if (isMarketingRoute(pathname)) {
+      const geo = applyGeoRedirect(req);
+      if (geo) return geo;
+    }
     intlResponse = intlMiddleware(req);
     if (intlResponse.status >= 300 && intlResponse.status < 400) {
       return intlResponse;
@@ -91,7 +125,10 @@ export default auth((req) => {
     if (isOnDashboard) {
       const target = path + nextUrl.search;
       return NextResponse.redirect(
-        new URL(withNext("/login", target), nextUrl),
+        new URL(
+          withNext(localizedPathFromRequest("/login", pathname), target),
+          nextUrl,
+        ),
       );
     }
     return intlResponse ?? NextResponse.next();
@@ -106,13 +143,22 @@ export default auth((req) => {
     }
     if (isOnLogin || isOnOnboarding) {
       return NextResponse.redirect(
-        new URL(withNext("/register", incomingNext || null), nextUrl),
+        new URL(
+          withNext(
+            localizedPathFromRequest("/register", pathname),
+            incomingNext || null,
+          ),
+          nextUrl,
+        ),
       );
     }
     if (isOnDashboard) {
       const target = path + nextUrl.search;
       return NextResponse.redirect(
-        new URL(withNext("/register", target), nextUrl),
+        new URL(
+          withNext(localizedPathFromRequest("/register", pathname), target),
+          nextUrl,
+        ),
       );
     }
     return intlResponse ?? NextResponse.next();

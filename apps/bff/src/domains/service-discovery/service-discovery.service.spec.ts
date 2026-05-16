@@ -13,6 +13,7 @@ import { GEOCODE_SERVICE } from '../geocode/geocode.interface';
 import { ProfileCompletionStatus } from '../profile-management/entities/profile-completion-status.enum';
 import { ProfileVisibility } from '../profile-management/entities/profile-visibility.enum';
 import { DiscoveryCategoriesCacheService } from '../../common/discovery-categories-cache/discovery-categories-cache.service';
+import { BackgroundCheckService } from '../safety-verification/background-check.service';
 
 describe('ServiceDiscoveryService', () => {
   let service: ServiceDiscoveryService;
@@ -119,6 +120,12 @@ describe('ServiceDiscoveryService', () => {
         {
           provide: DiscoveryCategoriesCacheService,
           useValue: mockDiscoveryCategoriesCache,
+        },
+        {
+          provide: BackgroundCheckService,
+          useValue: {
+            assertVisibleInSearch: jest.fn().mockResolvedValue(true),
+          },
         },
       ],
     }).compile();

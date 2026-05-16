@@ -1,0 +1,377 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import type {
+  AccountVerificationLabels,
+  EmailPasswordStepLabels,
+  IdentityStepLabels,
+  LoginFormLabels,
+  OptionalProfileStepLabels,
+  PasswordResetLabels,
+  SelectRoleStepLabels,
+  WelperAvailabilityStepLabels,
+  WelperBackgroundCheckStepLabels,
+  WelperBioStepLabels,
+  WelperOfferingStepLabels,
+  WelperServiceAreaStepLabels,
+} from "@welpco/ui/platform/user-management";
+
+export function useLoginFormLabels(): LoginFormLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.login");
+  return {
+    title: t("title"),
+    subtitle: t("subtitle"),
+    email: t("email"),
+    password: t("password"),
+    emailPlaceholder: tc("emailPlaceholder"),
+    passwordPlaceholder: tc("passwordPlaceholder"),
+    forgotPassword: t("forgotPassword"),
+    rememberMe: t("rememberMe"),
+    signIn: t("signIn"),
+    signingIn: t("signingIn"),
+    newToWelpco: t("newToWelpco"),
+    createAccount: t("createAccount"),
+    validation: {
+      emailInvalid: t("validation.emailInvalid"),
+      passwordMinLength: t("validation.passwordMinLength"),
+    },
+  };
+}
+
+export function useEmailPasswordStepLabels(): EmailPasswordStepLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.register.begin");
+  return {
+    back: tc("back"),
+    continue: tc("continue"),
+    saving: tc("saving"),
+    requiredMarker: "*",
+    title: t("title"),
+    description: t("description"),
+    email: t("email"),
+    password: t("password"),
+    emailPlaceholder: tc("emailPlaceholder"),
+    passwordPlaceholder: t("passwordPlaceholder"),
+    passwordStrengthAria: t("passwordStrengthAria"),
+    strengthTooShort: t("strengthTooShort"),
+    strengthWeak: t("strengthWeak"),
+    strengthFair: t("strengthFair"),
+    strengthGood: t("strengthGood"),
+    strengthStrong: t("strengthStrong"),
+    strengthHint: t("strengthHint"),
+    creatingAccount: t("creatingAccount"),
+    alreadyHaveAccount: t("alreadyHaveAccount"),
+    signIn: t("signInLink"),
+    validation: {
+      emailInvalid: t("validation.emailInvalid"),
+      passwordMinLength: t("validation.passwordMinLength"),
+      passwordMaxLength: t("validation.passwordMaxLength"),
+    },
+  };
+}
+
+export function useSelectRoleStepLabels(): SelectRoleStepLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.register.steps.selectRole");
+  return {
+    back: tc("back"),
+    continue: tc("continue"),
+    saving: tc("saving"),
+    requiredMarker: "*",
+    title: t("title"),
+    description: t("description"),
+    radiogroupAriaLabel: t("radiogroupAriaLabel"),
+    customerTitle: t("customerTitle"),
+    customerDescription: t("customerDescription"),
+    welperTitle: t("welperTitle"),
+    welperDescription: t("welperDescription"),
+    customerDisabledDescription: t("customerDisabledDescription"),
+    validationRequired: t("validation.required"),
+    continueLoading: tc("saving"),
+  };
+}
+
+export function useIdentityStepLabels(): IdentityStepLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.register.steps.identity");
+  return {
+    back: tc("back"),
+    continue: tc("continue"),
+    saving: tc("saving"),
+    requiredMarker: "*",
+    title: t("title"),
+    description: t("description"),
+    firstName: t("firstName"),
+    lastName: t("lastName"),
+    phone: t("phone"),
+    countryPlaceholder: t("countryPlaceholder"),
+    phonePlaceholder: t("phonePlaceholder"),
+    dateOfBirth: t("dateOfBirth"),
+    dobHint: t("dobHint"),
+    tosPrefix: t("tosPrefix"),
+    tosLink: t("tosLink"),
+    privacyPrefix: t("privacyPrefix"),
+    privacyLink: t("privacyLink"),
+    countryOptions: [
+      { code: "CA", label: t("countries.CA") },
+      { code: "US", label: t("countries.US") },
+      { code: "GB", label: t("countries.GB") },
+      { code: "AU", label: t("countries.AU") },
+      { code: "FR", label: t("countries.FR") },
+      { code: "DE", label: t("countries.DE") },
+      { code: "IN", label: t("countries.IN") },
+      { code: "MX", label: t("countries.MX") },
+    ],
+    validation: {
+      firstNameRequired: t("validation.firstNameRequired"),
+      firstNameMax: t("validation.firstNameMax"),
+      lastNameRequired: t("validation.lastNameRequired"),
+      lastNameMax: t("validation.lastNameMax"),
+      countryRequired: t("validation.countryRequired"),
+      phoneRequired: t("validation.phoneRequired"),
+      phoneInvalid: t("validation.phoneInvalid"),
+      dobRequired: t("validation.dobRequired"),
+      dobInvalid: t("validation.dobInvalid"),
+      dobMinAge: t("validation.dobMinAge"),
+      tosRequired: t("validation.tosRequired"),
+      privacyRequired: t("validation.privacyRequired"),
+    },
+  };
+}
+
+const WELPER_BIO_MIN = 120;
+const WELPER_BIO_MAX = 2000;
+
+export function useWelperBioStepLabels(): WelperBioStepLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.register.steps.welperBio");
+  return {
+    back: tc("back"),
+    continue: tc("continue"),
+    saving: tc("saving"),
+    requiredMarker: "*",
+    title: t("title"),
+    description: t("description"),
+    bioLabel: t("bioLabel"),
+    bioPlaceholder: t("bioPlaceholder"),
+    charCount: t("charCount"),
+    charsRemaining: t("charsRemaining"),
+    minCharsRemaining: t("minCharsRemaining"),
+    validation: {
+      bioMin: t("validation.bioMin", { min: WELPER_BIO_MIN }),
+      bioMax: t("validation.bioMax", { max: WELPER_BIO_MAX }),
+    },
+  };
+}
+
+export function useWelperServiceAreaStepLabels(): WelperServiceAreaStepLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.register.steps.welperServiceArea");
+  return {
+    back: tc("back"),
+    continue: tc("continue"),
+    saving: tc("saving"),
+    requiredMarker: "*",
+    title: t("title"),
+    description: t("description"),
+    validation: {
+      required: t("validation.required"),
+      cityRequired: t("validation.cityRequired"),
+      provinceRequired: t("validation.provinceRequired"),
+      postalRequired: t("validation.postalRequired"),
+      radiusRange: t("validation.radiusRange"),
+    },
+    selector: {
+      centerAddress: t("selector.centerAddress"),
+      serviceRadius: t("selector.serviceRadius"),
+      radiusHint: t("selector.radiusHint"),
+    },
+    address: {
+      streetAddress: t("address.streetAddress"),
+      city: t("address.city"),
+      stateProvince: t("address.stateProvince"),
+      zipPostalCode: t("address.zipPostalCode"),
+      streetPlaceholder: t("address.streetPlaceholder"),
+    },
+  };
+}
+
+export function useWelperOfferingStepLabels(maxServices: number): WelperOfferingStepLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.register.steps.welperOffering");
+  return {
+    back: tc("back"),
+    continue: tc("continue"),
+    saving: tc("saving"),
+    requiredMarker: "*",
+    title: t("title"),
+    description: t("description", { max: maxServices }),
+    yourServices: t("yourServices"),
+    remove: t("remove"),
+    addAnother: t("addAnother"),
+    firstService: t("firstService"),
+    category: t("category"),
+    subcategory: t("subcategory"),
+    serviceTitle: t("serviceTitle"),
+    hourlyRate: t("hourlyRate"),
+    descriptionLabel: t("descriptionLabel"),
+    addToList: t("addToList"),
+    loadingCategories: t("loadingCategories"),
+    chooseCategory: t("chooseCategory"),
+    chooseCategoryFirst: t("chooseCategoryFirst"),
+    noSubcategories: t("noSubcategories"),
+    chooseSubcategory: t("chooseSubcategory"),
+    addAtLeastOne: t("addAtLeastOne"),
+    validation: {
+      parentRequired: t("validation.parentRequired"),
+      subcategoryRequired: t("validation.subcategoryRequired"),
+      titleRequired: t("validation.titleRequired"),
+      rateRequired: t("validation.rateRequired"),
+      rateMin: t("validation.rateMin"),
+      descriptionRequired: t("validation.descriptionRequired"),
+    },
+  };
+}
+
+export function useWelperAvailabilityStepLabels(): WelperAvailabilityStepLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.register.steps.welperAvailability");
+  return {
+    back: tc("back"),
+    continue: tc("continue"),
+    saving: tc("saving"),
+    requiredMarker: "*",
+    title: t("title"),
+    description: t("description"),
+    addSlotLabel: t("addSlotLabel"),
+    dayPlaceholder: t("dayPlaceholder"),
+    addSlotButton: t("addSlotButton"),
+    yourWeeklyHours: t("yourWeeklyHours"),
+    remove: t("remove"),
+    days: {
+      monday: t("days.monday"),
+      tuesday: t("days.tuesday"),
+      wednesday: t("days.wednesday"),
+      thursday: t("days.thursday"),
+      friday: t("days.friday"),
+      saturday: t("days.saturday"),
+      sunday: t("days.sunday"),
+    },
+    validation: {
+      endAfterStart: t("validation.endAfterStart"),
+      maxSlots: t("validation.maxSlots"),
+      duplicateSlot: t("validation.duplicateSlot"),
+      addAtLeastOne: t("validation.addAtLeastOne"),
+    },
+  };
+}
+
+export function useWelperBackgroundCheckStepLabels(): WelperBackgroundCheckStepLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.register.steps.welperBackgroundCheck");
+  return {
+    back: tc("back"),
+    continue: t("continue"),
+    saving: tc("saving"),
+    requiredMarker: "*",
+    title: t("title"),
+    under18Description: t("under18Description"),
+    description: t("description"),
+    limitedTimeRate: t("limitedTimeRate"),
+    payAndContinue: t("payAndContinue"),
+    startCertnVerification: t("startCertnVerification"),
+    openCertnVerification: t("openCertnVerification"),
+    certnEmailInvite: t("certnEmailInvite"),
+    footer: t("footer"),
+    paymentReceivedPrefix: t("paymentReceivedPrefix"),
+    paymentInviteReady: t("paymentInviteReady"),
+    paymentFailureStart: t("paymentFailureStart"),
+    paymentInvitePending: t("paymentInvitePending"),
+    failureMissingProfile: t("failureMissingProfile"),
+    failureCertnFailed: t("failureCertnFailed"),
+    failureGeneric: t("failureGeneric"),
+  };
+}
+
+export function usePasswordResetLabels(): PasswordResetLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.resetPassword");
+  return {
+    title: t("title"),
+    description: t("description"),
+    email: t("email"),
+    newPassword: t("newPassword"),
+    confirmPassword: t("confirmPassword"),
+    emailPlaceholder: tc("emailPlaceholder"),
+    passwordPlaceholder: tc("passwordPlaceholder"),
+    updatePassword: t("submit"),
+    updating: t("submitting"),
+    cancel: tc("cancel"),
+    requiredMarker: "*",
+    validation: {
+      emailInvalid: t("validation.emailInvalid"),
+      passwordMinLength: t("validation.passwordMinLength"),
+      confirmPasswordMinLength: t("validation.confirmPasswordMinLength"),
+      passwordsMustMatch: t("validation.passwordsMustMatch"),
+    },
+  };
+}
+
+export function useAccountVerificationLabels(): AccountVerificationLabels {
+  const t = useTranslations("auth.verification");
+  return {
+    title: t("title"),
+    codeSentPrefix: t("codeSentPrefix"),
+    codeLabel: t("codeLabel"),
+    codeDigitAria: t("codeDigitAria"),
+    resendCode: t("resendCode"),
+    verify: t("verify"),
+    verifying: t("verifying"),
+    requiredMarker: "*",
+    validation: {
+      codeInvalid: t("validation.codeFormat"),
+    },
+  };
+}
+
+export function useOptionalProfileStepLabels(): OptionalProfileStepLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.register.steps.optionalProfile");
+  return {
+    back: tc("back"),
+    continue: tc("continue"),
+    saving: tc("saving"),
+    requiredMarker: "*",
+    title: t("title"),
+    description: t("description"),
+    photoUpload: {
+      title: t("photoUpload.title"),
+      description: t("photoUpload.description"),
+      photoAlt: t("photoUpload.photoAlt"),
+      uploadPhoto: t("photoUpload.uploadPhoto"),
+      changePhoto: t("photoUpload.changePhoto"),
+      removePhoto: t("photoUpload.removePhoto"),
+      acceptedHint: t("photoUpload.acceptedHint"),
+      errors: {
+        invalidFormat: t("photoUpload.errors.invalidFormat"),
+        fileTooLarge: t("photoUpload.errors.fileTooLarge"),
+        imageTooSmall: t("photoUpload.errors.imageTooSmall"),
+        imageTooLarge: t("photoUpload.errors.imageTooLarge"),
+        invalidImage: t("photoUpload.errors.invalidImage"),
+        uploadFailed: t("photoUpload.errors.uploadFailed"),
+        removeFailed: t("photoUpload.errors.removeFailed"),
+      },
+    },
+    addressTitle: t("addressTitle"),
+    addressDescription: t("addressDescription"),
+    address: {
+      streetAddress: t("address.streetAddress"),
+      city: t("address.city"),
+      stateProvince: t("address.stateProvince"),
+      zipPostalCode: t("address.zipPostalCode"),
+      streetPlaceholder: t("address.streetPlaceholder"),
+    },
+    finishSignup: t("finishSignup"),
+  };
+}

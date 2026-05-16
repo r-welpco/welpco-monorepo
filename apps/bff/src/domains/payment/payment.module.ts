@@ -14,6 +14,7 @@ import { StripeWebhookController } from './stripe-webhook.controller';
 import { PaymentCaptureScheduler } from './payment-capture.scheduler';
 import { EmailVerifiedGuardModule } from '../../common/guards/email-verified.guard.module';
 import { NotificationModule } from '../notification/notification.module';
+import { SafetyVerificationModule } from '../safety-verification/safety-verification.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { NotificationModule } from '../notification/notification.module';
     CustomerProfileModule,
     EmailVerifiedGuardModule,
     NotificationModule,
+    SafetyVerificationModule,
   ],
   controllers: [PaymentController, StripeWebhookController],
   providers: [ApplicationSettingsService, PaymentService, PaymentCaptureScheduler],

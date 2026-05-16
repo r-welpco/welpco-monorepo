@@ -1,4 +1,4 @@
-import { stripLocale } from "./marketing-routes";
+import { stripLocale } from "./locale-routes";
 
 /** Whether the pathname is the localized marketing homepage. */
 export function isMarketingHome(pathname: string): boolean {

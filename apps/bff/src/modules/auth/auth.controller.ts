@@ -298,6 +298,18 @@ export class AuthController {
     return this.authService.submitWelperAvailabilityStep(user.userId, dto);
   }
 
+  @Post('signup/step/welper-background-check')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Wizard step (welper-only): acknowledge background check after payment and Certn invite.',
+  })
+  async submitWelperBackgroundCheckStep(@CurrentUser() user: CurrentUserData) {
+    return this.authService.submitWelperBackgroundCheckStep(user.userId);
+  }
+
   @Post('signup/step/welper-payout')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')

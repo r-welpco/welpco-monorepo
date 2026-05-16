@@ -16,6 +16,8 @@ import type { SearchServicesQueryDto } from './dto/search-services-query.dto';
 import type { SearchResultItemDto, SearchServicesResponseDto } from './dto/search-result-item.dto';
 import type { PublicWelperProfileDto, PublicServiceOfferingDto } from './dto/public-welper-profile.dto';
 import { DiscoveryCategoriesCacheService } from '../../common/discovery-categories-cache/discovery-categories-cache.service';
+import { BackgroundCheckStatus } from '../user-management/entities/verification-status.entity';
+import { BackgroundCheckService } from '../safety-verification/background-check.service';
 
 const BIO_SNIPPET_LENGTH = 120;
 
@@ -52,6 +54,7 @@ export class ServiceDiscoveryService {
     private readonly categoriesService: CategoriesService,
     private readonly discoveryCategoriesCache: DiscoveryCategoriesCacheService,
     @Inject(GEOCODE_SERVICE) private readonly geocodeService: IGeocodeService,
+    private readonly backgroundCheckService: BackgroundCheckService,
   ) {}
 
   private async getCachedCategories(): Promise<ServiceCategory[]> {
@@ -177,7 +180,20 @@ export class ServiceDiscoveryService {
         'min_so.welper_id = p.welper_id',
       )
       .where('p.profile_completion_status = :status', { status: ProfileCompletionStatus.COMPLETE })
-      .andWhere('p.profile_visibility = :visibility', { visibility: ProfileVisibility.PUBLIC });
+      .andWhere('p.profile_visibility = :visibility', { visibility: ProfileVisibility.PUBLIC })
+      .andWhere(
+        `EXISTS (
+          SELECT 1 FROM verification_statuses vs
+          WHERE vs.user_id = p.welper_id
+          AND vs.background_check_status IN (:...bgAllowed)
+        )`,
+        {
+          bgAllowed: [
+            BackgroundCheckStatus.PASSED,
+            BackgroundCheckStatus.NOT_REQUIRED,
+          ],
+        },
+      );
 
     if (categoryIds.length > 0) {
       qb.andWhere(
@@ -326,6 +342,11 @@ export class ServiceDiscoveryService {
     ]);
 
     if (profile.profileVisibility !== ProfileVisibility.PUBLIC || profile.profileCompletionStatus !== ProfileCompletionStatus.COMPLETE) {
+      throw new NotFoundException('Welper profile not found');
+    }
+
+    const searchable = await this.backgroundCheckService.assertVisibleInSearch(welperId);
+    if (!searchable) {
       throw new NotFoundException('Welper profile not found');
     }
 

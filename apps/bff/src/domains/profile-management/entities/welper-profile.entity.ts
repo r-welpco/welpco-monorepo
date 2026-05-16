@@ -49,6 +49,16 @@ export class WelperProfile extends BaseEntity {
   optionalProfileStepCompletedAt!: Date | null;
 
   /**
+   * Set when the welper continues past the signup background-check step after payment.
+   */
+  @Column({
+    name: 'background_check_step_acknowledged_at',
+    type: 'timestamptz',
+    nullable: true,
+  })
+  backgroundCheckStepAcknowledgedAt!: Date | null;
+
+  /**
    * True when the welper chose ad-hoc-only availability during signup (no recurring slots).
    */
   @Column({

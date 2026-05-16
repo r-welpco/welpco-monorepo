@@ -26,8 +26,8 @@ export type SignupStepName =
   | 'welperServiceArea'
   | 'welperOffering'
   | 'welperAvailability'
+  | 'welperBackgroundCheck'
   | 'welperPayout'
-  | 'notificationPrefs'
   | 'optionalProfile';
 
 /**
@@ -91,12 +91,27 @@ export interface SignupFilledData {
     province: string;
     country: string;
     postalCodes: string[];
+    radiusMiles?: number;
+    serviceArea?: {
+      type: "radius";
+      centerAddress: {
+        streetAddress?: string;
+        city: string;
+        stateProvince: string;
+        zipPostalCode?: string;
+        country?: string;
+      };
+      radiusMiles: number;
+      radiusKm?: number;
+    };
   };
   welperOffering?: {
-    categoryId: string;
-    title: string;
-    hourlyRate: number;
-    description: string;
+    offerings: Array<{
+      subcategoryId: string;
+      title: string;
+      hourlyRate: number;
+      description: string;
+    }>;
   };
   welperAvailability?: {
     weeklySlots?: Array<{
@@ -105,6 +120,15 @@ export interface SignupFilledData {
       endTime: string;
     }>;
     acceptsAdHocOnly?: boolean;
+  };
+  welperBackgroundCheck?: {
+    paid: boolean;
+    certnStatus: string;
+    applicantUrl?: string;
+    listPriceCents: number;
+    promoPriceCents: number;
+    promoEnabled: boolean;
+    skipped?: boolean;
   };
   welperPayout?: {
     stripeOnboardingCompleted?: boolean;

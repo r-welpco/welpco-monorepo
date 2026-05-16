@@ -15,6 +15,11 @@ import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { TextField } from "@welpco/ui/text-field";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import {
+  DEFAULT_EMAIL_PASSWORD_LABELS,
+  type EmailPasswordStepLabels,
+} from "./labels";
+import { SIGNUP_STEP_CARD_STYLE } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch A. Step 1 of the unified signup wizard.
@@ -46,44 +51,59 @@ export interface EmailPasswordStepProps {
    * here verbatim.
    */
   error?: string | null;
+  labels?: EmailPasswordStepLabels;
   onSubmit: (values: EmailPasswordStepValues) => void | Promise<void>;
   /** Optional callback for the "Sign in" link in the secondary CTA row. */
   onSignIn?: () => void;
 }
 
-const schema = z.object({
-  email: z.string().trim().toLowerCase().email("Enter a valid email address"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(128, "Password must be 128 characters or fewer"),
-});
+function createSchema(labels: EmailPasswordStepLabels) {
+  return z.object({
+    email: z.string().trim().toLowerCase().email(labels.validation.emailInvalid),
+    password: z
+      .string()
+      .min(8, labels.validation.passwordMinLength)
+      .max(128, labels.validation.passwordMaxLength),
+  });
+}
 
 interface PasswordStrength {
   score: 0 | 1 | 2 | 3 | 4;
   label: string;
 }
 
-function scorePassword(password: string): PasswordStrength {
+function scorePassword(
+  password: string,
+  labels: EmailPasswordStepLabels,
+): PasswordStrength {
   if (!password) return { score: 0, label: "" };
   let score = 0;
   if (password.length >= 8) score += 1;
   if (password.length >= 12) score += 1;
   if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score += 1;
   if (/\d/.test(password) && /[^A-Za-z0-9]/.test(password)) score += 1;
-  // Clamp to the 0..4 range; map to a friendly label.
   const clamped = Math.min(score, 4) as 0 | 1 | 2 | 3 | 4;
-  const labels = ["Too short", "Weak", "Fair", "Good", "Strong"] as const;
-  return { score: clamped, label: labels[clamped] };
+  const strengthLabels = [
+    labels.strengthTooShort,
+    labels.strengthWeak,
+    labels.strengthFair,
+    labels.strengthGood,
+    labels.strengthStrong,
+  ] as const;
+  return { score: clamped, label: strengthLabels[clamped] };
 }
 
 export function EmailPasswordStep({
   defaultValues,
   loading,
   error,
+  labels: labelsProp,
   onSubmit,
   onSignIn,
 }: EmailPasswordStepProps) {
+  const labels = labelsProp ?? DEFAULT_EMAIL_PASSWORD_LABELS;
+  const schema = useMemo(() => createSchema(labels), [labels]);
+
   const form = useForm<EmailPasswordStepValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -94,7 +114,10 @@ export function EmailPasswordStep({
   });
 
   const passwordValue = form.watch("password");
-  const strength = useMemo(() => scorePassword(passwordValue ?? ""), [passwordValue]);
+  const strength = useMemo(
+    () => scorePassword(passwordValue ?? "", labels),
+    [passwordValue, labels],
+  );
   const strengthPct = (strength.score / 4) * 100;
 
   const handleSubmit = form.handleSubmit(async (values) => {
@@ -105,16 +128,15 @@ export function EmailPasswordStep({
     <Card
       size="4"
       variant="surface"
-      style={{ width: "100%", maxWidth: "480px", minWidth: 0 }}
+      style={SIGNUP_STEP_CARD_STYLE}
     >
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>
           <Heading as="h1" size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            Create your account
+            {labels.title}
           </Heading>
           <Text size="2" color="gray">
-            Set your email and password. We&apos;ll send a verification link in the
-            background — you can keep going while it arrives.
+            {labels.description}
           </Text>
         </Box>
 
@@ -133,15 +155,15 @@ export function EmailPasswordStep({
               htmlFor="signup-email"
               mb={FORM_SPACING.labelGap}
             >
-              Email
+              {labels.email}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
-                *
+                {labels.requiredMarker}
               </Text>
             </Text>
             <TextField.Root
               id="signup-email"
               type="email"
-              placeholder="you@example.com"
+              placeholder={labels.emailPlaceholder}
               autoComplete="email"
               inputMode="email"
               disabled={loading}
@@ -175,15 +197,15 @@ export function EmailPasswordStep({
               htmlFor="signup-password"
               mb={FORM_SPACING.labelGap}
             >
-              Password
+              {labels.password}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
-                *
+                {labels.requiredMarker}
               </Text>
             </Text>
             <TextField.Root
               id="signup-password"
               type="password"
-              placeholder="At least 8 characters"
+              placeholder={labels.passwordPlaceholder}
               autoComplete="new-password"
               disabled={loading}
               size="2"
@@ -209,7 +231,7 @@ export function EmailPasswordStep({
                       ? SEMANTIC_COLOR.warning
                       : SEMANTIC_COLOR.danger
                   }
-                  aria-label="Password strength"
+                  aria-label={labels.passwordStrengthAria}
                 />
                 <Text
                   id="signup-password-strength"
@@ -218,8 +240,7 @@ export function EmailPasswordStep({
                   mt={FORM_SPACING.labelGap}
                 >
                   {strength.label}
-                  {strength.score < 3 &&
-                    ". Mix in numbers, symbols, and a longer length to strengthen it."}
+                  {strength.score < 3 && labels.strengthHint}
                 </Text>
               </Box>
             )}
@@ -244,14 +265,14 @@ export function EmailPasswordStep({
             mt={FORM_SPACING.submitGap}
             style={{ width: "100%" }}
           >
-            {loading ? "Creating your account..." : "Continue"}
+            {loading ? labels.creatingAccount : labels.continue}
           </Button>
         </form>
 
         {onSignIn && (
           <Flex align="center" justify="center" gap="2">
             <Text size="2" color="gray">
-              Already have an account?
+              {labels.alreadyHaveAccount}
             </Text>
             <Link
               size="2"
@@ -262,7 +283,7 @@ export function EmailPasswordStep({
               }}
               style={{ cursor: "pointer" }}
             >
-              Sign in
+              {labels.signIn}
             </Link>
           </Flex>
         )}

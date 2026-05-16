@@ -654,5 +654,353 @@
       "ogDescription": "Prestataires locaux vérifiés — garde, pelouse, tutorat, aide tech et plus.",
       "twitterDescription": "Prestataires locaux vérifiés pour les services du quotidien dans votre quartier."
     }
+  },
+  "auth": {
+    "common": {
+      "back": "Retour",
+      "continue": "Continuer",
+      "cancel": "Annuler",
+      "saving": "Enregistrement…",
+      "pleaseWait": "Veuillez patienter…",
+      "somethingWentWrong": "Une erreur s'est produite. Réessayez dans un instant.",
+      "emailPlaceholder": "vous@exemple.com",
+      "passwordPlaceholder": "••••••••"
+    },
+    "login": {
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous pour continuer.",
+      "email": "Courriel",
+      "password": "Mot de passe",
+      "forgotPassword": "Mot de passe oublié?",
+      "rememberMe": "Se souvenir de moi",
+      "signIn": "Se connecter",
+      "signingIn": "Connexion…",
+      "newToWelpco": "Nouveau sur Welpco?",
+      "createAccount": "Créer un compte",
+      "verifiedBanner": "Votre courriel est vérifié. Connectez-vous pour continuer.",
+      "validation": {
+        "emailInvalid": "Entrez un courriel valide",
+        "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères"
+      },
+      "errors": {
+        "invalidCredentials": "Courriel ou mot de passe invalide",
+        "signInFailed": "Échec de la connexion. Veuillez réessayer."
+      }
+    },
+    "register": {
+      "begin": {
+        "title": "Créez votre compte",
+        "description": "Choisissez votre courriel et mot de passe. Nous enverrons un lien de vérification en arrière-plan — vous pouvez continuer pendant qu'il arrive.",
+        "email": "Courriel",
+        "password": "Mot de passe",
+        "passwordPlaceholder": "Au moins 8 caractères",
+        "passwordStrengthAria": "Force du mot de passe",
+        "strengthTooShort": "Trop court",
+        "strengthWeak": "Faible",
+        "strengthFair": "Passable",
+        "strengthGood": "Bon",
+        "strengthStrong": "Fort",
+        "strengthHint": ". Ajoutez des chiffres, symboles et une longueur plus grande pour le renforcer.",
+        "creatingAccount": "Création du compte…",
+        "alreadyHaveAccount": "Vous avez déjà un compte?",
+        "signInLink": "Se connecter",
+        "validation": {
+          "emailInvalid": "Entrez une adresse courriel valide",
+          "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
+          "passwordMaxLength": "Le mot de passe doit contenir au plus 128 caractères"
+        },
+        "errors": {
+          "accountExists": "Un compte existe déjà pour ce courriel. Connectez-vous ou utilisez un autre courriel.",
+          "createFailed": "Impossible de créer votre compte. Réessayez dans un instant."
+        }
+      },
+      "chrome": {
+        "stepOf": "Étape {current} sur {total}",
+        "saveAndContinueLater": "Enregistrer et continuer plus tard",
+        "saveAndContinueLaterAria": "Enregistrer et continuer plus tard",
+        "progressSavedHint": "Votre progression est enregistrée. Reconnectez-vous pour reprendre ici.",
+        "signupProgressAria": "Progression de l'inscription : {percent} %"
+      },
+      "finish": {
+        "title": "Presque terminé",
+        "description": "Il nous manque quelques détails avant que votre compte soit prêt.",
+        "missingFieldsPrefix": "Les éléments suivants sont encore manquants :",
+        "continueSetup": "Continuer l'inscription",
+        "errors": {
+          "finishFailed": "Impossible de terminer votre inscription. Réessayez dans un instant."
+        }
+      },
+      "steps": {
+        "selectRole": {
+          "title": "Qu'est-ce qui vous amène sur Welpco?",
+          "description": "Choisissez une option. Vous pourrez changer plus tard en créant un nouveau compte avec un autre courriel — la plupart des gens gardent leur choix initial.",
+          "radiogroupAriaLabel": "Choisissez votre rôle",
+          "customerTitle": "Trouver de l'aide",
+          "customerDescription": "Réservez des Welpers de confiance dans votre région pour le ménage, les soins, les courses et plus.",
+          "welperTitle": "Devenir Welper",
+          "welperDescription": "Fixez vos horaires, vos tarifs et gagnez auprès de clients qui ont besoin de vos compétences.",
+          "customerDisabledDescription": "L'inscription client arrive bientôt. Pour l'instant, Welpco est ouvert aux Welpers.",
+          "validation": {
+            "required": "Choisissez une option pour continuer."
+          }
+        },
+        "identity": {
+          "title": "Parlez-nous de vous",
+          "description": "Nous utilisons ces renseignements pour confirmer les réservations et vous joindre au sujet de votre compte. Ils ne sont jamais affichés publiquement sans votre accord.",
+          "firstName": "Prénom",
+          "lastName": "Nom",
+          "phone": "Téléphone",
+          "countryPlaceholder": "Pays",
+          "phonePlaceholder": "416 555 1234",
+          "dateOfBirth": "Date de naissance",
+          "dobHint": "Vous devez avoir au moins 13 ans.",
+          "tosPrefix": "J'accepte les",
+          "tosLink": "Conditions d'utilisation",
+          "privacyPrefix": "J'ai lu la",
+          "privacyLink": "Politique de confidentialité",
+          "countries": {
+            "CA": "Canada (+1)",
+            "US": "États-Unis (+1)",
+            "GB": "Royaume-Uni (+44)",
+            "AU": "Australie (+61)",
+            "FR": "France (+33)",
+            "DE": "Allemagne (+49)",
+            "IN": "Inde (+91)",
+            "MX": "Mexique (+52)"
+          },
+          "validation": {
+            "firstNameRequired": "Le prénom est requis",
+            "firstNameMax": "Le prénom doit contenir au plus 80 caractères",
+            "lastNameRequired": "Le nom est requis",
+            "lastNameMax": "Le nom doit contenir au plus 80 caractères",
+            "countryRequired": "Choisissez un pays",
+            "phoneRequired": "Le numéro de téléphone est requis",
+            "phoneInvalid": "Entrez un numéro valide pour le pays sélectionné",
+            "dobRequired": "La date de naissance est requise",
+            "dobInvalid": "Entrez une date valide",
+            "dobMinAge": "Vous devez avoir au moins 13 ans pour vous inscrire",
+            "tosRequired": "Acceptez les Conditions d'utilisation pour continuer",
+            "privacyRequired": "Acceptez la Politique de confidentialité pour continuer"
+          }
+        },
+        "welperBio": {
+          "title": "Présentez-vous aux clients",
+          "description": "Quelques phrases sur votre travail, ce que vous aimez et pour qui vous êtes un excellent choix. C'est la première chose que les gens lisent sur votre profil — parlez avec votre voix.",
+          "bioLabel": "Votre bio",
+          "bioPlaceholder": "Que faites-vous, pour qui, et pourquoi êtes-vous bon dans ce domaine?",
+          "charCount": "{count} caractères",
+          "charsRemaining": "{count} restants",
+          "minCharsRemaining": "Encore {count} ({min} min)",
+          "validation": {
+            "bioMin": "La bio doit contenir au moins {min} caractères",
+            "bioMax": "La bio doit contenir au plus {max} caractères"
+          }
+        },
+        "welperServiceArea": {
+          "title": "Où travaillez-vous?",
+          "description": "Définissez le centre de votre zone de service et la distance que vous êtes prêt à parcourir. Les clients à proximité pourront vous trouver dans la recherche.",
+          "validation": {
+            "required": "Définissez votre zone de service et le rayon pour continuer.",
+            "cityRequired": "La ville est requise.",
+            "provinceRequired": "La province ou l'État est requis.",
+            "postalRequired": "Le code postal est requis pour vous placer sur la carte.",
+            "radiusRange": "Choisissez un rayon entre 1 et 100 milles."
+          },
+          "selector": {
+            "centerAddress": "Adresse centrale",
+            "serviceRadius": "Rayon de service (milles)",
+            "radiusHint": "Les services seront disponibles dans un rayon de {miles} milles autour de l'adresse centrale."
+          },
+          "address": {
+            "streetAddress": "Adresse",
+            "city": "Ville",
+            "stateProvince": "Province / État",
+            "zipPostalCode": "Code postal",
+            "streetPlaceholder": "123 rue Principale"
+          }
+        },
+        "welperOffering": {
+          "title": "Ajoutez vos services",
+          "description": "Choisissez une catégorie et une sous-catégorie pour chaque service, puis ajoutez le tarif et une description. Vous pouvez ajouter jusqu'à {max} services maintenant et d'autres plus tard depuis votre profil.",
+          "yourServices": "Vos services ({count}/{max})",
+          "remove": "Retirer",
+          "addAnother": "Ajouter un autre service",
+          "firstService": "Premier service",
+          "category": "Catégorie",
+          "subcategory": "Sous-catégorie",
+          "serviceTitle": "Titre du service",
+          "hourlyRate": "Tarif horaire ($)",
+          "descriptionLabel": "Description",
+          "addToList": "Ajouter à la liste",
+          "loadingCategories": "Chargement des catégories…",
+          "chooseCategory": "Choisir une catégorie",
+          "chooseCategoryFirst": "Choisissez d'abord une catégorie",
+          "noSubcategories": "Aucune sous-catégorie disponible",
+          "chooseSubcategory": "Choisir une sous-catégorie",
+          "addAtLeastOne": "Ajoutez au moins un service avant de continuer.",
+          "validation": {
+            "parentRequired": "Choisissez une catégorie",
+            "subcategoryRequired": "Choisissez une sous-catégorie",
+            "titleRequired": "Donnez un titre à ce service",
+            "rateRequired": "Indiquez un tarif horaire",
+            "rateMin": "Le tarif doit être d'au moins 1 $",
+            "descriptionRequired": "Ajoutez une courte description"
+          }
+        },
+        "welperAvailability": {
+          "title": "Quand êtes-vous disponible?",
+          "description": "Ajoutez les plages où vous pouvez normalement travailler. Les clients les voient dans la recherche et lors de la réservation. Vous pourrez les modifier à tout moment.",
+          "addSlotLabel": "Ajouter une plage hebdomadaire",
+          "dayPlaceholder": "Jour",
+          "addSlotButton": "Ajouter la plage",
+          "yourWeeklyHours": "Vos heures hebdomadaires",
+          "remove": "Retirer",
+          "days": {
+            "monday": "Lundi",
+            "tuesday": "Mardi",
+            "wednesday": "Mercredi",
+            "thursday": "Jeudi",
+            "friday": "Vendredi",
+            "saturday": "Samedi",
+            "sunday": "Dimanche"
+          },
+          "validation": {
+            "endAfterStart": "L'heure de fin doit être après l'heure de début",
+            "maxSlots": "Maximum de 50 plages",
+            "duplicateSlot": "Cette plage est déjà dans votre liste",
+            "addAtLeastOne": "Ajoutez au moins une plage pour continuer."
+          }
+        },
+        "welperBackgroundCheck": {
+          "title": "Vérification des antécédents",
+          "under18Description": "Comme vous avez moins de 18 ans, une vérification des antécédents criminels n'est pas requise pour le moment.",
+          "description": "Les Welpers adultes doivent compléter une vérification d'antécédents criminels de base au Canada avant d'être actifs. Payez les frais ci-dessous, puis terminez la vérification d'identité avec notre partenaire.",
+          "limitedTimeRate": "Tarif promotionnel",
+          "payAndContinue": "Payer {amount} et continuer",
+          "startCertnVerification": "Commencer la vérification Certn",
+          "openCertnVerification": "Ouvrir la vérification Certn",
+          "certnEmailInvite": "Nous avons envoyé un lien Certn à votre courriel d'inscription. Ouvrez ce message pour compléter la vérification (ce n'est pas la connexion admin Certn).",
+          "footer": "Les résultats sont généralement prêts en quelques jours ouvrables. Vous pouvez terminer l'inscription pendant le traitement; la recherche et les réservations s'activent une fois approuvé.",
+          "continue": "Continuer",
+          "paymentReceivedPrefix": "Paiement reçu.",
+          "paymentInviteReady": "Poursuivez la vérification sur Certn si ce n'est pas déjà fait, puis continuez l'inscription.",
+          "paymentFailureStart": "Le paiement est complété. Lancez Certn ci-dessous si la vérification n'a pas encore commencé.",
+          "paymentInvitePending": "Le paiement est complété. Nous envoyons votre invitation Certn — vous pouvez continuer l'inscription pendant le traitement.",
+          "failureMissingProfile": "Impossible de lancer Certn — votre nom et votre date de naissance de l'étape d'identité sont requis.",
+          "failureCertnFailed": "Certn n'a pas pu démarrer : {detail}",
+          "failureGeneric": "Impossible de lancer la vérification Certn. Réessayez ci-dessous ou contactez le soutien si le problème persiste."
+        },
+        "optionalProfile": {
+          "title": "Complétez votre profil",
+          "description": "Ajoutez une photo de profil pour que clients et Welpers sachent avec qui ils travaillent. Vous pourrez la modifier à tout moment.",
+          "photoUpload": {
+            "title": "Photo de profil",
+            "description": "Une photo claire et accueillante. JPEG, PNG ou WebP jusqu'à 5 Mo.",
+            "photoAlt": "Photo de profil",
+            "uploadPhoto": "Téléverser une photo",
+            "changePhoto": "Changer la photo",
+            "removePhoto": "Retirer la photo",
+            "acceptedHint": "Formats : {formats}. Max {maxSizeMB} Mo. Min. {minWidth}×{minHeight} px.",
+            "errors": {
+              "invalidFormat": "Le fichier doit être : {formats}",
+              "fileTooLarge": "La taille doit être inférieure à {maxSizeMB} Mo",
+              "imageTooSmall": "L'image doit faire au moins {minWidth}×{minHeight} pixels",
+              "imageTooLarge": "L'image doit faire au plus {maxWidth}×{maxHeight} pixels",
+              "invalidImage": "Fichier image invalide",
+              "uploadFailed": "Impossible de téléverser cette photo. Réessayez ou choisissez un autre fichier.",
+              "removeFailed": "Impossible de retirer la photo"
+            }
+          },
+          "addressTitle": "Où habitez-vous?",
+          "addressDescription": "Nous l'utilisons pour trouver des Welpers près de vous. Optionnel — vous pourrez l'ajouter plus tard.",
+          "address": {
+            "streetAddress": "Adresse",
+            "city": "Ville",
+            "stateProvince": "Province",
+            "zipPostalCode": "Code postal",
+            "streetPlaceholder": "123 rue Principale"
+          },
+          "finishSignup": "Terminer l'inscription"
+        },
+        "page": {
+          "loadProgressTitle": "Impossible de charger votre progression",
+          "loadProgressMessage": "Erreur lors du chargement de l'inscription. Vérifiez que l'API fonctionne et réessayez.",
+          "stepNotFoundTitle": "Étape introuvable",
+          "stepNotFoundMessage": "Cette URL ne correspond à aucune étape. Retournez où vous en étiez.",
+          "comingSoonDefault": "Nous finalisons cette étape. Votre progression est enregistrée — déconnectez-vous et revenez bientôt, ou actualisez dans quelques instants.",
+          "photoUploadFailed": "Impossible de téléverser cette photo. Réessayez ou ajoutez-la plus tard depuis votre profil.",
+          "labels": {
+            "selectRole": "Choisissez votre rôle",
+            "identity": "Parlez-nous de vous",
+            "welperBio": "Parlez de vous",
+            "welperServiceArea": "Où travaillez-vous?",
+            "welperOffering": "Ajoutez votre premier service",
+            "welperAvailability": "Quand êtes-vous disponible?",
+            "welperBackgroundCheck": "Vérification des antécédents",
+            "welperPayout": "Configuration des paiements",
+            "optionalProfile": "Complétez votre profil",
+            "default": "Étape suivante"
+          }
+        }
+      }
+    },
+    "forgotPassword": {
+      "title": "Mot de passe oublié?",
+      "description": "Entrez le courriel de votre compte. Nous vous enverrons un lien pour en définir un nouveau.",
+      "email": "Courriel",
+      "submit": "Envoyer le lien",
+      "submitting": "Envoi…",
+      "backToSignIn": "Retour à la connexion",
+      "successMessage": "Si un compte existe pour {email}, nous venons d'envoyer un lien. Vérifiez votre boîte — le lien expire dans 15 minutes.",
+      "validation": {
+        "emailInvalid": "Entrez un courriel valide"
+      },
+      "errors": {
+        "sendFailed": "Impossible d'envoyer le lien. Vérifiez le courriel et réessayez."
+      }
+    },
+    "resetPassword": {
+      "title": "Réinitialiser le mot de passe",
+      "description": "Entrez votre courriel et un nouveau mot de passe.",
+      "email": "Courriel",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "submit": "Mettre à jour le mot de passe",
+      "submitting": "Mise à jour…",
+      "invalidLinkTitle": "Ce lien de réinitialisation ne fonctionne pas",
+      "invalidLinkDescription": "Le lien est peut-être expiré ou déjà utilisé. Demandez une nouvelle réinitialisation.",
+      "invalidLinkCallout": "Les liens sont valides 30 minutes après leur émission.",
+      "requestNewLink": "Demander un nouveau lien",
+      "successTitle": "Votre mot de passe est défini",
+      "successRedirecting": "Redirection vers la connexion…",
+      "successCallout": "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+      "validation": {
+        "emailInvalid": "Entrez un courriel valide",
+        "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
+        "confirmPasswordMinLength": "Confirmez votre mot de passe",
+        "passwordsMustMatch": "Les mots de passe doivent correspondre"
+      },
+      "errors": {
+        "invalidToken": "Ce lien est invalide. Demandez-en un nouveau pour continuer.",
+        "resetFailed": "Impossible de réinitialiser le mot de passe. Le lien est peut-être expiré — demandez-en un nouveau."
+      }
+    },
+    "verification": {
+      "title": "Vérifiez votre compte",
+      "codeSentPrefix": "Nous avons envoyé un code à 6 chiffres à",
+      "codeLabel": "Code de vérification",
+      "codeDigitAria": "Chiffre {index} sur {total} du code de vérification",
+      "resendCode": "Renvoyer le code",
+      "verify": "Vérifier",
+      "verifying": "Vérification…",
+      "validation": {
+        "codeFormat": "Entrez le code à 6 chiffres"
+      },
+      "errors": {
+        "codeRequired": "Entrez le code à 6 chiffres que nous vous avons envoyé.",
+        "verifyFailed": "Ce code n'a pas fonctionné. Il est peut-être expiré — demandez-en un nouveau.",
+        "resendFailed": "Impossible d'envoyer un nouveau code. Réessayez dans un instant."
+      }
+    }
   }
 }

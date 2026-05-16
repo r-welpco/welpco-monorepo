@@ -46,19 +46,28 @@ export interface WelperBioStepParams {
 }
 
 export interface WelperServiceAreaStepParams {
-  city: string;
-  province: string;
-  country: string;
-  /** ≥ 1 postal-code prefix. */
-  postalCodes: string[];
+  serviceArea: {
+    type: "radius";
+    centerAddress: {
+      streetAddress?: string;
+      city: string;
+      stateProvince: string;
+      zipPostalCode?: string;
+      country?: string;
+    };
+    radiusMiles: number;
+  };
+}
+
+export interface WelperOfferingItemParams {
+  subcategoryId: string;
+  title: string;
+  hourlyRate: number;
+  description: string;
 }
 
 export interface WelperOfferingStepParams {
-  categoryId: string;
-  title: string;
-  /** Hourly rate in the currency of the welper profile. */
-  hourlyRate: number;
-  description: string;
+  offerings: WelperOfferingItemParams[];
 }
 
 export interface WelperAvailabilityStepParams {
@@ -156,7 +165,7 @@ export async function submitWelperBioStep(
   );
 }
 
-/** Welper-only: service area (city, province, country, postal codes). */
+/** Welper-only: service area (city, province, country). */
 export async function submitWelperServiceAreaStep(
   params: WelperServiceAreaStepParams,
 ): Promise<SignupStateDto> {
@@ -166,7 +175,7 @@ export async function submitWelperServiceAreaStep(
   );
 }
 
-/** Welper-only: first service offering (category + rate + description). */
+/** Welper-only: one or more service offerings (subcategory + rate + description). */
 export async function submitWelperOfferingStep(
   params: WelperOfferingStepParams,
 ): Promise<SignupStateDto> {
@@ -183,6 +192,13 @@ export async function submitWelperAvailabilityStep(
   return apiClient.post<SignupStateDto>(
     "/api/auth/signup/step/welper-availability",
     params,
+  );
+}
+
+/** Welper-only: continue past background check after payment + Certn invite. */
+export async function submitWelperBackgroundCheckStep(): Promise<SignupStateDto> {
+  return apiClient.post<SignupStateDto>(
+    "/api/auth/signup/step/welper-background-check",
   );
 }
 

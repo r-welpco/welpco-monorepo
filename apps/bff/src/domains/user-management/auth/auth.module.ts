@@ -36,6 +36,8 @@ import {
 } from '../../profile-management/entities';
 import { NotificationPreference } from '../../notification/entities/notification-preference.entity';
 import { NotificationModule } from '../../notification/notification.module';
+import { SafetyVerificationModule } from '../../safety-verification/safety-verification.module';
+import { GeocodeModule } from '../../geocode/geocode.module';
 
 @Module({
   imports: [
@@ -63,6 +65,8 @@ import { NotificationModule } from '../../notification/notification.module';
     EmailModule,
     ProfileCreationModule,
     NotificationModule,
+    SafetyVerificationModule,
+    GeocodeModule,
   ],
   controllers: [AuthController],
   providers: [

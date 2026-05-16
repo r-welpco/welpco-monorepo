@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Inject,
   Logger,
   ConflictException,
   NotFoundException,
@@ -42,6 +43,16 @@ import { WelperAvailabilityStepDto } from '../../../modules/auth/dto/welper-avai
 import { WelperPayoutStepDto } from '../../../modules/auth/dto/welper-payout-step.dto';
 import { NotificationPrefsStepDto } from '../../../modules/auth/dto/notification-prefs-step.dto';
 import { OptionalProfileStepDto } from '../../../modules/auth/dto/optional-profile-step.dto';
+import { BackgroundCheckService } from '../../safety-verification/background-check.service';
+import { isAdultWelper } from '../../safety-verification/background-check-age.util';
+import { GEOCODE_SERVICE } from '../../geocode/geocode.interface';
+import type { IGeocodeService } from '../../geocode/geocode.interface';
+import {
+  applyRadiusServiceAreaToWelperProfile,
+  buildWelperServiceAreaFilledData,
+  isWelperServiceAreaStepComplete,
+  type RadiusServiceAreaPayload,
+} from '../../profile-management/welper-profile/service-area-radius.util';
 
 /**
  * Day 15 — Phase 1 of the signup ↔ onboarding merge.
@@ -69,8 +80,8 @@ export type SignupStepName =
   | 'welperServiceArea'
   | 'welperOffering'
   | 'welperAvailability'
+  | 'welperBackgroundCheck'
   | 'welperPayout'
-  | 'notificationPrefs'
   | 'optionalProfile';
 
 interface SignupFilledData {
@@ -88,12 +99,16 @@ interface SignupFilledData {
     province: string;
     country: string;
     postalCodes: string[];
+    radiusMiles?: number;
+    serviceArea?: RadiusServiceAreaPayload;
   };
   welperOffering?: {
-    categoryId: string;
-    title: string;
-    hourlyRate: number;
-    description: string;
+    offerings: Array<{
+      subcategoryId: string;
+      title: string;
+      hourlyRate: number;
+      description: string;
+    }>;
   };
   welperAvailability?: {
     weeklySlots?: Array<{
@@ -102,6 +117,15 @@ interface SignupFilledData {
       endTime: string;
     }>;
     acceptsAdHocOnly?: boolean;
+  };
+  welperBackgroundCheck?: {
+    paid: boolean;
+    certnStatus: string;
+    applicantUrl?: string;
+    listPriceCents: number;
+    promoPriceCents: number;
+    promoEnabled: boolean;
+    skipped?: boolean;
   };
   welperPayout?: {
     stripeOnboardingCompleted?: boolean;
@@ -141,7 +165,6 @@ export interface BeginSignupResult {
 const CUSTOMER_REQUIRED_STEPS: SignupStepName[] = [
   'selectRole',
   'identity',
-  'notificationPrefs',
   'optionalProfile',
 ];
 
@@ -152,7 +175,7 @@ const WELPER_REQUIRED_STEPS: SignupStepName[] = [
   'welperServiceArea',
   'welperOffering',
   'welperAvailability',
-  'notificationPrefs',
+  'welperBackgroundCheck',
   'optionalProfile',
 ];
 
@@ -161,11 +184,37 @@ export class SignupOrchestratorService {
   private readonly logger = new Logger(SignupOrchestratorService.name);
   private readonly saltRounds = 12;
 
+  private formatOfferingDescription(title: string, description: string): string {
+    const t = title.trim();
+    const d = description.trim();
+    if (!t) return d;
+    if (d.startsWith(`${t}\n\n`)) return d;
+    return `${t}\n\n${d}`;
+  }
+
+  private parseOfferingDescription(desc: string): {
+    title: string;
+    description: string;
+  } {
+    const idx = desc.indexOf('\n\n');
+    if (idx > 0 && idx <= 120) {
+      return {
+        title: desc.slice(0, idx).trim(),
+        description: desc.slice(idx + 2).trim(),
+      };
+    }
+    return { title: '', description: desc };
+  }
+
   /** ISO calendar date for Postgres `date` columns (UTC components — avoids TZ drift). */
-  private formatDateOnly(d: Date): string {
-    const y = d.getUTCFullYear();
-    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
+  private formatDateOnly(d: Date | string): string {
+    if (typeof d === 'string') {
+      return d.slice(0, 10);
+    }
+    const date = d instanceof Date ? d : new Date(d);
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   }
 
@@ -188,6 +237,9 @@ export class SignupOrchestratorService {
     private readonly emailVerificationService: EmailVerificationService,
     private readonly referralService: ReferralService,
     private readonly dataSource: DataSource,
+    private readonly backgroundCheckService: BackgroundCheckService,
+    @Inject(GEOCODE_SERVICE)
+    private readonly geocodeService: IGeocodeService,
   ) {}
 
   // ---------------------------------------------------------------------
@@ -383,31 +435,28 @@ export class SignupOrchestratorService {
         completed.add('welperBio');
         filledData.welperBio = { bio: welper.bio };
       }
-      if (
-        welper?.serviceAreaCity &&
-        welper?.provinceCode &&
-        welper?.countryCode &&
-        Array.isArray(welper.serviceAreaPostalCodes) &&
-        welper.serviceAreaPostalCodes.length > 0
-      ) {
+      if (welper && isWelperServiceAreaStepComplete(welper)) {
         completed.add('welperServiceArea');
-        filledData.welperServiceArea = {
-          city: welper.serviceAreaCity,
-          province: welper.provinceCode,
-          country: welper.countryCode,
-          postalCodes: welper.serviceAreaPostalCodes,
-        };
+        filledData.welperServiceArea = buildWelperServiceAreaFilledData(welper);
       }
-      const offering = await this.serviceOfferingRepo.findOne({
+      const offerings = await this.serviceOfferingRepo.find({
         where: { welperId: userId, active: true },
+        order: { createdAt: 'ASC' },
       });
-      if (offering) {
+      if (offerings.length > 0) {
         completed.add('welperOffering');
         filledData.welperOffering = {
-          categoryId: offering.serviceCategoryId,
-          title: '', // legacy: title isn't a separate column; tracked in description preamble
-          hourlyRate: Number(offering.hourlyRate),
-          description: offering.serviceDescription,
+          offerings: offerings.map((offering) => {
+            const parsed = this.parseOfferingDescription(
+              offering.serviceDescription,
+            );
+            return {
+              subcategoryId: offering.serviceCategoryId,
+              title: parsed.title,
+              hourlyRate: Number(offering.hourlyRate),
+              description: parsed.description,
+            };
+          }),
         };
       }
       const slots = await this.availabilityRepo.find({
@@ -425,6 +474,43 @@ export class SignupOrchestratorService {
                 endTime: s.endTime,
               })),
             };
+      }
+      try {
+        if (welper?.dateOfBirth && !isAdultWelper(welper.dateOfBirth)) {
+          await this.backgroundCheckService.skipForMinor(userId);
+          completed.add('welperBackgroundCheck');
+          filledData.welperBackgroundCheck = {
+            paid: false,
+            certnStatus: 'not_required',
+            listPriceCents: 0,
+            promoPriceCents: 0,
+            promoEnabled: false,
+            skipped: true,
+          };
+        } else if (welper?.dateOfBirth && isAdultWelper(welper.dateOfBirth)) {
+          const bgComplete =
+            await this.backgroundCheckService.isSignupStepComplete(userId);
+          if (bgComplete && welper.backgroundCheckStepAcknowledgedAt) {
+            completed.add('welperBackgroundCheck');
+          }
+          filledData.welperBackgroundCheck =
+            await this.backgroundCheckService.getFilledData(userId);
+        } else if (role === SelectedRole.WELPER) {
+          // Adult path but DOB missing on profile — still surface pricing defaults.
+          filledData.welperBackgroundCheck =
+            await this.backgroundCheckService.getFilledData(userId);
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Background check signup state skipped for ${userId}: ${(err as Error).message}`,
+        );
+        filledData.welperBackgroundCheck = {
+          paid: false,
+          certnStatus: 'not_started',
+          listPriceCents: 2599,
+          promoPriceCents: 1599,
+          promoEnabled: true,
+        };
       }
       if (
         welper?.profilePhotoUrl ||
@@ -446,22 +532,6 @@ export class SignupOrchestratorService {
           skip: welper.payoutMethodChoice === PayoutMethodChoice.SKIPPED,
         };
       }
-    }
-
-    // Notification prefs: any explicit row counts. Defaults are applied
-    // server-side, so "step complete" means the user actually visited.
-    const prefs = await this.notificationPrefRepo.find({
-      where: { userId },
-    });
-    if (prefs.length > 0) {
-      completed.add('notificationPrefs');
-      filledData.notificationPrefs = {
-        preferences: prefs.map((p) => ({
-          category: p.category,
-          emailEnabled: p.emailEnabled,
-          inAppEnabled: p.inAppEnabled,
-        })),
-      };
     }
 
     const requiredSteps = this.getRequiredStepsForRole(role);
@@ -610,11 +680,11 @@ export class SignupOrchestratorService {
       where: { welperId: userId },
     });
     if (!profile) throw new NotFoundException('Welper profile missing');
-    profile.serviceAreaCity = dto.city.trim();
-    profile.provinceCode = dto.province.trim().toUpperCase();
-    profile.countryCode = dto.country.trim().toUpperCase();
-    profile.serviceAreaPostalCodes = dto.postalCodes.map((p) =>
-      p.trim().toUpperCase(),
+    await applyRadiusServiceAreaToWelperProfile(
+      profile,
+      dto.serviceArea as RadiusServiceAreaPayload,
+      this.geocodeService,
+      this.logger,
     );
     await this.welperProfileRepo.save(profile);
     return this.getState(userId);
@@ -625,32 +695,25 @@ export class SignupOrchestratorService {
     dto: WelperOfferingStepDto,
   ): Promise<SignupState> {
     await this.assertWelper(userId);
-    // Upsert: one initial offering. The wizard creates exactly one; the
-    // welper can add more from the dashboard. Idempotent re-submit overwrites.
-    const existing = await this.serviceOfferingRepo.findOne({
-      where: { welperId: userId, active: true },
+    await this.dataSource.transaction(async (manager) => {
+      const repo = manager.getRepository(ServiceOffering);
+      await repo.update({ welperId: userId }, { active: false });
+      for (const item of dto.offerings) {
+        const offering = repo.create({
+          welperId: userId,
+          serviceCategoryId: item.subcategoryId,
+          hourlyRate: item.hourlyRate,
+          serviceDescription: this.formatOfferingDescription(
+            item.title,
+            item.description,
+          ),
+          experienceYears: 0,
+          active: true,
+          subcategoryIds: [item.subcategoryId],
+        });
+        await repo.save(offering);
+      }
     });
-    if (existing) {
-      existing.serviceCategoryId = dto.categoryId;
-      existing.hourlyRate = dto.hourlyRate;
-      // No dedicated `title` column on service_offerings today; the wizard
-      // titles are surfaced by the FE at render time. We persist the
-      // description (which already does double duty as the offering blurb).
-      existing.serviceDescription = dto.description;
-      existing.experienceYears = existing.experienceYears ?? 0;
-      await this.serviceOfferingRepo.save(existing);
-    } else {
-      const offering = this.serviceOfferingRepo.create({
-        welperId: userId,
-        serviceCategoryId: dto.categoryId,
-        hourlyRate: dto.hourlyRate,
-        serviceDescription: dto.description,
-        experienceYears: 0,
-        active: true,
-        subcategoryIds: [],
-      });
-      await this.serviceOfferingRepo.save(offering);
-    }
     return this.getState(userId);
   }
 
@@ -691,6 +754,27 @@ export class SignupOrchestratorService {
       profile.availabilityAdHocOnly = true;
       await this.welperProfileRepo.save(profile);
     }
+    return this.getState(userId);
+  }
+
+  async submitWelperBackgroundCheckStep(userId: string): Promise<SignupState> {
+    await this.assertWelper(userId);
+    const profile = await this.welperProfileRepo.findOne({
+      where: { welperId: userId },
+    });
+    if (!profile) throw new NotFoundException('Welper profile missing');
+
+    if (!(await this.backgroundCheckService.isBackgroundCheckRequiredForUser(userId))) {
+      return this.getState(userId);
+    }
+
+    const paid = await this.backgroundCheckService.isSignupStepComplete(userId);
+    if (!paid) {
+      throw new BadRequestException('Pay the background check fee before continuing.');
+    }
+
+    profile.backgroundCheckStepAcknowledgedAt = new Date();
+    await this.welperProfileRepo.save(profile);
     return this.getState(userId);
   }
 

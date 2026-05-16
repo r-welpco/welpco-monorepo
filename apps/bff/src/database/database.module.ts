@@ -40,6 +40,7 @@ import { Dispute } from '../domains/dispute/entities/dispute.entity';
 import { SupportTicket } from '../domains/dispute/entities/support-ticket.entity';
 import { Resolution } from '../domains/dispute/entities/resolution.entity';
 import { ApplicationSetting, BookingPayment, ProcessedWebhookEvent } from '../domains/payment/entities';
+import { BackgroundCheckOrder } from '../domains/safety-verification/entities';
 
 const allEntities = [
   UserAccount,
@@ -74,6 +75,7 @@ const allEntities = [
   ApplicationSetting,
   BookingPayment,
   ProcessedWebhookEvent,
+  BackgroundCheckOrder,
   AdminAuditLog,
 ];
 

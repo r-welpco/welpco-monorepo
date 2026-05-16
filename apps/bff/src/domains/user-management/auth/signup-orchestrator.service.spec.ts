@@ -31,6 +31,7 @@ import { NotificationPreference } from '../../notification/entities/notification
 import { ProfileCreationService } from '../../profile-management/profile-creation/profile-creation.service';
 import { EmailVerificationService } from './email-verification.service';
 import { ReferralService } from '../referral/referral.service';
+import { BackgroundCheckService } from '../../safety-verification/background-check.service';
 
 /**
  * Day 15 — Phase 1 of the signup ↔ onboarding merge.
@@ -200,6 +201,20 @@ describe('SignupOrchestratorService', () => {
           useValue: { generateReferralCode: jest.fn() },
         },
         { provide: DataSource, useValue: dataSourceMock },
+        {
+          provide: BackgroundCheckService,
+          useValue: {
+            skipForMinor: jest.fn().mockResolvedValue(undefined),
+            isSignupStepComplete: jest.fn().mockResolvedValue(false),
+            getFilledData: jest.fn().mockResolvedValue({
+              paid: false,
+              certnStatus: 'not_started',
+              listPriceCents: 2599,
+              promoPriceCents: 1599,
+              promoEnabled: true,
+            }),
+          },
+        },
       ],
     }).compile();
 
@@ -224,7 +239,6 @@ describe('SignupOrchestratorService', () => {
       expect(steps).toEqual<SignupStepName[]>([
         'selectRole',
         'identity',
-        'notificationPrefs',
         'optionalProfile',
       ]);
     });
@@ -238,7 +252,7 @@ describe('SignupOrchestratorService', () => {
         'welperServiceArea',
         'welperOffering',
         'welperAvailability',
-        'notificationPrefs',
+        'welperBackgroundCheck',
         'optionalProfile',
       ]);
     });
@@ -313,7 +327,6 @@ describe('SignupOrchestratorService', () => {
       expect(body.code).toBe('INCOMPLETE_SIGNUP');
       expect(body.missingFields).toEqual<SignupStepName[]>([
         'identity',
-        'notificationPrefs',
         'optionalProfile',
       ]);
       expect(body.nextStep).toBe('identity');
@@ -401,18 +414,9 @@ describe('SignupOrchestratorService', () => {
           },
         }),
       );
-      prefRepo.find.mockResolvedValue([
-        {
-          id: 'p1',
-          userId: 'user-1',
-          category: 'booking',
-          emailEnabled: true,
-          inAppEnabled: true,
-        } as NotificationPreference,
-      ] as never);
+      prefRepo.find.mockResolvedValue([] as never);
       const state = await service.getState('user-1');
       expect(state.completedSteps).toContain('identity');
-      expect(state.completedSteps).toContain('notificationPrefs');
       expect(state.completedSteps).toContain('optionalProfile');
       expect(state.nextStep).toBeNull();
     });

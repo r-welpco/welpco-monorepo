@@ -4,7 +4,7 @@ import { Footer } from "@/components/features/marketing/shared/footer";
 import en from "@/messages/en.json";
 
 /**
- * Layout for English-only blog and legal routes (phase 1 i18n scope).
+ * Layout for English-only blog routes. Legal pages live under `app/[locale]/(marketing)/legal/`.
  * Core marketing pages live under `app/[locale]/(marketing)/`.
  */
 export default function MarketingBlogLegalLayout({

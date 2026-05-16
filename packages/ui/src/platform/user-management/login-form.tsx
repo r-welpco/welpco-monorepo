@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { TextField } from "@welpco/ui/text-field";
@@ -14,33 +15,45 @@ import { Link } from "@welpco/ui/link";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import {
+  DEFAULT_LOGIN_FORM_LABELS,
+  type LoginFormLabels,
+} from "./signup-steps/labels";
+
+export type { LoginFormLabels } from "./signup-steps/labels";
 
 export interface LoginFormProps {
   defaultValues?: Partial<LoginFormValues>;
   loading?: boolean;
   error?: string;
+  labels?: LoginFormLabels;
   onSubmit?: (values: LoginFormValues) => void | Promise<void>;
   onForgotPassword?: () => void;
-  /** Optional "Don't have an account? Sign up" link rendered below the submit row. */
   onSignUp?: () => void;
 }
 
-const schema = z.object({
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  remember: z.boolean().optional().default(false),
-});
+function createSchema(labels: LoginFormLabels) {
+  return z.object({
+    email: z.string().email(labels.validation.emailInvalid),
+    password: z.string().min(8, labels.validation.passwordMinLength),
+    remember: z.boolean().optional().default(false),
+  });
+}
 
-export type LoginFormValues = z.infer<typeof schema>;
+export type LoginFormValues = z.infer<ReturnType<typeof createSchema>>;
 
 export function LoginForm({
   defaultValues,
   loading,
   error,
+  labels: labelsProp,
   onSubmit,
   onForgotPassword,
   onSignUp,
 }: LoginFormProps) {
+  const labels = labelsProp ?? DEFAULT_LOGIN_FORM_LABELS;
+  const schema = useMemo(() => createSchema(labels), [labels]);
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -64,10 +77,10 @@ export function LoginForm({
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>
           <Heading size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            Welcome back
+            {labels.title}
           </Heading>
           <Text size="2" color="gray">
-            Sign in to continue.
+            {labels.subtitle}
           </Text>
         </Box>
 
@@ -80,12 +93,12 @@ export function LoginForm({
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="login-email" mb={FORM_SPACING.labelGap}>
-              Email
+              {labels.email}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
               id="login-email"
-              placeholder="you@example.com"
+              placeholder={labels.emailPlaceholder}
               autoComplete="email"
               size="2"
               aria-required="true"
@@ -102,7 +115,7 @@ export function LoginForm({
           <Box mb={FORM_SPACING.fieldGap} position="relative">
             <Flex align="baseline" justify="between" mb={FORM_SPACING.labelGap}>
               <Text as="label" size="2" weight="bold" htmlFor="login-password">
-                Password
+                {labels.password}
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
               {onForgotPassword && (
@@ -114,13 +127,13 @@ export function LoginForm({
                   }}
                   style={{ cursor: "pointer" }}
                 >
-                  Forgot password?
+                  {labels.forgotPassword}
                 </Link>
               )}
             </Flex>
             <TextField.Root
               id="login-password"
-              placeholder="••••••••"
+              placeholder={labels.passwordPlaceholder}
               type="password"
               autoComplete="current-password"
               size="2"
@@ -147,20 +160,20 @@ export function LoginForm({
                 size="2"
               />
               <Text as="label" size="2" htmlFor="login-remember">
-                Remember me
+                {labels.rememberMe}
               </Text>
             </Flex>
           </Box>
 
           <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? labels.signingIn : labels.signIn}
           </Button>
         </form>
 
         {onSignUp && (
           <Flex align="center" justify="center" gap="2">
             <Text size="2" color="gray" highContrast>
-              New to Welpco?
+              {labels.newToWelpco}
             </Text>
             <Link
               size="2"
@@ -171,7 +184,7 @@ export function LoginForm({
                 onSignUp();
               }}
             >
-              Create an account
+              {labels.createAccount}
             </Link>
           </Flex>
         )}
@@ -179,4 +192,3 @@ export function LoginForm({
     </Card>
   );
 }
-

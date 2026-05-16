@@ -1,0 +1,115 @@
+{
+  "meta": {
+    "title": "Welpco — Politique de confidentialité",
+    "description": "Politique de confidentialité Welpco — collecte, utilisation et protection des renseignements personnels."
+  },
+  "hero": {
+    "title": "Politique de confidentialité",
+    "subtitle": "Comment nous collectons, utilisons et protégeons vos renseignements personnels."
+  },
+  "sections": [
+    {
+      "numeral": "01",
+      "title": "Introduction",
+      "intro": "Welpco inc. (« Welpco », « nous », « notre ») s’engage à protéger la confidentialité des renseignements personnels de ses utilisateurs. La présente politique explique comment nous collectons, utilisons, divulguons et protégeons vos informations."
+    },
+    {
+      "numeral": "02",
+      "title": "Renseignements collectés",
+      "intro": "Nous pouvons collecter :",
+      "list": [
+        "Nom, prénom",
+        "Adresse courriel",
+        "Numéro de téléphone",
+        "Adresse",
+        "Informations de paiement (via des fournisseurs tiers comme Stripe)",
+        "Informations de vérification (ex: antécédents via Certn)",
+        "Données d’utilisation (IP, navigation, cookies)"
+      ]
+    },
+    {
+      "numeral": "03",
+      "title": "Utilisation des renseignements",
+      "intro": "Nous utilisons vos données pour :",
+      "list": [
+        "Fournir et améliorer la plateforme",
+        "Mettre en relation Clients et Prestataires",
+        "Traiter les paiements",
+        "Effectuer des vérifications de sécurité",
+        "Prévenir la fraude",
+        "Communiquer avec vous",
+        "Respecter nos obligations légales"
+      ]
+    },
+    {
+      "numeral": "04",
+      "title": "Partage des renseignements",
+      "intro": "Nous pouvons partager vos informations avec :",
+      "list": [
+        "Fournisseurs de services (paiement, vérification, hébergement)",
+        "Autorités légales si requis",
+        "Partenaires technologiques"
+      ],
+      "paragraphs": [
+        "Nous ne vendons jamais vos données."
+      ]
+    },
+    {
+      "numeral": "05",
+      "title": "Conservation des données",
+      "intro": "Les données sont conservées aussi longtemps que nécessaire pour :",
+      "list": [
+        "Fournir les services",
+        "Respecter les obligations légales",
+        "Résoudre les litiges"
+      ]
+    },
+    {
+      "numeral": "06",
+      "title": "Sécurité",
+      "intro": "Nous mettons en place des mesures de sécurité raisonnables pour protéger vos données contre :",
+      "list": [
+        "accès non autorisé",
+        "perte",
+        "divulgation"
+      ]
+    },
+    {
+      "numeral": "07",
+      "title": "Vos droits (Québec – Loi 25)",
+      "intro": "Vous avez le droit de :",
+      "list": [
+        "accéder à vos données",
+        "corriger vos données",
+        "demander leur suppression",
+        "retirer votre consentement"
+      ],
+      "paragraphs": [
+        "Contact : support@welpco.com"
+      ]
+    },
+    {
+      "numeral": "08",
+      "title": "Cookies",
+      "intro": "Le Site utilise des cookies pour :",
+      "list": [
+        "améliorer l’expérience",
+        "analyser l’utilisation",
+        "personnaliser le contenu"
+      ],
+      "id": "cookies"
+    },
+    {
+      "numeral": "09",
+      "title": "Modifications",
+      "intro": "Welpco peut modifier cette politique en tout temps. Les changements prennent effet dès leur publication."
+    },
+    {
+      "numeral": "10",
+      "title": "Contact",
+      "intro": "Welpco inc.",
+      "companyLine": "Welpco inc.",
+      "contactEmail": true
+    }
+  ]
+}

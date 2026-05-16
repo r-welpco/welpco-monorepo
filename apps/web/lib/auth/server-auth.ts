@@ -5,7 +5,10 @@
 
 import { cache } from "react";
 import { auth } from "@/auth";
+import { localizedPath } from "@/i18n/locale-routes";
+import type { Locale } from "@/i18n/routing";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 
 export interface AuthCheckResult {
   isAuthenticated: boolean;
@@ -74,30 +77,47 @@ export async function getServerSession(): Promise<AuthCheckResult> {
   return getServerSessionCached();
 }
 
+async function localizedRedirect(path: string): Promise<never> {
+  let locale: Locale = "en";
+  try {
+    locale = (await getLocale()) as Locale;
+  } catch {
+    // Outside [locale] segment (e.g. dashboard) — default English paths.
+  }
+  redirect(localizedPath(path, locale));
+}
+
 /**
  * Require authentication - redirects to login if not authenticated
  * Use this in Server Components that require authentication
  */
-export async function requireAuth(): Promise<AuthCheckResult["user"]> {
+export async function requireAuth(): Promise<NonNullable<AuthCheckResult["user"]>> {
   const session = await getServerSession();
 
   if (!session.isAuthenticated || !session.user) {
-    redirect("/login");
+    await localizedRedirect("/login");
   }
 
-  return session.user;
+  return session.user!;
 }
 
 /**
  * Require email verification - redirects to verification page if not verified
  * Use this after requireAuth() to ensure email is verified
  */
-export async function requireEmailVerification(): Promise<AuthCheckResult["user"]> {
+export async function requireEmailVerification(): Promise<NonNullable<AuthCheckResult["user"]>> {
   const user = await requireAuth();
-  if (!user) redirect("/login");
 
   if (!user.emailVerified) {
-    redirect(`/verification?email=${encodeURIComponent(user.email)}`);
+    let locale: Locale = "en";
+    try {
+      locale = (await getLocale()) as Locale;
+    } catch {
+      /* default */
+    }
+    redirect(
+      `${localizedPath("/verification", locale)}?email=${encodeURIComponent(user.email)}`,
+    );
   }
 
   return user;
@@ -112,12 +132,11 @@ export async function requireEmailVerification(): Promise<AuthCheckResult["user"
  * for back-compat with callers that already imported it. The redirect target
  * moved from `/onboarding-welcome` to the wizard at `/register`.
  */
-export async function requireOnboardingComplete(): Promise<AuthCheckResult["user"]> {
+export async function requireOnboardingComplete(): Promise<NonNullable<AuthCheckResult["user"]>> {
   const user = await requireAuth();
-  if (!user) redirect("/login");
 
   if (user.signupCompleted === false) {
-    redirect("/register");
+    await localizedRedirect("/register");
   }
 
   return user;

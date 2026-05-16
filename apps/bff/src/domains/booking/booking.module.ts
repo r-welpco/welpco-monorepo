@@ -14,6 +14,7 @@ import { CustomerProfileModule } from '../profile-management/customer-profile/cu
 import { WelperProfileModule } from '../profile-management/welper-profile/welper-profile.module';
 import { UsersModule } from '../user-management/users/users.module';
 import { EmailVerifiedGuardModule } from '../../common/guards/email-verified.guard.module';
+import { SafetyVerificationModule } from '../safety-verification/safety-verification.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { EmailVerifiedGuardModule } from '../../common/guards/email-verified.gua
     WelperProfileModule,
     UsersModule,
     EmailVerifiedGuardModule,
+    SafetyVerificationModule,
   ],
   controllers: [BookingController],
   providers: [BookingService],

@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
-import { PrivacyPageContent } from "@/components/features/marketing/legal/privacy-page-content";
+import { setRequestLocale } from "next-intl/server";
+import {
+  getPrivacyMetadata,
+  PrivacyPageContent,
+} from "@/components/features/marketing/legal/privacy-page-content";
+import type { Locale } from "@/i18n/routing";
 
 /**
- * /fr/legal/privacy — Politique de confidentialité Welpco (French).
- * English canonical URL: /legal/privacy
+ * /legal/privacy (en) and /fr/legal/privacy (fr) — locale from `[locale]` segment.
  */
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("marketing.legal.privacy.meta");
-  return {
-    title: t("title"),
-    description: t("description"),
-  };
+type PageProps = { params: Promise<{ locale: string }> };
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  return getPrivacyMetadata(locale as Locale);
 }
 
-export default function LocalizedPrivacyPage() {
-  return <PrivacyPageContent />;
+export default async function LocalizedPrivacyPage({ params }: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  return <PrivacyPageContent locale={locale as Locale} />;
 }

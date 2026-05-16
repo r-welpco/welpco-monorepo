@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { Box } from "@welpco/ui/box";
@@ -14,33 +15,53 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useRef, useState } from "react";
 import { TextField } from "@welpco/ui/text-field";
+import {
+  DEFAULT_ACCOUNT_VERIFICATION_LABELS,
+  type AccountVerificationLabels,
+} from "./signup-steps/labels";
+
+export type { AccountVerificationLabels } from "./signup-steps/labels";
 
 export interface AccountVerificationProps {
   email?: string;
   phoneNumber?: string;
   loading?: boolean;
   error?: string;
+  labels?: AccountVerificationLabels;
   onSubmit?: (values: AccountVerificationValues) => void | Promise<void>;
   onResend?: () => void | Promise<void>;
 }
 
-const schema = z.object({
-  code: z
-    .string()
-    .regex(/^[0-9]{6}$/, "Enter the 6-digit code")
-    .trim(),
-});
+function formatLabel(template: string, vars: Record<string, string | number>): string {
+  return Object.entries(vars).reduce(
+    (s, [k, v]) => s.replaceAll(`{${k}}`, String(v)),
+    template,
+  );
+}
 
-export type AccountVerificationValues = z.infer<typeof schema>;
+function createSchema(labels: AccountVerificationLabels) {
+  return z.object({
+    code: z
+      .string()
+      .regex(/^[0-9]{6}$/, labels.validation.codeInvalid)
+      .trim(),
+  });
+}
+
+export type AccountVerificationValues = z.infer<ReturnType<typeof createSchema>>;
 
 export function AccountVerification({
   email,
   phoneNumber,
   loading,
   error,
+  labels: labelsProp,
   onSubmit,
   onResend,
 }: AccountVerificationProps) {
+  const labels = labelsProp ?? DEFAULT_ACCOUNT_VERIFICATION_LABELS;
+  const schema = useMemo(() => createSchema(labels), [labels]);
+
   const form = useForm<AccountVerificationValues>({
     resolver: zodResolver(schema),
     defaultValues: { code: "" },
@@ -50,18 +71,15 @@ export function AccountVerification({
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleInputChange = (index: number, value: string) => {
-    // Only allow numeric input, take only the last character if multiple entered
     const numericValue = value.replace(/\D/g, "").slice(-1);
-    
+
     const newOtpValues = [...otpValues];
     newOtpValues[index] = numericValue;
     setOtpValues(newOtpValues);
 
-    // Update form value
     const code = newOtpValues.join("");
     form.setValue("code", code, { shouldValidate: true });
 
-    // Move focus to next input if value entered
     if (numericValue && index < 5) {
       setTimeout(() => {
         inputRefs.current[index + 1]?.focus();
@@ -70,11 +88,9 @@ export function AccountVerification({
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Handle backspace
     if (e.key === "Backspace" && !otpValues[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-    // Handle arrow keys
     if (e.key === "ArrowLeft" && index > 0) {
       e.preventDefault();
       inputRefs.current[index - 1]?.focus();
@@ -96,7 +112,6 @@ export function AccountVerification({
     const code = newOtpValues.join("");
     form.setValue("code", code, { shouldValidate: true });
 
-    // Focus the next empty input or the last one
     const nextIndex = Math.min(pastedData.length, 5);
     inputRefs.current[nextIndex]?.focus();
   };
@@ -116,11 +131,11 @@ export function AccountVerification({
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>
           <Heading size="6" mb="2" trim="start">
-            Verify your account
+            {labels.title}
           </Heading>
           <Flex align="center" gap="2" wrap="wrap">
             <Text size="2" color="gray" highContrast>
-              We sent a 6-digit code to
+              {labels.codeSentPrefix}
             </Text>
             {contactInfo && (
               <Badge color="gray" variant="soft" size="1" highContrast>
@@ -139,8 +154,10 @@ export function AccountVerification({
         <form onSubmit={handleSubmit}>
           <Box mb="3">
             <Text as="label" size="2" weight="bold" mb="1">
-              Verification code
-              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
+              {labels.codeLabel}
+              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+                {labels.requiredMarker}
+              </Text>
             </Text>
             <Box>
               <Flex gap="2" justify="center">
@@ -155,7 +172,10 @@ export function AccountVerification({
                     }}
                   >
                     <TextField.Root
-                      aria-label={`Verification code digit ${index + 1} of ${otpValues.length}`}
+                      aria-label={formatLabel(labels.codeDigitAria, {
+                        index: index + 1,
+                        total: otpValues.length,
+                      })}
                       autoComplete={index === 0 ? "one-time-code" : "off"}
                       value={otpValues[index]}
                       onChange={(e) => {
@@ -204,7 +224,7 @@ export function AccountVerification({
               onClick={onResend}
               style={{ width: "100%", flex: 1, minWidth: 0 }}
             >
-              Resend code
+              {labels.resendCode}
             </Button>
             <Button
               type="submit"
@@ -213,7 +233,7 @@ export function AccountVerification({
               disabled={loading}
               style={{ width: "100%", flex: 1, minWidth: 0 }}
             >
-              {loading ? "Verifying…" : "Verify"}
+              {loading ? labels.verifying : labels.verify}
             </Button>
           </Flex>
         </form>
@@ -221,4 +241,3 @@ export function AccountVerification({
     </Card>
   );
 }
-

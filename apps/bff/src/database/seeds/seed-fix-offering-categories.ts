@@ -10,11 +10,15 @@ import { ServiceCategory } from '../../domains/content-management/entities/servi
 const LEVEL1_TO_DEFAULT_SUBCATEGORY_NAME: Record<string, string> = {
   Care: 'Babysitter',
   'Pet Care': 'Dog Walks',
+  'Learning & Lessons': 'Tutoring',
   Education: 'Tutoring',
-  'In-Home Maintenance': 'Housekeeping',
-  'Exterior Maintenance': 'Lawn Care',
+  'Exterior Maintenance': 'Lawn Mowing',
   'Health & Wellness': 'Meal Preparation',
-  Entertainment: 'Catering',
+  'Events & Hospitality': 'Catering Help',
+  Entertainment: 'Catering Help',
+  'Home Cleaning': 'Housekeeping',
+  'Home Help': 'Furniture Assembly',
+  'In-Home Maintenance': 'Housekeeping',
 };
 
 /**

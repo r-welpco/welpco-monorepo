@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://*.amazonaws.com",
               "font-src 'self'",
-              "connect-src 'self' https://api.stripe.com " +
+              "connect-src 'self' https://api.stripe.com https://*.amazonaws.com " +
                 (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"),
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
               "object-src 'none'",

@@ -1,45 +1,99 @@
-/* /legal/* — Direction D, warm community.
- * Terms + privacy share the same layout: narrow Container 2, Fraunces serif
- * section heads (no mono numerals), soft warm hairlines between sections. */
+/* Legal pages — readable body text, modest headings (not marketing hero scale). */
 
-.heroHeadline {
-  font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
-  font-weight: 400;
-  letter-spacing: -0.012em;
-  line-height: 1.1;
+.legalPage {
+  background: var(--color-background, #fff);
+}
+
+.pageHeader {
+  max-width: 48rem;
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--gray-a4);
+}
+
+/* Override `.welpco h1–h3` marketing hero scale (56px–112px) inside legal pages. */
+.legalPage.legalPage h1,
+.legalPage.legalPage .pageTitle {
+  font-family: var(--default-font-family, var(--font-geist-sans)), system-ui, sans-serif;
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
   color: var(--gray-12);
+}
+
+.legalPage.legalPage h2,
+.legalPage.legalPage .sectionTitle {
+  font-family: var(--default-font-family, var(--font-geist-sans)), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  color: var(--gray-12);
+}
+
+.legalPage.legalPage h3,
+.legalPage.legalPage .subsectionTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.4;
+  color: var(--gray-12);
+}
+
+.pageLead {
+  margin-top: var(--space-2);
+  max-width: 42rem;
+  line-height: 1.55;
+}
+
+.lastUpdated {
+  margin-top: var(--space-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.noticeBox {
+  max-width: 48rem;
+  padding: var(--space-3) var(--space-4);
+  background: var(--gray-a2);
+  border: 1px solid var(--gray-a5);
+  border-radius: var(--radius-3);
+}
+
+.noticeText {
+  line-height: 1.55;
+  color: var(--gray-12);
+  font-size: var(--font-size-2);
 }
 
 .sections {
   display: flex;
   flex-direction: column;
-  gap: var(--space-7);
+  gap: var(--space-6);
 }
 
 .section {
   position: relative;
-  padding-top: var(--space-5);
-  scroll-margin-top: 80px; /* offset the sticky header for hash links */
+  padding-top: var(--space-4);
+  scroll-margin-top: 80px;
 }
 
 .section + .section {
   border-top: 1px solid var(--gray-a4);
 }
 
-.sectionTitle {
-  font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
+.sectionNumeral {
+  font-family: var(--default-font-family, var(--font-geist-sans)), system-ui, sans-serif;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: -0.008em;
-  color: var(--gray-12);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gray-10);
+  font-variant-numeric: tabular-nums;
 }
 
-.sectionNumeral {
-  font-family: var(--default-font-family, var(--font-geist-sans)),
-    system-ui, sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--gray-11);
-  font-variant-numeric: tabular-nums;
+.subsection {
+  margin-top: var(--space-3);
 }
 
 .inlineLink {
@@ -52,7 +106,7 @@
 .inlineLink:hover {
   color: var(--grass-12);
   text-decoration: underline;
-  text-underline-offset: 0.25em;
+  text-underline-offset: 0.2em;
 }
 
 .inlineLink:focus-visible {
@@ -61,7 +115,7 @@
 }
 
 .sectionBody {
-  font-size: var(--font-size-3);
+  font-size: var(--font-size-2);
   line-height: 1.65;
   color: var(--gray-12);
 }
@@ -72,18 +126,21 @@
 
 .sectionBody p + p,
 .sectionBody p + ul,
-.sectionBody ul + p {
+.sectionBody ul + p,
+.sectionBody ul + div,
+.sectionBody div + p {
   margin-top: var(--space-3);
 }
 
 .sectionList {
   margin: var(--space-2) 0 0;
-  padding-left: 1.35rem;
+  padding-left: 1.25rem;
   list-style: disc;
 }
 
 .sectionList li {
   margin-top: var(--space-2);
+  padding-left: var(--space-1);
 }
 
 .sectionList li:first-child {

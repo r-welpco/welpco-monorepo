@@ -12,6 +12,7 @@ import { seedHolidays } from './seed-holidays';
 import { seedSearchDemo } from './seed-search-demo';
 import { seedQuebecWelpers } from './seed-quebec-welpers';
 import { seedFixOfferingCategories } from './seed-fix-offering-categories';
+import { syncServiceCategoryTaxonomy } from './sync-service-category-taxonomy';
 
 /**
  * Seed for single-backend: users + customer/welper profiles + content in one DB (welpco_dev).
@@ -184,6 +185,7 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
   );
 
   await seedContent(dataSource);
+  await syncServiceCategoryTaxonomy(dataSource);
   await seedHolidays(dataSource);
   await seedSearchDemo(dataSource);
   await seedQuebecWelpers(dataSource);

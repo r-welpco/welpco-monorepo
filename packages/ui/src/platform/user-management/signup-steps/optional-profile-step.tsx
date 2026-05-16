@@ -14,7 +14,11 @@ import {
   type AddressValues,
 } from "../../profile-management/address-input";
 import { ProfilePhotoUpload } from "../../profile-management/profile-photo-upload";
-import type { SignupStateLite, SelectedRole } from "./types";
+import {
+  DEFAULT_OPTIONAL_PROFILE_LABELS,
+  type OptionalProfileStepLabels,
+} from "./labels";
+import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite, type SelectedRole } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch B. Both-roles final step.
@@ -22,7 +26,7 @@ import type { SignupStateLite, SelectedRole } from "./types";
  * Photo (skippable, both roles) + address (skippable, customers only — welpers
  * already gave a service area in step 4). Composes the existing platform
  * primitives `<ProfilePhotoUpload>` and `<AddressInput>` with the wizard's
- * voice + skip affordance.
+ * voice for the final signup step.
  *
  * The photo upload is wired through `onUploadPhoto` so the wizard host can
  * route the file through its existing presigned-S3 upload service and feed
@@ -45,6 +49,7 @@ export interface OptionalProfileStepProps {
   state: SignupStateLite;
   loading?: boolean;
   error?: string | null;
+  labels?: OptionalProfileStepLabels;
   /** When a customer, the address fields are shown; welpers skip address. */
   role: SelectedRole;
   /** Current photo URL (after a successful upload). */
@@ -59,7 +64,6 @@ export interface OptionalProfileStepProps {
   onUploadPhoto?: (file: File) => void | Promise<void>;
   onRemovePhoto?: () => void | Promise<void>;
   onSubmit: (values: OptionalProfileStepValues) => void | Promise<void>;
-  onSkip?: () => void | Promise<void>;
   onBack?: () => void;
 }
 
@@ -67,15 +71,17 @@ export function OptionalProfileStep({
   state,
   loading,
   error,
+  labels: labelsProp,
   role,
   defaultPhotoUrl,
   uploadingPhoto,
   onUploadPhoto,
   onRemovePhoto,
   onSubmit,
-  onSkip,
   onBack,
 }: OptionalProfileStepProps) {
+  const labels = labelsProp ?? DEFAULT_OPTIONAL_PROFILE_LABELS;
+
   const filled = state.filledData.optionalProfile as
     | OptionalProfileStepValues
     | undefined;
@@ -85,7 +91,7 @@ export function OptionalProfileStep({
     city: filled?.address?.city ?? "",
     stateProvince: filled?.address?.state ?? "",
     zipPostalCode: filled?.address?.zipCode ?? "",
-    country: filled?.address?.country ?? "",
+    country: "CA",
   });
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -97,41 +103,33 @@ export function OptionalProfileStep({
         address.streetAddress.trim() ||
         address.city.trim() ||
         address.stateProvince.trim() ||
-        address.zipPostalCode.trim() ||
-        (address.country?.trim() ?? "");
+        address.zipPostalCode.trim();
       if (anyAddress) {
         payload.address = {
           streetAddress: address.streetAddress.trim() || undefined,
           city: address.city.trim() || undefined,
           state: address.stateProvince.trim() || undefined,
           zipCode: address.zipPostalCode.trim() || undefined,
-          country: address.country?.trim() || undefined,
+          country: "CA",
         };
       }
     }
     await onSubmit(payload);
   };
 
-  const handleSkip = async () => {
-    if (onSkip) await onSkip();
-    else await onSubmit({});
-  };
-
   return (
     <Card
       size="4"
       variant="surface"
-      style={{ width: "100%", maxWidth: "640px", minWidth: 0 }}
+      style={SIGNUP_STEP_CARD_STYLE}
     >
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>
           <Heading as="h1" size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            Finish your profile
+            {labels.title}
           </Heading>
           <Text size="2" color="gray">
-            A photo and a few extra details help customers and Welpers know
-            who they&apos;re working with. Both are optional — you can skip
-            and add them later.
+            {labels.description}
           </Text>
         </Box>
 
@@ -146,7 +144,7 @@ export function OptionalProfileStep({
             <ProfilePhotoUpload
               currentPhotoUrl={defaultPhotoUrl ?? undefined}
               loading={uploadingPhoto}
-              description="A clear, friendly photo of you. JPEG, PNG, or WebP up to 5 MB."
+              labels={labels.photoUpload}
               onUpload={onUploadPhoto}
               onRemove={onRemovePhoto}
             />
@@ -158,18 +156,19 @@ export function OptionalProfileStep({
                 <Flex direction="column" gap="3">
                   <Box>
                     <Heading as="h3" size="4" trim="start" mb="1">
-                      Where do you live?
+                      {labels.addressTitle}
                     </Heading>
                     <Text size="2" color="gray">
-                      We use this to find Welpers near you. Optional — you can
-                      enter it later from your profile.
+                      {labels.addressDescription}
                     </Text>
                   </Box>
                   <AddressInput
                     values={address}
-                    onChange={setAddress}
+                    labels={labels.address}
+                    onChange={(next) => setAddress({ ...next, country: "CA" })}
                     loading={loading}
                     required={false}
+                    showCountry={false}
                   />
                 </Flex>
               </Card>
@@ -188,18 +187,7 @@ export function OptionalProfileStep({
               disabled={loading}
               style={{ width: "100%" }}
             >
-              {loading ? "Saving..." : "Finish signup"}
-            </Button>
-            <Button
-              type="button"
-              size="3"
-              variant="soft"
-              color="gray"
-              disabled={loading}
-              onClick={handleSkip}
-              style={{ width: "100%" }}
-            >
-              Skip for now
+              {loading ? labels.saving : labels.finishSignup}
             </Button>
             {onBack && (
               <Button
@@ -211,7 +199,7 @@ export function OptionalProfileStep({
                 onClick={onBack}
                 style={{ width: "100%" }}
               >
-                Back
+                {labels.back}
               </Button>
             )}
           </Flex>

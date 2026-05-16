@@ -158,6 +158,9 @@ export class AuthService {
   submitWelperAvailabilityStep(userId: string, dto: WelperAvailabilityStepDto) {
     return this.signupOrchestrator.submitWelperAvailabilityStep(userId, dto);
   }
+  submitWelperBackgroundCheckStep(userId: string) {
+    return this.signupOrchestrator.submitWelperBackgroundCheckStep(userId);
+  }
   submitWelperPayoutStep(userId: string, dto: WelperPayoutStepDto) {
     return this.signupOrchestrator.submitWelperPayoutStep(userId, dto);
   }

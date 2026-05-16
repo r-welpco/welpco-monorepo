@@ -22,9 +22,16 @@ export type SignupStepName =
   | "welperServiceArea"
   | "welperOffering"
   | "welperAvailability"
+  | "welperBackgroundCheck"
   | "welperPayout"
-  | "notificationPrefs"
   | "optionalProfile";
+
+/** Outer card width for every signup wizard step (matches register layout progress). */
+export const SIGNUP_STEP_CARD_STYLE = {
+  width: "100%",
+  maxWidth: "560px",
+  minWidth: 0,
+} as const;
 
 export interface SignupStateLite {
   userId: string;

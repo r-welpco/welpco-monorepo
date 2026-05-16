@@ -2,7 +2,6 @@
 
 import { Facebook, Instagram, Linkedin } from "lucide-react";
 import { useTranslations } from "next-intl";
-import NextLink from "next/link";
 import { Link } from "@/i18n/navigation";
 import { MarketingLogo } from "./marketing-logo";
 
@@ -224,9 +223,9 @@ export function Footer() {
             {t("copyright")}
           </div>
           <div style={{ display: "flex", gap: 24, fontSize: 13, color: "rgba(250,241,229,0.86)" }}>
-            <NextLink href="/legal/terms" style={{ color: "inherit", textDecoration: "none" }}>
+            <Link href="/legal/terms" style={{ color: "inherit", textDecoration: "none" }}>
               {t("terms")}
-            </NextLink>
+            </Link>
             <Link href="/legal/privacy" style={{ color: "inherit", textDecoration: "none" }}>
               {t("privacy")}
             </Link>

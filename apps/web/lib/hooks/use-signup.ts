@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   useMutation,
   useQuery,
   useQueryClient,
@@ -13,6 +14,7 @@ import {
   submitOptionalProfileStep,
   submitSelectRoleStep,
   submitWelperAvailabilityStep,
+  submitWelperBackgroundCheckStep,
   submitWelperBioStep,
   submitWelperOfferingStep,
   submitWelperServiceAreaStep,
@@ -26,6 +28,12 @@ import {
   type WelperOfferingStepParams,
   type WelperServiceAreaStepParams,
 } from "@/lib/services/signup-service";
+import {
+  confirmBackgroundCheckReturn,
+  createBackgroundCheckCheckoutSession,
+  getBackgroundCheckStatus,
+  retryBackgroundCheckCertnInvite,
+} from "@/lib/services/background-check-service";
 import type { BeginSignupResponseDto, SignupStateDto } from "@welpco/types";
 
 /**
@@ -60,8 +68,11 @@ export function useSignupState() {
     queryKey: SIGNUP_STATE_KEY,
     queryFn: getSignupState,
     enabled: isAuthenticated,
-    staleTime: 0,
+    staleTime: 30_000,
+    // Keep wizard state visible while refetching — refetch on tab focus must not
+    // unmount step forms and wipe in-progress fields.
     refetchOnWindowFocus: true,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -143,6 +154,58 @@ export function useCompleteWelperAvailabilityStep() {
   return useStepMutation<WelperAvailabilityStepParams>(
     submitWelperAvailabilityStep,
   );
+}
+
+export function useCompleteWelperBackgroundCheckStep() {
+  return useStepMutation<void>(submitWelperBackgroundCheckStep);
+}
+
+const BACKGROUND_CHECK_STATUS_KEY = ["verification", "background-check", "status"] as const;
+
+export function useBackgroundCheckStatus(enabled = true) {
+  const isAuthenticated = useIsAuthenticated();
+  return useQuery({
+    queryKey: BACKGROUND_CHECK_STATUS_KEY,
+    queryFn: getBackgroundCheckStatus,
+    enabled: isAuthenticated && enabled,
+    staleTime: 10_000,
+    retry: 1,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (data?.paymentStatus === "paid" && !data.certnInviteReady) {
+        return 3000;
+      }
+      return false;
+    },
+  });
+}
+
+export function useCreateBackgroundCheckCheckout() {
+  return useMutation({
+    mutationFn: createBackgroundCheckCheckoutSession,
+  });
+}
+
+export function useConfirmBackgroundCheckReturn() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionId: string) => confirmBackgroundCheckReturn(sessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BACKGROUND_CHECK_STATUS_KEY });
+      queryClient.invalidateQueries({ queryKey: SIGNUP_STATE_KEY });
+    },
+  });
+}
+
+export function useRetryBackgroundCheckCertnInvite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: retryBackgroundCheckCertnInvite,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BACKGROUND_CHECK_STATUS_KEY });
+      queryClient.invalidateQueries({ queryKey: SIGNUP_STATE_KEY });
+    },
+  });
 }
 
 export function useCompleteNotificationPrefsStep() {

@@ -66,10 +66,7 @@ test.describe('@auth Signup wizard — customer happy path', () => {
     // Step 3 — identity.
     await fillIdentityStep(page, { first: 'Avery', last: 'Tester' });
 
-    // Step 4 — notification prefs (defaults pre-checked, opt-out per bible §22.6).
-    await page.getByRole('button', { name: /continue|next/i }).click();
-
-    // Step 5 — optional profile (skip).
+    // Step 4 — optional profile (skip).
     await page.getByRole('button', { name: /skip|finish|complete/i }).first().click();
 
     // Land on dashboard.
@@ -103,10 +100,6 @@ test.describe('@auth Signup wizard — welper happy path', () => {
     // Step 5 — service area.
     await page.getByLabel(/city/i).fill('Toronto');
     await page.getByLabel(/province|state/i).fill('ON');
-    await page.getByLabel(/country/i).fill('CA');
-    // Postal-code prefix list — first prefix.
-    await page.getByLabel(/postal/i).first().fill('M5V');
-    await page.getByRole('button', { name: /add/i }).first().click();
     await page.getByRole('button', { name: /continue|next/i }).click();
 
     // Step 6 — service offering.
@@ -121,13 +114,8 @@ test.describe('@auth Signup wizard — welper happy path', () => {
       );
     await page.getByRole('button', { name: /continue|next/i }).click();
 
-    // Availability — ad-hoc-only path keeps the spec tight.
-    await page
-      .getByLabel(/take bookings by request only|ad.?hoc/i)
-      .check();
-    await page.getByRole('button', { name: /continue|next/i }).click();
-
-    // Notification prefs.
+    // Availability — add one weekly slot.
+    await page.getByRole('button', { name: /add slot/i }).click();
     await page.getByRole('button', { name: /continue|next/i }).click();
 
     // Optional profile (skip).
@@ -162,10 +150,10 @@ test.describe('@auth Signup wizard — drop and resume', () => {
     await page.getByRole('button', { name: /sign in|log in/i }).click();
 
     // Middleware (state B) routes to /register; the wizard reads server state
-    // and `router.replace`s to the next required step (notification-prefs for
+    // and `router.replace`s to the next required step (optional-profile for
     // a customer who finished steps 1-3).
-    await page.waitForURL(/\/register\/step\/notification-prefs/, { timeout: 15_000 });
-    expect(page.url()).toContain('/register/step/notification-prefs');
+    await page.waitForURL(/\/register\/step\/optional-profile/, { timeout: 15_000 });
+    expect(page.url()).toContain('/register/step/optional-profile');
 
     void context; // keep param signature for future cross-tab variants
   });

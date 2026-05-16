@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import { Box } from "@welpco/ui/box";
 import { Button } from "@welpco/ui/button";
 import { Callout } from "@welpco/ui/callout";
@@ -9,7 +9,11 @@ import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import type { SelectedRole, SignupStateLite } from "./types";
+import {
+  DEFAULT_SELECT_ROLE_LABELS,
+  type SelectRoleStepLabels,
+} from "./labels";
+import { SIGNUP_STEP_CARD_STYLE, type SelectedRole, type SignupStateLite } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch A. Step 2 of the unified signup wizard.
@@ -29,6 +33,7 @@ export interface SelectRoleStepProps {
   customerRegistrationEnabled?: boolean;
   loading?: boolean;
   error?: string | null;
+  labels?: SelectRoleStepLabels;
   onSubmit: (values: { role: SelectedRole }) => void | Promise<void>;
   onBack?: () => void;
 }
@@ -39,29 +44,33 @@ interface RoleOption {
   description: string;
 }
 
-const OPTIONS: readonly RoleOption[] = [
-  {
-    value: "customer",
-    title: "Find help",
-    description:
-      "Book trusted Welpers in your area for cleaning, care, errands, and more.",
-  },
-  {
-    value: "welper",
-    title: "Become a Welper",
-    description:
-      "Set your own hours, your own rates, and earn from clients who need your skills.",
-  },
-] as const;
-
 export function SelectRoleStep({
   state,
   customerRegistrationEnabled = true,
   loading,
   error,
+  labels: labelsProp,
   onSubmit,
   onBack,
 }: SelectRoleStepProps) {
+  const labels = labelsProp ?? DEFAULT_SELECT_ROLE_LABELS;
+
+  const options = useMemo<readonly RoleOption[]>(
+    () => [
+      {
+        value: "customer",
+        title: labels.customerTitle,
+        description: labels.customerDescription,
+      },
+      {
+        value: "welper",
+        title: labels.welperTitle,
+        description: labels.welperDescription,
+      },
+    ],
+    [labels],
+  );
+
   const [selected, setSelected] = useState<SelectedRole | null>(() => {
     if (state.selectedRole) return state.selectedRole;
     if (!customerRegistrationEnabled) return "welper";
@@ -70,8 +79,8 @@ export function SelectRoleStep({
   const [submitted, setSubmitted] = useState(false);
 
   const selectableOptions = customerRegistrationEnabled
-    ? OPTIONS
-    : OPTIONS.filter((o) => o.value === "welper");
+    ? options
+    : options.filter((o) => o.value === "welper");
 
   const selectRole = (value: SelectedRole) => {
     if (!customerRegistrationEnabled && value === "customer") return;
@@ -112,16 +121,15 @@ export function SelectRoleStep({
     <Card
       size="4"
       variant="surface"
-      style={{ width: "100%", maxWidth: "560px", minWidth: 0 }}
+      style={SIGNUP_STEP_CARD_STYLE}
     >
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>
           <Heading as="h1" size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            What brings you to Welpco?
+            {labels.title}
           </Heading>
           <Text size="2" color="gray">
-            Pick one. You can switch later by creating a new account with a
-            different email — most people stick with what they pick here.
+            {labels.description}
           </Text>
         </Box>
 
@@ -137,15 +145,15 @@ export function SelectRoleStep({
             gap="3"
             role="radiogroup"
             aria-required="true"
-            aria-label="Choose your role"
+            aria-label={labels.radiogroupAriaLabel}
             mb={FORM_SPACING.fieldGap}
           >
-            {OPTIONS.map((option) => {
+            {options.map((option) => {
               const isDisabled =
                 !customerRegistrationEnabled && option.value === "customer";
               const isSelected = !isDisabled && selected === option.value;
               const defaultFocusRole = customerRegistrationEnabled
-                ? OPTIONS[0].value
+                ? options[0].value
                 : "welper";
               return (
                 <Box
@@ -192,7 +200,7 @@ export function SelectRoleStep({
                     </Heading>
                     <Text size="2" color="gray">
                       {isDisabled
-                        ? "Customer sign-up is coming soon. For now, Welpco is open to Welpers."
+                        ? labels.customerDisabledDescription
                         : option.description}
                     </Text>
                   </Flex>
@@ -208,7 +216,7 @@ export function SelectRoleStep({
               color={SEMANTIC_COLOR.danger}
               mb={FORM_SPACING.fieldGap}
             >
-              Pick one to continue.
+              {labels.validationRequired}
             </Text>
           )}
 
@@ -224,7 +232,7 @@ export function SelectRoleStep({
               disabled={loading}
               style={{ width: "100%" }}
             >
-              {loading ? "Saving..." : "Continue"}
+              {loading ? labels.continueLoading : labels.continue}
             </Button>
             {onBack && (
               <Button
@@ -236,7 +244,7 @@ export function SelectRoleStep({
                 onClick={onBack}
                 style={{ width: "100%" }}
               >
-                Back
+                {labels.back}
               </Button>
             )}
           </Flex>

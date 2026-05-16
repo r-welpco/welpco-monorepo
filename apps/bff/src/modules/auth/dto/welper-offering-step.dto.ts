@@ -1,5 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
   IsNumber,
   IsString,
   IsUUID,
@@ -7,30 +11,18 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
 /**
- * Day 15 — Phase 1 of the signup ↔ onboarding merge.
- *
- * Welper-only step. Required: at least one service offering exists when the
- * wizard finishes.
- *
- * Hourly-rate bounds: 5 floor (a $0/hr offering is data entry mistake;
- * Day 11 booking audit caught the same), 500 ceiling (the wizard is a
- * "sane defaults" entry path; premium concierge welpers can push higher
- * later via the dashboard's offering editor which uses the broader 1–1000
- * window). title 8–120 mirrors the existing offering form's sizing
- * convention; description 80–1000 enforces a useful minimum while staying
- * shorter than bio (offering description is a sub-card primitive).
+ * One service offering in the welper signup wizard (subcategory + details).
  */
-export class WelperOfferingStepDto {
+export class WelperOfferingItemDto {
   @ApiProperty({
-    description: 'Service category UUID (from Content Management).',
-    example: '6b2f2ed6-0f7c-4f09-9f70-2a9b4aaa6f7d',
+    description: 'Level-2 service category UUID (subcategory).',
   })
-  @IsUUID('4', { message: 'categoryId must be a valid UUID' })
-  categoryId!: string;
+  @IsUUID('4', { message: 'subcategoryId must be a valid UUID' })
+  subcategoryId!: string;
 
   @ApiProperty({
     description: 'Offering title (8–120 characters).',
@@ -43,12 +35,7 @@ export class WelperOfferingStepDto {
   @MaxLength(120, { message: 'title must be at most 120 characters' })
   title!: string;
 
-  @ApiProperty({
-    description: 'Hourly rate (5–500).',
-    example: 35,
-    minimum: 5,
-    maximum: 500,
-  })
+  @ApiProperty({ description: 'Hourly rate (5–500).', example: 35 })
   @Type(() => Number)
   @IsNumber(
     { maxDecimalPlaces: 2 },
@@ -60,9 +47,6 @@ export class WelperOfferingStepDto {
 
   @ApiProperty({
     description: 'Offering description (80–1000 characters).',
-    example:
-      'I bring my own mower and trimmer. Standard yard takes 60–90 minutes. ' +
-      'Bagging, edging, and curbside disposal included.',
     minLength: 80,
     maxLength: 1000,
   })
@@ -70,4 +54,17 @@ export class WelperOfferingStepDto {
   @MinLength(80, { message: 'description must be at least 80 characters' })
   @MaxLength(1000, { message: 'description must be at most 1000 characters' })
   description!: string;
+}
+
+/**
+ * Welper-only signup step: one or more service offerings.
+ */
+export class WelperOfferingStepDto {
+  @ApiProperty({ type: [WelperOfferingItemDto], minItems: 1 })
+  @IsArray()
+  @ArrayMinSize(1, { message: 'offerings must include at least one service' })
+  @ArrayMaxSize(3, { message: 'offerings must include at most 3 services' })
+  @ValidateNested({ each: true })
+  @Type(() => WelperOfferingItemDto)
+  offerings!: WelperOfferingItemDto[];
 }

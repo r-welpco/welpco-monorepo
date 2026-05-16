@@ -28,6 +28,7 @@ import { PaymentService } from '../payment/payment.service';
 import { CustomerProfileService } from '../profile-management/customer-profile/customer-profile.service';
 import { WelperProfileService } from '../profile-management/welper-profile/welper-profile.service';
 import { UsersService } from '../user-management/users/users.service';
+import { BackgroundCheckService } from '../safety-verification/background-check.service';
 import { validateTransition, getValidTransitions } from './booking-state-machine';
 import type { ServiceQuestion } from '../content-management/entities/service-question.entity';
 
@@ -53,6 +54,7 @@ export class BookingService {
     private readonly welperProfileService: WelperProfileService,
     private readonly usersService: UsersService,
     private readonly s3Presigner: S3UrlPresignerService,
+    private readonly backgroundCheckService: BackgroundCheckService,
   ) {}
 
   // ─── Helpers ──────────────────────────────────────────────────────────
@@ -457,6 +459,8 @@ export class BookingService {
   // ─── Welper Actions ───────────────────────────────────────────────────
 
   async accept(bookingId: string, welperId: string, accountType: string): Promise<BookingResponseDto> {
+    await this.backgroundCheckService.assertCanAcceptBookings(welperId);
+
     let idempotentAlreadyAccepted: BookingRequest | null = null;
 
     await this.dataSource.transaction(async (manager) => {

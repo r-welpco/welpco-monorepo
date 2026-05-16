@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Box } from "@welpco/ui/box";
@@ -12,7 +13,11 @@ import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { TextArea } from "@welpco/ui/text-area";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import type { SignupStateLite } from "./types";
+import {
+  DEFAULT_WELPER_BIO_LABELS,
+  type WelperBioStepLabels,
+} from "./labels";
+import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch B. Welper-only step 3 of the unified signup wizard.
@@ -26,13 +31,28 @@ import type { SignupStateLite } from "./types";
 const MIN_BIO = 120;
 const MAX_BIO = 2000;
 
-const schema = z.object({
-  bio: z
-    .string()
-    .trim()
-    .min(MIN_BIO, `Bio must be at least ${MIN_BIO} characters`)
-    .max(MAX_BIO, `Bio must be ${MAX_BIO} characters or fewer`),
-});
+function formatLabel(template: string, vars: Record<string, string | number>): string {
+  return Object.entries(vars).reduce(
+    (s, [k, v]) => s.replaceAll(`{${k}}`, String(v)),
+    template,
+  );
+}
+
+function createSchema(labels: WelperBioStepLabels) {
+  return z.object({
+    bio: z
+      .string()
+      .trim()
+      .min(
+        MIN_BIO,
+        formatLabel(labels.validation.bioMin, { min: MIN_BIO }),
+      )
+      .max(
+        MAX_BIO,
+        formatLabel(labels.validation.bioMax, { max: MAX_BIO }),
+      ),
+  });
+}
 
 export interface WelperBioStepValues {
   bio: string;
@@ -42,6 +62,7 @@ export interface WelperBioStepProps {
   state: SignupStateLite;
   loading?: boolean;
   error?: string | null;
+  labels?: WelperBioStepLabels;
   onSubmit: (values: WelperBioStepValues) => void | Promise<void>;
   onBack?: () => void;
 }
@@ -50,9 +71,13 @@ export function WelperBioStep({
   state,
   loading,
   error,
+  labels: labelsProp,
   onSubmit,
   onBack,
 }: WelperBioStepProps) {
+  const labels = labelsProp ?? DEFAULT_WELPER_BIO_LABELS;
+  const schema = useMemo(() => createSchema(labels), [labels]);
+
   const filled = (state.filledData.welperBio as { bio?: string } | undefined)?.bio ?? "";
 
   const form = useForm<WelperBioStepValues>({
@@ -73,17 +98,15 @@ export function WelperBioStep({
     <Card
       size="4"
       variant="surface"
-      style={{ width: "100%", maxWidth: "640px", minWidth: 0 }}
+      style={SIGNUP_STEP_CARD_STYLE}
     >
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>
           <Heading as="h1" size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            Tell customers who you are
+            {labels.title}
           </Heading>
           <Text size="2" color="gray">
-            A few sentences about your work, what you love about it, and who
-            you&apos;re a great fit for. This is the first thing people read on
-            your profile — speak in your own voice.
+            {labels.description}
           </Text>
         </Box>
 
@@ -102,14 +125,14 @@ export function WelperBioStep({
               htmlFor="signup-bio"
               mb={FORM_SPACING.labelGap}
             >
-              Your bio
+              {labels.bioLabel}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
-                *
+                {labels.requiredMarker}
               </Text>
             </Text>
             <TextArea
               id="signup-bio"
-              placeholder="What do you do, who do you do it for, and why are you good at it?"
+              placeholder={labels.bioPlaceholder}
               rows={8}
               size="2"
               disabled={loading}
@@ -126,11 +149,14 @@ export function WelperBioStep({
                 color={meetsMin ? "gray" : SEMANTIC_COLOR.warning}
               >
                 {meetsMin
-                  ? `${charCount} characters`
-                  : `${MIN_BIO - charCount} more to go (${MIN_BIO} min)`}
+                  ? formatLabel(labels.charCount, { count: charCount })
+                  : formatLabel(labels.minCharsRemaining, {
+                      count: MIN_BIO - charCount,
+                      min: MIN_BIO,
+                    })}
               </Text>
               <Text size="1" color={remaining < 100 ? SEMANTIC_COLOR.warning : "gray"}>
-                {remaining} left
+                {formatLabel(labels.charsRemaining, { count: remaining })}
               </Text>
             </Flex>
             {form.formState.errors.bio && (
@@ -157,7 +183,7 @@ export function WelperBioStep({
               disabled={loading}
               style={{ width: "100%" }}
             >
-              {loading ? "Saving..." : "Continue"}
+              {loading ? labels.saving : labels.continue}
             </Button>
             {onBack && (
               <Button
@@ -169,7 +195,7 @@ export function WelperBioStep({
                 onClick={onBack}
                 style={{ width: "100%" }}
               >
-                Back
+                {labels.back}
               </Button>
             )}
           </Flex>

@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
@@ -21,7 +22,11 @@ import {
 import { Text } from "@welpco/ui/text";
 import { TextField } from "@welpco/ui/text-field";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import type { SignupStateLite } from "./types";
+import {
+  DEFAULT_IDENTITY_LABELS,
+  type IdentityStepLabels,
+} from "./labels";
+import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch A. Step 3 of the unified signup wizard.
@@ -40,18 +45,18 @@ import type { SignupStateLite } from "./types";
  * with the rest of the wizard.
  */
 
-const COUNTRY_CODES = [
-  { code: "CA", label: "Canada (+1)", dial: "+1" },
-  { code: "US", label: "United States (+1)", dial: "+1" },
-  { code: "GB", label: "United Kingdom (+44)", dial: "+44" },
-  { code: "AU", label: "Australia (+61)", dial: "+61" },
-  { code: "FR", label: "France (+33)", dial: "+33" },
-  { code: "DE", label: "Germany (+49)", dial: "+49" },
-  { code: "IN", label: "India (+91)", dial: "+91" },
-  { code: "MX", label: "Mexico (+52)", dial: "+52" },
+const SUPPORTED_COUNTRY_CODES = [
+  "CA",
+  "US",
+  "GB",
+  "AU",
+  "FR",
+  "DE",
+  "IN",
+  "MX",
 ] as const;
 
-type CountryCode = (typeof COUNTRY_CODES)[number]["code"];
+type CountryCode = (typeof SUPPORTED_COUNTRY_CODES)[number];
 
 function isAtLeast13(dobIso: string): boolean {
   const dob = new Date(dobIso);
@@ -63,36 +68,35 @@ function isAtLeast13(dobIso: string): boolean {
   return age >= 13;
 }
 
-const schema = z.object({
-  firstName: z
-    .string()
-    .trim()
-    .min(1, "First name is required")
-    .max(80, "First name must be 80 characters or fewer"),
-  lastName: z
-    .string()
-    .trim()
-    .min(1, "Last name is required")
-    .max(80, "Last name must be 80 characters or fewer"),
-  countryCode: z.string().min(2, "Pick a country") as z.ZodType<CountryCode>,
-  phoneNational: z
-    .string()
-    .trim()
-    .min(1, "Phone number is required"),
-  dateOfBirth: z
-    .string()
-    .min(1, "Date of birth is required")
-    .refine((v) => !Number.isNaN(new Date(v).getTime()), "Enter a valid date")
-    .refine(isAtLeast13, "You must be at least 13 to sign up"),
-  acceptTos: z.boolean().refine((v) => v === true, {
-    message: "Accept the Terms of Service to continue",
-  }),
-  acceptPrivacy: z.boolean().refine((v) => v === true, {
-    message: "Accept the Privacy Policy to continue",
-  }),
-});
+function createSchema(labels: IdentityStepLabels) {
+  return z.object({
+    firstName: z
+      .string()
+      .trim()
+      .min(1, labels.validation.firstNameRequired)
+      .max(80, labels.validation.firstNameMax),
+    lastName: z
+      .string()
+      .trim()
+      .min(1, labels.validation.lastNameRequired)
+      .max(80, labels.validation.lastNameMax),
+    countryCode: z.string().min(2, labels.validation.countryRequired) as z.ZodType<CountryCode>,
+    phoneNational: z.string().trim().min(1, labels.validation.phoneRequired),
+    dateOfBirth: z
+      .string()
+      .min(1, labels.validation.dobRequired)
+      .refine((v) => !Number.isNaN(new Date(v).getTime()), labels.validation.dobInvalid)
+      .refine(isAtLeast13, labels.validation.dobMinAge),
+    acceptTos: z.boolean().refine((v) => v === true, {
+      message: labels.validation.tosRequired,
+    }),
+    acceptPrivacy: z.boolean().refine((v) => v === true, {
+      message: labels.validation.privacyRequired,
+    }),
+  });
+}
 
-type IdentityFormValues = z.infer<typeof schema>;
+type IdentityFormValues = z.infer<ReturnType<typeof createSchema>>;
 
 export interface IdentityStepSubmitValues {
   firstName: string;
@@ -111,6 +115,7 @@ export interface IdentityStepProps {
   state: SignupStateLite;
   loading?: boolean;
   error?: string | null;
+  labels?: IdentityStepLabels;
   onSubmit: (values: IdentityStepSubmitValues) => void | Promise<void>;
   onBack?: () => void;
   /** Hrefs for the legal documents — defaults to the canonical paths. */
@@ -122,13 +127,16 @@ export function IdentityStep({
   state,
   loading,
   error,
+  labels: labelsProp,
   onSubmit,
   onBack,
   termsHref = "/legal/terms",
   privacyHref = "/legal/privacy",
 }: IdentityStepProps) {
+  const labels = labelsProp ?? DEFAULT_IDENTITY_LABELS;
+  const schema = useMemo(() => createSchema(labels), [labels]);
+
   const filled = state.filledData.identity;
-  // Best-effort split of a pre-filled phone into country + national format.
   const parsedExisting = filled?.phone
     ? parsePhoneNumberFromString(filled.phone)
     : undefined;
@@ -151,7 +159,6 @@ export function IdentityStep({
   const countryCode = form.watch("countryCode");
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    // Combine country + national into E.164 and re-validate before submitting.
     const phoneInput = `${values.phoneNational}`;
     const parsed = parsePhoneNumberFromString(
       phoneInput,
@@ -160,7 +167,7 @@ export function IdentityStep({
     if (!parsed?.isValid()) {
       form.setError("phoneNational", {
         type: "manual",
-        message: "Enter a valid phone number for the selected country",
+        message: labels.validation.phoneInvalid,
       });
       return;
     }
@@ -168,7 +175,7 @@ export function IdentityStep({
     await onSubmit({
       firstName: values.firstName,
       lastName: values.lastName,
-      phone: parsed.number, // E.164
+      phone: parsed.number,
       dateOfBirth: values.dateOfBirth,
       tosAcceptedAt: filled?.tosAcceptedAt ?? now,
       privacyAcceptedAt: filled?.privacyAcceptedAt ?? now,
@@ -179,16 +186,15 @@ export function IdentityStep({
     <Card
       size="4"
       variant="surface"
-      style={{ width: "100%", maxWidth: "560px", minWidth: 0 }}
+      style={SIGNUP_STEP_CARD_STYLE}
     >
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>
           <Heading as="h1" size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            Tell us who you are
+            {labels.title}
           </Heading>
           <Text size="2" color="gray">
-            We use these details to confirm bookings and reach you about your
-            account. They&apos;re never shown publicly without your say-so.
+            {labels.description}
           </Text>
         </Box>
 
@@ -208,9 +214,9 @@ export function IdentityStep({
                 htmlFor="signup-first-name"
                 mb={FORM_SPACING.labelGap}
               >
-                First name
+                {labels.firstName}
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
-                  *
+                  {labels.requiredMarker}
                 </Text>
               </Text>
               <TextField.Root
@@ -244,9 +250,9 @@ export function IdentityStep({
                 htmlFor="signup-last-name"
                 mb={FORM_SPACING.labelGap}
               >
-                Last name
+                {labels.lastName}
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
-                  *
+                  {labels.requiredMarker}
                 </Text>
               </Text>
               <TextField.Root
@@ -281,9 +287,9 @@ export function IdentityStep({
               weight="bold"
               mb={FORM_SPACING.labelGap}
             >
-              Phone
+              {labels.phone}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
-                *
+                {labels.requiredMarker}
               </Text>
             </Text>
             <Flex direction={{ initial: "column", sm: "row" }} gap="2">
@@ -300,11 +306,11 @@ export function IdentityStep({
                 >
                   <SelectTrigger
                     aria-labelledby="signup-phone-label"
-                    placeholder="Country"
+                    placeholder={labels.countryPlaceholder}
                     style={{ width: "100%" }}
                   />
                   <SelectContent>
-                    {COUNTRY_CODES.map((c) => (
+                    {labels.countryOptions.map((c) => (
                       <SelectItem key={c.code} value={c.code}>
                         {c.label}
                       </SelectItem>
@@ -317,7 +323,7 @@ export function IdentityStep({
                   id="signup-phone"
                   type="tel"
                   inputMode="tel"
-                  placeholder="416 555 1234"
+                  placeholder={labels.phonePlaceholder}
                   autoComplete="tel-national"
                   disabled={loading}
                   size="2"
@@ -350,9 +356,9 @@ export function IdentityStep({
               htmlFor="signup-dob"
               mb={FORM_SPACING.labelGap}
             >
-              Date of birth
+              {labels.dateOfBirth}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
-                *
+                {labels.requiredMarker}
               </Text>
             </Text>
             <TextField.Root
@@ -378,7 +384,7 @@ export function IdentityStep({
               </Text>
             ) : (
               <Text size="1" color="gray" mt={FORM_SPACING.helperGap}>
-                You must be at least 13.
+                {labels.dobHint}
               </Text>
             )}
           </Box>
@@ -396,12 +402,12 @@ export function IdentityStep({
                 aria-required="true"
               />
               <Text as="label" size="2" htmlFor="signup-tos">
-                I agree to the{" "}
+                {labels.tosPrefix}{" "}
                 <Link href={termsHref} target="_blank" rel="noopener noreferrer">
-                  Terms of Service
+                  {labels.tosLink}
                 </Link>
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
-                  *
+                  {labels.requiredMarker}
                 </Text>
               </Text>
             </Flex>
@@ -432,12 +438,12 @@ export function IdentityStep({
                 aria-required="true"
               />
               <Text as="label" size="2" htmlFor="signup-privacy">
-                I&apos;ve read the{" "}
+                {labels.privacyPrefix}{" "}
                 <Link href={privacyHref} target="_blank" rel="noopener noreferrer">
-                  Privacy Policy
+                  {labels.privacyLink}
                 </Link>
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
-                  *
+                  {labels.requiredMarker}
                 </Text>
               </Text>
             </Flex>
@@ -465,7 +471,7 @@ export function IdentityStep({
               disabled={loading}
               style={{ width: "100%" }}
             >
-              {loading ? "Saving..." : "Continue"}
+              {loading ? labels.saving : labels.continue}
             </Button>
             {onBack && (
               <Button
@@ -477,7 +483,7 @@ export function IdentityStep({
                 onClick={onBack}
                 style={{ width: "100%" }}
               >
-                Back
+                {labels.back}
               </Button>
             )}
           </Flex>

@@ -177,7 +177,7 @@ describe('BFF Signup wizard (e2e)', () => {
   // Customer happy path
   // -----------------------------------------------------------------
   describe('Customer happy path', () => {
-    it('walks begin → select-role → identity → notification-prefs → optional-profile → finish', async () => {
+    it('walks begin → select-role → identity → optional-profile → finish', async () => {
       // Begin
       orchestratorMock.beginSignup.mockResolvedValueOnce({
         user: {
@@ -207,7 +207,6 @@ describe('BFF Signup wizard (e2e)', () => {
           requiredSteps: [
             'selectRole',
             'identity',
-            'notificationPrefs',
             'optionalProfile',
           ],
         }),
@@ -231,16 +230,6 @@ describe('BFF Signup wizard (e2e)', () => {
           tosAcceptedAt: new Date().toISOString(),
           privacyAcceptedAt: new Date().toISOString(),
         })
-        .expect(200);
-
-      // notification-prefs
-      orchestratorMock.submitNotificationPrefsStep.mockResolvedValueOnce(
-        stubState(),
-      );
-      await request(app.getHttpServer())
-        .post('/api/auth/signup/step/notification-prefs')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ preferences: [] })
         .expect(200);
 
       // optional-profile
@@ -312,10 +301,16 @@ describe('BFF Signup wizard (e2e)', () => {
         .post('/api/auth/signup/step/welper-service-area')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          city: 'Toronto',
-          province: 'ON',
-          country: 'CA',
-          postalCodes: ['M5V', 'M5W'],
+          serviceArea: {
+            type: 'radius',
+            centerAddress: {
+              city: 'Toronto',
+              stateProvince: 'ON',
+              zipPostalCode: 'M5V 2T6',
+              country: 'CA',
+            },
+            radiusMiles: 25,
+          },
         })
         .expect(200);
 
@@ -326,10 +321,14 @@ describe('BFF Signup wizard (e2e)', () => {
         .post('/api/auth/signup/step/welper-offering')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          categoryId: '6b2f2ed6-0f7c-4f09-9f70-2a9b4aaa6f7d',
-          title: 'Lawn mowing services',
-          hourlyRate: 35,
-          description: 'a'.repeat(85),
+          offerings: [
+            {
+              subcategoryId: '6b2f2ed6-0f7c-4f09-9f70-2a9b4aaa6f7d',
+              title: 'Lawn mowing services',
+              hourlyRate: 35,
+              description: 'a'.repeat(85),
+            },
+          ],
         })
         .expect(200);
 
@@ -351,15 +350,6 @@ describe('BFF Signup wizard (e2e)', () => {
         .post('/api/auth/signup/step/welper-payout')
         .set('Authorization', `Bearer ${token}`)
         .send({ skip: true })
-        .expect(200);
-
-      orchestratorMock.submitNotificationPrefsStep.mockResolvedValueOnce(
-        stubState(),
-      );
-      await request(app.getHttpServer())
-        .post('/api/auth/signup/step/notification-prefs')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ preferences: [] })
         .expect(200);
 
       orchestratorMock.submitOptionalProfileStep.mockResolvedValueOnce(
@@ -437,23 +427,14 @@ describe('BFF Signup wizard (e2e)', () => {
         stubState({
           selectedRole: SelectedRole.CUSTOMER,
           completedSteps: ['selectRole', 'identity'],
-          nextStep: 'notificationPrefs',
+          nextStep: 'optionalProfile',
         }),
       );
       const stateRes = await request(app.getHttpServer())
         .get('/api/auth/signup/state')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
-      expect(stateRes.body.nextStep).toBe('notificationPrefs');
-
-      orchestratorMock.submitNotificationPrefsStep.mockResolvedValueOnce(
-        stubState(),
-      );
-      await request(app.getHttpServer())
-        .post('/api/auth/signup/step/notification-prefs')
-        .set('Authorization', `Bearer ${token}`)
-        .send({ preferences: [] })
-        .expect(200);
+      expect(stateRes.body.nextStep).toBe('optionalProfile');
 
       orchestratorMock.submitOptionalProfileStep.mockResolvedValueOnce(
         stubState(),

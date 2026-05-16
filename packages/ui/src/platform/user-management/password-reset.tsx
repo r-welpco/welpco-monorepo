@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { TextField } from "@welpco/ui/text-field";
@@ -12,35 +13,48 @@ import { Callout } from "@welpco/ui/callout";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import {
+  DEFAULT_PASSWORD_RESET_LABELS,
+  type PasswordResetLabels,
+} from "./signup-steps/labels";
+
+export type { PasswordResetLabels } from "./signup-steps/labels";
 
 export interface PasswordResetProps {
   defaultValues?: Partial<PasswordResetValues>;
   loading?: boolean;
   error?: string;
+  labels?: PasswordResetLabels;
   onSubmit?: (values: PasswordResetValues) => void | Promise<void>;
   onCancel?: () => void;
 }
 
-const schema = z
-  .object({
-    email: z.string().email("Enter a valid email"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Confirm your password"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords must match",
-    path: ["confirmPassword"],
-  });
+function createSchema(labels: PasswordResetLabels) {
+  return z
+    .object({
+      email: z.string().email(labels.validation.emailInvalid),
+      newPassword: z.string().min(8, labels.validation.passwordMinLength),
+      confirmPassword: z.string().min(8, labels.validation.confirmPasswordMinLength),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: labels.validation.passwordsMustMatch,
+      path: ["confirmPassword"],
+    });
+}
 
-export type PasswordResetValues = z.infer<typeof schema>;
+export type PasswordResetValues = z.infer<ReturnType<typeof createSchema>>;
 
 export function PasswordReset({
   defaultValues,
   loading,
   error,
+  labels: labelsProp,
   onSubmit,
   onCancel,
 }: PasswordResetProps) {
+  const labels = labelsProp ?? DEFAULT_PASSWORD_RESET_LABELS;
+  const schema = useMemo(() => createSchema(labels), [labels]);
+
   const form = useForm<PasswordResetValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -64,10 +78,10 @@ export function PasswordReset({
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>
           <Heading size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            Reset password
+            {labels.title}
           </Heading>
           <Text size="2" color="gray">
-            Enter your email and a new password.
+            {labels.description}
           </Text>
         </Box>
 
@@ -80,12 +94,14 @@ export function PasswordReset({
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="reset-email" mb={FORM_SPACING.labelGap}>
-              Email
-              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
+              {labels.email}
+              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+                {labels.requiredMarker}
+              </Text>
             </Text>
             <TextField.Root
               id="reset-email"
-              placeholder="you@example.com"
+              placeholder={labels.emailPlaceholder}
               autoComplete="email"
               size="2"
               aria-required="true"
@@ -101,13 +117,15 @@ export function PasswordReset({
 
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="reset-password" mb={FORM_SPACING.labelGap}>
-              New password
-              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
+              {labels.newPassword}
+              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+                {labels.requiredMarker}
+              </Text>
             </Text>
             <TextField.Root
               id="reset-password"
               type="password"
-              placeholder="••••••••"
+              placeholder={labels.passwordPlaceholder}
               autoComplete="new-password"
               size="2"
               aria-required="true"
@@ -129,13 +147,15 @@ export function PasswordReset({
               htmlFor="reset-confirm"
               mb="1"
             >
-              Confirm password
-              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
+              {labels.confirmPassword}
+              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+                {labels.requiredMarker}
+              </Text>
             </Text>
             <TextField.Root
               id="reset-confirm"
               type="password"
-              placeholder="••••••••"
+              placeholder={labels.passwordPlaceholder}
               autoComplete="new-password"
               size="2"
               aria-required="true"
@@ -151,11 +171,11 @@ export function PasswordReset({
 
           <Flex gap="2" mt={FORM_SPACING.submitGap}>
             <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading}>
-              {loading ? "Updating..." : "Update password"}
+              {loading ? labels.updating : labels.updatePassword}
             </Button>
             {onCancel && (
               <Button type="button" size="2" variant="soft" color="gray" disabled={loading} onClick={onCancel}>
-                Cancel
+                {labels.cancel}
               </Button>
             )}
           </Flex>
@@ -164,4 +184,3 @@ export function PasswordReset({
     </Card>
   );
 }
-

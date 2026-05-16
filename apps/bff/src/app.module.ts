@@ -22,6 +22,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { HealthModule } from './health/health.module';
 import { PaymentModule } from './domains/payment/payment.module';
+import { SafetyVerificationModule } from './domains/safety-verification/safety-verification.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { PaymentModule } from './domains/payment/payment.module';
     UploadsModule,
     HealthModule,
     PaymentModule,
+    SafetyVerificationModule,
   ],
 })
 export class AppModule {}

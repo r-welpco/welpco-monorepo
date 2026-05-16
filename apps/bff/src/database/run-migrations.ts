@@ -1,6 +1,11 @@
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { join } from 'path';
+import {
+  ServiceCategory,
+  Question,
+  ServiceQuestion,
+} from '../domains/content-management/entities';
 
 /**
  * Migration runner — auto-discovers every migration class via filesystem glob.
@@ -43,6 +48,8 @@ async function runMigrations() {
     migrationsRun: false,
     synchronize: false,
     logging: process.env.DB_LOGGING === 'true',
+    // Content taxonomy sync migration uses repositories (ServiceCategory, etc.).
+    entities: [ServiceCategory, Question, ServiceQuestion],
   });
 
   try {

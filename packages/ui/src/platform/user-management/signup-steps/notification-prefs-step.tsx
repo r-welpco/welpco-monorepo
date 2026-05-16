@@ -11,7 +11,7 @@ import { Switch } from "@welpco/ui/switch";
 import { Separator } from "@welpco/ui/separator";
 import { Text } from "@welpco/ui/text";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import type { SignupStateLite } from "./types";
+import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch B. Both-roles step 8.
@@ -121,7 +121,7 @@ export function NotificationPrefsStep({
     <Card
       size="4"
       variant="surface"
-      style={{ width: "100%", maxWidth: "640px", minWidth: 0 }}
+      style={SIGNUP_STEP_CARD_STYLE}
     >
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>

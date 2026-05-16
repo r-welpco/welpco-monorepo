@@ -10,7 +10,11 @@ import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { RadioGroup } from "@welpco/ui/radio-group";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { AddressInput, type AddressValues } from "./address-input";
+import {
+  AddressInput,
+  type AddressInputLabels,
+  type AddressValues,
+} from "./address-input";
 import { useState, useEffect } from "react";
 
 export interface ServiceArea {
@@ -18,6 +22,29 @@ export interface ServiceArea {
   centerAddress?: AddressValues;
   radiusMiles?: number;
   description?: string;
+}
+
+export interface ServiceAreaSelectorLabels {
+  centerAddress: string;
+  serviceRadius: string;
+  radiusHint: string;
+}
+
+const DEFAULT_SELECTOR_LABELS: ServiceAreaSelectorLabels = {
+  centerAddress: "Center address",
+  serviceRadius: "Service radius (miles)",
+  radiusHint:
+    "Services will be available within {miles} miles of the center address.",
+};
+
+function formatLabel(
+  template: string,
+  vars: Record<string, string | number>,
+): string {
+  return Object.entries(vars).reduce(
+    (s, [k, v]) => s.replaceAll(`{${k}}`, String(v)),
+    template,
+  );
 }
 
 export interface ServiceAreaSelectorProps {
@@ -29,6 +56,12 @@ export interface ServiceAreaSelectorProps {
   noCard?: boolean; // If true, don't render the card wrapper
   /** When false, calls onSave on every change (for use inside forms). Default true. */
   showSaveButton?: boolean;
+  /** When false, omits the redundant "Center address" group label (e.g. signup step). */
+  showCenterAddressLabel?: boolean;
+  selectorLabels?: ServiceAreaSelectorLabels;
+  addressLabels?: AddressInputLabels;
+  /** When false, hides country on the address fields (Canada-only for now). */
+  showAddressCountry?: boolean;
 }
 
 export function ServiceAreaSelector({
@@ -39,7 +72,12 @@ export function ServiceAreaSelector({
   defaultServiceArea,
   noCard = false,
   showSaveButton = true,
+  showCenterAddressLabel = true,
+  selectorLabels: selectorLabelsProp,
+  addressLabels,
+  showAddressCountry = true,
 }: ServiceAreaSelectorProps) {
+  const selectorLabels = selectorLabelsProp ?? DEFAULT_SELECTOR_LABELS;
   const [centerAddress, setCenterAddress] = useState<AddressValues>(
     defaultArea?.centerAddress || {
       streetAddress: "",
@@ -167,21 +205,27 @@ export function ServiceAreaSelector({
           {!useDefault && (
             <>
               <Box mb="3">
-                <Text as="label" size="2" weight="bold" mb="1">
-                  Center address
-                  <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
-                </Text>
+                {showCenterAddressLabel ? (
+                  <Text as="label" size="2" weight="bold" mb="1">
+                    {selectorLabels.centerAddress}
+                    <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
+                  </Text>
+                ) : null}
                 <AddressInput
                   values={centerAddress}
-                  onChange={handleAddressChange}
+                  labels={addressLabels}
+                  onChange={(address) =>
+                    handleAddressChange({ ...address, country: address.country || "CA" })
+                  }
                   loading={loading}
                   required
+                  showCountry={showAddressCountry}
                 />
               </Box>
 
               <Box mb="3">
                 <Text as="label" size="2" weight="bold" htmlFor="service-radius" mb="1">
-                  Service radius (miles)
+                  {selectorLabels.serviceRadius}
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
                 </Text>
                 <TextField.Root
@@ -197,7 +241,7 @@ export function ServiceAreaSelector({
                   onChange={(e) => handleRadiusChange(e.target.value)}
                 />
                 <Text size="1" color="gray" highContrast mt="2">
-                  Services will be available within {radiusMiles} miles of the center address.
+                  {formatLabel(selectorLabels.radiusHint, { miles: radiusMiles })}
                 </Text>
               </Box>
             </>
@@ -206,21 +250,27 @@ export function ServiceAreaSelector({
       ) : (
         <>
           <Box mb="3">
-            <Text as="label" size="2" weight="bold" mb="1">
-              Center address
-              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
-            </Text>
+            {showCenterAddressLabel ? (
+              <Text as="label" size="2" weight="bold" mb="1">
+                {selectorLabels.centerAddress}
+                <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
+              </Text>
+            ) : null}
             <AddressInput
               values={centerAddress}
-              onChange={handleAddressChange}
+              labels={addressLabels}
+              onChange={(address) =>
+                handleAddressChange({ ...address, country: address.country || "CA" })
+              }
               loading={loading}
               required
+              showCountry={showAddressCountry}
             />
           </Box>
 
           <Box mb="3">
             <Text as="label" size="2" weight="bold" htmlFor="service-radius" mb="1">
-              Service radius (miles)
+              {selectorLabels.serviceRadius}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
@@ -235,7 +285,7 @@ export function ServiceAreaSelector({
               onChange={(e) => handleRadiusChange(e.target.value)}
             />
             <Text size="1" color="gray" mt="2">
-              Services will be available within {radiusMiles} miles of the center address.
+              {formatLabel(selectorLabels.radiusHint, { miles: radiusMiles })}
             </Text>
           </Box>
         </>

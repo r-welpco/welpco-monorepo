@@ -1,0 +1,73 @@
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../common/auth/guards/jwt-auth.guard';
+import { CurrentUser, CurrentUserData } from '../../common/auth/decorators/current-user.decorator';
+import { BackgroundCheckService } from './background-check.service';
+import { BackgroundCheckPaymentService } from './background-check-payment.service';
+import { ConfirmBackgroundCheckReturnDto } from './dto/confirm-background-check-return.dto';
+
+@ApiTags('Verification')
+@Controller('verification/background-check')
+export class VerificationController {
+  constructor(
+    private readonly backgroundCheckService: BackgroundCheckService,
+    private readonly paymentService: BackgroundCheckPaymentService,
+  ) {}
+
+  @Get('pricing')
+  @ApiOperation({ summary: 'Background check list and promo pricing (public)' })
+  async getPricing() {
+    return this.backgroundCheckService.getPricing();
+  }
+
+  @Get('status')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Background check payment and Certn status for current welper' })
+  async getStatus(@CurrentUser() user: CurrentUserData) {
+    return this.backgroundCheckService.getStatus(user.userId);
+  }
+
+  @Post('checkout-session')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Create Stripe Checkout session for background check fee' })
+  async createCheckoutSession(@CurrentUser() user: CurrentUserData) {
+    return this.paymentService.createCheckoutSession(user.userId);
+  }
+
+  @Post('confirm-return')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Sync payment after Stripe Checkout success redirect (webhook fallback)',
+  })
+  async confirmReturn(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: ConfirmBackgroundCheckReturnDto,
+  ) {
+    await this.paymentService.confirmReturn(user.userId, dto.sessionId);
+    return this.backgroundCheckService.getStatus(user.userId);
+  }
+
+  @Post('retry-invite')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Retry Certn applicant invite after payment (when invite failed or was skipped)',
+  })
+  async retryInvite(@CurrentUser() user: CurrentUserData) {
+    await this.backgroundCheckService.retryCertnInvite(user.userId);
+    return this.backgroundCheckService.getStatus(user.userId);
+  }
+}
