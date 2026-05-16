@@ -9,6 +9,7 @@ export const authProviders: NextAuthConfig["providers"] = [
     credentials: {
       email: { label: "Email", type: "email" },
       password: { label: "Password", type: "password" },
+      preferredLocale: { label: "Locale", type: "text" },
     },
     async authorize(credentials) {
       const validatedFields = loginSchema.safeParse(credentials);
@@ -17,6 +18,10 @@ export const authProviders: NextAuthConfig["providers"] = [
       }
 
       const { email, password } = validatedFields.data;
+      const preferredLocale =
+        credentials?.preferredLocale === "fr" || credentials?.preferredLocale === "en"
+          ? credentials.preferredLocale
+          : undefined;
 
       try {
         const response = await apiClient.post<{
@@ -35,7 +40,7 @@ export const authProviders: NextAuthConfig["providers"] = [
           profile?: { onboardingCompleted: boolean };
         }>(
           "/api/auth/login",
-          { email, password },
+          { email, password, ...(preferredLocale ? { preferredLocale } : {}) },
           { skipAuth: true },
         );
 

@@ -225,7 +225,8 @@ export function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     style={{ color: "var(--red-9)", cursor: "pointer" }}
-                    onClick={() => {
+                    onSelect={(event) => {
+                      event.preventDefault();
                       void performClientSignOut({ callbackUrl: "/", queryClient });
                     }}
                     aria-label="Log out"

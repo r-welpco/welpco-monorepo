@@ -155,8 +155,9 @@ test.describe('@auth Launch thank-you gate', () => {
     page,
   }) => {
     test.skip(
-      process.env.PLATFORM_ACCESS_GATED === 'false',
-      'Requires BFF PLATFORM_ACCESS_GATED=true',
+      process.env.PLATFORM_ACCESS_GATED === 'false' ||
+        process.env.NEXT_PUBLIC_PLATFORM_ACCESS_GATED === 'false',
+      'Requires PLATFORM_ACCESS_GATED=true (BFF + web)',
     );
 
     const email = generateTestEmail('gated');

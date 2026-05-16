@@ -21,6 +21,8 @@ import type {
 export interface BeginSignupParams {
   email: string;
   password: string;
+  /** UI language at signup — stored for transactional email (en | fr). */
+  preferredLocale?: "en" | "fr";
 }
 
 export interface SelectRoleStepParams {

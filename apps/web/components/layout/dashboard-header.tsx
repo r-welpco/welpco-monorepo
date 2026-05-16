@@ -120,7 +120,8 @@ export function DashboardHeader() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 style={{ color: "var(--red-9)", cursor: "pointer" }}
-                onClick={() => {
+                onSelect={(event) => {
+                  event.preventDefault();
                   void performClientSignOut({ callbackUrl: "/", queryClient });
                 }}
               >

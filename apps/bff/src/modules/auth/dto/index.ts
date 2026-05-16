@@ -16,3 +16,4 @@ export * from './welper-availability-step.dto';
 export * from './welper-payout-step.dto';
 export * from './notification-prefs-step.dto';
 export * from './optional-profile-step.dto';
+export * from './preferred-locale.dto';

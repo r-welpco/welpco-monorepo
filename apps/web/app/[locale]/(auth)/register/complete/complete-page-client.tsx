@@ -16,7 +16,8 @@ import { Text } from "@welpco/ui/text";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { hasFrenchPrefix } from "@/i18n/locale-routes";
 import { useRouter } from "@/i18n/navigation";
-import { useEffect } from "react";
+import { hasPlatformAccess } from "@/lib/auth/platform-access";
+import { useEffect, useRef } from "react";
 import { useSignupState } from "@/lib/hooks/use-signup";
 
 const CARD_STYLE = {
@@ -35,9 +36,6 @@ export default function CompletePageClient() {
 
   const loginCallback = hasFrenchPrefix(pathname) ? "/fr/login" : "/login";
 
-  const platformAccessEnabled =
-    signupState?.platformAccessEnabled ?? session?.user?.platformAccessEnabled;
-
   const signupCompleted =
     signupState?.signupCompleted ?? session?.user?.signupCompleted ?? false;
 
@@ -51,39 +49,39 @@ export default function CompletePageClient() {
       router.replace("/register");
       return;
     }
-    if (platformAccessEnabled === true) {
+    if (hasPlatformAccess({ signupCompleted: true })) {
       router.replace("/dashboard");
     }
-  }, [status, signupCompleted, platformAccessEnabled, router]);
+  }, [status, signupCompleted, router]);
 
   const roleFromSignup = roleFromSelectedRole(signupState?.selectedRole);
+  const sessionSyncStartedRef = useRef(false);
 
   useEffect(() => {
     if (!signupCompleted || status !== "authenticated") return;
+    if (sessionSyncStartedRef.current) return;
 
     const sessionPatch: {
       signupCompleted?: boolean;
-      platformAccessEnabled?: boolean;
       role?: "welper" | "customer";
     } = {};
 
     if (session?.user?.signupCompleted !== true) {
       sessionPatch.signupCompleted = true;
     }
-    if (typeof platformAccessEnabled === "boolean") {
-      sessionPatch.platformAccessEnabled = platformAccessEnabled;
-    }
     if (roleFromSignup && session?.user?.role !== roleFromSignup) {
       sessionPatch.role = roleFromSignup;
     }
 
-    if (Object.keys(sessionPatch).length > 0) {
-      void updateSession({ user: sessionPatch });
+    if (Object.keys(sessionPatch).length === 0) {
+      return;
     }
+
+    sessionSyncStartedRef.current = true;
+    void updateSession({ user: sessionPatch });
   }, [
     signupCompleted,
     status,
-    platformAccessEnabled,
     session?.user?.signupCompleted,
     session?.user?.role,
     roleFromSignup,

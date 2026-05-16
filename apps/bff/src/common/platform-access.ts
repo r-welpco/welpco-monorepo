@@ -1,6 +1,8 @@
 /**
- * When true, users who finish signup cannot access the dashboard until
- * `platform_access_enabled` is set (bulk update or PLATFORM_ACCESS_GATED=false).
+ * Global launch gate — controlled only by PLATFORM_ACCESS_GATED (not per-user DB flags).
+ *
+ * When true (default), signed-up users cannot access the dashboard until you set
+ * PLATFORM_ACCESS_GATED=false on the BFF (and matching env on the web app).
  */
 export function isPlatformAccessGated(): boolean {
   const raw = process.env.PLATFORM_ACCESS_GATED;
@@ -10,7 +12,7 @@ export function isPlatformAccessGated(): boolean {
   return raw === 'true' || raw === '1';
 }
 
-/** Value written on `POST /auth/signup/finish` for new accounts. */
-export function platformAccessEnabledOnFinish(): boolean {
+/** Exposed on login/signup/session DTOs so clients can mirror the global gate. */
+export function platformAccessEnabledForClients(): boolean {
   return !isPlatformAccessGated();
 }

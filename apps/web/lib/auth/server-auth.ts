@@ -144,12 +144,7 @@ export async function requireOnboardingComplete(): Promise<NonNullable<AuthCheck
     await localizedRedirect("/register");
   }
 
-  if (
-    !hasPlatformAccess({
-      signupCompleted: true,
-      platformAccessEnabled: user.platformAccessEnabled,
-    })
-  ) {
+  if (!hasPlatformAccess({ signupCompleted: true })) {
     await localizedRedirect("/register/complete");
   }
 

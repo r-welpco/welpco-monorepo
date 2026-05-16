@@ -1,5 +1,5 @@
 import { ApiProperty, ApiSchema } from '@nestjs/swagger';
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsString, IsOptional, IsIn } from 'class-validator';
 import { IsStrongPassword } from '../validators/password.validator';
 
 @ApiSchema({ name: 'DomainAuthRequestResetPasswordDto' })
@@ -10,6 +10,15 @@ export class RequestResetPasswordDto {
   })
   @IsEmail({}, { message: 'Invalid email format' })
   email: string;
+
+  @ApiProperty({
+    description: 'Locale of the reset form (updates preference when known user)',
+    required: false,
+    enum: ['en', 'fr'],
+  })
+  @IsOptional()
+  @IsIn(['en', 'fr'])
+  preferredLocale?: 'en' | 'fr';
 }
 
 @ApiSchema({ name: 'DomainAuthConfirmResetPasswordDto' })

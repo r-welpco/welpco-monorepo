@@ -106,6 +106,7 @@ export function useBeginSignup() {
       await signIn("credentials", {
         email: params.email,
         password: params.password,
+        preferredLocale: params.preferredLocale ?? "en",
         redirect: false,
       });
       return response;

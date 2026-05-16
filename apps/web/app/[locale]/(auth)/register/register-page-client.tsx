@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { localeFromUseLocale } from "@/lib/i18n/app-locale";
 import { Flex } from "@welpco/ui/flex";
 import { Spinner } from "@welpco/ui/spinner";
 import { EmailPasswordStep } from "@welpco/ui/platform/user-management";
@@ -22,6 +23,7 @@ export default function RegisterPageClient() {
   const { status } = useSession();
   const isAuthenticated = status === "authenticated";
   const labels = useEmailPasswordStepLabels();
+  const uiLocale = useLocale();
   const t = useTranslations("auth.register.begin");
 
   const beginSignup = useBeginSignup();
@@ -50,7 +52,10 @@ export default function RegisterPageClient() {
   const handleBegin = async (values: { email: string; password: string }) => {
     setError(null);
     try {
-      await beginSignup.mutateAsync(values);
+      await beginSignup.mutateAsync({
+        ...values,
+        preferredLocale: localeFromUseLocale(uiLocale),
+      });
     } catch (err) {
       if (err instanceof ApiClientError && err.code === "ACCOUNT_EXISTS") {
         setError(t("errors.accountExists"));

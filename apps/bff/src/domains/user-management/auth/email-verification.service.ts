@@ -15,6 +15,7 @@ import { EmailVerificationToken } from '../entities/email-verification-token.ent
 import { VerificationStatus } from '../entities/verification-status.entity';
 import { EventPublisherService } from '../events/event-publisher.service';
 import { EmailService } from '../email/email.service';
+import { emailLocaleForUser } from './user-locale.helper';
 
 @Injectable()
 export class EmailVerificationService {
@@ -60,7 +61,11 @@ export class EmailVerificationService {
     if (user) {
       try {
         // Send email directly via EmailService (uses MailHog in development)
-        await this.emailService.sendVerificationEmail(user.email, token);
+        await this.emailService.sendVerificationEmail(
+          user.email,
+          token,
+          emailLocaleForUser(user),
+        );
       } catch (error) {
         // Log error but don't fail token generation
         console.error('Failed to send verification email:', error);

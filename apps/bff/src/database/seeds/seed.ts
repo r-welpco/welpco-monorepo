@@ -1,6 +1,10 @@
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { UserAccount, AccountType, AccountStatus } from '../../domains/user-management/entities/user-account.entity';
+import {
+  UserAccount,
+  AccountType,
+  AccountStatus,
+} from '../../domains/user-management/entities/user-account.entity';
 import { VerificationStatus } from '../../domains/user-management/entities/verification-status.entity';
 import { ReferralCode, CodeType } from '../../domains/user-management/entities/referral-code.entity';
 import { CustomerProfile } from '../../domains/profile-management/entities/customer-profile.entity';
@@ -13,19 +17,42 @@ import { seedSearchDemo } from './seed-search-demo';
 import { seedQuebecWelpers } from './seed-quebec-welpers';
 import { seedFixOfferingCategories } from './seed-fix-offering-categories';
 import { syncServiceCategoryTaxonomy } from './sync-service-category-taxonomy';
+import {
+  applySeedCustomerProfileReady,
+  applySeedUserAccountFields,
+  applySeedWelperProfileReady,
+  type SeedUserReadyOptions,
+} from './seed-user-helpers';
+import { validateSeed } from './validate-seed';
+import { shouldSkipUserSeed } from './seed-flags';
 
 /**
- * Seed for single-backend: users + customer/welper profiles + content in one DB (welpco_dev).
- * Matches ProfileCreationService.createProfileForUser so login and GET /api/profiles/me work.
+ * Seed reference data (categories, questions, FAQ, holidays) and optionally dev test users.
+ *
+ * Production: run migrations first, then:
+ *   SEED_CONFIRM_PRODUCTION=yes SEED_SKIP_USERS=1 pnpm seed:users
+ * Categories come from SERVICE_CATEGORY_TAXONOMY (same list as signup i18n + migration sync).
  */
 export async function seedDatabase(dataSource: DataSource): Promise<void> {
+  const skipUsers = shouldSkipUserSeed();
+
+  if (skipUsers) {
+    console.log('🌱 Seeding database (content + taxonomy only — no user accounts)...');
+    await syncServiceCategoryTaxonomy(dataSource);
+    await seedContent(dataSource);
+    await seedHolidays(dataSource);
+    await validateSeed(dataSource);
+    console.log('✅ Content seed completed (no user accounts created).');
+    return;
+  }
+
   const userRepository = dataSource.getRepository(UserAccount);
   const verificationRepository = dataSource.getRepository(VerificationStatus);
   const referralCodeRepository = dataSource.getRepository(ReferralCode);
   const customerProfileRepository = dataSource.getRepository(CustomerProfile);
   const welperProfileRepository = dataSource.getRepository(WelperProfile);
 
-  console.log('🌱 Seeding database (users + profiles)...');
+  console.log('🌱 Seeding database (users + profiles + content)...');
 
   const existingUsers = await userRepository.count();
   if (existingUsers > 0) {
@@ -38,7 +65,7 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
     accountType: AccountType,
     referralCode: string,
     displayName?: { firstName: string; lastName: string },
-    options?: { onboardingCompleted?: boolean },
+    options?: SeedUserReadyOptions,
   ) => {
     const passwordHash = await bcrypt.hash(password, 12);
     let user = await userRepository.findOne({ where: { email } });
@@ -51,16 +78,16 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
         status: AccountStatus.ACTIVE,
         emailVerified: true,
       });
-      user = await userRepository.save(user);
-      console.log('✅ Created user:', email);
     } else {
       user.passwordHash = passwordHash;
       user.accountType = accountType;
       user.status = AccountStatus.ACTIVE;
       user.emailVerified = true;
-      user = await userRepository.save(user);
-      console.log('✅ Updated user:', email);
     }
+
+    applySeedUserAccountFields(user, accountType, options);
+    user = await userRepository.save(user);
+    console.log('✅ Ensured user:', email);
 
     const verification = await verificationRepository.findOne({
       where: { userId: user.id },
@@ -91,8 +118,10 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
       );
     }
 
-    // Single-backend: ensure customer or welper profile exists (GET /api/profiles/me, login onboardingCompleted)
     const normalizedType = (accountType || '').toLowerCase();
+    const ready =
+      options?.signupCompleted === true || options?.onboardingCompleted === true;
+
     if (normalizedType === 'customer') {
       let profile = await customerProfileRepository.findOne({
         where: { customerId: user.id },
@@ -110,8 +139,8 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
         profile = await customerProfileRepository.save(profile);
         console.log('   ✅ Created customer profile for', email);
       }
-      if (options?.onboardingCompleted === true) {
-        profile.onboardingCompleted = true;
+      if (ready) {
+        applySeedCustomerProfileReady(profile, displayName);
         await customerProfileRepository.save(profile);
       }
     } else if (normalizedType === 'welper') {
@@ -134,8 +163,8 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
         profile = await welperProfileRepository.save(profile);
         console.log('   ✅ Created welper profile for', email);
       }
-      if (options?.onboardingCompleted === true) {
-        profile.onboardingCompleted = true;
+      if (ready) {
+        applySeedWelperProfileReady(profile, displayName);
         await welperProfileRepository.save(profile);
       }
     }
@@ -164,8 +193,8 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
     'Customer123!',
     AccountType.CUSTOMER,
     'E2ECUSTOMER',
-    undefined,
-    { onboardingCompleted: true },
+    { firstName: 'E2E', lastName: 'Customer' },
+    { signupCompleted: true, platformAccessEnabled: true },
   );
 
   await ensureUser(
@@ -173,8 +202,8 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
     'Welper123!',
     AccountType.WELPER,
     'E2EWELPER',
-    undefined,
-    { onboardingCompleted: true },
+    { firstName: 'E2E', lastName: 'Welper' },
+    { signupCompleted: true, platformAccessEnabled: true },
   );
 
   await ensureUser(
@@ -184,17 +213,20 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
     'ADMIN01',
   );
 
-  await seedContent(dataSource);
   await syncServiceCategoryTaxonomy(dataSource);
+  await seedContent(dataSource);
   await seedHolidays(dataSource);
   await seedSearchDemo(dataSource);
   await seedQuebecWelpers(dataSource);
   await seedFixOfferingCategories(dataSource);
 
+  await validateSeed(dataSource);
+
   console.log('✅ Seed data created successfully!');
-  console.log('📧 Test accounts (single backend):');
-  console.log('   Customer: customer@welpco.com / Customer123!');
-  console.log('   Welper: welper@welpco.com / Welper123!');
+  console.log('📧 Test accounts (dev only):');
+  console.log('   Customer (wizard): customer@welpco.com / Customer123!');
+  console.log('   Welper (wizard): welper@welpco.com / Welper123!');
+  console.log('   E2E customer (dashboard): e2e-customer@welpco.com / Customer123!');
+  console.log('   E2E welper (dashboard): e2e-welper@welpco.com / Welper123!');
   console.log('   Admin (staff app): admin@welpco.local / Admin123!');
-  console.log('   Search demo welpers: welper@welpco.com, e2e-welper@welpco.com, search-demo@welpco.com');
 }

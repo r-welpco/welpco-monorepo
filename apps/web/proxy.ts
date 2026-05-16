@@ -139,10 +139,7 @@ export default auth((req) => {
 
   const signupCompleted = user?.signupCompleted === true;
   const emailVerified = user?.emailVerified === true;
-  const platformAccess = hasPlatformAccess({
-    signupCompleted,
-    platformAccessEnabled: user?.platformAccessEnabled,
-  });
+  const platformAccess = hasPlatformAccess({ signupCompleted });
 
   if (!signupCompleted) {
     if (isOnRegister) {

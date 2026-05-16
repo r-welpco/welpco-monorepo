@@ -2,6 +2,7 @@ import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { join } from 'path';
 import { seedDatabase } from './seed';
+import { isProductionLikeSeed } from './seed-flags';
 import {
   UserAccount,
   GuardianAccount,
@@ -54,7 +55,25 @@ const allEntities = [
   Holiday,
 ];
 
+function assertSeedAllowed(): void {
+  if (isProductionLikeSeed() && process.env.SEED_CONFIRM_PRODUCTION !== 'yes') {
+    console.error(
+      '❌ Refusing to seed: production-like target detected. Set SEED_CONFIRM_PRODUCTION=yes to proceed.',
+    );
+    console.error(
+      `   NODE_ENV=${process.env.NODE_ENV ?? 'development'} DB_DATABASE=${process.env.DB_DATABASE ?? 'welpco_dev'}`,
+    );
+    process.exit(1);
+  }
+
+  if (isProductionLikeSeed()) {
+    console.warn('⚠️  Production-like seed: user accounts are skipped unless SEED_SKIP_USERS=false.');
+  }
+}
+
 async function runSeed() {
+  assertSeedAllowed();
+
   const dataSource = new DataSource({
     type: 'postgres',
     host: process.env.DB_HOST || 'localhost',

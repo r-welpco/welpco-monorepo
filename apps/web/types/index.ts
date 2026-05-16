@@ -273,6 +273,7 @@ export interface VerificationData {
 
 export interface PasswordResetData {
   email: string;
+  preferredLocale?: "en" | "fr";
 }
 
 export interface OnboardingData {

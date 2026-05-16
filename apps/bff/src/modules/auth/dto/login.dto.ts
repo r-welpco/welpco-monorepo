@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString } from 'class-validator';
+import { PreferredLocaleOptionalDto } from './preferred-locale.dto';
 
-export class LoginDto {
+export class LoginDto extends PreferredLocaleOptionalDto {
   @ApiProperty({
     description: 'User email address',
     example: 'user@example.com',

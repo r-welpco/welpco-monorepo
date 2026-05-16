@@ -158,6 +158,13 @@ export async function resendVerificationCode(email: string): Promise<void> {
   }
 }
 
+/** Persist UI/email language for the signed-in user. */
+export async function updatePreferredLocale(
+  preferredLocale: "en" | "fr",
+): Promise<void> {
+  await apiClient.patch("/api/auth/preferred-locale", { preferredLocale });
+}
+
 // Password Reset
 export async function requestPasswordReset(data: PasswordResetData): Promise<void> {
   try {
@@ -165,6 +172,7 @@ export async function requestPasswordReset(data: PasswordResetData): Promise<voi
       "/api/auth/reset-password",
       {
         email: data.email,
+        ...(data.preferredLocale ? { preferredLocale: data.preferredLocale } : {}),
       },
       { skipAuth: true }
     );

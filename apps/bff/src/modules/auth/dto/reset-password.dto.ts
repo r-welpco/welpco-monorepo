@@ -1,8 +1,9 @@
 import { ApiProperty, ApiSchema } from '@nestjs/swagger';
 import { IsEmail, IsString, IsOptional } from 'class-validator';
+import { PreferredLocaleOptionalDto } from './preferred-locale.dto';
 
 @ApiSchema({ name: 'BffAuthRequestResetPasswordDto' })
-export class RequestResetPasswordDto {
+export class RequestResetPasswordDto extends PreferredLocaleOptionalDto {
   @ApiProperty({
     description: 'User email address',
     example: 'user@example.com',

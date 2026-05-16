@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import "./tokens.css";
 import "./responsive.css";
 import { MarketingTopNavGate } from "./marketing-top-nav-gate";
+import { WelperLaunchAnnouncementGate } from "./welper-launch-announcement-gate";
 import { Footer } from "@/components/features/marketing/shared/footer";
 
 /**
@@ -124,6 +125,7 @@ export default async function MarketingLayout({
       <MarketingTopNavGate />
       <main id="main-content">{children}</main>
       <Footer />
+      <WelperLaunchAnnouncementGate />
     </div>
   );
 }

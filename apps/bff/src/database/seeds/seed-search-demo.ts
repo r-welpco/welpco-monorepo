@@ -9,6 +9,14 @@ import { ServiceOffering } from '../../domains/profile-management/entities/servi
 import { ServiceCategory } from '../../domains/content-management/entities/service-category.entity';
 import { ProfileCompletionStatus } from '../../domains/profile-management/entities/profile-completion-status.enum';
 import { ProfileVisibility } from '../../domains/profile-management/entities/profile-visibility.enum';
+import {
+  SEARCH_DEMO_SUBCATEGORY_NAMES,
+  pickSeedSubcategory,
+} from './seed-category-names';
+import {
+  applySeedMarketplaceWelperUser,
+  applySeedWelperProfileReady,
+} from './seed-user-helpers';
 
 /**
  * Seeds demo data for Service Discovery search: complete public welper profiles
@@ -24,9 +32,8 @@ export async function seedSearchDemo(dataSource: DataSource): Promise<void> {
   console.log('🌱 Seeding search demo (complete welper profiles + service offerings)...');
 
   // Use subcategories only (level 2); questions are attached to subcategories
-  const categoryNames = ['Babysitter', 'Child Care', 'Dog Walks', 'Pet-sitting', 'Tutoring', 'Housekeeping'];
   const categories = await categoryRepo.find({
-    where: { name: In(categoryNames), isActive: true },
+    where: { name: In([...SEARCH_DEMO_SUBCATEGORY_NAMES]), isActive: true },
   });
   const categoryByName = new Map(categories.map((c) => [c.name, c]));
 
@@ -35,12 +42,17 @@ export async function seedSearchDemo(dataSource: DataSource): Promise<void> {
     return;
   }
 
-  const babysitterCategory = categoryByName.get('Babysitter') ?? categories[0];
-  const childCareCategory = categoryByName.get('Child Care') ?? categories[0];
-  const dogWalksCategory = categoryByName.get('Dog Walks') ?? categories[0];
-  const petSittingCategory = categoryByName.get('Pet-sitting') ?? categories[0];
-  const tutoringCategory = categoryByName.get('Tutoring') ?? categories[0];
-  const housekeepingCategory = categoryByName.get('Housekeeping') ?? categories[0];
+  const fallback = categories[0];
+  const babysitterCategory = pickSeedSubcategory(categoryByName, ['Babysitter'], fallback);
+  const childCareCategory = pickSeedSubcategory(categoryByName, ['Child Care'], fallback);
+  const dogWalksCategory = pickSeedSubcategory(categoryByName, ['Dog Walks'], fallback);
+  const petSittingCategory = pickSeedSubcategory(
+    categoryByName,
+    ['Pet Sitting', 'Pet-sitting'],
+    fallback,
+  );
+  const tutoringCategory = pickSeedSubcategory(categoryByName, ['Tutoring'], fallback);
+  const housekeepingCategory = pickSeedSubcategory(categoryByName, ['Housekeeping'], fallback);
 
   const welperEmails = ['welper@welpco.com', 'e2e-welper@welpco.com'];
   const welperUsers = await userRepo.find({
@@ -48,8 +60,21 @@ export async function seedSearchDemo(dataSource: DataSource): Promise<void> {
   });
 
   for (const user of welperUsers) {
+    // e2e-welper is dashboard-ready; welper@welpco.com stays signup-incomplete for wizard tests.
+    if (user.email === 'e2e-welper@welpco.com') {
+      applySeedMarketplaceWelperUser(user);
+      await userRepo.save(user);
+    }
+
     let profile = await welperProfileRepo.findOne({ where: { welperId: user.id } });
     if (!profile) continue;
+
+    if (user.email === 'e2e-welper@welpco.com') {
+      applySeedWelperProfileReady(profile, {
+        firstName: 'Jane',
+        lastName: 'Doe',
+      });
+    }
 
     profile.firstName = user.email === 'welper@welpco.com' ? 'Alex' : 'Jane';
     profile.lastName = user.email === 'welper@welpco.com' ? 'Rivera' : 'Doe';

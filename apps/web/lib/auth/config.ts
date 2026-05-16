@@ -204,7 +204,10 @@ export const authConfig: NextAuthConfig = {
         ? now >= accessTokenExpires - 5 * 60 * 1000
         : false;
 
-      applyRoleFromAccessToken(token, token.accessToken as string | undefined);
+      // Do not clobber role/signup fields set via `updateSession` on the same request.
+      if (trigger !== "update") {
+        applyRoleFromAccessToken(token, token.accessToken as string | undefined);
+      }
 
       if (!isExpiringSoon) {
         return token;
@@ -314,6 +317,12 @@ export const authConfig: NextAuthConfig = {
         }
         // Also update user fields if they were updated in token
         if (session.user) {
+          if (typeof token.role === "string") {
+            session.user.role = token.role;
+          }
+          if (typeof token.accountType === "string") {
+            session.user.accountType = token.accountType;
+          }
           if (typeof token.emailVerified !== "undefined") {
             session.user.emailVerified = Boolean(token.emailVerified) as unknown as typeof session.user.emailVerified;
           }
@@ -326,10 +335,6 @@ export const authConfig: NextAuthConfig = {
           if (typeof token.platformAccessEnabled !== "undefined") {
             session.user.platformAccessEnabled = token.platformAccessEnabled as boolean;
           }
-        }
-        if (typeof token.role === "string") {
-          session.user.role = token.role;
-          session.user.accountType = token.accountType as string;
         }
       }
 

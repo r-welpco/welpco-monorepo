@@ -233,6 +233,88 @@
   }
 }
 
+/* ---------- Welper launch announcement modal ---------- */
+.welpco-launch-dialog {
+  margin: auto;
+  max-width: min(560px, calc(100vw - 32px));
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--fg);
+}
+.welpco-launch-dialog::backdrop {
+  background: rgba(0, 73, 47, 0.55);
+  backdrop-filter: blur(4px);
+}
+.welpco-launch-dialog__panel {
+  position: relative;
+  padding: 32px 28px 28px;
+  box-shadow: 0 24px 64px rgba(0, 73, 47, 0.18);
+}
+.welpco-launch-dialog__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.welpco-launch-dialog__close:hover {
+  background: var(--pill-bg);
+  color: var(--fg);
+}
+.welpco-launch-dialog__fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--evergreen);
+  cursor: pointer;
+  box-shadow: 0 8px 28px rgba(0, 73, 47, 0.2);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.welpco-launch-dialog__fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 73, 47, 0.24);
+}
+.welpco-launch-dialog__fab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .welpco-launch-dialog__panel {
+    padding: 28px 20px 24px;
+  }
+  .welpco-launch-dialog__fab {
+    right: 16px;
+    bottom: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welpco-launch-dialog__fab:hover {
+    transform: none;
+  }
+}
+
 /* ---------- Mobile-nav drawer ---------- */
 .welpco [data-mobile-drawer] {
   position: fixed;

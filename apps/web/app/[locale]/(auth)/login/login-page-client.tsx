@@ -9,7 +9,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { signIn, useSession } from "next-auth/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { localeFromUseLocale } from "@/lib/i18n/app-locale";
 import type { LoginFormValues } from "@welpco/ui/platform/user-management";
 import { hasPlatformAccess, postSignupDestination } from "@/lib/auth/platform-access";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
@@ -20,6 +21,7 @@ export default function LoginPageClient() {
   const searchParams = useSearchParams();
   const { update: updateSession } = useSession();
   const labels = useLoginFormLabels();
+  const uiLocale = useLocale();
   const t = useTranslations("auth.login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +56,7 @@ export default function LoginPageClient() {
         const result = await signIn("credentials", {
           email: values.email,
           password: values.password,
+          preferredLocale: localeFromUseLocale(uiLocale),
           redirect: false,
         });
 
@@ -85,8 +88,6 @@ export default function LoginPageClient() {
         const emailVerified = session.user.emailVerified ?? false;
         const signupCompleted =
           session.user.signupCompleted ?? session.user.onboardingCompleted ?? false;
-        const platformAccessEnabled = session.user.platformAccessEnabled;
-
         if (values.remember) {
           localStorage.setItem("rememberEmail", values.email);
         } else {
@@ -99,7 +100,6 @@ export default function LoginPageClient() {
               user: {
                 emailVerified,
                 signupCompleted,
-                platformAccessEnabled,
                 role: session.user.role,
               },
             });
@@ -110,9 +110,7 @@ export default function LoginPageClient() {
 
         if (!signupCompleted) {
           router.push(withNext("/register", nextRaw));
-        } else if (
-          !hasPlatformAccess({ signupCompleted: true, platformAccessEnabled })
-        ) {
+        } else if (!hasPlatformAccess({ signupCompleted: true })) {
           router.push("/register/complete");
         } else {
           router.push(nextPath);
@@ -128,7 +126,7 @@ export default function LoginPageClient() {
         setLoading(false);
       }
     },
-    [router, updateSession, nextPath, nextRaw, t],
+    [router, updateSession, nextPath, nextRaw, t, uiLocale],
   );
 
   const handleForgotPassword = useCallback(() => {

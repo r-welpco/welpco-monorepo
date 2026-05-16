@@ -363,7 +363,13 @@ export function WelperHeader({
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                     </Box>
-                    <DropdownMenuItem color={SEMANTIC_COLOR.danger} onClick={onLogout}>
+                    <DropdownMenuItem
+                      color={SEMANTIC_COLOR.danger}
+                      onSelect={(event) => {
+                        event.preventDefault();
+                        onLogout?.();
+                      }}
+                    >
                       <Flex align="center" gap="2">
                         <LogOut size={16} aria-hidden="true" />
                         <Text size="2">Sign out</Text>

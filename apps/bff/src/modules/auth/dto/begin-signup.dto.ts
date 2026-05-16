@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { PreferredLocaleOptionalDto } from './preferred-locale.dto';
 
 /**
  * Day 15 — Phase 1 of the signup ↔ onboarding merge.
@@ -13,7 +14,7 @@ import { Transform } from 'class-transformer';
  * email that already has `signup_completed = true` returns 409 with code
  * `ACCOUNT_EXISTS` (the user should sign in, not start over).
  */
-export class BeginSignupDto {
+export class BeginSignupDto extends PreferredLocaleOptionalDto {
   @ApiProperty({
     description: 'User email address (lowercased and trimmed server-side).',
     example: 'jordan@example.com',

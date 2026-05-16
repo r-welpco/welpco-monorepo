@@ -3,6 +3,7 @@
 import { useEffect, useRef, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { clearTokenCache } from "@/lib/api/get-token";
+import { isClientSigningOut } from "@/lib/auth/client-sign-out";
 import { useAuthStore } from "@/stores/authStore";
 import type { User } from "@/types";
 
@@ -42,7 +43,7 @@ export function AuthSessionSync({ children }: { children: React.ReactNode }) {
 
     // Only update user if user ID changed (prevents infinite loops)
     // When user ID changes, update all fields from session
-    if (userFromSession) {
+    if (userFromSession && !isClientSigningOut()) {
       const userId = userFromSession.id;
       const role = userFromSession.role;
 

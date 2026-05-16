@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Field } from "./field";
 
 /**
@@ -11,6 +11,7 @@ import { Field } from "./field";
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
 export function ContactPage() {
+  const locale = useLocale();
   const t = useTranslations("marketing.contactPage");
   const contactInfo = t.raw("info") as { l: string; v: string }[];
   const roles = t.raw("form.roles") as string[];
@@ -31,26 +32,21 @@ export function ContactPage() {
       email: String(data.get("email") ?? ""),
       phone: String(data.get("phone") ?? ""),
       message: String(data.get("message") ?? ""),
+      locale: locale === "fr" ? "fr" : "en",
     };
 
     setState("submitting");
     setErrorMsg(null);
 
-    const endpoint = process.env.NEXT_PUBLIC_CONTACT_ENDPOINT;
-
     try {
-      if (endpoint) {
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error(`Contact API responded ${res.status}`);
-      } else {
-        await new Promise((r) => setTimeout(r, 400));
-        if (process.env.NODE_ENV !== "production") {
-          console.info("[(marketing)] contact form submit (no BFF endpoint)", payload);
-        }
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(data?.error ?? `Contact API responded ${res.status}`);
       }
       setState("success");
       form.reset();

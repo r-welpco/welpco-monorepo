@@ -89,6 +89,10 @@ export class UserAccount {
   @Column({ name: 'platform_access_enabled', type: 'boolean', default: true })
   platformAccessEnabled!: boolean;
 
+  /** Preferred language for transactional email (en | fr). */
+  @Column({ name: 'preferred_locale', type: 'varchar', length: 2, default: 'en' })
+  preferredLocale!: 'en' | 'fr';
+
   /**
    * Role chosen at step 1 of the wizard. NULL until the user picks. Distinct
    * from `accountType` (which is the legacy taxonomy used across the rest of

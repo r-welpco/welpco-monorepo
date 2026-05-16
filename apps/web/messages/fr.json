@@ -648,6 +648,20 @@
         ]
       }
     },
+    "welpersOpen": {
+      "badge": "Ouvert aux Welpers",
+      "title": "Welpco est ouvert aux Welpers",
+      "intro": "Vous pouvez créer votre compte dès aujourd'hui, compléter votre profil et entamer votre vérification des antécédents. Nous ouvrons l'accès par étapes pour que chaque Welper soit bien configuré dès le départ.",
+      "whatsNextTitle": "Et ensuite?",
+      "whatsNextBody": "Après votre inscription, vous compléterez votre profil et votre vérification des antécédents. Nous vous enverrons un courriel lorsque l'accès complet à la plateforme sera ouvert — avec tout ce qu'il faut pour commencer à Welper.",
+      "feedbackPrefix": "Des questions ou des commentaires? Écrivez-nous à",
+      "feedbackSuffix": " — nous serons ravis de vous lire.",
+      "supportEmail": "support@welpco.com",
+      "neverShowAgain": "Ne plus afficher",
+      "close": "Fermer",
+      "ctaPrimary": "Devenir Welper",
+      "fabLabel": "Nouvelles sur l'inscription Welper"
+    },
     "layout": {
       "title": "Welpco — Services locaux, vrais voisins",
       "description": "Welpco vous connecte à des Welpers vérifiés dans votre communauté.",

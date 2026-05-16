@@ -11,6 +11,8 @@ import { ServiceCategory } from '../../domains/content-management/entities/servi
 import { ProfileCompletionStatus } from '../../domains/profile-management/entities/profile-completion-status.enum';
 import { ProfileVisibility } from '../../domains/profile-management/entities/profile-visibility.enum';
 import type { GeoJSONPoint } from '../../common/types';
+import { SEARCH_DEMO_SUBCATEGORY_NAMES, pickSeedSubcategory } from './seed-category-names';
+import { applySeedMarketplaceWelperUser } from './seed-user-helpers';
 
 /** City config: [longitude, latitude] for GeoJSON Point, and display name */
 const CITIES: { key: string; coords: [number, number]; name: string }[] = [
@@ -23,7 +25,7 @@ const WELPERS_PER_CITY = 10;
 const FIRST_NAMES = ['Marie', 'Jean', 'Sophie', 'Pierre', 'Julie', 'François', 'Isabelle', 'Nicolas', 'Valérie', 'Alexandre'];
 const LAST_NAMES = ['Tremblay', 'Gagnon', 'Roy', 'Côté', 'Bouchard', 'Gauthier', 'Morin', 'Lavoie', 'Fortin', 'Bergeron'];
 
-const CATEGORY_NAMES = ['Babysitter', 'Child Care', 'Dog Walks', 'Pet-sitting', 'Tutoring', 'Housekeeping'];
+const CATEGORY_NAMES = [...SEARCH_DEMO_SUBCATEGORY_NAMES];
 const BIOS = [
   'Experienced and reliable. I love helping families and take pride in quality service.',
   'Friendly professional with a passion for care. Flexible schedule and great references.',
@@ -59,7 +61,7 @@ export async function seedQuebecWelpers(dataSource: DataSource): Promise<void> {
     return;
   }
 
-  const defaultCategory = categoryByName.get('Babysitter') ?? categories[0];
+  const defaultCategory = pickSeedSubcategory(categoryByName, ['Babysitter'], categories[0]);
   const passwordHash = await bcrypt.hash('Welper123!', 12);
 
   let created = 0;
@@ -87,6 +89,9 @@ export async function seedQuebecWelpers(dataSource: DataSource): Promise<void> {
         user = await userRepo.save(user);
         created++;
       }
+
+      applySeedMarketplaceWelperUser(user);
+      user = await userRepo.save(user);
 
       let profile = await welperProfileRepo.findOne({ where: { welperId: user.id } });
       const countryCode = 'CA';

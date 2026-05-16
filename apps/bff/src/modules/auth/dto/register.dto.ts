@@ -1,5 +1,6 @@
 import { ApiProperty, ApiSchema } from '@nestjs/swagger';
 import { IsEmail, IsString, IsEnum, IsOptional } from 'class-validator';
+import { PreferredLocaleOptionalDto } from './preferred-locale.dto';
 
 export enum AccountType {
   CUSTOMER = 'Customer',
@@ -7,7 +8,7 @@ export enum AccountType {
 }
 
 @ApiSchema({ name: 'BffAuthRegisterDto' })
-export class RegisterDto {
+export class RegisterDto extends PreferredLocaleOptionalDto {
   @ApiProperty({
     description: 'User email address',
     example: 'user@example.com',

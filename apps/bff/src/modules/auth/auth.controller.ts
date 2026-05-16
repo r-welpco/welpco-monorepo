@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Patch,
   Get,
   Body,
   HttpCode,
@@ -35,6 +36,7 @@ import {
   WelperPayoutStepDto,
   NotificationPrefsStepDto,
   OptionalProfileStepDto,
+  UpdatePreferredLocaleDto,
 } from './dto';
 import { JwtAuthGuard } from '../../common/auth/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserData } from '../../common/auth/decorators/current-user.decorator';
@@ -100,6 +102,21 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async resendVerificationEmail(@CurrentUser() user: CurrentUserData) {
     return this.authService.resendVerificationEmail(user.userId);
+  }
+
+  @Patch('preferred-locale')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update preferred email/UI language' })
+  @ApiBody({ type: UpdatePreferredLocaleDto })
+  @ApiResponse({ status: 200, description: 'Locale updated' })
+  async updatePreferredLocale(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: UpdatePreferredLocaleDto,
+  ) {
+    await this.authService.updatePreferredLocale(user.userId, dto.preferredLocale);
+    return { ok: true, preferredLocale: dto.preferredLocale };
   }
 
   @Post('reset-password')

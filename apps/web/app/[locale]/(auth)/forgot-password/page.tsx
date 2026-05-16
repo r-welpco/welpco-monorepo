@@ -5,7 +5,8 @@ import { AuthSearchParamsFallback } from "@/components/layout/auth-search-params
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { localeFromUseLocale } from "@/lib/i18n/app-locale";
 import { requestPasswordReset } from "@/lib/services/user-service";
 import { useUserStore } from "@/stores/userStore";
 import type { AccountRecoveryValues } from "@welpco/ui/platform/user-management";
@@ -15,6 +16,7 @@ function ForgotPasswordPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextRaw = searchParams.get("next");
+  const uiLocale = useLocale();
   const t = useTranslations("auth.forgotPassword");
   const setPasswordResetEmail = useUserStore((state) => state.setPasswordResetEmail);
   const setPasswordResetSent = useUserStore((state) => state.setPasswordResetSent);
@@ -28,7 +30,10 @@ function ForgotPasswordPageClient() {
     setSentEmail(null);
 
     try {
-      await requestPasswordReset({ email: values.email });
+      await requestPasswordReset({
+        email: values.email,
+        preferredLocale: localeFromUseLocale(uiLocale),
+      });
       setPasswordResetEmail(values.email);
       setPasswordResetSent(true);
       setSentEmail(values.email);

@@ -12,7 +12,7 @@ import { WelperProfile } from '../../profile-management/entities/welper-profile.
 import { EventPublisherService } from '../events/event-publisher.service';
 import { ProfileCreationService } from '../../profile-management/profile-creation/profile-creation.service';
 import { ReferralService } from '../referral/referral.service';
-import { RegisterDto, LoginDto, ChangePasswordDto } from './dto';
+import { RegisterDto, LoginDto, ChangePasswordDto, RequestResetPasswordDto } from './dto';
 import { EmailVerificationService } from './email-verification.service';
 import { PasswordResetService } from './password-reset.service';
 import { AccountLockoutService } from './account-lockout.service';
@@ -519,9 +519,12 @@ describe('AuthService', () => {
       const passwordResetService = service['passwordResetService'] as jest.Mocked<PasswordResetService>;
       (passwordResetService.requestPasswordReset as jest.Mock).mockResolvedValue(undefined);
 
-      await service.requestResetPassword({ email: 'user@example.com' });
+      await service.requestResetPassword({ email: 'user@example.com' } as RequestResetPasswordDto);
 
-      expect(passwordResetService.requestPasswordReset).toHaveBeenCalledWith('user@example.com');
+      expect(passwordResetService.requestPasswordReset).toHaveBeenCalledWith(
+        'user@example.com',
+        { preferredLocale: undefined },
+      );
     });
   });
 

@@ -649,6 +649,20 @@
         ]
       }
     },
+    "welpersOpen": {
+      "badge": "Welpers welcome",
+      "title": "Welpco is open for Welpers",
+      "intro": "You can create your account today, complete your profile, and start your background check. We're rolling out access in phases so every Welper is set up properly from day one.",
+      "whatsNextTitle": "What's next?",
+      "whatsNextBody": "After you register, you'll finish your profile and background check. We'll email you when full platform access opens — with everything you need to start Welping.",
+      "feedbackPrefix": "Questions or feedback? Reach us anytime at",
+      "feedbackSuffix": " — we'd love to hear from you.",
+      "supportEmail": "support@welpco.com",
+      "neverShowAgain": "Don't show this again",
+      "close": "Close",
+      "ctaPrimary": "Become a Welper",
+      "fabLabel": "Welper registration update"
+    },
     "layout": {
       "title": "Welpco — Local services, real neighbours",
       "description": "Welpco connects you with vetted Welpers in your community — for the everyday services you need.",

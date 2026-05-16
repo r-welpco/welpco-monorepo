@@ -12,10 +12,16 @@ import {
   MarketingPhrase,
   PhraseType,
 } from '../../domains/content-management/entities';
+import { syncServiceCategoryTaxonomy } from './sync-service-category-taxonomy';
+import {
+  loadActiveSubcategory,
+  loadActiveSubcategories,
+} from './seed-category-loader';
 
 /**
- * Seeds all content-management data: categories, questions, service_questions,
- * static content, FAQ items, and marketing phrases.
+ * Seeds content-management data: questions, service_questions, static content,
+ * FAQ, and marketing phrases. Categories come from SERVICE_CATEGORY_TAXONOMY
+ * (synced before this runs — same list as migrations and web signup i18n).
  */
 export async function seedContent(dataSource: DataSource): Promise<void> {
   const categoryRepository = dataSource.getRepository(ServiceCategory);
@@ -47,390 +53,18 @@ export async function seedContent(dataSource: DataSource): Promise<void> {
     await marketingRepository.delete({});
   }
 
-  // —— Categories (level 1) ——
-  const careCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Care',
-      description: 'Childcare, elderly care, and special needs services',
-      parentId: null,
-      level: 1,
-      displayOrder: 1,
-      isActive: true,
-    }),
-  );
-  const petCareCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Pet Care',
-      description: 'Pet-related services including dog walking, grooming, and training',
-      parentId: null,
-      level: 1,
-      displayOrder: 2,
-      isActive: true,
-    }),
-  );
-  const educationCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Education',
-      description: 'Tutoring and music lessons',
-      parentId: null,
-      level: 1,
-      displayOrder: 3,
-      isActive: true,
-    }),
-  );
-  const inHomeMaintenanceCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'In-Home Maintenance',
-      description: 'Housekeeping, painting, organizing, moving, and installation services',
-      parentId: null,
-      level: 1,
-      displayOrder: 4,
-      isActive: true,
-    }),
-  );
-  const exteriorMaintenanceCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Exterior Maintenance',
-      description: 'Lawn care, gardening, car washing, and seasonal maintenance',
-      parentId: null,
-      level: 1,
-      displayOrder: 5,
-      isActive: true,
-    }),
-  );
-  const healthWellnessCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Health & Wellness',
-      description: 'Meal preparation, personal training, and nutrition services',
-      parentId: null,
-      level: 1,
-      displayOrder: 6,
-      isActive: true,
-    }),
-  );
-  const entertainmentCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Entertainment',
-      description: 'Catering, party planning, and event services',
-      parentId: null,
-      level: 1,
-      displayOrder: 7,
-      isActive: true,
-    }),
-  );
+  // Canonical taxonomy (8 parents + subcategories — matches migration + auth.register.categoryNames)
+  await syncServiceCategoryTaxonomy(dataSource);
 
-  // —— Subcategories ——
-  const babysitterCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Babysitter',
-      description: 'Babysitting services',
-      parentId: careCategory.id,
-      level: 2,
-      displayOrder: 1,
-      isActive: true,
-    }),
-  );
-  const childCareCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Child Care',
-      description: 'Child care services',
-      parentId: careCategory.id,
-      level: 2,
-      displayOrder: 2,
-      isActive: true,
-    }),
-  );
-  const elderlyCareCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Elderly Care',
-      description: 'Elderly care services',
-      parentId: careCategory.id,
-      level: 2,
-      displayOrder: 3,
-      isActive: true,
-    }),
-  );
-  const specialNeedsCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Special Needs',
-      description: 'Special needs care services',
-      parentId: careCategory.id,
-      level: 2,
-      displayOrder: 4,
-      isActive: true,
-    }),
-  );
-  const dogWalksCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Dog Walks',
-      description: 'Dog walking services',
-      parentId: petCareCategory.id,
-      level: 2,
-      displayOrder: 1,
-      isActive: true,
-    }),
-  );
-  const petGroomingCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Pet Grooming',
-      description: 'Pet grooming services',
-      parentId: petCareCategory.id,
-      level: 2,
-      displayOrder: 2,
-      isActive: true,
-    }),
-  );
-  const aquariumTerrariumCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Aquarium and Terrarium Cleaning/Maintenance',
-      description: 'Aquarium and terrarium cleaning and maintenance services',
-      parentId: petCareCategory.id,
-      level: 2,
-      displayOrder: 3,
-      isActive: true,
-    }),
-  );
-  const dogTrainingCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Dog Training',
-      description: 'Dog training services',
-      parentId: petCareCategory.id,
-      level: 2,
-      displayOrder: 4,
-      isActive: true,
-    }),
-  );
-  const petSittingCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Pet-sitting',
-      description: 'Pet sitting services',
-      parentId: petCareCategory.id,
-      level: 2,
-      displayOrder: 5,
-      isActive: true,
-    }),
-  );
-  const tutoringCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Tutoring',
-      description: 'Tutoring services',
-      parentId: educationCategory.id,
-      level: 2,
-      displayOrder: 1,
-      isActive: true,
-    }),
-  );
-  const musicLessonsCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Music Lessons',
-      description: 'Music lesson services',
-      parentId: educationCategory.id,
-      level: 2,
-      displayOrder: 2,
-      isActive: true,
-    }),
-  );
-  const cateringCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Catering',
-      description: 'Catering services',
-      parentId: entertainmentCategory.id,
-      level: 2,
-      displayOrder: 1,
-      isActive: true,
-    }),
-  );
-  const partyPlanningCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Party-planning',
-      description: 'Party planning services',
-      parentId: entertainmentCategory.id,
-      level: 2,
-      displayOrder: 2,
-      isActive: true,
-    }),
-  );
-  const magicianCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Magician',
-      description: 'Magician services',
-      parentId: entertainmentCategory.id,
-      level: 2,
-      displayOrder: 3,
-      isActive: true,
-    }),
-  );
-  const clownCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Clown',
-      description: 'Clown services',
-      parentId: entertainmentCategory.id,
-      level: 2,
-      displayOrder: 4,
-      isActive: true,
-    }),
-  );
-  const serverCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Server',
-      description: 'Server services',
-      parentId: entertainmentCategory.id,
-      level: 2,
-      displayOrder: 5,
-      isActive: true,
-    }),
-  );
-  const assistantForPartyCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Assistant for Party',
-      description: 'Party assistant services',
-      parentId: entertainmentCategory.id,
-      level: 2,
-      displayOrder: 6,
-      isActive: true,
-    }),
-  );
-  const bartenderCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Bartender',
-      description: 'Bartender services',
-      parentId: entertainmentCategory.id,
-      level: 2,
-      displayOrder: 7,
-      isActive: true,
-    }),
-  );
-  const mealPreparationCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Meal Preparation',
-      description: 'Meal preparation services',
-      parentId: healthWellnessCategory.id,
-      level: 2,
-      displayOrder: 1,
-      isActive: true,
-    }),
-  );
-  const personalTrainerCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Personal Trainer',
-      description: 'Personal training services',
-      parentId: healthWellnessCategory.id,
-      level: 2,
-      displayOrder: 2,
-      isActive: true,
-    }),
-  );
-  const dieticianCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Dietician',
-      description: 'Dietician services',
-      parentId: healthWellnessCategory.id,
-      level: 2,
-      displayOrder: 3,
-      isActive: true,
-    }),
-  );
-  const nutritionistCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Nutritionist',
-      description: 'Nutritionist services',
-      parentId: healthWellnessCategory.id,
-      level: 2,
-      displayOrder: 4,
-      isActive: true,
-    }),
-  );
-  // In-Home Maintenance subcategories (questions attach only to subcategories)
-  const housekeepingCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Housekeeping',
-      description: 'Housekeeping and cleaning services',
-      parentId: inHomeMaintenanceCategory.id,
-      level: 2,
-      displayOrder: 1,
-      isActive: true,
-    }),
-  );
-  const paintingCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Painting',
-      description: 'Interior and exterior painting',
-      parentId: inHomeMaintenanceCategory.id,
-      level: 2,
-      displayOrder: 2,
-      isActive: true,
-    }),
-  );
-  const organizingCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Organizing',
-      description: 'Home organizing and decluttering',
-      parentId: inHomeMaintenanceCategory.id,
-      level: 2,
-      displayOrder: 3,
-      isActive: true,
-    }),
-  );
-  const movingCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Moving',
-      description: 'Moving and relocation help',
-      parentId: inHomeMaintenanceCategory.id,
-      level: 2,
-      displayOrder: 4,
-      isActive: true,
-    }),
-  );
-  const installationCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Installation',
-      description: 'Furniture and equipment installation',
-      parentId: inHomeMaintenanceCategory.id,
-      level: 2,
-      displayOrder: 5,
-      isActive: true,
-    }),
-  );
-  // Exterior Maintenance subcategories
-  const lawnCareCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Lawn Care',
-      description: 'Lawn mowing and lawn care services',
-      parentId: exteriorMaintenanceCategory.id,
-      level: 2,
-      displayOrder: 1,
-      isActive: true,
-    }),
-  );
-  const gardeningCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Gardening',
-      description: 'Gardening and landscaping services',
-      parentId: exteriorMaintenanceCategory.id,
-      level: 2,
-      displayOrder: 2,
-      isActive: true,
-    }),
-  );
-  const carWashingCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Car Washing',
-      description: 'Car washing and detailing',
-      parentId: exteriorMaintenanceCategory.id,
-      level: 2,
-      displayOrder: 3,
-      isActive: true,
-    }),
-  );
-  const seasonalMaintenanceCategory = await categoryRepository.save(
-    categoryRepository.create({
-      name: 'Seasonal Maintenance',
-      description: 'Seasonal outdoor maintenance',
-      parentId: exteriorMaintenanceCategory.id,
-      level: 2,
-      displayOrder: 4,
-      isActive: true,
-    }),
+  const babysitterCategory = await loadActiveSubcategory(categoryRepository, 'Babysitter');
+  const childCareCategory = await loadActiveSubcategory(categoryRepository, 'Child Care');
+  const elderlyCareCategory = await loadActiveSubcategory(categoryRepository, 'Elderly Care');
+  const specialNeedsCategory = await loadActiveSubcategory(categoryRepository, 'Special Needs');
+  const dogWalksCategory = await loadActiveSubcategory(categoryRepository, 'Dog Walks');
+  const petGroomingCategory = await loadActiveSubcategory(categoryRepository, 'Pet Grooming');
+  const mealPreparationCategory = await loadActiveSubcategory(
+    categoryRepository,
+    'Meal Preparation',
   );
 
   // —— Questions (shared) ——
@@ -691,16 +325,14 @@ export async function seedContent(dataSource: DataSource): Promise<void> {
   await link(mealPreparationCategory.id, estimatedEndDateQuestion.id, 6, true);
   await link(mealPreparationCategory.id, payPerHourQuestion.id, 7, true);
   await link(mealPreparationCategory.id, notesQuestion.id, 8, false);
-  // Entertainment
-  const entertainmentServices = [
-    cateringCategory,
-    partyPlanningCategory,
-    magicianCategory,
-    clownCategory,
-    serverCategory,
-    assistantForPartyCategory,
-    bartenderCategory,
-  ];
+  // Events & Hospitality (canonical subcategory names)
+  const entertainmentServices = await loadActiveSubcategories(categoryRepository, [
+    'Catering Help',
+    'Bartending',
+    'Serving',
+    'Party Assistance',
+    'Entertainer',
+  ]);
   for (const service of entertainmentServices) {
     await link(service.id, whatDoYouNeedQuestion.id, 0, true);
     await link(service.id, eventForQuestion.id, 1, true);
@@ -713,42 +345,13 @@ export async function seedContent(dataSource: DataSource): Promise<void> {
     await link(service.id, notesQuestion.id, 8, false);
   }
 
-  // Questions attach only to subcategories (level 2). Generic set for subcategories that had none.
-  const genericQuestionOrder = [
-    { q: dateNeededQuestion.id, order: 1, required: true },
-    { q: timeQuestion.id, order: 2, required: true },
-    { q: oneTimeOrRecurringQuestion.id, order: 3, required: true },
-    { q: recurringFrequencyQuestion.id, order: 4, required: false, conditional: recurringConditional },
-    { q: payPerHourQuestion.id, order: 5, required: true },
-    { q: notesQuestion.id, order: 6, required: false },
-  ];
-  const subcategoriesWithoutQuestions = [
-    aquariumTerrariumCategory,
-    dogTrainingCategory,
-    petSittingCategory,
-    tutoringCategory,
-    musicLessonsCategory,
-    personalTrainerCategory,
-    dieticianCategory,
-    nutritionistCategory,
-    housekeepingCategory,
-    paintingCategory,
-    organizingCategory,
-    movingCategory,
-    installationCategory,
-    lawnCareCategory,
-    gardeningCategory,
-    carWashingCategory,
-    seasonalMaintenanceCategory,
-  ];
-  for (const cat of subcategoriesWithoutQuestions) {
-    for (const { q, order, required, conditional } of genericQuestionOrder) {
-      await link(cat.id, q, order, required, conditional);
-    }
-  }
+  // Attach generic booking questions to any active subcategory still missing links
+  await syncServiceCategoryTaxonomy(dataSource);
 
-  // Verify every subcategory (level 2) has at least one question
-  const allSubcategories = await categoryRepository.find({ where: { level: 2 }, order: { displayOrder: 'ASC' } });
+  const allSubcategories = await categoryRepository.find({
+    where: { level: 2, isActive: true },
+    order: { displayOrder: 'ASC' },
+  });
   const missing: string[] = [];
   for (const sub of allSubcategories) {
     const count = await serviceQuestionRepository.count({ where: { serviceCategoryId: sub.id } });

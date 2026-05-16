@@ -6,6 +6,12 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
+import { platformAccessEnabledForClients } from '../../../common/platform-access';
+import {
+  resolvePreferredLocale,
+  type UserPreferredLocale,
+} from '../../../common/preferred-locale';
+import { applyPreferredLocaleIfProvided } from './user-locale.helper';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -66,7 +72,7 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
-    const { email, password, accountType, referralCode } = registerDto;
+    const { email, password, accountType, referralCode, preferredLocale } = registerDto;
 
     if (accountType === AccountType.ADMIN) {
       throw new BadRequestException('Admin accounts cannot be registered publicly');
@@ -97,6 +103,7 @@ export class AuthService {
         accountType,
         status: AccountStatus.PENDING,
         emailVerified: false,
+        preferredLocale: resolvePreferredLocale(preferredLocale),
       });
       const savedUser = await queryRunner.manager.save(user);
 
@@ -133,7 +140,11 @@ export class AuthService {
 
       // Welcome email and default notification preferences (after commit so user exists)
       try {
-        await this.emailNotificationService.sendWelcomeEmail(savedUser.email);
+        await this.emailNotificationService.sendWelcomeEmail(
+          savedUser.email,
+          undefined,
+          savedUser.preferredLocale,
+        );
         await this.notificationService.getPreferences(savedUser.id);
       } catch (err) {
         this.logger.warn(`Post-registration notification setup failed: ${(err as Error).message}`);
@@ -158,7 +169,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
-    const { email, password } = loginDto;
+    const { email, password, preferredLocale } = loginDto;
 
     // Check account lockout before attempting login
     await this.accountLockoutService.checkLockout(email);
@@ -208,8 +219,9 @@ export class AuthService {
     // Clear failed attempts on successful login
     await this.accountLockoutService.clearFailedAttempts(email);
 
-    // Update last login
+    // Update last login and preferred locale when the client sends it
     user.lastLoginAt = new Date();
+    applyPreferredLocaleIfProvided(user, preferredLocale);
     await this.userRepository.save(user);
 
     // Generate tokens
@@ -247,7 +259,7 @@ export class AuthService {
         status: user.status,
         emailVerified: user.emailVerified,
         signupCompleted: user.signupCompleted,
-        platformAccessEnabled: user.platformAccessEnabled,
+        platformAccessEnabled: platformAccessEnabledForClients(),
         onboardingCompleted,
         profileCompletionStatus,
       },
@@ -268,8 +280,20 @@ export class AuthService {
   async requestResetPassword(
     requestResetDto: RequestResetPasswordDto,
   ): Promise<void> {
-    const { email } = requestResetDto;
-    await this.passwordResetService.requestPasswordReset(email);
+    const { email, preferredLocale } = requestResetDto;
+    await this.passwordResetService.requestPasswordReset(email, { preferredLocale });
+  }
+
+  async updatePreferredLocale(
+    userId: string,
+    preferredLocale: UserPreferredLocale,
+  ): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    user.preferredLocale = preferredLocale;
+    await this.userRepository.save(user);
   }
 
   async confirmResetPassword(

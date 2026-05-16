@@ -1,15 +1,28 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "@/i18n/navigation";
+import { localeFromUseLocale } from "@/lib/i18n/app-locale";
+import { updatePreferredLocale } from "@/lib/services/user-service";
 
 const LOCALES = ["en", "fr"] as const;
 
 export function LanguageSwitcher({ className }: { className?: string }) {
   const locale = useLocale();
+  const { status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations("marketing.languageSwitcher");
+
+  const handleLocaleChange = (code: (typeof LOCALES)[number]) => {
+    router.replace(pathname, { locale: code });
+    if (status === "authenticated") {
+      void updatePreferredLocale(localeFromUseLocale(code)).catch(() => {
+        // Non-blocking — UI locale still updates via router
+      });
+    }
+  };
 
   return (
     <div
@@ -30,7 +43,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
         <button
           key={code}
           type="button"
-          onClick={() => router.replace(pathname, { locale: code })}
+          onClick={() => handleLocaleChange(code)}
           aria-label={code === "en" ? t("english") : t("french")}
           aria-pressed={locale === code}
           style={{

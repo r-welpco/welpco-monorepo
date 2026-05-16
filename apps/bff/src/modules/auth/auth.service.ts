@@ -1,4 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { platformAccessEnabledForClients } from '../../common/platform-access';
 import { CustomerProfileService } from '../../domains/profile-management/customer-profile/customer-profile.service';
 import { WelperProfileService } from '../../domains/profile-management/welper-profile/welper-profile.service';
 import {
@@ -67,7 +68,7 @@ export class AuthService {
         status: user?.status,
         emailVerified: user?.emailVerified,
         signupCompleted: user?.signupCompleted as boolean | undefined,
-        platformAccessEnabled: user?.platformAccessEnabled as boolean | undefined,
+        platformAccessEnabled: platformAccessEnabledForClients(),
       },
       profile: {
         onboardingCompleted,
@@ -81,6 +82,7 @@ export class AuthService {
       password: registerDto.password,
       accountType: registerDto.accountType,
       referralCode: registerDto.referralCode,
+      preferredLocale: registerDto.preferredLocale,
     } as Parameters<DomainAuthService['register']>[0]);
   }
 
@@ -98,7 +100,12 @@ export class AuthService {
   async requestResetPassword(requestResetPasswordDto: RequestResetPasswordDto) {
     return this.domainAuthService.requestResetPassword({
       email: requestResetPasswordDto.email,
+      preferredLocale: requestResetPasswordDto.preferredLocale,
     });
+  }
+
+  async updatePreferredLocale(userId: string, preferredLocale: 'en' | 'fr') {
+    return this.domainAuthService.updatePreferredLocale(userId, preferredLocale);
   }
 
   async confirmResetPassword(confirmResetPasswordDto: ConfirmResetPasswordDto) {

@@ -4,6 +4,7 @@ import {
   IsString,
   IsIn,
   IsOptional,
+  IsIn,
 } from 'class-validator';
 import { AccountType } from '../../entities/user-account.entity';
 import { IsStrongPassword } from '../validators/password.validator';
@@ -49,5 +50,14 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   referralCode?: string;
+
+  @ApiProperty({
+    description: 'Preferred language for emails (en or fr)',
+    required: false,
+    enum: ['en', 'fr'],
+  })
+  @IsOptional()
+  @IsIn(['en', 'fr'])
+  preferredLocale?: 'en' | 'fr';
 }
 

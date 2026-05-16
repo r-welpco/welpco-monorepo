@@ -7,6 +7,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { UserAccount } from '../entities/user-account.entity';
+import {
+  normalizePreferredLocale,
+  type UserPreferredLocale,
+} from '../../../common/preferred-locale';
+import { applyPreferredLocaleIfProvided } from './user-locale.helper';
 import { CacheService } from '../cache/cache.service';
 import { EventPublisherService } from '../events/event-publisher.service';
 import { EmailService } from '../email/email.service';
@@ -43,7 +48,10 @@ export class PasswordResetService {
    * rate-limited known emails — that's a textbook enumeration leak. Wave 2
    * removes the differentiating exception.
    */
-  async requestPasswordReset(email: string): Promise<void> {
+  async requestPasswordReset(
+    email: string,
+    options?: { preferredLocale?: UserPreferredLocale },
+  ): Promise<void> {
     const user = await this.userRepository.findOne({
       where: { email },
     });
@@ -53,6 +61,12 @@ export class PasswordResetService {
     // out-of-band (see below) so its latency doesn't widen the window.
     if (!user) {
       return;
+    }
+
+    const localeFromRequest = normalizePreferredLocale(options?.preferredLocale);
+    if (localeFromRequest) {
+      applyPreferredLocaleIfProvided(user, localeFromRequest);
+      await this.userRepository.save(user);
     }
 
     // Rate limiting (still enforced — we don't want a flood of resets going to
@@ -86,7 +100,11 @@ export class PasswordResetService {
    */
   private async dispatchResetEmail(user: UserAccount, token: string): Promise<void> {
     try {
-      await this.emailService.sendPasswordResetEmail(user.email, token);
+      await this.emailService.sendPasswordResetEmail(
+        user.email,
+        token,
+        user.preferredLocale,
+      );
     } catch (error) {
       this.logger.warn(
         `Password reset email send failed for ${user.email}: ${(error as Error).message}`,

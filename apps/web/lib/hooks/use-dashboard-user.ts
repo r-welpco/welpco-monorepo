@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { isClientSigningOut } from "@/lib/auth/client-sign-out";
 import { useAuthStore } from "@/stores/authStore";
 import type { User } from "@/types";
 
@@ -25,6 +26,8 @@ export function useDashboardUser(serverUser: DashboardServerUser): { user: User 
   const setUser = useAuthStore((s) => s.setUser);
 
   useEffect(() => {
+    if (isClientSigningOut()) return;
+
     const current = useAuthStore.getState().user;
     if (
       !current ||
