@@ -1,15 +1,51 @@
 import Link from "next/link";
+import { Facebook, Instagram, Linkedin } from "lucide-react";
 import { MarketingLogo } from "./marketing-logo";
 
 /**
- * Footer — dark Evergreen footer with 4 link columns + decorative pastel circle.
- *
- * Faithful port of `.design-reference/project/components/shared.jsx` `Footer`.
+ * Footer — dark Evergreen footer with link columns + social links.
  */
 
 interface FooterLink {
   label: string;
   href?: string;
+}
+
+const SOCIAL_LINKS = [
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/welpco",
+    Icon: Facebook,
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/welpco",
+    Icon: Instagram,
+  },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/company/welpco",
+    Icon: Linkedin,
+  },
+  {
+    label: "X",
+    href: "https://x.com/welpco",
+    Icon: XIcon,
+  },
+] as const;
+
+function XIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden
+    >
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
 }
 
 const COLS: { title: string; links: FooterLink[] }[] = [
@@ -18,8 +54,6 @@ const COLS: { title: string; links: FooterLink[] }[] = [
     links: [
       { label: "About us", href: "/about" },
       { label: "Our mission", href: "/about#mission" },
-      { label: "Press" },
-      { label: "Careers" },
     ],
   },
   {
@@ -34,9 +68,11 @@ const COLS: { title: string; links: FooterLink[] }[] = [
   {
     title: "For Welpers",
     links: [
-      { label: "Become a Welper", href: "/welper/onboarding" },
       { label: "Welper handbook" },
-      { label: "Get paid", href: "/how-it-works" },
+      {
+        label: "Weekly payouts (Friday)",
+        href: "/how-it-works",
+      },
       { label: "Community" },
     ],
   },
@@ -45,8 +81,6 @@ const COLS: { title: string; links: FooterLink[] }[] = [
     links: [
       { label: "FAQ", href: "/faq" },
       { label: "Contact us", href: "/contact" },
-      { label: "Help center", href: "/faq" },
-      { label: "Report an issue", href: "/contact" },
     ],
   },
 ];
@@ -64,7 +98,18 @@ export function Footer() {
         overflow: "hidden",
       }}
     >
-      <h2 id="footer-heading" style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0,0,0,0)" }}>
+      <h2
+        id="footer-heading"
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          padding: 0,
+          margin: -1,
+          overflow: "hidden",
+          clip: "rect(0,0,0,0)",
+        }}
+      >
         Site footer
       </h2>
       <div
@@ -104,15 +149,47 @@ export function Footer() {
             >
               A local-services marketplace. Vetted providers, escrow payments, on-platform messaging.
             </p>
-            <div style={{ display: "flex", gap: 8, marginTop: 24 }}>
-              <Link
-                href="/welper/onboarding"
-                className="btn btn-accent"
-                style={{ padding: "12px 20px", fontSize: 14 }}
+            <nav aria-label="Social media" style={{ marginTop: 24 }}>
+              <ul
+                style={{
+                  listStyle: "none",
+                  padding: 0,
+                  margin: 0,
+                  display: "flex",
+                  gap: 10,
+                  flexWrap: "wrap",
+                }}
               >
-                Become a Welper
-              </Link>
-            </div>
+                {SOCIAL_LINKS.map(({ label, href, Icon }) => (
+                  <li key={label}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        border: "1px solid rgba(250,241,229,0.22)",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "rgba(250,241,229,0.92)",
+                        textDecoration: "none",
+                        transition: "background 160ms ease, border-color 160ms ease",
+                      }}
+                    >
+                      {label === "X" ? (
+                        <XIcon size={18} />
+                      ) : (
+                        <Icon size={18} strokeWidth={1.75} aria-hidden />
+                      )}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
           {COLS.map((col) => (
             <nav key={col.title} aria-label={col.title}>

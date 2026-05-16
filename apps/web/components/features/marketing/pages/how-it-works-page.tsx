@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { HowItWorks } from "../sections/how-it-works";
 import { BecomeWelperCTA } from "../sections/become-welper-cta";
-import { MarqueeBand } from "../sections/marquee-band";
 import { MarketingImage } from "../shared/marketing-image";
 
 /**
@@ -16,7 +15,10 @@ const STEPS: [string, string][] = [
   ["Pass a background check", "Required for adult Welpers — keeps customers confident, keeps Welpers credible."],
   ["Set your availability", "You tell us when you work. Part-time, full-time, weekends, evenings — all welcome."],
   ["Accept your first booking", "Browse incoming requests, accept what fits, and meet your first neighbor."],
-  ["Get paid, get reviewed", "3–5 business days after each completed job. Reviews build your profile over time."],
+  [
+    "Get paid, get reviewed",
+    "Payment is sent the following week on the Friday on a weekly basis. Reviews are submitted by the customer when the job is complete.",
+  ],
 ];
 
 export function HowItWorksPage() {
@@ -137,7 +139,6 @@ export function HowItWorksPage() {
       </section>
 
       <BecomeWelperCTA />
-      <MarqueeBand />
     </>
   );
 }

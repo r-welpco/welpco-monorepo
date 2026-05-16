@@ -82,7 +82,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://welpco.com";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Welpco — Local services, real neighbors",
+    default: "Welpco — Local services, real neighbours",
     template: "%s — Welpco",
   },
   description:
@@ -90,7 +90,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Welpco",
-    title: "Welpco — Local services, real neighbors",
+    title: "Welpco — Local services, real neighbours",
     description:
       "Vetted local providers for everyday services — childcare, lawn care, tutoring, tech help and more.",
     url: SITE_URL,
@@ -98,7 +98,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Welpco — Local services, real neighbors",
+    title: "Welpco — Local services, real neighbours",
     description: "Vetted local providers for everyday services in your neighborhood.",
     images: ["/logos/Welpco_Imagotype_Primary_Reg_1.svg"],
   },

@@ -4,26 +4,24 @@ import { useState } from "react";
 
 /**
  * FAQTeaser — homepage FAQ accordion (split layout, sticky left intro).
- *
- * Faithful port of `.design-reference/project/components/sections.jsx` `FAQTeaser`.
  */
 
 const ITEMS = [
   {
-    q: "How do I become a Welper?",
-    a: "Sign up via the website or app, complete your profile, list the services you provide and your rates. Adults pass a background check; minors aged 14+ sign up under a guardian-managed account.",
+    q: "How can I become a Welper?",
+    a: "Sign up via our website or app, create your profile, list your services and rates, and set up Stripe for weekly payouts.",
   },
   {
-    q: "How does payment work?",
-    a: "Payment is taken upfront when a booking is confirmed and held in escrow. Once you confirm the job is complete, funds are released to the Welper.",
+    q: "How do I get paid as a Welper?",
+    a: "Confirm \"Job Done\" when the work is finished. Customers are charged, and Welpers receive weekly payouts every Friday of the following week.",
   },
   {
-    q: "What if I need a service that isn’t listed?",
-    a: "Post your job description on the platform and any qualified Welper can respond. You can also reach us via the Contact page.",
+    q: "When and how do I pay for a service?",
+    a: "Payment is taken when your booking is confirmed and held until the job is complete. Once you confirm completion, funds are released to the Welper.",
   },
   {
-    q: "Is it safe to have a Welper at my property?",
-    a: "Adult Welpers complete background checks, all messaging stays on-platform, and two-way ratings keep accounts accountable.",
+    q: "How do I know that having a Welper at my home is safe?",
+    a: "Adult Welpers complete background checks and earn a certified badge on their profile. Minor Welpers display a Minor badge and sign up under a guardian-managed account.",
   },
 ];
 

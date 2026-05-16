@@ -23,7 +23,7 @@ const CUSTOMER_STEPS = [
   {
     n: "03",
     title: "Confirm & rate",
-    body: "Mark the job complete to release payment, and leave a rating. Reviews keep the platform accountable.",
+    body: "Welper confirms the job is done and submits end time. Payment is taken and the customer is sent the final invoice. Leave a rating for the Welper, which helps keep the platform accountable.",
   },
 ];
 
@@ -41,7 +41,7 @@ const WELPER_STEPS = [
   {
     n: "03",
     title: "Get paid",
-    body: "Payment is released after the customer confirms the job is complete. Direct deposit in 3–5 business days.",
+    body: "Welper confirms job is complete and submits end time. Invoice is sent to the customer and payment is taken. Welpco transfers weekly payouts to Welper’s Stripe account the following week on the Friday.",
   },
 ];
 

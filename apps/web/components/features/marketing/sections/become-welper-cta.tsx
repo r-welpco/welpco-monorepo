@@ -10,7 +10,7 @@ import { MarketingImage } from "../shared/marketing-image";
 const POINTS = [
   "Pick the services that match your skills",
   "Set your own rates and weekly availability",
-  "Get paid 3–5 business days after each job",
+  "Get paid the following week on the Friday on a weekly basis",
   "Build a profile, ratings, and a regular client base",
 ];
 

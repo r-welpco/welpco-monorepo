@@ -4,67 +4,78 @@ import { useState } from "react";
 
 /**
  * FAQPage — full Welper + Customer questions, sticky group headings.
- *
- * Faithful port of `.design-reference/project/components/pages.jsx` `FAQPage`.
- * Chrome (TopNav + Footer) lives in the (marketing) layout.
  */
 
-const GROUPS = [
+type FaqAnswer = string | string[];
+
+type FaqItem = [question: string, answer: FaqAnswer];
+
+const GROUPS: {
+  label: string;
+  tone: "spring" | "pink";
+  items: FaqItem[];
+}[] = [
   {
     label: "For Welpers",
-    tone: "spring" as const,
+    tone: "spring",
     items: [
       [
         "How can I become a Welper?",
-        "Sign up via our website or app and create your profile. Include your experience, the services you'll provide, and your rates.",
+        "To become a Welper, simply sign up via our website or app and create your profile. You can include your experience and the type of services you provide. You will also need to choose the amount you will charge for the service(s) you will provide.",
       ],
       [
         "Why do I need a background check?",
-        "Welpco identifies itself as a safe and user-friendly platform. A background check gives our customers ease of mind when having a Welper enter their home or property.",
+        "Welpco identifies itself as a safe and user-friendly platform. We want to ensure, to the best of our ability, that our platform is a safe environment for our customers. A background check gives our customers the ease of mind they require when having a Welper enter their home and/or their property. If you pass the background check, you will receive a certified badge on your profile. If you fail the background check, you will not receive a certified badge on your profile, but you will still be able to be a Welper.",
       ],
       [
         "How do I get paid?",
-        "Once the job is complete, you'll confirm with the customer and they'll confirm via the app or website to release payment. Payments process to your account in 3–5 business days.",
+        [
+          "Once the job is completed, the Welper will confirm \"Job Done\" through the app or website. A receipt will automatically be sent to the customer, and the payment process will then be finalized.",
+          "Welpers receive their payouts on a weekly basis, every Friday of the following week.",
+          "Example: If you begin completing jobs on Monday and continue working throughout that week, you will receive payment on the Friday of the following week, and so on.",
+          "When creating your profile, you will also need to set up your own Stripe account in order to receive your weekly payouts.",
+          "Once your payout becomes available in your Stripe account, you can manually transfer your funds to your bank account at no cost.",
+        ],
       ],
       [
         "Can a minor sign up as a Welper?",
-        "Yes. Minors over the age of 14 can become a Welper, however their account must be created and managed by a legal guardian. Minors are not subjected to a background check.",
+        "Minors over the age of 14 can become a Welper via our platform, however, their account must be created and managed by a legal guardian. Welpers who are minors will not be subjected to a background check.",
       ],
       [
-        "What if a customer refuses to pay?",
-        "They'd need a valid reason and discuss it with you. If you can't resolve it together, contact us directly — we'll review the facts from both parties.",
+        "What happens if a customer refuses to pay for the service they received?",
+        "If a customer refuses to pay for the service you provided, they would need to have a valid reason, and they would need to discuss it with you to see if you can resolve the issue. If the issue cannot be resolved between the Welper and the customer, they will need to contact us directly, so we can determine the issue and resolve it based on the facts provided to us by both parties.",
       ],
-    ] as [string, string][],
+    ],
   },
   {
     label: "For Customers",
-    tone: "pink" as const,
+    tone: "pink",
     items: [
       [
         "How do I sign up to use your services?",
-        "Use our website or app — you can start searching the services you need within your community right away.",
+        "To sign up, simply use our website or app. You can then get started searching for the service you need being offered within your community.",
       ],
       [
         "When and how do I pay for a service?",
-        "When a booking is confirmed, you complete the payment. We hold the money until the job is done; once you confirm, we release payment to the Welper.",
+        "When a booking is confirmed between yourself and a Welper, you will complete the payment, but we will hold the money until the job is completed. Once the job is completed, you will confirm via the website or app that the job is completed and we will then release payment to the Welper for the service they provided.",
       ],
       [
-        "What if a Welper does an unsatisfactory job?",
-        "Discuss it with them first. If you can't resolve it, contact us directly — we'll determine if a refund or credit is warranted, and any disciplinary action. You can also rate the job, which appears on the Welper's profile.",
+        "What happens if a Welper does an unsatisfactory job?",
+        "If a Welper does an unsatisfactory job, discuss with them the issue you have with the job they did. If it cannot be resolved between both parties, please contact us directly and we will determine the outcome, whether or not, a refund or credit will be issued to you and if any disciplinary actions need to be taken in regards to the Welper using our platform. There is also a rating system, so you can rate the job provided by the Welper, which will also appear in their profile.",
       ],
       [
-        "How do I know having a Welper on my property is safe?",
-        "Welpers pass a background check during sign-up to ensure the integrity of the work they provide. You can also see ratings and reviews on every profile.",
+        "How do I know that allowing a Welper on my property, or in my home, is safe?",
+        "Welpco prides itself on providing a safe and secure environment for both our customers and our Welpers. Welpers will need to pass a background check during sign up to insure the integrity of the work they will provide. Welpers who pass their background check, will have a certified badge on their profile. Welpers who are minors, will not need to complete a background check, so their profiles will display a \"Minor badge\".",
       ],
       [
-        "What if there's a service I need that isn't offered?",
-        "Post a job description on the platform — Welpers will contact you if they're willing and able. You can also reach us via Contact us.",
+        "What if there is a service I need that I don't see offered on the platform?",
+        "If there is a service you need that you don't see offered on our platform, you can post the job description you need in the job postings section on our platform and Welpers will contact you if they are able and willing to do the job. You can also contact us directly via our \"Contact us\" page.",
       ],
       [
-        "What if I contact a Welper outside the platform?",
-        "We'd advise against it. Off-platform contact isn't covered by Welpco and we can't support issues that arise. All on-platform messaging is logged for transparency, and on-platform payments are secure.",
+        "What happens if I contact a Welper for services outside of the platform?",
+        "Contacting a Welper outside of our platform can lead to many issues and an unsafe environment. You will not be secure and any contact made outside of the platform with a Welper that was not made during the completion of a task will not be permitted by Welpco; thus we will provide no assistance with any issues that may arise. Welpers via our platform are vetted and any communication you have with them will be conducted via our platform's messenger system to insure a respectful and transparent exchange of information. Transactions made via our platform are also secure and we offer our support for any questions or concerns you may have.",
       ],
-    ] as [string, string][],
+    ],
   },
 ];
 
@@ -72,6 +83,28 @@ const TONE_BG: Record<"spring" | "pink", string> = {
   spring: "var(--spring-soft)",
   pink: "var(--bubblegum)",
 };
+
+function FaqAnswerBody({ answer }: { answer: FaqAnswer }) {
+  const parts = Array.isArray(answer) ? answer : [answer];
+  return (
+    <div style={{ paddingBottom: 22 }}>
+      {parts.map((paragraph, index) => (
+        <p
+          key={index}
+          style={{
+            margin: index === 0 ? 0 : "12px 0 0",
+            fontSize: 16,
+            color: "var(--fg-muted)",
+            lineHeight: 1.6,
+            maxWidth: 640,
+          }}
+        >
+          {paragraph}
+        </p>
+      ))}
+    </div>
+  );
+}
 
 export function FAQPage() {
   const [open, setOpen] = useState<{ g: number; i: number }>({ g: 0, i: 0 });
@@ -195,17 +228,7 @@ export function FAQPage() {
                           overflow: "hidden",
                         }}
                       >
-                        <p
-                          style={{
-                            paddingBottom: 22,
-                            fontSize: 16,
-                            color: "var(--fg-muted)",
-                            lineHeight: 1.6,
-                            maxWidth: 640,
-                          }}
-                        >
-                          {a}
-                        </p>
+                        <FaqAnswerBody answer={a} />
                       </div>
                     </div>
                   );

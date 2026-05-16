@@ -10,8 +10,8 @@ export type HeroVideoTreatmentValues = {
 };
 
 export const HERO_VIDEO_TREATMENT: HeroVideoTreatmentValues = {
-  blurPx: 10,
-  darken: 0.3,
+  blurPx: 3,
+  darken: 0.15,
   grain: 0.5,
 };
 

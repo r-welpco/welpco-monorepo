@@ -1,14 +1,12 @@
+"use client";
+
+import { useState } from "react";
+import { Plus, Minus } from "lucide-react";
 import { SectionHeader } from "./section-header";
 import { CategoryIcon, type CategoryIconName } from "./category-icon";
 
 /**
- * CategoriesGrid — 8 cards in a 4-col grid.
- *
- * Faithful port of `.design-reference/project/components/sections.jsx`
- * `CATEGORIES` + `CategoriesGrid` + `CategoryCard`. The 8 categories with
- * their service lists are the bundle's verbatim arrays.
- *
- * Cards are informational only (no navigation).
+ * CategoriesGrid — category cards with expandable sub-service lists.
  */
 
 type Tone = "spring" | "yellow" | "mint" | "pink" | "lilac";
@@ -22,14 +20,97 @@ interface Category {
 }
 
 const CATEGORIES: Category[] = [
-  { key: "care", name: "Care", tone: "spring", services: ["Babysitter", "Child care", "Elderly care", "Special needs"], icon: "heart" },
-  { key: "pet", name: "Pet care", tone: "yellow", services: ["Dog walks", "Pet grooming", "Aquarium care", "Dog training"], icon: "paw" },
-  { key: "edu", name: "Education", tone: "mint", services: ["Tutoring", "Music lessons"], icon: "book" },
-  { key: "home", name: "In-home", tone: "pink", services: ["Housekeeping", "Painting", "Organizing", "Moving", "Furniture assembly", "Smart-TV setup"], icon: "home" },
-  { key: "ext", name: "Exterior", tone: "lilac", services: ["Lawn-mowing", "Gardening", "Snow removal", "Window cleaning", "Gutter cleaning"], icon: "leaf" },
-  { key: "health", name: "Health & wellness", tone: "spring", services: ["Meal prep", "Personal trainer", "Dietician", "Nutritionist"], icon: "apple" },
-  { key: "fun", name: "Entertainment", tone: "yellow", services: ["Catering", "Party-planning", "Magician", "Bartender", "Server"], icon: "star" },
-  { key: "tech", name: "Tech help", tone: "mint", services: ["Smart home setup", "TV mounting", "Installations"], icon: "plug" },
+  {
+    key: "care",
+    name: "Care",
+    tone: "spring",
+    icon: "heart",
+    services: ["Babysitter", "Child care", "Elderly care", "Special needs"],
+  },
+  {
+    key: "pet",
+    name: "Pet care",
+    tone: "yellow",
+    icon: "paw",
+    services: [
+      "Dog walks",
+      "Pet grooming",
+      "Pet sitting",
+      "Aquarium and terrarium cleaning/maintenance",
+      "Dog training",
+    ],
+  },
+  {
+    key: "learning",
+    name: "Learning & Lessons",
+    tone: "mint",
+    icon: "book",
+    services: ["Tutoring", "Music lessons", "Cooking lessons", "Swimming lessons"],
+  },
+  {
+    key: "exterior",
+    name: "Exterior maintenance",
+    tone: "lilac",
+    icon: "leaf",
+    services: [
+      "Lawn-mowing",
+      "Tree-planting",
+      "Gardening",
+      "Car washing",
+      "Gutter cleaning",
+      "Window cleaning",
+      "Exterior property cleaning",
+      "Snow removal",
+      "Pool opening/closing",
+      "Leaf cleanup",
+      "Summer/winter preparation",
+    ],
+  },
+  {
+    key: "health",
+    name: "Health and wellness",
+    tone: "spring",
+    icon: "apple",
+    services: ["Meal preparation", "Personal trainer", "Wellness support", "Nutritionist"],
+  },
+  {
+    key: "events",
+    name: "Events & Hospitality",
+    tone: "yellow",
+    icon: "star",
+    services: ["Catering help", "Bartending", "Serving", "Party assistance", "Entertainer"],
+  },
+  {
+    key: "cleaning",
+    name: "Home Cleaning",
+    tone: "pink",
+    icon: "home",
+    services: [
+      "Housekeeping",
+      "Deep cleaning",
+      "Organizing",
+      "Laundry",
+      "Move-in/move-out cleaning",
+    ],
+  },
+  {
+    key: "home-help",
+    name: "Home Help",
+    tone: "mint",
+    icon: "plug",
+    services: [
+      "Furniture assembly",
+      "TV & shelf mounting",
+      "Smart home setup",
+      "Small repairs",
+      "Appliance installation",
+      "Moving help",
+      "Heavy lifting",
+      "Home organization",
+      "Painting touch-ups",
+      "Picture hanging",
+    ],
+  },
 ];
 
 const TONE_BG: Record<Tone, string> = {
@@ -64,8 +145,8 @@ export function CategoriesGrid() {
             marginTop: 56,
           }}
         >
-          {CATEGORIES.map((cat, i) => (
-            <CategoryCard key={cat.key} cat={cat} index={i} />
+          {CATEGORIES.map((cat) => (
+            <CategoryCard key={cat.key} cat={cat} />
           ))}
         </div>
       </div>
@@ -73,17 +154,19 @@ export function CategoriesGrid() {
   );
 }
 
-function CategoryCard({ cat, index }: { cat: Category; index: number }) {
+function CategoryCard({ cat }: { cat: Category }) {
+  const [expanded, setExpanded] = useState(false);
   const headingId = `category-${cat.key}-title`;
+  const listId = `category-${cat.key}-services`;
+
   return (
     <article
       aria-labelledby={headingId}
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: 20,
+        gap: 16,
         padding: 24,
-        minHeight: 280,
         background: "var(--card)",
         border: "1px solid var(--line)",
         borderRadius: "var(--radius-lg)",
@@ -94,38 +177,72 @@ function CategoryCard({ cat, index }: { cat: Category; index: number }) {
     >
       <div
         style={{
-          width: 56,
-          height: 56,
-          borderRadius: 16,
-          background: TONE_BG[cat.tone],
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 12,
         }}
       >
-        <CategoryIcon name={cat.icon} color="var(--evergreen)" />
-      </div>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
         <div
           style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            letterSpacing: "0.16em",
-            color: "var(--fg-faint)",
-            textTransform: "uppercase",
+            width: 56,
+            height: 56,
+            borderRadius: 16,
+            background: TONE_BG[cat.tone],
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
           }}
         >
-          0{index + 1}
+          <CategoryIcon name={cat.icon} color="var(--evergreen)" />
         </div>
-        <h3 id={headingId} style={{ fontSize: 28, marginTop: 6, marginBottom: 0 }}>
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          aria-expanded={expanded}
+          aria-controls={listId}
+          aria-label={
+            expanded
+              ? `Hide services in ${cat.name}`
+              : `Show ${cat.services.length} services in ${cat.name}`
+          }
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            border: "1px solid var(--line)",
+            background: expanded ? "var(--evergreen)" : "var(--bg-soft)",
+            color: expanded ? "var(--cream)" : "var(--evergreen)",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            flexShrink: 0,
+            transition: "background 160ms ease, color 160ms ease",
+          }}
+        >
+          {expanded ? (
+            <Minus aria-hidden width={18} height={18} strokeWidth={2} />
+          ) : (
+            <Plus aria-hidden width={18} height={18} strokeWidth={2} />
+          )}
+        </button>
+      </div>
+
+      <div>
+        <h3 id={headingId} style={{ fontSize: 28, margin: 0 }}>
           {cat.name}
         </h3>
+      </div>
+
+      {expanded ? (
         <ul
+          id={listId}
           style={{
             listStyle: "none",
             padding: 0,
-            margin: "14px 0 0",
+            margin: 0,
             display: "grid",
             gap: 8,
           }}
@@ -158,7 +275,7 @@ function CategoryCard({ cat, index }: { cat: Category; index: number }) {
             </li>
           ))}
         </ul>
-      </div>
+      ) : null}
     </article>
   );
 }

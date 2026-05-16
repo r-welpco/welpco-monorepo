@@ -1,6 +1,5 @@
 import { SectionHeader } from "../sections/section-header";
 import { MarketingImage } from "../shared/marketing-image";
-import { MarqueeBand } from "../sections/marquee-band";
 
 /**
  * AboutPage — mission, who-Welps personas, values.
@@ -28,6 +27,12 @@ const PERSONAS = [
     imageSrc: "/marketing/about-persona-retirees.jpg",
     imageAlt: "Retiree enjoying meaningful work in the garden",
   },
+];
+
+const MISSION_PARAGRAPHS = [
+  `Welpco is uniquely designed to connect people in need of services to those who provide services within their community. Whether it's parents searching for a last-minute babysitter to someone needing a hand with household maintenance, Welpco facilitates your needs by connecting you to a friendly face within your community who is willing to lend a hand. Our mission is to bring forward a user-friendly platform, where people can utilize their skills and provide services within their community with the freedom of selecting their own schedule while accommodating to the needs of others. We provide a safe environment for both our service providers, who we refer to as our "Welpers", and our customers.`,
+  `Being a Welper comes with many advantages. You decide which services you'd like to provide. You choose your work schedule, since you provide us with your availability, so you can be a part-time Welper or a full-time Welper. For some, becoming a Welper can be your first job. It can teach adolescents and young adults, quality life skills, such as: responsibility, commitment, communication, and kindness. For others, becoming a Welper is a way to make money outside the hours of your daily job/career, allowing you to have more income on your own time. For retirees who'd like to increase their income by utilizing their free time and perhaps, doing something they enjoy, becoming a Welper is absolutely perfect. Welpco offers many services provided by our Welpers, such as: babysitting, tutoring, lawn-mowing, seasonal outdoor maintenance, household chores, moving, dog-walking, technological assistance, installations, among many others.`,
+  `In today's fast paced society, it can be challenging to accomplish everything you need to get done in a day's time. We all have obligations, whether it's to our jobs, our family, our homes, or our communities. Welpco facilitates your needs by giving you the means of scheduling whichever services you need to alleviate some of that stress or free up some much needed time. You can schedule a daily, weekly, or monthly routine of services via our platform. From scheduling tutoring for your children on Wednesday evenings to having your lawn mowed Sunday mornings, Welpco is there. Too busy to prepare a home cooked meal throughout the week, why not have a Welper prepare your meals in advance for you? Not only can you schedule services in advance, but we at Welpco understand that sometimes services are needed now, today, as soon as possible, so we cater to your needs. With a simple search on our platform, you can find the service you're looking for from a friendly Welper in no time!`,
 ];
 
 const VALUES = [
@@ -92,7 +97,7 @@ export function AboutPage() {
             </div>
             <MarketingImage
               src="/marketing/about-community.jpg"
-              alt="Neighbors helping each other in the community"
+              alt="Neighbours helping each other in the community on a sunny afternoon"
               ratio="4 / 3"
               radius="var(--radius-lg)"
               priority
@@ -102,7 +107,7 @@ export function AboutPage() {
       </section>
 
       {/* Mission */}
-      <section className="section" style={{ background: "var(--bg-soft)" }}>
+      <section className="section" id="mission" style={{ background: "var(--bg-soft)" }}>
         <div className="container">
           <div data-grid="about-mission" style={{ display: "grid", gridTemplateColumns: "0.6fr 1.4fr", gap: 64 }}>
             <div className="eyebrow" style={{ paddingTop: 18 }}>
@@ -110,20 +115,23 @@ export function AboutPage() {
             </div>
             <div>
               <h2>
-                A platform where providers set their own terms{" "}
-                <span className="display-italic">and customers find help fast.</span>
+                Connecting neighbours who need help{" "}
+                <span className="display-italic">with those ready to Welp.</span>
               </h2>
-              <p
-                style={{
-                  marginTop: 28,
-                  fontSize: 17,
-                  lineHeight: 1.65,
-                  color: "var(--fg-muted)",
-                  maxWidth: 720,
-                }}
-              >
-                Welpers — our service providers — choose what they offer, when they work, and what they charge. Customers get vetted help on demand. The platform handles trust, payment and accountability.
-              </p>
+              {MISSION_PARAGRAPHS.map((paragraph) => (
+                <p
+                  key={paragraph.slice(0, 48)}
+                  style={{
+                    marginTop: 28,
+                    fontSize: 17,
+                    lineHeight: 1.65,
+                    color: "var(--fg-muted)",
+                    maxWidth: 720,
+                  }}
+                >
+                  {paragraph}
+                </p>
+              ))}
             </div>
           </div>
         </div>
@@ -237,7 +245,6 @@ export function AboutPage() {
         </div>
       </section>
 
-      <MarqueeBand />
     </>
   );
 }
