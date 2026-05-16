@@ -20,6 +20,24 @@ function stripRegisterPath(pathname: string): string {
 }
 import { useSignupState } from "@/lib/hooks/use-signup";
 
+/** Matches BFF `WELPER_REQUIRED_STEPS` length — used for progress chrome before role is picked. */
+const WELPER_SIGNUP_STEP_TOTAL = 9;
+
+function signupProgressTotals(state: {
+  selectedRole: string | null;
+  requiredSteps: unknown[];
+  completedSteps: unknown[];
+}): { totalSteps: number; stepIndex: number; progressPct: number } {
+  const totalSteps = state.selectedRole
+    ? state.requiredSteps.length
+    : WELPER_SIGNUP_STEP_TOTAL;
+  const stepIndex = Math.min(state.completedSteps.length + 1, totalSteps);
+  const progressPct = Math.round(
+    (state.completedSteps.length / Math.max(totalSteps, 1)) * 100,
+  );
+  return { totalSteps, stepIndex, progressPct };
+}
+
 export default function RegisterLayoutClient({
   children,
 }: {
@@ -35,13 +53,9 @@ export default function RegisterLayoutClient({
   const isCompletePage = stripRegisterPath(pathname) === "/register/complete";
   const showProgressChrome = isAuthenticated && state && !isCompletePage;
 
-  const totalSteps = state?.requiredSteps?.length ?? 7;
-  const stepIndex = state
-    ? Math.min(state.completedSteps.length + 1, totalSteps)
-    : 1;
-  const progressPct = state
-    ? Math.round((state.completedSteps.length / Math.max(totalSteps, 1)) * 100)
-    : 0;
+  const { totalSteps, stepIndex, progressPct } = state
+    ? signupProgressTotals(state)
+    : { totalSteps: WELPER_SIGNUP_STEP_TOTAL, stepIndex: 1, progressPct: 0 };
 
   const loginCallback = hasFrenchPrefix(pathname) ? "/fr/login" : "/login";
 

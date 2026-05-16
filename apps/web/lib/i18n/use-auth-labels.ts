@@ -286,6 +286,7 @@ export function useWelperBackgroundCheckStepLabels(): WelperBackgroundCheckStepL
     payAndContinue: bg.payAndContinue,
     startCertnVerification: "",
     openCertnVerification: "",
+    certnLinkReady: "",
     certnEmailInvite: t("certnEmailInvite"),
     footer: t("footer"),
     paymentReceivedPrefix: t("paymentReceivedPrefix"),

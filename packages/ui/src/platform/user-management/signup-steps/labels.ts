@@ -403,6 +403,7 @@ export interface WelperBackgroundCheckStepLabels extends SignupCommonLabels {
   payAndContinue: string;
   startCertnVerification: string;
   openCertnVerification: string;
+  certnLinkReady: string;
   certnEmailInvite: string;
   footer: string;
   continue: string;
@@ -427,6 +428,8 @@ export const DEFAULT_WELPER_BACKGROUND_CHECK_LABELS: WelperBackgroundCheckStepLa
     payAndContinue: "Pay {amount} and continue",
     startCertnVerification: "Start Certn verification",
     openCertnVerification: "Open Certn verification",
+    certnLinkReady:
+      "Complete your background check on Certn using the button below. You can continue signup while screening is in progress.",
     certnEmailInvite:
       "We sent a Certn screening link to your signup email. Open that message to complete your background check (it is not the Certn admin login at demo-app.certn.co).",
     footer:
