@@ -27,7 +27,8 @@ import {
   useUpdateNotificationPreferences,
 } from "@/lib/hooks/use-notifications";
 import { useWelperProfile, useUpdateWelperProfile } from "@/lib/hooks/use-profile";
-import { signOut } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { performClientSignOut } from "@/lib/auth/client-sign-out";
 import { Dialog, DialogContentRaw } from "@welpco/ui/dialog";
 import { EmailUpdateForm } from "@welpco/ui/platform/user-management/email-update-form";
 import { PasswordChangeForm } from "@welpco/ui/platform/user-management/password-change-form";
@@ -59,7 +60,8 @@ function isSettingsTab(value: string | null): value is SettingsTab {
 }
 
 function SettingsPageContent() {
-  const { user, logout } = useAuthStore();
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
   const searchParams = useSearchParams();
 
   const changePasswordMutation = useChangePassword();
@@ -204,8 +206,7 @@ function SettingsPageContent() {
 
   const handleDeleteAccount = async () => {
     await deleteAccountMutation.mutateAsync();
-    logout();
-    void signOut({ callbackUrl: "/" });
+    void performClientSignOut({ callbackUrl: "/", queryClient });
   };
 
   const handleProfileVisibilityChange = async (visible: boolean) => {

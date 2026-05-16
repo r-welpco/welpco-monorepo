@@ -66,6 +66,8 @@ export class AuthService {
         accountType: user?.accountType,
         status: user?.status,
         emailVerified: user?.emailVerified,
+        signupCompleted: user?.signupCompleted as boolean | undefined,
+        platformAccessEnabled: user?.platformAccessEnabled as boolean | undefined,
       },
       profile: {
         onboardingCompleted,

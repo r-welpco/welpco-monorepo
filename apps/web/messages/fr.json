@@ -788,6 +788,17 @@
           "finishFailed": "Impossible de terminer votre inscription. Réessayez dans un instant."
         }
       },
+      "complete": {
+        "title": "Merci pour votre inscription",
+        "intro": "Votre compte Welpco est configuré. Nous avons enregistré votre profil, vos services et les étapes que vous avez complétées aujourd'hui.",
+        "whatsNextTitle": "Et ensuite?",
+        "whatsNextBody": "Vous recevrez un courriel lorsque l'accès complet à la plateforme sera ouvert — avec tous les détails pour commencer en tant que Welper. D'ici là, vous pouvez vous connecter pour revoir votre inscription, mais le tableau de bord et les réservations ne sont pas encore disponibles.",
+        "feedbackPrefix": "En attendant, pour toute question ou commentaire, écrivez-nous à",
+        "feedbackSuffix": " — nous serons ravis de vous lire.",
+        "supportEmail": "support@welpco.com",
+        "signOff": "À bientôt,\nL'équipe Welpco",
+        "signOut": "Se déconnecter"
+      },
       "steps": {
         "selectRole": {
           "title": "Qu'est-ce qui vous amène sur Welpco?",

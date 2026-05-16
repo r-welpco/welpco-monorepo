@@ -11,6 +11,7 @@ import {
   stripLocale,
 } from "@/i18n/locale-routes";
 import { routing } from "@/i18n/routing";
+import { hasPlatformAccess } from "@/lib/auth/platform-access";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 
 const intlMiddleware = createIntlMiddleware(routing);
@@ -20,6 +21,7 @@ type AuthUser = {
   emailVerified?: boolean;
   signupCompleted?: boolean;
   onboardingCompleted?: boolean;
+  platformAccessEnabled?: boolean;
 };
 
 /** Unprefixed legal URLs when NEXT_LOCALE is French → `/fr/legal/...`. */
@@ -92,6 +94,7 @@ export default auth((req) => {
   const isOnDashboard = path.startsWith("/dashboard");
   const isOnLogin = path.startsWith("/login");
   const isOnRegister = path.startsWith("/register");
+  const isOnRegisterComplete = path === "/register/complete";
   const isOnOnboarding = path.startsWith("/onboarding-welcome");
   const isPublicRoute =
     isMarketingRoute(pathname) ||
@@ -136,6 +139,10 @@ export default auth((req) => {
 
   const signupCompleted = user?.signupCompleted === true;
   const emailVerified = user?.emailVerified === true;
+  const platformAccess = hasPlatformAccess({
+    signupCompleted,
+    platformAccessEnabled: user?.platformAccessEnabled,
+  });
 
   if (!signupCompleted) {
     if (isOnRegister) {
@@ -160,6 +167,21 @@ export default auth((req) => {
           nextUrl,
         ),
       );
+    }
+    return intlResponse ?? NextResponse.next();
+  }
+
+  if (!platformAccess) {
+    const completePath = localizedPathFromRequest("/register/complete", pathname);
+
+    if (isOnDashboard) {
+      return NextResponse.redirect(new URL(completePath, nextUrl));
+    }
+    if (isOnRegister && !isOnRegisterComplete) {
+      return NextResponse.redirect(new URL(completePath, nextUrl));
+    }
+    if (isOnLogin || isOnOnboarding) {
+      return NextResponse.redirect(new URL(completePath, nextUrl));
     }
     return intlResponse ?? NextResponse.next();
   }

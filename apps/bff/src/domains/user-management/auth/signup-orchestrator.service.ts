@@ -45,6 +45,7 @@ import { NotificationPrefsStepDto } from '../../../modules/auth/dto/notification
 import { OptionalProfileStepDto } from '../../../modules/auth/dto/optional-profile-step.dto';
 import { BackgroundCheckService } from '../../safety-verification/background-check.service';
 import { StripeConnectService } from '../../payment/stripe-connect.service';
+import { platformAccessEnabledOnFinish } from '../../../common/platform-access';
 import { isAdultWelper } from '../../safety-verification/background-check-age.util';
 import { GEOCODE_SERVICE } from '../../geocode/geocode.interface';
 import type { IGeocodeService } from '../../geocode/geocode.interface';
@@ -148,6 +149,7 @@ export interface SignupState {
   userId: string;
   email: string;
   signupCompleted: boolean;
+  platformAccessEnabled: boolean;
   emailVerified: boolean;
   selectedRole: SelectedRole | null;
   completedSteps: SignupStepName[];
@@ -547,6 +549,7 @@ export class SignupOrchestratorService {
       userId: user.id,
       email: user.email,
       signupCompleted: user.signupCompleted,
+      platformAccessEnabled: user.platformAccessEnabled,
       emailVerified: user.emailVerified,
       selectedRole: user.selectedRole,
       completedSteps,
@@ -922,6 +925,7 @@ export class SignupOrchestratorService {
       });
       if (!u) throw new NotFoundException('User not found');
       u.signupCompleted = true;
+      u.platformAccessEnabled = platformAccessEnabledOnFinish();
       // Active by default once signup is done. Email-verification gating moves
       // off the AccountStatus rail in Phase 3 (EmailVerifiedGuard handles it).
       if (u.status === AccountStatus.PENDING) u.status = AccountStatus.ACTIVE;

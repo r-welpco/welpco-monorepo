@@ -30,6 +30,7 @@ export const authProviders: NextAuthConfig["providers"] = [
             emailVerified: boolean;
             signupCompleted?: boolean;
             onboardingCompleted?: boolean;
+            platformAccessEnabled?: boolean;
           };
           profile?: { onboardingCompleted: boolean };
         }>(
@@ -61,6 +62,7 @@ export const authProviders: NextAuthConfig["providers"] = [
         // are treated as signup-complete (no regression for current users).
         const signupCompleted =
           response.user.signupCompleted ?? onboardingCompleted;
+        const platformAccessEnabled = response.user.platformAccessEnabled;
 
         return {
           id: response.user.id,
@@ -75,6 +77,7 @@ export const authProviders: NextAuthConfig["providers"] = [
           emailVerified: response.user.emailVerified,
           onboardingCompleted,
           signupCompleted,
+          platformAccessEnabled,
         };
       } catch (error) {
         const errorMessage =

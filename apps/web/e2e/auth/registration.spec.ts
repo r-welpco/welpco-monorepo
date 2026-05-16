@@ -88,8 +88,16 @@ test.describe('@auth Signup wizard — customer happy path', () => {
 
     await page.getByRole('button', { name: /skip|finish|complete/i }).first().click();
 
-    await page.waitForURL(/\/dashboard(?!\/onboarding)/, { timeout: 15_000 });
-    expect(page.url()).toContain('/dashboard');
+    await page.waitForURL(/\/(dashboard(?!\/onboarding)|register\/complete)/, {
+      timeout: 15_000,
+    });
+    if (page.url().includes('/register/complete')) {
+      await expect(
+        page.getByRole('heading', { name: /thank you for (signing up|registering)/i }),
+      ).toBeVisible();
+    } else {
+      expect(page.url()).toContain('/dashboard');
+    }
   });
 });
 
@@ -128,9 +136,42 @@ test.describe('@auth Signup wizard — welper happy path', () => {
 
     await page.getByRole('button', { name: /skip|finish|complete/i }).first().click();
 
-    await page.waitForURL(/\/dashboard(?!\/onboarding)/, { timeout: 30_000 });
-    expect(page.url()).toContain('/dashboard');
-    await expect(page.getByRole('navigation').first()).toBeVisible();
+    await page.waitForURL(/\/(dashboard(?!\/onboarding)|register\/complete)/, {
+      timeout: 30_000,
+    });
+    if (page.url().includes('/register/complete')) {
+      await expect(
+        page.getByRole('heading', { name: /thank you for (signing up|registering)/i }),
+      ).toBeVisible();
+    } else {
+      expect(page.url()).toContain('/dashboard');
+      await expect(page.getByRole('navigation').first()).toBeVisible();
+    }
+  });
+});
+
+test.describe('@auth Launch thank-you gate', () => {
+  test('signed-in + signupCompleted + no platform access + /dashboard → /register/complete', async ({
+    page,
+  }) => {
+    test.skip(
+      process.env.PLATFORM_ACCESS_GATED === 'false',
+      'Requires BFF PLATFORM_ACCESS_GATED=true',
+    );
+
+    const email = generateTestEmail('gated');
+    const password = generateTestPassword();
+    await page.goto(WIZARD_URL);
+    await waitForFormReady(page);
+    await fillEmailPasswordStep(page, email, password);
+    await selectRole(page, 'customer');
+    await fillIdentityStep(page, { first: 'Gated', last: 'User' });
+    await page.getByRole('button', { name: /skip|finish|complete/i }).first().click();
+    await page.waitForURL(/\/register\/complete/, { timeout: 15_000 });
+
+    await page.goto('/dashboard');
+    await page.waitForURL(/\/register\/complete/, { timeout: 10_000 });
+    expect(page.url()).toContain('/register/complete');
   });
 });
 

@@ -789,6 +789,17 @@
           "finishFailed": "We couldn't finish your signup. Try again in a moment."
         }
       },
+      "complete": {
+        "title": "Thank you for registering",
+        "intro": "Your Welpco account is set up. We've saved your profile, services, and the steps you completed today.",
+        "whatsNextTitle": "What's next?",
+        "whatsNextBody": "You'll receive an email when full access to the platform opens — with everything you need to get started as a Welper. Until then, you can sign in anytime to review your registration, but the dashboard and bookings are not available yet.",
+        "feedbackPrefix": "In the meantime, if you have any questions or feedback, reach out anytime at",
+        "feedbackSuffix": " — we'd love to hear from you.",
+        "supportEmail": "support@welpco.com",
+        "signOff": "Talk soon,\nThe Welpco Team",
+        "signOut": "Sign out"
+      },
       "steps": {
         "selectRole": {
           "title": "What brings you to Welpco?",

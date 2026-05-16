@@ -1,6 +1,8 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { performClientSignOut } from "@/lib/auth/client-sign-out";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { Box } from "@welpco/ui/box";
@@ -11,7 +13,11 @@ import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { AuthBackground } from "@welpco/ui/platform/user-management";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { hasFrenchPrefix } from "@/i18n/locale-routes";
+import { hasFrenchPrefix, stripLocale } from "@/i18n/locale-routes";
+
+function stripRegisterPath(pathname: string): string {
+  return stripLocale(pathname);
+}
 import { useSignupState } from "@/lib/hooks/use-signup";
 
 export default function RegisterLayoutClient({
@@ -19,13 +25,15 @@ export default function RegisterLayoutClient({
 }: {
   children: React.ReactNode;
 }) {
+  const queryClient = useQueryClient();
   const { status } = useSession();
   const isAuthenticated = status === "authenticated";
   const { data: state } = useSignupState();
   const pathname = usePathname() ?? "/";
   const t = useTranslations("auth.register.chrome");
 
-  const showProgressChrome = isAuthenticated && state;
+  const isCompletePage = stripRegisterPath(pathname) === "/register/complete";
+  const showProgressChrome = isAuthenticated && state && !isCompletePage;
 
   const totalSteps = state?.requiredSteps?.length ?? 7;
   const stepIndex = state
@@ -66,7 +74,10 @@ export default function RegisterLayoutClient({
                     href="#"
                     onClick={async (e) => {
                       e.preventDefault();
-                      await signOut({ callbackUrl: loginCallback });
+                      await performClientSignOut({
+                        callbackUrl: loginCallback,
+                        queryClient,
+                      });
                     }}
                     style={{ cursor: "pointer" }}
                     aria-label={t("saveAndContinueLaterAria")}

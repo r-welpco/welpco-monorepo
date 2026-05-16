@@ -4,9 +4,9 @@ import { CustomerHeader, WelperHeader } from "@welpco/ui/platform/layout";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { usePathname, useRouter } from "next/navigation";
-import { useAuthStore } from "@/stores/authStore";
 import { usePersonalizationStore } from "@/stores/personalizationStore";
-import { signOut } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { performClientSignOut } from "@/lib/auth/client-sign-out";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useDashboardUser } from "@/lib/hooks/use-dashboard-user";
 import { useCustomerProfile, useWelperProfile } from "@/lib/hooks/use-profile";
@@ -37,6 +37,7 @@ export default function DashboardLayoutClient({
 }: DashboardLayoutClientProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useDashboardUser(serverUser);
   const userRole = user?.role || "customer";
   const { data: customerProfile } = useCustomerProfile(user.id, userRole === "customer");
@@ -111,9 +112,8 @@ export default function DashboardLayoutClient({
   }, [router]);
 
   const handleLogout = useCallback(async () => {
-    useAuthStore.getState().logout();
-    await signOut({ callbackUrl: "/" });
-  }, []);
+    await performClientSignOut({ callbackUrl: "/", queryClient });
+  }, [queryClient]);
 
   const notificationSlot = useMemo(
     () => <NotificationBellPopover badgeColor={userRole === "welper" ? "green" : "blue"} />,

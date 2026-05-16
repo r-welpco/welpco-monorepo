@@ -11,6 +11,7 @@ import { EmailPasswordStep } from "@welpco/ui/platform/user-management";
 import { stepNameToSlug } from "./step-name-utils";
 import { useBeginSignup, useSignupState } from "@/lib/hooks/use-signup";
 import { ApiClientError } from "@/lib/api/client";
+import { postSignupDestination } from "@/lib/auth/platform-access";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 import { useEmailPasswordStepLabels } from "@/lib/i18n/use-auth-labels";
 
@@ -31,7 +32,14 @@ export default function RegisterPageClient() {
   useEffect(() => {
     if (!isAuthenticated || !state) return;
     if (state.signupCompleted) {
-      router.replace(safeNextPath(nextRaw, "/dashboard"));
+      router.replace(
+        postSignupDestination({
+          signupCompleted: true,
+          platformAccessEnabled: state.platformAccessEnabled,
+        }) === "/dashboard"
+          ? safeNextPath(nextRaw, "/dashboard")
+          : "/register/complete",
+      );
       return;
     }
     if (state.nextStep) {

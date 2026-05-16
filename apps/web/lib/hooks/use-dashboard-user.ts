@@ -26,7 +26,11 @@ export function useDashboardUser(serverUser: DashboardServerUser): { user: User 
 
   useEffect(() => {
     const current = useAuthStore.getState().user;
-    if (!current || current.id !== serverUser.id) {
+    if (
+      !current ||
+      current.id !== serverUser.id ||
+      current.role !== serverUser.role
+    ) {
       setUser({
         id: serverUser.id,
         email: serverUser.email,

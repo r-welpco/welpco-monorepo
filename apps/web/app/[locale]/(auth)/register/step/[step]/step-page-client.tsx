@@ -6,6 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
+import { postSignupDestination } from "@/lib/auth/platform-access";
+import { refreshBffTokensInSession } from "@/lib/auth/refresh-session-tokens";
 import { localizedPath } from "@/i18n/locale-routes";
 import {
   useIdentityStepLabels,
@@ -265,7 +267,14 @@ export default function StepPageClient({ slug }: { slug: string }) {
   useEffect(() => {
     if (!state) return;
     if (state.signupCompleted) {
-      router.replace(safeNextPath(nextRaw, "/dashboard"));
+      router.replace(
+        postSignupDestination({
+          signupCompleted: true,
+          platformAccessEnabled: state.platformAccessEnabled,
+        }) === "/dashboard"
+          ? safeNextPath(nextRaw, "/dashboard")
+          : "/register/complete",
+      );
     }
   }, [state, router, nextRaw]);
 
@@ -379,6 +388,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
           guard(async () => {
             const next = await completeSelectRole.mutateAsync(values);
             await updateSession({ user: { role: values.role } });
+            await refreshBffTokensInSession(updateSession);
             advanceTo(next.nextStep);
           })
         }

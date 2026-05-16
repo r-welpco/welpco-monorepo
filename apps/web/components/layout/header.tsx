@@ -16,7 +16,8 @@ import {
   DropdownMenuTrigger,
 } from "@welpco/ui/dropdown-menu";
 import { LogOut, User, Settings, HandHeart, Menu, X } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { performClientSignOut } from "@/lib/auth/client-sign-out";
 import { useState } from "react";
 
 // Hoist static navigation items outside component to prevent recreation on every render
@@ -29,6 +30,7 @@ const getNavigationHref = (item: string): string => {
 };
 
 export function Header() {
+  const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -223,11 +225,8 @@ export function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     style={{ color: "var(--red-9)", cursor: "pointer" }}
-                    onClick={async () => {
-                      // Clear auth store
-                      useAuthStore.getState().logout();
-                      // Clear NextAuth session
-                      await signOut({ callbackUrl: "/" });
+                    onClick={() => {
+                      void performClientSignOut({ callbackUrl: "/", queryClient });
                     }}
                     aria-label="Log out"
                   >

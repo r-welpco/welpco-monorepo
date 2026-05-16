@@ -43,6 +43,8 @@ export interface SignupStateDto {
   email: string;
   /** True after `POST /auth/signup/finish` succeeds. */
   signupCompleted: boolean;
+  /** When false, dashboard is closed until full platform launch. */
+  platformAccessEnabled: boolean;
   /** Repurposed as a banner trigger; gates `bookableActions` in Phase 3. */
   emailVerified: boolean;
   /** Role chosen at step 1 of the wizard; null until the user picks. */

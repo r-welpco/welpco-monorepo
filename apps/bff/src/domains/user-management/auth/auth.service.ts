@@ -246,6 +246,8 @@ export class AuthService {
         accountType: user.accountType,
         status: user.status,
         emailVerified: user.emailVerified,
+        signupCompleted: user.signupCompleted,
+        platformAccessEnabled: user.platformAccessEnabled,
         onboardingCompleted,
         profileCompletionStatus,
       },

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useMemo } from "react";
 import { useSession } from "next-auth/react";
+import { clearTokenCache } from "@/lib/api/get-token";
 import { useAuthStore } from "@/stores/authStore";
 import type { User } from "@/types";
 
@@ -10,8 +11,8 @@ export function AuthSessionSync({ children }: { children: React.ReactNode }) {
   const setUser = useAuthStore((state) => state.setUser);
   const setLoading = useAuthStore((state) => state.setLoading);
   
-  // Track last synced user ID to prevent unnecessary updates
   const lastSyncedUserIdRef = useRef<string | null>(null);
+  const lastSyncedRoleRef = useRef<string | null>(null);
   const lastStatusRef = useRef<string | null>(null);
 
   // Memoize user object creation to avoid recreating on every render
@@ -43,16 +44,21 @@ export function AuthSessionSync({ children }: { children: React.ReactNode }) {
     // When user ID changes, update all fields from session
     if (userFromSession) {
       const userId = userFromSession.id;
-      
-      // Only update if user ID changed - this prevents loops when other fields change
-      if (lastSyncedUserIdRef.current !== userId) {
+      const role = userFromSession.role;
+
+      if (
+        lastSyncedUserIdRef.current !== userId ||
+        lastSyncedRoleRef.current !== role
+      ) {
         setUser(userFromSession);
         lastSyncedUserIdRef.current = userId;
+        lastSyncedRoleRef.current = role;
       }
     } else if (status === "unauthenticated" && lastSyncedUserIdRef.current !== null) {
-      // Only clear user if we had one before
+      clearTokenCache();
       setUser(null);
       lastSyncedUserIdRef.current = null;
+      lastSyncedRoleRef.current = null;
     }
   }, [userFromSession, status, setUser, setLoading]); // Use memoized user object
 
@@ -61,6 +67,7 @@ export function AuthSessionSync({ children }: { children: React.ReactNode }) {
     return () => {
       // Reset refs on unmount to prevent stale state
       lastSyncedUserIdRef.current = null;
+      lastSyncedRoleRef.current = null;
       lastStatusRef.current = null;
     };
   }, []);

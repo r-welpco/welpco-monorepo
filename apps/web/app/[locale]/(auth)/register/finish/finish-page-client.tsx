@@ -17,6 +17,9 @@ import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useFinishSignup } from "@/lib/hooks/use-signup";
 import { ApiClientError } from "@/lib/api/client";
 import { stepNameToSlug } from "../step-name-utils";
+import { postSignupDestination } from "@/lib/auth/platform-access";
+import { roleFromSelectedRole } from "@/lib/auth/session-role";
+import { refreshBffTokensInSession } from "@/lib/auth/refresh-session-tokens";
 import { safeNextPath } from "@/lib/auth/safe-next";
 import type {
   IncompleteSignupErrorBody,
@@ -57,13 +60,25 @@ export default function FinishPageClient() {
     void (async () => {
       try {
         const finalState = await finish.mutateAsync();
+        const destination = postSignupDestination({
+          signupCompleted: true,
+          platformAccessEnabled: finalState.platformAccessEnabled,
+        });
+        const role =
+          roleFromSelectedRole(finalState.selectedRole) ?? "customer";
         await updateSession({
           user: {
             signupCompleted: true,
-            role: finalState.selectedRole === "welper" ? "welper" : "customer",
+            platformAccessEnabled: finalState.platformAccessEnabled,
+            role,
           },
         });
-        router.replace(safeNextPath(nextRaw, "/dashboard"));
+        await refreshBffTokensInSession(updateSession);
+        router.replace(
+          destination === "/dashboard"
+            ? safeNextPath(nextRaw, "/dashboard")
+            : "/register/complete",
+        );
       } catch (err) {
         if (err instanceof ApiClientError && err.code === "INCOMPLETE_SIGNUP") {
           const body = (err as unknown as { body?: IncompleteSignupErrorBody })

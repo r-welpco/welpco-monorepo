@@ -17,8 +17,9 @@ import {
 } from "@welpco/ui/dropdown-menu";
 import { NotificationBell } from "./notification-bell";
 import { ThemeToggle } from "./theme-toggle";
+import { useQueryClient } from "@tanstack/react-query";
+import { performClientSignOut } from "@/lib/auth/client-sign-out";
 import { useAuthStore } from "@/stores/authStore";
-import { signOut } from "next-auth/react";
 import { User, Settings, LogOut } from "lucide-react";
 
 const tabs = [
@@ -32,6 +33,7 @@ const tabs = [
 export function DashboardHeader() {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
   // Determine active tab from pathname
@@ -118,11 +120,8 @@ export function DashboardHeader() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 style={{ color: "var(--red-9)", cursor: "pointer" }}
-                onClick={async () => {
-                  // Clear auth store
-                  useAuthStore.getState().logout();
-                  // Clear NextAuth session
-                  await signOut({ callbackUrl: "/" });
+                onClick={() => {
+                  void performClientSignOut({ callbackUrl: "/", queryClient });
                 }}
               >
                 <Flex align="center" gap="2">

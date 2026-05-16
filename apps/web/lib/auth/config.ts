@@ -18,7 +18,14 @@ function authRefreshApiOrigin(): string {
  * Read access-token expiry from the JWT payload (no verification — timing hint only).
  * Keeps refresh aligned with BFF JWT_EXPIRES_IN even if it differs from the 15m default.
  */
-function decodeAccessTokenExpMs(accessToken: string | undefined): number | undefined {
+type AccessTokenPayload = {
+  exp?: number;
+  accountType?: string;
+};
+
+function decodeAccessTokenPayload(
+  accessToken: string | undefined,
+): AccessTokenPayload | undefined {
   if (!accessToken || typeof accessToken !== "string") return undefined;
   const parts = accessToken.split(".");
   if (parts.length < 2) return undefined;
@@ -28,11 +35,27 @@ function decodeAccessTokenExpMs(accessToken: string | undefined): number | undef
     const padded = segment + (pad ? "=".repeat(4 - pad) : "");
     if (typeof atob !== "function") return undefined;
     const json = atob(padded);
-    const payload = JSON.parse(json) as { exp?: number };
-    return typeof payload.exp === "number" ? payload.exp * 1000 : undefined;
+    return JSON.parse(json) as AccessTokenPayload;
   } catch {
     return undefined;
   }
+}
+
+function decodeAccessTokenExpMs(accessToken: string | undefined): number | undefined {
+  const exp = decodeAccessTokenPayload(accessToken)?.exp;
+  return typeof exp === "number" ? exp * 1000 : undefined;
+}
+
+/** Sync NextAuth JWT role from the BFF access token (DB-backed accountType). */
+function applyRoleFromAccessToken(
+  token: JWT,
+  accessToken: string | undefined,
+): void {
+  const accountType = decodeAccessTokenPayload(accessToken)?.accountType;
+  if (!accountType || typeof accountType !== "string") return;
+  const normalized = accountType.toLowerCase();
+  token.role = normalized === "welper" ? "welper" : "customer";
+  token.accountType = accountType;
 }
 
 function refreshDedupeKey(token: JWT): string {
@@ -101,6 +124,9 @@ export const authConfig: NextAuthConfig = {
         if ("signupCompleted" in user) {
           token.signupCompleted = user.signupCompleted as boolean;
         }
+        if ("platformAccessEnabled" in user) {
+          token.platformAccessEnabled = user.platformAccessEnabled as boolean;
+        }
 
         // Store JWT tokens from backend (NestJS Passport)
         // These are the actual JWT tokens from the backend
@@ -116,6 +142,21 @@ export const authConfig: NextAuthConfig = {
       
       // Handle session update trigger (from update() call)
       if (trigger === "update" && token) {
+        const sessionData = session as {
+          accessToken?: string;
+          refreshToken?: string;
+          user?: typeof session.user;
+        } | null;
+        if (typeof sessionData?.accessToken === "string") {
+          token.accessToken = sessionData.accessToken;
+          applyRoleFromAccessToken(token, sessionData.accessToken);
+          token.accessTokenExpires =
+            decodeAccessTokenExpMs(sessionData.accessToken) ??
+            Date.now() + 15 * 60 * 1000;
+        }
+        if (typeof sessionData?.refreshToken === "string") {
+          token.refreshToken = sessionData.refreshToken;
+        }
         // Persist updated session fields into the JWT token
         if (session?.user) {
           if (typeof session.user.role === "string") {
@@ -131,6 +172,10 @@ export const authConfig: NextAuthConfig = {
           }
           if (typeof session.user.signupCompleted !== "undefined") {
             token.signupCompleted = session.user.signupCompleted as boolean;
+          }
+          if (typeof session.user.platformAccessEnabled !== "undefined") {
+            token.platformAccessEnabled =
+              session.user.platformAccessEnabled as boolean;
           }
         }
         // Access token was updated via update() call
@@ -158,6 +203,8 @@ export const authConfig: NextAuthConfig = {
       const isExpiringSoon = accessTokenExpires
         ? now >= accessTokenExpires - 5 * 60 * 1000
         : false;
+
+      applyRoleFromAccessToken(token, token.accessToken as string | undefined);
 
       if (!isExpiringSoon) {
         return token;
@@ -215,10 +262,12 @@ export const authConfig: NextAuthConfig = {
         token.emailVerified = undefined;
         token.onboardingCompleted = undefined;
         token.signupCompleted = undefined;
+        token.platformAccessEnabled = undefined;
       } else if (result?.accessToken) {
         token.accessToken = result.accessToken;
         token.accessTokenExpires =
           decodeAccessTokenExpMs(result.accessToken) ?? Date.now() + 15 * 60 * 1000;
+        applyRoleFromAccessToken(token, result.accessToken);
         // Store rotated refresh token (the backend now returns a new one on each refresh)
         if (result.refreshToken) {
           token.refreshToken = result.refreshToken;
@@ -249,6 +298,9 @@ export const authConfig: NextAuthConfig = {
         session.user.emailVerified = Boolean(token.emailVerified) as unknown as typeof session.user.emailVerified;
         session.user.onboardingCompleted = token.onboardingCompleted as boolean;
         session.user.signupCompleted = token.signupCompleted as boolean | undefined;
+        session.user.platformAccessEnabled = token.platformAccessEnabled as
+          | boolean
+          | undefined;
         // Store access token and refresh token in session for API client
         session.accessToken = token.accessToken as string;
         session.refreshToken = token.refreshToken as string;
@@ -271,10 +323,13 @@ export const authConfig: NextAuthConfig = {
           if (typeof token.signupCompleted !== "undefined") {
             session.user.signupCompleted = token.signupCompleted as boolean;
           }
-          if (typeof token.role === "string") {
-            session.user.role = token.role;
-            session.user.accountType = token.accountType as string;
+          if (typeof token.platformAccessEnabled !== "undefined") {
+            session.user.platformAccessEnabled = token.platformAccessEnabled as boolean;
           }
+        }
+        if (typeof token.role === "string") {
+          session.user.role = token.role;
+          session.user.accountType = token.accountType as string;
         }
       }
 

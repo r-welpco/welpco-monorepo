@@ -83,6 +83,13 @@ export class UserAccount {
   signupCompleted!: boolean;
 
   /**
+   * When false, signup is complete but the product dashboard stays closed
+   * (phased launch). Users see the registration thank-you page instead.
+   */
+  @Column({ name: 'platform_access_enabled', type: 'boolean', default: true })
+  platformAccessEnabled!: boolean;
+
+  /**
    * Role chosen at step 1 of the wizard. NULL until the user picks. Distinct
    * from `accountType` (which is the legacy taxonomy used across the rest of
    * the domain). Once written, it is locked — the wizard does not allow
