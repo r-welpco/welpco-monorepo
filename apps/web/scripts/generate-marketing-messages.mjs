@@ -587,7 +587,12 @@ Object.assign(fr.marketing.home.categories, {
 });
 fr.marketing.home.categories.items.care = {
   name: "Soins",
-  services: ["Gardienne", "Garde d'enfants", "Soins aux aînés", "Besoins particuliers"],
+  services: [
+    "Gardienne / gardien",
+    "Garde d'enfants",
+    "Soins aux aînés",
+    "Besoins particuliers",
+  ],
 };
 fr.marketing.home.categories.items.pet = {
   name: "Soins aux animaux",
@@ -597,6 +602,70 @@ fr.marketing.home.categories.items.pet = {
     "Garde d'animaux",
     "Entretien d'aquariums et terrariums",
     "Dressage canin",
+  ],
+};
+fr.marketing.home.categories.items.learning = {
+  name: "Cours et apprentissage",
+  services: ["Tutorat", "Cours de musique", "Cours de cuisine", "Cours de natation"],
+};
+fr.marketing.home.categories.items.exterior = {
+  name: "Entretien extérieur",
+  services: [
+    "Tonte de pelouse",
+    "Plantation d'arbres",
+    "Jardinage",
+    "Lavage automobile",
+    "Nettoyage de gouttières",
+    "Nettoyage de fenêtres",
+    "Nettoyage extérieur de la propriété",
+    "Déneigement",
+    "Ouverture / fermeture de piscine",
+    "Ramassage de feuilles",
+    "Préparation été / hiver",
+  ],
+};
+fr.marketing.home.categories.items.health = {
+  name: "Santé et bien-être",
+  services: [
+    "Préparation de repas",
+    "Entraîneur personnel",
+    "Soutien bien-être",
+    "Nutritionniste",
+  ],
+};
+fr.marketing.home.categories.items.events = {
+  name: "Événements et réception",
+  services: [
+    "Aide en traiteur",
+    "Service de bar",
+    "Service en salle",
+    "Aide pour fêtes",
+    "Animation",
+  ],
+};
+fr.marketing.home.categories.items.cleaning = {
+  name: "Entretien ménager",
+  services: [
+    "Entretien courant",
+    "Grand ménage",
+    "Organisation",
+    "Lessive",
+    "Ménage déménagement",
+  ],
+};
+fr.marketing.home.categories.items.homeHelp = {
+  name: "Aide à domicile",
+  services: [
+    "Assemblage de meubles",
+    "Installation TV et étagères",
+    "Domotique",
+    "Petites réparations",
+    "Installation d'appareils",
+    "Aide au déménagement",
+    "Manutention",
+    "Organisation à domicile",
+    "Retouches de peinture",
+    "Accrochage de tableaux",
   ],
 };
 fr.marketing.home.howItWorks = {

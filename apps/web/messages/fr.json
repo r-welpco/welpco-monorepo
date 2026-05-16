@@ -70,7 +70,7 @@
           "care": {
             "name": "Soins",
             "services": [
-              "Gardienne",
+              "Gardienne / gardien",
               "Garde d'enfants",
               "Soins aux aînés",
               "Besoins particuliers"
@@ -87,72 +87,72 @@
             ]
           },
           "learning": {
-            "name": "Learning & Lessons",
+            "name": "Cours et apprentissage",
             "services": [
-              "Tutoring",
-              "Music lessons",
-              "Cooking lessons",
-              "Swimming lessons"
+              "Tutorat",
+              "Cours de musique",
+              "Cours de cuisine",
+              "Cours de natation"
             ]
           },
           "exterior": {
-            "name": "Exterior maintenance",
+            "name": "Entretien extérieur",
             "services": [
-              "Lawn-mowing",
-              "Tree-planting",
-              "Gardening",
-              "Car washing",
-              "Gutter cleaning",
-              "Window cleaning",
-              "Exterior property cleaning",
-              "Snow removal",
-              "Pool opening/closing",
-              "Leaf cleanup",
-              "Summer/winter preparation"
+              "Tonte de pelouse",
+              "Plantation d'arbres",
+              "Jardinage",
+              "Lavage automobile",
+              "Nettoyage de gouttières",
+              "Nettoyage de fenêtres",
+              "Nettoyage extérieur de la propriété",
+              "Déneigement",
+              "Ouverture / fermeture de piscine",
+              "Ramassage de feuilles",
+              "Préparation été / hiver"
             ]
           },
           "health": {
-            "name": "Health and wellness",
+            "name": "Santé et bien-être",
             "services": [
-              "Meal preparation",
-              "Personal trainer",
-              "Wellness support",
-              "Nutritionist"
+              "Préparation de repas",
+              "Entraîneur personnel",
+              "Soutien bien-être",
+              "Nutritionniste"
             ]
           },
           "events": {
-            "name": "Events & Hospitality",
+            "name": "Événements et réception",
             "services": [
-              "Catering help",
-              "Bartending",
-              "Serving",
-              "Party assistance",
-              "Entertainer"
+              "Aide en traiteur",
+              "Service de bar",
+              "Service en salle",
+              "Aide pour fêtes",
+              "Animation"
             ]
           },
           "cleaning": {
-            "name": "Home Cleaning",
+            "name": "Entretien ménager",
             "services": [
-              "Housekeeping",
-              "Deep cleaning",
-              "Organizing",
-              "Laundry",
-              "Move-in/move-out cleaning"
+              "Entretien courant",
+              "Grand ménage",
+              "Organisation",
+              "Lessive",
+              "Ménage déménagement"
             ]
           },
           "homeHelp": {
-            "name": "Home Help",
+            "name": "Aide à domicile",
             "services": [
-              "Furniture assembly",
-              "TV & shelf mounting",
-              "Smart home setup",
-              "Small repairs",
-              "Appliance installation",
-              "Moving help",
-              "Heavy lifting",
-              "Home organization",
-              "Painting touch-ups",
-              "Picture hanging"
+              "Assemblage de meubles",
+              "Installation TV et étagères",
+              "Domotique",
+              "Petites réparations",
+              "Installation d'appareils",
+              "Aide au déménagement",
+              "Manutention",
+              "Organisation à domicile",
+              "Retouches de peinture",
+              "Accrochage de tableaux"
             ]
           }
         }
@@ -791,7 +791,48 @@
         "Heavy Lifting": "Manutention",
         "Home Organization": "Organisation à domicile",
         "Painting Touch-Ups": "Retouches de peinture",
-        "Picture Hanging": "Accrochage de tableaux"
+        "Picture Hanging": "Accrochage de tableaux",
+        "Pet care": "Soins aux animaux",
+        "Child care": "Garde d'enfants",
+        "Elderly care": "Soins aux aînés",
+        "Special needs": "Besoins particuliers",
+        "Dog walks": "Promenades de chiens",
+        "Pet grooming": "Toilettage",
+        "Pet sitting": "Garde d'animaux",
+        "Aquarium and terrarium cleaning/maintenance": "Entretien d'aquariums et terrariums",
+        "Dog training": "Dressage canin",
+        "Music lessons": "Cours de musique",
+        "Cooking lessons": "Cours de cuisine",
+        "Swimming lessons": "Cours de natation",
+        "Exterior maintenance": "Entretien extérieur",
+        "Lawn-mowing": "Tonte de pelouse",
+        "Tree-planting": "Plantation d'arbres",
+        "Car washing": "Lavage automobile",
+        "Gutter cleaning": "Nettoyage de gouttières",
+        "Window cleaning": "Nettoyage de fenêtres",
+        "Exterior property cleaning": "Nettoyage extérieur de la propriété",
+        "Snow removal": "Déneigement",
+        "Pool opening/closing": "Ouverture / fermeture de piscine",
+        "Leaf cleanup": "Ramassage de feuilles",
+        "Summer/winter preparation": "Préparation été / hiver",
+        "Health and wellness": "Santé et bien-être",
+        "Meal preparation": "Préparation de repas",
+        "Personal trainer": "Entraîneur personnel",
+        "Wellness support": "Soutien bien-être",
+        "Catering help": "Aide en traiteur",
+        "Party assistance": "Aide pour fêtes",
+        "Deep cleaning": "Grand ménage",
+        "Move-in/move-out cleaning": "Ménage déménagement",
+        "Furniture assembly": "Assemblage de meubles",
+        "TV & shelf mounting": "Installation TV et étagères",
+        "Smart home setup": "Domotique",
+        "Small repairs": "Petites réparations",
+        "Appliance installation": "Installation d'appareils",
+        "Moving help": "Aide au déménagement",
+        "Heavy lifting": "Manutention",
+        "Home organization": "Organisation à domicile",
+        "Painting touch-ups": "Retouches de peinture",
+        "Picture hanging": "Accrochage de tableaux"
       },
       "finish": {
         "title": "Presque terminé",
