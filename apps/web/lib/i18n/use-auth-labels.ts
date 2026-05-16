@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useAuthMessages, useAuthRegisterStep } from "@/lib/i18n/auth-message-templates";
 import type {
   AccountVerificationLabels,
   EmailPasswordStepLabels,
@@ -140,12 +141,10 @@ export function useIdentityStepLabels(): IdentityStepLabels {
   };
 }
 
-const WELPER_BIO_MIN = 120;
-const WELPER_BIO_MAX = 2000;
-
 export function useWelperBioStepLabels(): WelperBioStepLabels {
   const tc = useTranslations("auth.common");
   const t = useTranslations("auth.register.steps.welperBio");
+  const bio = useAuthRegisterStep("welperBio");
   return {
     back: tc("back"),
     continue: tc("continue"),
@@ -155,12 +154,12 @@ export function useWelperBioStepLabels(): WelperBioStepLabels {
     description: t("description"),
     bioLabel: t("bioLabel"),
     bioPlaceholder: t("bioPlaceholder"),
-    charCount: t("charCount"),
-    charsRemaining: t("charsRemaining"),
-    minCharsRemaining: t("minCharsRemaining"),
+    charCount: bio.charCount,
+    charsRemaining: bio.charsRemaining,
+    minCharsRemaining: bio.minCharsRemaining,
     validation: {
-      bioMin: t("validation.bioMin", { min: WELPER_BIO_MIN }),
-      bioMax: t("validation.bioMax", { max: WELPER_BIO_MAX }),
+      bioMin: bio.validation.bioMin,
+      bioMax: bio.validation.bioMax,
     },
   };
 }
@@ -168,6 +167,7 @@ export function useWelperBioStepLabels(): WelperBioStepLabels {
 export function useWelperServiceAreaStepLabels(): WelperServiceAreaStepLabels {
   const tc = useTranslations("auth.common");
   const t = useTranslations("auth.register.steps.welperServiceArea");
+  const area = useAuthRegisterStep("welperServiceArea");
   return {
     back: tc("back"),
     continue: tc("continue"),
@@ -185,7 +185,7 @@ export function useWelperServiceAreaStepLabels(): WelperServiceAreaStepLabels {
     selector: {
       centerAddress: t("selector.centerAddress"),
       serviceRadius: t("selector.serviceRadius"),
-      radiusHint: t("selector.radiusHint"),
+      radiusHint: area.selector.radiusHint,
     },
     address: {
       streetAddress: t("address.streetAddress"),
@@ -200,14 +200,16 @@ export function useWelperServiceAreaStepLabels(): WelperServiceAreaStepLabels {
 export function useWelperOfferingStepLabels(maxServices: number): WelperOfferingStepLabels {
   const tc = useTranslations("auth.common");
   const t = useTranslations("auth.register.steps.welperOffering");
+  const offering = useAuthRegisterStep("welperOffering");
+  void maxServices;
   return {
     back: tc("back"),
     continue: tc("continue"),
     saving: tc("saving"),
     requiredMarker: "*",
     title: t("title"),
-    description: t("description", { max: maxServices }),
-    yourServices: t("yourServices"),
+    description: offering.description,
+    yourServices: offering.yourServices,
     remove: t("remove"),
     addAnother: t("addAnother"),
     firstService: t("firstService"),
@@ -270,6 +272,7 @@ export function useWelperAvailabilityStepLabels(): WelperAvailabilityStepLabels 
 export function useWelperBackgroundCheckStepLabels(): WelperBackgroundCheckStepLabels {
   const tc = useTranslations("auth.common");
   const t = useTranslations("auth.register.steps.welperBackgroundCheck");
+  const bg = useAuthRegisterStep("welperBackgroundCheck");
   return {
     back: tc("back"),
     continue: t("continue"),
@@ -279,7 +282,7 @@ export function useWelperBackgroundCheckStepLabels(): WelperBackgroundCheckStepL
     under18Description: t("under18Description"),
     description: t("description"),
     limitedTimeRate: t("limitedTimeRate"),
-    payAndContinue: t("payAndContinue"),
+    payAndContinue: bg.payAndContinue,
     startCertnVerification: t("startCertnVerification"),
     openCertnVerification: t("openCertnVerification"),
     certnEmailInvite: t("certnEmailInvite"),
@@ -289,7 +292,7 @@ export function useWelperBackgroundCheckStepLabels(): WelperBackgroundCheckStepL
     paymentFailureStart: t("paymentFailureStart"),
     paymentInvitePending: t("paymentInvitePending"),
     failureMissingProfile: t("failureMissingProfile"),
-    failureCertnFailed: t("failureCertnFailed"),
+    failureCertnFailed: bg.failureCertnFailed,
     failureGeneric: t("failureGeneric"),
   };
 }
@@ -320,11 +323,12 @@ export function usePasswordResetLabels(): PasswordResetLabels {
 
 export function useAccountVerificationLabels(): AccountVerificationLabels {
   const t = useTranslations("auth.verification");
+  const verification = useAuthMessages().auth.verification;
   return {
     title: t("title"),
     codeSentPrefix: t("codeSentPrefix"),
     codeLabel: t("codeLabel"),
-    codeDigitAria: t("codeDigitAria"),
+    codeDigitAria: verification.codeDigitAria,
     resendCode: t("resendCode"),
     verify: t("verify"),
     verifying: t("verifying"),
@@ -338,6 +342,8 @@ export function useAccountVerificationLabels(): AccountVerificationLabels {
 export function useOptionalProfileStepLabels(): OptionalProfileStepLabels {
   const tc = useTranslations("auth.common");
   const t = useTranslations("auth.register.steps.optionalProfile");
+  const optional = useAuthRegisterStep("optionalProfile");
+  const photo = optional.photoUpload;
   return {
     back: tc("back"),
     continue: tc("continue"),
@@ -352,12 +358,12 @@ export function useOptionalProfileStepLabels(): OptionalProfileStepLabels {
       uploadPhoto: t("photoUpload.uploadPhoto"),
       changePhoto: t("photoUpload.changePhoto"),
       removePhoto: t("photoUpload.removePhoto"),
-      acceptedHint: t("photoUpload.acceptedHint"),
+      acceptedHint: photo.acceptedHint,
       errors: {
-        invalidFormat: t("photoUpload.errors.invalidFormat"),
-        fileTooLarge: t("photoUpload.errors.fileTooLarge"),
-        imageTooSmall: t("photoUpload.errors.imageTooSmall"),
-        imageTooLarge: t("photoUpload.errors.imageTooLarge"),
+        invalidFormat: photo.errors.invalidFormat,
+        fileTooLarge: photo.errors.fileTooLarge,
+        imageTooSmall: photo.errors.imageTooSmall,
+        imageTooLarge: photo.errors.imageTooLarge,
         invalidImage: t("photoUpload.errors.invalidImage"),
         uploadFailed: t("photoUpload.errors.uploadFailed"),
         removeFailed: t("photoUpload.errors.removeFailed"),
