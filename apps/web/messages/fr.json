@@ -1026,7 +1026,7 @@
           "startCertnVerification": "Commencer la vérification Certn",
           "openCertnVerification": "Ouvrir la vérification Certn",
           "certnLinkReady": "Complétez votre vérification des antécédents sur Certn à l'aide du bouton ci-dessous. Vous pouvez poursuivre l'inscription pendant le traitement.",
-          "certnEmailInvite": "Nous avons envoyé un lien Certn à votre adresse d'inscription. Ouvrez ce courriel pour compléter la vérification (ce n'est pas la connexion admin Certn sur demo-app.certn.co).",
+          "certnEmailInvite": "Nous avons envoyé un lien Certn à votre adresse d'inscription. Ouvrez ce courriel pour compléter la vérification des antécédents.",
           "footer": "Les résultats sont généralement prêts en quelques jours ouvrables. Vous pouvez terminer l'inscription pendant le traitement; la recherche et les réservations s'activent une fois approuvé.",
           "continue": "Continuer",
           "paymentReceivedPrefix": "Paiement reçu.",

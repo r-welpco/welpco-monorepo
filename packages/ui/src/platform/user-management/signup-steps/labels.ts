@@ -433,7 +433,7 @@ export const DEFAULT_WELPER_BACKGROUND_CHECK_LABELS: WelperBackgroundCheckStepLa
     certnLinkReady:
       "Complete your background check on Certn using the button below. You can continue signup while screening is in progress.",
     certnEmailInvite:
-      "We sent a Certn screening link to your signup email. Open that message to complete your background check (it is not the Certn admin login at demo-app.certn.co).",
+      "We sent a Certn screening link to your signup email. Open that message to complete your background check.",
     footer:
       "Results are usually ready within a few business days. You can finish signup while your check is processing; search and bookings unlock once you are cleared.",
     continue: "Continue",
