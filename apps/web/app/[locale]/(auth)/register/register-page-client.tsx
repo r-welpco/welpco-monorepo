@@ -6,10 +6,16 @@ import { useRouter } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import { localeFromUseLocale } from "@/lib/i18n/app-locale";
+import { hasApiSession } from "@/lib/auth/has-api-session";
+import { Button } from "@welpco/ui/button";
+import { Heading } from "@welpco/ui/heading";
+import { Text } from "@welpco/ui/text";
+import { FORM_SPACING } from "@welpco/ui/tokens";
+import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
-import { Spinner } from "@welpco/ui/spinner";
 import { EmailPasswordStep } from "@welpco/ui/platform/user-management";
 import { stepNameToSlug } from "./step-name-utils";
+import { RegisterResumeShell } from "./register-resume-shell";
 import { useBeginSignup, useSignupState } from "@/lib/hooks/use-signup";
 import { ApiClientError } from "@/lib/api/client";
 import { postSignupDestination } from "@/lib/auth/platform-access";
@@ -20,19 +26,28 @@ export default function RegisterPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextRaw = searchParams.get("next");
-  const { status } = useSession();
-  const isAuthenticated = status === "authenticated";
+  const { status, data: session } = useSession();
+  const canResumeSignup = hasApiSession(status, session);
   const labels = useEmailPasswordStepLabels();
   const uiLocale = useLocale();
   const t = useTranslations("auth.register.begin");
+  const tPage = useTranslations("auth.register.steps.page");
 
   const beginSignup = useBeginSignup();
-  const { data: state, isFetching } = useSignupState();
+  const {
+    data: state,
+    isPending,
+    error: signupStateError,
+    refetch,
+  } = useSignupState();
 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated || !state) return;
+    if (status === "loading" || !canResumeSignup) return;
+    if (isPending && !state) return;
+    if (!state) return;
+
     if (state.signupCompleted) {
       router.replace(
         postSignupDestination({ signupCompleted: true }) === "/dashboard"
@@ -41,10 +56,14 @@ export default function RegisterPageClient() {
       );
       return;
     }
+
     if (state.nextStep) {
       router.replace(`/register/step/${stepNameToSlug(state.nextStep)}`);
+      return;
     }
-  }, [isAuthenticated, state, router, nextRaw]);
+
+    router.replace("/register/finish");
+  }, [status, canResumeSignup, isPending, state, router, nextRaw]);
 
   const handleBegin = async (values: { email: string; password: string }) => {
     setError(null);
@@ -58,23 +77,54 @@ export default function RegisterPageClient() {
         setError(t("errors.accountExists"));
         return;
       }
-      const message =
-        err instanceof Error ? err.message : t("errors.createFailed");
-      setError(message);
+      setError(
+        err instanceof Error ? err.message : t("errors.createFailed"),
+      );
     }
   };
 
-  if (isAuthenticated) {
-    return (
-      <Flex
-        justify="center"
-        align="center"
-        style={{ minHeight: "40vh" }}
-        aria-busy={isFetching}
-      >
-        <Spinner size="3" />
-      </Flex>
-    );
+  if (status === "loading") {
+    return null;
+  }
+
+  if (canResumeSignup) {
+    if (isPending && !state) {
+      return <RegisterResumeShell loading />;
+    }
+
+    if (!state) {
+      const message =
+        signupStateError instanceof ApiClientError &&
+        signupStateError.code === "NO_TOKEN"
+          ? tPage("sessionExpiredMessage")
+          : signupStateError instanceof Error
+            ? signupStateError.message
+            : tPage("loadProgressMessage");
+
+      return (
+        <RegisterResumeShell>
+          <Box>
+            <Heading as="h2" size="4" trim="start" mb={FORM_SPACING.titleGap}>
+              {tPage("loadProgressTitle")}
+            </Heading>
+            <Text size="2" color="gray">
+              {message}
+            </Text>
+          </Box>
+          <Flex direction="column" gap="2">
+            <Button
+              size="3"
+              onClick={() => void refetch()}
+              disabled={isPending}
+            >
+              {t("retry")}
+            </Button>
+          </Flex>
+        </RegisterResumeShell>
+      );
+    }
+
+    return <RegisterResumeShell loading />;
   }
 
   return (

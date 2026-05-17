@@ -5,6 +5,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { signIn, useSession } from "next-auth/react";
+import { clearTokenCache } from "@/lib/api/get-token";
+import { hasApiSession } from "@/lib/auth/has-api-session";
 import {
   beginSignup,
   finishSignup,
@@ -56,9 +58,9 @@ import type { BeginSignupResponseDto, SignupStateDto } from "@welpco/types";
 
 const SIGNUP_STATE_KEY = ["signup", "state"] as const;
 
-function useIsAuthenticated(): boolean {
-  const { status } = useSession();
-  return status === "authenticated";
+function useHasApiSession(): boolean {
+  const { data: session, status } = useSession();
+  return hasApiSession(status, session);
 }
 
 // ─── State query ────────────────────────────────────────────────────────────
@@ -69,11 +71,11 @@ function useIsAuthenticated(): boolean {
  * cache this value — `nextStep` must always reflect the BFF's source of truth.
  */
 export function useSignupState() {
-  const isAuthenticated = useIsAuthenticated();
+  const canCallApi = useHasApiSession();
   return useQuery<SignupStateDto>({
     queryKey: SIGNUP_STATE_KEY,
     queryFn: getSignupState,
-    enabled: isAuthenticated,
+    enabled: canCallApi,
     staleTime: 30_000,
     // Keep wizard state visible while refetching — refetch on tab focus must not
     // unmount step forms and wipe in-progress fields.
@@ -96,19 +98,34 @@ export function useSignupState() {
  */
 export function useBeginSignup() {
   const queryClient = useQueryClient();
+  const { update: updateSession } = useSession();
   return useMutation<BeginSignupResponseDto, Error, BeginSignupParams>({
     mutationFn: async (params) => {
       const response = await beginSignup(params);
-      // Establish a NextAuth session immediately so `useSignupState` and
-      // subsequent step submissions are authenticated. Auto-login failures
-      // are non-fatal: the wizard can still surface the begin response and
-      // route the user to /login if the session never establishes.
-      await signIn("credentials", {
+      clearTokenCache();
+
+      const signInResult = await signIn("credentials", {
         email: params.email,
         password: params.password,
         preferredLocale: params.preferredLocale ?? "en",
         redirect: false,
       });
+
+      // Seed the JWT with tokens from begin (authoritative) so API calls work
+      // even if credentials sign-in races or the login round-trip is slow.
+      await updateSession({
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      });
+      clearTokenCache();
+
+      if (signInResult?.error) {
+        console.warn(
+          "Auto sign-in after signup failed; session tokens were applied from begin response.",
+          signInResult.error,
+        );
+      }
+
       return response;
     },
     onSuccess: () => {

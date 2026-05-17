@@ -692,13 +692,21 @@
       "newToWelpco": "Nouveau sur Welpco?",
       "createAccount": "Créer un compte",
       "verifiedBanner": "Votre courriel est vérifié. Connectez-vous pour continuer.",
+      "alreadySignedInTitle": "Vous êtes déjà connecté",
+      "alreadySignedInHint": "Continuez ci-dessous, ou déconnectez-vous pour utiliser un autre compte.",
+      "signedInAs": "Connecté en tant que {email}",
+      "useAnotherAccount": "Se déconnecter et utiliser un autre compte",
+      "continueSignup": "Continuer l'inscription",
+      "viewLaunchStatus": "Voir le statut du lancement",
+      "goToDashboard": "Aller au tableau de bord",
       "validation": {
         "emailInvalid": "Entrez un courriel valide",
         "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères"
       },
       "errors": {
         "invalidCredentials": "Courriel ou mot de passe invalide",
-        "signInFailed": "Échec de la connexion. Veuillez réessayer."
+        "signInFailed": "Échec de la connexion. Veuillez réessayer.",
+        "sessionNotReady": "Impossible de démarrer votre session. Veuillez vous reconnecter."
       }
     },
     "register": {
@@ -726,10 +734,19 @@
         "errors": {
           "accountExists": "Un compte existe déjà pour ce courriel. Connectez-vous ou utilisez un autre courriel.",
           "createFailed": "Impossible de créer votre compte. Réessayez dans un instant."
-        }
+        },
+        "resumingAria": "Chargement de votre progression d'inscription",
+        "retry": "Réessayer",
+        "signInInstead": "Se connecter avec un autre compte"
       },
       "chrome": {
         "stepOf": "Étape {current} sur {total}",
+        "signedInAs": "Connecté en tant que {email}",
+        "useAnotherAccount": "Utiliser un autre compte",
+        "continuingSignup": "Reprenez l'inscription où vous l'avez laissée.",
+        "loadingProgress": "Chargement de votre progression…",
+        "staleSessionMessage": "Votre session a expiré. Reconnectez-vous pour continuer.",
+        "staleSessionAction": "Se reconnecter",
         "saveAndContinueLater": "Enregistrer et continuer plus tard",
         "saveAndContinueLaterAria": "Enregistrer et continuer plus tard",
         "progressSavedHint": "Votre progression est enregistrée. Reconnectez-vous pour reprendre ici.",
@@ -1055,6 +1072,7 @@
         "page": {
           "loadProgressTitle": "Impossible de charger votre progression",
           "loadProgressMessage": "Erreur lors du chargement de l'inscription. Vérifiez que l'API fonctionne et réessayez.",
+          "sessionExpiredMessage": "Votre session a expiré. Reconnectez-vous pour reprendre où vous en étiez.",
           "stepNotFoundTitle": "Étape introuvable",
           "stepNotFoundMessage": "Cette URL ne correspond à aucune étape. Retournez où vous en étiez.",
           "comingSoonDefault": "Nous finalisons cette étape. Votre progression est enregistrée — déconnectez-vous et revenez bientôt, ou actualisez dans quelques instants.",

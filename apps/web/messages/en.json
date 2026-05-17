@@ -693,13 +693,21 @@
       "newToWelpco": "New to Welpco?",
       "createAccount": "Create an account",
       "verifiedBanner": "Your email is verified. Sign in to continue.",
+      "alreadySignedInTitle": "You're already signed in",
+      "alreadySignedInHint": "Continue below, or sign out to use a different account.",
+      "signedInAs": "Signed in as {email}",
+      "useAnotherAccount": "Sign out and use another account",
+      "continueSignup": "Continue signup",
+      "viewLaunchStatus": "View launch status",
+      "goToDashboard": "Go to dashboard",
       "validation": {
         "emailInvalid": "Enter a valid email",
         "passwordMinLength": "Password must be at least 8 characters"
       },
       "errors": {
         "invalidCredentials": "Invalid email or password",
-        "signInFailed": "Failed to sign in. Please try again."
+        "signInFailed": "Failed to sign in. Please try again.",
+        "sessionNotReady": "We couldn't start your session. Please try signing in again."
       }
     },
     "register": {
@@ -727,10 +735,19 @@
         "errors": {
           "accountExists": "An account already exists for that email. Sign in instead, or use a different email.",
           "createFailed": "We couldn't create your account. Try again in a moment."
-        }
+        },
+        "resumingAria": "Loading your signup progress",
+        "retry": "Try again",
+        "signInInstead": "Sign in with a different account"
       },
       "chrome": {
         "stepOf": "Step {current} of {total}",
+        "signedInAs": "Signed in as {email}",
+        "useAnotherAccount": "Use another account",
+        "continuingSignup": "Pick up signup where you left off.",
+        "loadingProgress": "Loading your saved progress…",
+        "staleSessionMessage": "Your session expired. Sign in again to continue.",
+        "staleSessionAction": "Sign in again",
         "saveAndContinueLater": "Save and continue later",
         "saveAndContinueLaterAria": "Save and continue later",
         "progressSavedHint": "Your progress is saved. Sign back in to pick up here.",
@@ -1056,6 +1073,7 @@
         "page": {
           "loadProgressTitle": "Could not load your signup progress",
           "loadProgressMessage": "Something went wrong loading signup state. Check that the API is running and try again.",
+          "sessionExpiredMessage": "Your session has expired. Sign in again to continue where you left off.",
           "stepNotFoundTitle": "Step not found",
           "stepNotFoundMessage": "That URL doesn't match a wizard step. Head back to where you left off.",
           "comingSoonDefault": "We're putting the finishing touches on this step. Your progress is saved — sign out and check back shortly, or stay tuned and refresh in a few.",

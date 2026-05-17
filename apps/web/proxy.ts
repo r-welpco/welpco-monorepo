@@ -147,10 +147,10 @@ export default auth((req) => {
   const platformAccess = hasPlatformAccess({ signupCompleted });
 
   if (!signupCompleted) {
-    if (isOnRegister) {
+    if (isOnRegister || isOnLogin) {
       return intlResponse ?? NextResponse.next();
     }
-    if (isOnLogin || isOnOnboarding) {
+    if (isOnOnboarding) {
       return NextResponse.redirect(
         new URL(
           withNext(

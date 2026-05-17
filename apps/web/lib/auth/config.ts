@@ -187,22 +187,29 @@ export const authConfig: NextAuthConfig = {
       }
 
       // Token refresh logic (keep it simple and delegated to NestJS)
-      if (!token.accessToken) {
+      if (!token.accessToken && !token.refreshToken) {
         return token;
       }
 
+      const mustRefreshMissingAccess =
+        !token.accessToken && Boolean(token.refreshToken);
+
       // Keep NextAuth's expiry in sync with the real access JWT (BFF may use a non-default TTL).
-      const jwtExpMs = decodeAccessTokenExpMs(token.accessToken as string | undefined);
-      if (jwtExpMs) {
-        token.accessTokenExpires = jwtExpMs;
+      if (token.accessToken) {
+        const jwtExpMs = decodeAccessTokenExpMs(token.accessToken as string | undefined);
+        if (jwtExpMs) {
+          token.accessTokenExpires = jwtExpMs;
+        }
       }
 
       const accessTokenExpires = token.accessTokenExpires as number | undefined;
       const now = Date.now();
-      // Refresh when within 5 minutes of access expiry.
-      const isExpiringSoon = accessTokenExpires
-        ? now >= accessTokenExpires - 5 * 60 * 1000
-        : false;
+      // Refresh when within 5 minutes of access expiry, or when access was cleared but refresh remains.
+      const isExpiringSoon =
+        mustRefreshMissingAccess ||
+        (accessTokenExpires
+          ? now >= accessTokenExpires - 5 * 60 * 1000
+          : false);
 
       // Do not clobber role/signup fields set via `updateSession` on the same request.
       if (trigger !== "update") {
@@ -281,14 +288,10 @@ export const authConfig: NextAuthConfig = {
     },
     session({ session, token, trigger }) {
       const userId = (token?.id ?? token?.sub) as string | undefined;
-      // No valid token or user identity → treat as unauthenticated (e.g. after refresh failed)
+      // No valid token or user identity → unauthenticated (e.g. after refresh failed).
+      // Returning a truthy session without accessToken left useSession() as "authenticated".
       if (!token?.accessToken || !userId) {
-        return {
-          ...session,
-          user: undefined,
-          accessToken: undefined,
-          refreshToken: undefined,
-        } as unknown as typeof session;
+        return null as unknown as typeof session;
       }
       if (session.user && token) {
         session.user.id = userId;

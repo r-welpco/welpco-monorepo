@@ -1,19 +1,19 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { performClientSignOut } from "@/lib/auth/client-sign-out";
+import { hasApiSession } from "@/lib/auth/has-api-session";
+import { RegisterSessionBanner } from "./register-session-banner";
+import { RegisterStaleSessionGuard } from "./register-stale-session";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { Box } from "@welpco/ui/box";
 import { Container } from "@welpco/ui/container";
 import { Flex } from "@welpco/ui/flex";
-import { Link } from "@welpco/ui/link";
 import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { AuthBackground } from "@welpco/ui/platform/user-management";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { hasFrenchPrefix, stripLocale } from "@/i18n/locale-routes";
+import { stripLocale } from "@/i18n/locale-routes";
 
 function stripRegisterPath(pathname: string): string {
   return stripLocale(pathname);
@@ -43,26 +43,39 @@ export default function RegisterLayoutClient({
 }: {
   children: React.ReactNode;
 }) {
-  const queryClient = useQueryClient();
-  const { status } = useSession();
-  const isAuthenticated = status === "authenticated";
+  const { status, data: session } = useSession();
+  const canResumeSignup = hasApiSession(status, session);
   const { data: state } = useSignupState();
   const pathname = usePathname() ?? "/";
   const t = useTranslations("auth.register.chrome");
 
   const isCompletePage = stripRegisterPath(pathname) === "/register/complete";
-  const showProgressChrome = isAuthenticated && state && !isCompletePage;
+  const showProgressChrome = canResumeSignup && state && !isCompletePage;
+  const showSessionBanner = canResumeSignup && !isCompletePage;
 
   const { totalSteps, stepIndex, progressPct } = state
     ? signupProgressTotals(state)
     : { totalSteps: WELPER_SIGNUP_STEP_TOTAL, stepIndex: 1, progressPct: 0 };
 
-  const loginCallback = hasFrenchPrefix(pathname) ? "/fr/login" : "/login";
-
   return (
     <AuthBackground>
       <Container size="2" style={{ width: "100%" }}>
         <Flex direction="column" gap="5" style={{ width: "100%" }}>
+          <Box mx="auto" style={{ width: "100%", maxWidth: "560px" }}>
+            <RegisterStaleSessionGuard />
+          </Box>
+          {showSessionBanner ? (
+            <Box
+              mx="auto"
+              style={{ width: "100%", maxWidth: "560px" }}
+            >
+              <RegisterSessionBanner
+                subtitle={
+                  showProgressChrome ? undefined : t("continuingSignup")
+                }
+              />
+            </Box>
+          ) : null}
           {showProgressChrome ? (
             <Box
               mx="auto"
@@ -71,35 +84,9 @@ export default function RegisterLayoutClient({
                 maxWidth: "560px",
               }}
             >
-              <Flex
-                direction={{ initial: "column", sm: "row" }}
-                gap="2"
-                align={{ initial: "stretch", sm: "center" }}
-                justify="between"
-                mb="2"
-              >
-                <Text size="2" color="gray" weight="medium">
-                  {t("stepOf", { current: stepIndex, total: totalSteps })}
-                </Text>
-                {isAuthenticated && (
-                  <Link
-                    size="2"
-                    weight="medium"
-                    href="#"
-                    onClick={async (e) => {
-                      e.preventDefault();
-                      await performClientSignOut({
-                        callbackUrl: loginCallback,
-                        queryClient,
-                      });
-                    }}
-                    style={{ cursor: "pointer" }}
-                    aria-label={t("saveAndContinueLaterAria")}
-                  >
-                    {t("saveAndContinueLater")}
-                  </Link>
-                )}
-              </Flex>
+              <Text size="2" color="gray" weight="medium" mb="2" as="p">
+                {t("stepOf", { current: stepIndex, total: totalSteps })}
+              </Text>
               {state ? (
                 <Progress
                   value={progressPct}

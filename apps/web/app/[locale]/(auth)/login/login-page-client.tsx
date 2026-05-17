@@ -9,17 +9,22 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { signIn, useSession } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { localeFromUseLocale } from "@/lib/i18n/app-locale";
 import type { LoginFormValues } from "@welpco/ui/platform/user-management";
+import { clearSessionForSignIn } from "@/lib/auth/clear-session-for-sign-in";
+import { hasApiSession } from "@/lib/auth/has-api-session";
 import { hasPlatformAccess, postSignupDestination } from "@/lib/auth/platform-access";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 import { useLoginFormLabels } from "@/lib/i18n/use-auth-labels";
+import { LoginAlreadySignedIn } from "./login-already-signed-in";
 
 export default function LoginPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { update: updateSession } = useSession();
+  const queryClient = useQueryClient();
+  const { data: session, status, update: updateSession } = useSession();
   const labels = useLoginFormLabels();
   const uiLocale = useLocale();
   const t = useTranslations("auth.login");
@@ -29,6 +34,8 @@ export default function LoginPageClient() {
   const verifiedEmail = searchParams.get("email");
   const nextRaw = searchParams.get("next");
   const nextPath = useMemo(() => safeNextPath(nextRaw, "/dashboard"), [nextRaw]);
+
+  const alreadySignedIn = hasApiSession(status, session);
 
   useEffect(() => {
     if (searchParams.get("verified") === "true") {
@@ -53,6 +60,8 @@ export default function LoginPageClient() {
       setError(null);
 
       try {
+        await clearSessionForSignIn(queryClient);
+
         const result = await signIn("credentials", {
           email: values.email,
           password: values.password,
@@ -65,29 +74,31 @@ export default function LoginPageClient() {
         }
 
         const { getSession } = await import("next-auth/react");
-        let session = null;
-        const maxAttempts = 3;
-        const delays = [200, 400, 600];
+        let nextSession = null;
+        const maxAttempts = 5;
+        const delays = [150, 300, 500, 700, 900];
 
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
           if (attempt > 0) {
             await new Promise((resolve) => setTimeout(resolve, delays[attempt - 1]));
           }
-          session = await getSession();
-          if (session?.user && session?.accessToken) {
+          nextSession = await getSession();
+          if (nextSession?.user && nextSession?.accessToken) {
             break;
           }
         }
 
-        if (!session?.user || !session?.accessToken) {
-          router.push(withNext("/register", nextRaw));
+        if (!nextSession?.user || !nextSession?.accessToken) {
+          setError(t("errors.sessionNotReady"));
           setLoading(false);
           return;
         }
 
-        const emailVerified = session.user.emailVerified ?? false;
+        const emailVerified = nextSession.user.emailVerified ?? false;
         const signupCompleted =
-          session.user.signupCompleted ?? session.user.onboardingCompleted ?? false;
+          nextSession.user.signupCompleted ??
+          nextSession.user.onboardingCompleted ??
+          false;
         if (values.remember) {
           localStorage.setItem("rememberEmail", values.email);
         } else {
@@ -100,7 +111,7 @@ export default function LoginPageClient() {
               user: {
                 emailVerified,
                 signupCompleted,
-                role: session.user.role,
+                role: nextSession.user.role,
               },
             });
           } catch {
@@ -126,7 +137,7 @@ export default function LoginPageClient() {
         setLoading(false);
       }
     },
-    [router, updateSession, nextPath, nextRaw, t, uiLocale],
+    [router, updateSession, nextPath, nextRaw, t, uiLocale, queryClient],
   );
 
   const handleForgotPassword = useCallback(() => {
@@ -137,30 +148,42 @@ export default function LoginPageClient() {
     router.push(withNext("/register", nextRaw));
   }, [router, nextRaw]);
 
+  if (status === "loading") {
+    return (
+      <AuthBackground>
+        <Flex justify="center" align="center" style={{ minHeight: "40vh" }} />
+      </AuthBackground>
+    );
+  }
+
   return (
     <AuthBackground>
       <Flex direction="column" align="center" gap="4" width="100%">
-        {showVerifiedMessage && (
+        {showVerifiedMessage && !alreadySignedIn ? (
           <Box width="100%" maxWidth="480px">
             <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
               <Callout.Text>{t("verifiedBanner")}</Callout.Text>
             </Callout.Root>
           </Box>
+        ) : null}
+        {alreadySignedIn ? (
+          <LoginAlreadySignedIn nextRaw={nextRaw} />
+        ) : (
+          <LoginForm
+            key={`login-${verifiedEmail ?? ""}-${rememberedEmail ?? ""}`}
+            labels={labels}
+            defaultValues={
+              defaultEmail
+                ? { email: defaultEmail, remember: Boolean(rememberedEmail) }
+                : undefined
+            }
+            loading={loading}
+            error={error || undefined}
+            onSubmit={handleSubmit}
+            onForgotPassword={handleForgotPassword}
+            onSignUp={handleSignUp}
+          />
         )}
-        <LoginForm
-          key={`login-${verifiedEmail ?? ""}-${rememberedEmail ?? ""}`}
-          labels={labels}
-          defaultValues={
-            defaultEmail
-              ? { email: defaultEmail, remember: Boolean(rememberedEmail) }
-              : undefined
-          }
-          loading={loading}
-          error={error || undefined}
-          onSubmit={handleSubmit}
-          onForgotPassword={handleForgotPassword}
-          onSignUp={handleSignUp}
-        />
       </Flex>
     </AuthBackground>
   );
