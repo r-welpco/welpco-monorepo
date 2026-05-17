@@ -5,6 +5,7 @@
   "compilerOptions": {
     "builder": "webpack",
     "deleteOutDir": false,
-    "watchAssets": true
+    "watchAssets": true,
+    "webpackConfigPath": "webpack.config.js"
   }
 }
