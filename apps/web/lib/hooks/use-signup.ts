@@ -187,11 +187,11 @@ export function useCompleteWelperBackgroundCheckStep() {
 const BACKGROUND_CHECK_STATUS_KEY = ["verification", "background-check", "status"] as const;
 
 export function useBackgroundCheckStatus(enabled = true) {
-  const isAuthenticated = useIsAuthenticated();
+  const canCallApi = useHasApiSession();
   return useQuery({
     queryKey: BACKGROUND_CHECK_STATUS_KEY,
     queryFn: getBackgroundCheckStatus,
-    enabled: isAuthenticated && enabled,
+    enabled: canCallApi && enabled,
     staleTime: 10_000,
     retry: 1,
     refetchInterval: (query) => {
@@ -224,11 +224,11 @@ export function useConfirmBackgroundCheckReturn() {
 const STRIPE_CONNECT_STATUS_KEY = ["payment", "connect", "status"] as const;
 
 export function useStripeConnectStatus(enabled = true) {
-  const isAuthenticated = useIsAuthenticated();
+  const canCallApi = useHasApiSession();
   return useQuery({
     queryKey: STRIPE_CONNECT_STATUS_KEY,
     queryFn: getStripeConnectStatus,
-    enabled: isAuthenticated && enabled,
+    enabled: canCallApi && enabled,
     staleTime: 10_000,
   });
 }

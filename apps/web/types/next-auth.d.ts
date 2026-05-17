@@ -9,6 +9,9 @@ declare module "next-auth" {
     user: {
       id: string;
       role: string;
+      email?: string | null;
+      name?: string | null;
+      image?: string | null;
       accountType?: string;
       status?: string;
       emailVerified?: boolean;
@@ -21,7 +24,10 @@ declare module "next-auth" {
       signupCompleted?: boolean;
       /** False after signup finish while launch access is gated. */
       platformAccessEnabled?: boolean;
-    } & Omit<DefaultSession["user"], "emailVerified">;
+    } & Omit<
+      DefaultSession["user"],
+      "emailVerified" | "email" | "name" | "image"
+    >;
   }
 
   interface User extends Omit<DefaultUser, "emailVerified"> {
