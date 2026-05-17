@@ -26,6 +26,9 @@ export const CERTN_API_BASE_URL_SANDBOX = 'https://demo-api.certn.co';
 /** Demo dashboard — create account, API keys, webhooks (employer admin, not welper screening). */
 export const CERTN_DEMO_SIGNUP_URL = 'https://demo-app.certn.co/welcome/signUp';
 
+/** Certn requires IDV or enhanced IDV whenever `request_criminal_record_check` is true. */
+export type CertnIdentityCheckMode = 'identity' | 'enhanced';
+
 /** Employer admin login — must never be shown as the welper "Open Certn verification" link. */
 const EMPLOYER_DASHBOARD_URL_PATTERNS = [
   /\/login\/?(\?.*)?$/i,
@@ -39,7 +42,7 @@ export function isEmployerDashboardUrl(url: string): boolean {
     const isEmployerHost =
       host === 'demo-app.certn.co' ||
       host === 'app.certn.co' ||
-      host.endsWith('.certn.co') && host.includes('app');
+      (host.endsWith('.certn.co') && host.includes('app'));
     if (!isEmployerHost) return false;
     return EMPLOYER_DASHBOARD_URL_PATTERNS.some((p) => p.test(url));
   } catch {
@@ -54,6 +57,14 @@ export function sanitizeCertnApplicantUrl(url: string | null | undefined): strin
   return isEmployerDashboardUrl(trimmed) ? null : trimmed;
 }
 
+export function resolveCertnIdentityCheckMode(
+  raw: string | undefined,
+): CertnIdentityCheckMode {
+  const normalized = raw?.trim().toLowerCase();
+  if (normalized === 'enhanced') return 'enhanced';
+  return 'identity';
+}
+
 /**
  * Certn HR invite API. When `CERTN_API_KEY` is unset, returns a deterministic
  * stub so local signup can be exercised without Certn credentials.
@@ -65,27 +76,36 @@ export class CertnApiClient {
   constructor(private readonly config: ConfigService) {}
 
   /**
-   * Identity verification is a separate Certn plan feature. Production "Team Welpco"
-   * may only have CRC — set CERTN_REQUEST_IDENTITY_VERIFICATION=false to invite with
-   * criminal record check only (or contact support@certn.co to enable IDV).
+   * Canadian CRC requires identity or enhanced identity verification on the invite.
+   * `identity` → request_identity_verification (default)
+   * `enhanced` → request_enhanced_identity_verification (if standard IDV is not on your plan)
    */
-  shouldRequestIdentityVerification(): boolean {
-    const raw = this.config.get<string>('CERTN_REQUEST_IDENTITY_VERIFICATION');
-    if (raw === 'false' || raw === '0') return false;
-    if (raw === 'true' || raw === '1') return true;
-    return true;
+  resolveIdentityCheckMode(): CertnIdentityCheckMode {
+    return resolveCertnIdentityCheckMode(
+      this.config.get<string>('CERTN_IDENTITY_CHECK_MODE'),
+    );
   }
 
-  /** Sandbox in development unless `CERTN_API_BASE_URL` is set explicitly. */
+  /**
+   * Production (Vercel): always `https://api.certn.co` — use production API keys from app.certn.co.
+   * Local dev: defaults to `https://demo-api.certn.co` unless CERTN_API_BASE_URL is set.
+   */
   resolveApiBaseUrl(): string {
-    const configured = this.config.get<string>('CERTN_API_BASE_URL')?.trim();
-    if (configured) {
-      return configured.replace(/\/$/, '');
-    }
     const nodeEnv = this.config.get<string>('NODE_ENV') ?? 'development';
-    return nodeEnv === 'production'
-      ? CERTN_API_BASE_URL_PRODUCTION
-      : CERTN_API_BASE_URL_SANDBOX;
+    const configured = this.config.get<string>('CERTN_API_BASE_URL')?.trim();
+    const baseUrl = configured
+      ? configured.replace(/\/$/, '')
+      : nodeEnv === 'production'
+        ? CERTN_API_BASE_URL_PRODUCTION
+        : CERTN_API_BASE_URL_SANDBOX;
+
+    if (nodeEnv === 'production' && baseUrl.includes('demo-api.certn.co')) {
+      throw new Error(
+        'Production must use https://api.certn.co (live Certn). Remove CERTN_API_BASE_URL or set CERTN_API_BASE_URL=https://api.certn.co — demo-api is for local dev only.',
+      );
+    }
+
+    return baseUrl;
   }
 
   async createInvite(payload: CertnInvitePayload): Promise<CertnInviteResult> {
@@ -98,11 +118,13 @@ export class CertnApiClient {
       );
     }
 
+    const identityMode = this.resolveIdentityCheckMode();
+
     // Invite endpoint emails the applicant a screening link (see Certn HR API docs).
     const inviteUrl = `${baseUrl}/hr/v1/applications/invite/`;
-    this.logger.log(`Certn invite → ${inviteUrl}`);
-
-    const requestIdentityVerification = this.shouldRequestIdentityVerification();
+    this.logger.log(
+      `Certn invite → ${inviteUrl} (CRC + ${identityMode === 'enhanced' ? 'enhanced identity' : 'identity'} verification)`,
+    );
 
     const body: Record<string, unknown> = {
       email: payload.email,
@@ -114,12 +136,10 @@ export class CertnApiClient {
       },
     };
 
-    if (requestIdentityVerification) {
-      body.request_identity_verification = true;
+    if (identityMode === 'enhanced') {
+      body.request_enhanced_identity_verification = true;
     } else {
-      this.logger.log(
-        'Certn invite: request_criminal_record_check only (CERTN_REQUEST_IDENTITY_VERIFICATION=false)',
-      );
+      body.request_identity_verification = true;
     }
 
     const res = await fetchJson(inviteUrl, {
