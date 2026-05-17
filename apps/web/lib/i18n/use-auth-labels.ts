@@ -186,6 +186,7 @@ export function useWelperServiceAreaStepLabels(): WelperServiceAreaStepLabels {
     selector: {
       centerAddress: t("selector.centerAddress"),
       serviceRadius: t("selector.serviceRadius"),
+      radiusPlaceholder: t("selector.radiusPlaceholder"),
       radiusHint: area.selector.radiusHint,
     },
     address: {
@@ -233,6 +234,7 @@ export function useWelperOfferingStepLabels(maxServices: number): WelperOffering
       rateRequired: t("validation.rateRequired"),
       rateMin: t("validation.rateMin"),
       descriptionRequired: t("validation.descriptionRequired"),
+      descriptionMin: offering.validation.descriptionMin,
     },
   };
 }

@@ -249,6 +249,7 @@ export const DEFAULT_WELPER_BIO_LABELS: WelperBioStepLabels = {
 const DEFAULT_WELPER_SERVICE_AREA_SELECTOR: ServiceAreaSelectorLabels = {
   centerAddress: "Center address",
   serviceRadius: "Service radius (km)",
+  radiusPlaceholder: "25",
   radiusHint:
     "Services will be available within {km} km of the center address.",
 };
@@ -317,6 +318,7 @@ export interface WelperOfferingStepLabels extends SignupCommonLabels {
     rateRequired: string;
     rateMin: string;
     descriptionRequired: string;
+    descriptionMin: string;
   };
 }
 
@@ -348,6 +350,7 @@ export const DEFAULT_WELPER_OFFERING_LABELS: WelperOfferingStepLabels = {
     rateRequired: "Set an hourly rate",
     rateMin: "Rate must be at least $1",
     descriptionRequired: "Add a short description",
+    descriptionMin: "Description must be at least {min} characters",
   },
 };
 

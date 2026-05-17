@@ -456,7 +456,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
                   zipPostalCode: addr?.zipPostalCode,
                   country: addr?.country,
                 },
-                radiusKm: values.serviceArea.radiusKm ?? 25,
+                radiusKm: values.serviceArea.radiusKm!,
               },
             });
             advanceTo(next.nextStep);

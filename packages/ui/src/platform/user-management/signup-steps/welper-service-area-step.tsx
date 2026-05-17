@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Box } from "@welpco/ui/box";
 import { Button } from "@welpco/ui/button";
 import { Callout } from "@welpco/ui/callout";
@@ -12,7 +12,6 @@ import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
   ServiceAreaSelector,
   resolveServiceAreaRadiusKm,
-  SERVICE_AREA_RADIUS_KM_DEFAULT,
   SERVICE_AREA_RADIUS_KM_MAX,
   SERVICE_AREA_RADIUS_KM_MIN,
   type ServiceArea,
@@ -78,11 +77,16 @@ function validateServiceArea(
   const city = area.centerAddress?.city?.trim() ?? "";
   const province = area.centerAddress?.stateProvince?.trim() ?? "";
   const zip = area.centerAddress?.zipPostalCode?.trim() ?? "";
-  const km = resolveServiceAreaRadiusKm(area);
+  const km = area.radiusKm;
   if (!city) return v.cityRequired;
   if (province.length < 2) return v.provinceRequired;
   if (!zip) return v.postalRequired;
-  if (km < SERVICE_AREA_RADIUS_KM_MIN || km > SERVICE_AREA_RADIUS_KM_MAX) {
+  if (
+    typeof km !== "number" ||
+    !Number.isFinite(km) ||
+    km < SERVICE_AREA_RADIUS_KM_MIN ||
+    km > SERVICE_AREA_RADIUS_KM_MAX
+  ) {
     return v.radiusRange;
   }
   return null;
@@ -102,8 +106,9 @@ export function WelperServiceAreaStep({
     | Record<string, unknown>
     | undefined;
 
-  const [serviceArea, setServiceArea] = useState<ServiceArea>(() => {
-    return (
+  const initialServiceAreaRef = useRef<ServiceArea | null>(null);
+  if (initialServiceAreaRef.current === null) {
+    initialServiceAreaRef.current =
       filledToDefaultArea(filled) ?? {
         type: "radius",
         centerAddress: {
@@ -113,10 +118,12 @@ export function WelperServiceAreaStep({
           zipPostalCode: "",
           country: "CA",
         },
-        radiusKm: SERVICE_AREA_RADIUS_KM_DEFAULT,
-      }
-    );
-  });
+      };
+  }
+
+  const [serviceArea, setServiceArea] = useState<ServiceArea>(
+    () => initialServiceAreaRef.current!,
+  );
   const [submitted, setSubmitted] = useState(false);
 
   const validationError = useMemo(
@@ -164,7 +171,7 @@ export function WelperServiceAreaStep({
             noCard
             showSaveButton={false}
             showCenterAddressLabel={false}
-            defaultArea={serviceArea}
+            defaultArea={initialServiceAreaRef.current}
             loading={loading}
             selectorLabels={labels.selector}
             addressLabels={labels.address}

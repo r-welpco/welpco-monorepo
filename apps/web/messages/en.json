@@ -955,6 +955,7 @@
           "selector": {
             "centerAddress": "Center address",
             "serviceRadius": "Service radius (km)",
+            "radiusPlaceholder": "25",
             "radiusHint": "Services will be available within {km} km of the center address."
           },
           "address": {
@@ -990,7 +991,8 @@
             "titleRequired": "Give this service a title",
             "rateRequired": "Set an hourly rate",
             "rateMin": "Rate must be at least $1",
-            "descriptionRequired": "Add a short description"
+            "descriptionRequired": "Add a short description",
+            "descriptionMin": "Description must be at least {min} characters"
           }
         },
         "welperAvailability": {

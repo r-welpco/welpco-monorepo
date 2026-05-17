@@ -49,7 +49,14 @@ function createOfferingDraftSchema(labels: WelperOfferingStepLabels) {
     hourlyRate: z
       .number({ invalid_type_error: labels.validation.rateRequired })
       .min(1, labels.validation.rateMin),
-    description: z.string().trim().min(1, labels.validation.descriptionRequired),
+    description: z
+      .string()
+      .trim()
+      .min(1, labels.validation.descriptionRequired)
+      .min(
+        MIN_DESCRIPTION_CHARS,
+        formatLabel(labels.validation.descriptionMin, { min: MIN_DESCRIPTION_CHARS }),
+      ),
   });
 }
 
@@ -80,6 +87,7 @@ export interface WelperOfferingStepProps {
 }
 
 const MAX_SERVICES = 3;
+const MIN_DESCRIPTION_CHARS = 20;
 
 function emptyDraft(): OfferingDraftFormValues {
   return {

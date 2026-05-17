@@ -46,12 +46,12 @@ export class WelperOfferingItemDto {
   hourlyRate!: number;
 
   @ApiProperty({
-    description: 'Offering description (80–1000 characters).',
-    minLength: 80,
+    description: 'Offering description (20–1000 characters).',
+    minLength: 20,
     maxLength: 1000,
   })
   @IsString()
-  @MinLength(80, { message: 'description must be at least 80 characters' })
+  @MinLength(20, { message: 'description must be at least 20 characters' })
   @MaxLength(1000, { message: 'description must be at most 1000 characters' })
   description!: string;
 }

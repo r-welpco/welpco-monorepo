@@ -16,9 +16,9 @@ import {
   type AddressValues,
 } from "./address-input";
 import {
+  radiusInputFromServiceArea,
   resolveServiceAreaRadiusKm,
-  SERVICE_AREA_RADIUS_KM_MAX,
-  SERVICE_AREA_RADIUS_KM_MIN,
+  SERVICE_AREA_RADIUS_KM_DEFAULT,
 } from "./service-area-utils";
 import { useState, useEffect } from "react";
 
@@ -34,12 +34,14 @@ export interface ServiceArea {
 export interface ServiceAreaSelectorLabels {
   centerAddress: string;
   serviceRadius: string;
+  radiusPlaceholder: string;
   radiusHint: string;
 }
 
 const DEFAULT_SELECTOR_LABELS: ServiceAreaSelectorLabels = {
   centerAddress: "Center address",
   serviceRadius: "Service radius (km)",
+  radiusPlaceholder: "25",
   radiusHint:
     "Services will be available within {km} km of the center address.",
 };
@@ -94,28 +96,26 @@ export function ServiceAreaSelector({
       country: "",
     }
   );
-  const [radiusKm, setRadiusKm] = useState<number>(
-    resolveServiceAreaRadiusKm(defaultArea),
+  const [radiusInput, setRadiusInput] = useState(() =>
+    radiusInputFromServiceArea(defaultArea),
   );
   const [useDefault, setUseDefault] = useState(allowOverride && !defaultArea);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Reset state when defaultArea changes (e.g. after async profile fetch)
   useEffect(() => {
-    if (defaultArea) {
-      setCenterAddress(
-        defaultArea.centerAddress || {
-          streetAddress: "",
-          city: "",
-          stateProvince: "",
-          zipPostalCode: "",
-          country: "",
-        }
-      );
-      setRadiusKm(resolveServiceAreaRadiusKm(defaultArea));
-      setIsDirty(false);
-    }
-  }, [defaultArea]);
+    if (!showSaveButton || !defaultArea) return;
+    setCenterAddress(
+      defaultArea.centerAddress || {
+        streetAddress: "",
+        city: "",
+        stateProvince: "",
+        zipPostalCode: "",
+        country: "",
+      },
+    );
+    setRadiusInput(radiusInputFromServiceArea(defaultArea));
+    setIsDirty(false);
+  }, [defaultArea, showSaveButton]);
 
   /** Fire onSave immediately (used when showSaveButton is false, e.g. inside a form) */
   const fireImmediate = (area: ServiceArea) => {
@@ -126,15 +126,28 @@ export function ServiceAreaSelector({
     }
   };
 
+  const parseRadiusKm = (value: string): number | undefined => {
+    const digits = value.replace(/\D/g, "");
+    if (!digits) return undefined;
+    const n = parseInt(digits, 10);
+    return Number.isNaN(n) ? undefined : n;
+  };
+
   const handleAddressChange = (address: AddressValues) => {
     setCenterAddress(address);
-    fireImmediate({ type: "radius", centerAddress: address, radiusKm });
+    const radiusKm = parseRadiusKm(radiusInput);
+    if (radiusKm !== undefined) {
+      fireImmediate({ type: "radius", centerAddress: address, radiusKm });
+    }
   };
 
   const handleRadiusChange = (value: string) => {
-    const radius = parseInt(value, 10) || 0;
-    setRadiusKm(radius);
-    fireImmediate({ type: "radius", centerAddress, radiusKm: radius });
+    const digits = value.replace(/\D/g, "");
+    setRadiusInput(digits);
+    const radiusKm = parseRadiusKm(digits);
+    if (radiusKm !== undefined) {
+      fireImmediate({ type: "radius", centerAddress, radiusKm });
+    }
   };
 
   const handleSave = () => {
@@ -144,7 +157,7 @@ export function ServiceAreaSelector({
       onSave?.({
         type: "radius",
         centerAddress,
-        radiusKm,
+        radiusKm: parseRadiusKm(radiusInput) ?? SERVICE_AREA_RADIUS_KM_DEFAULT,
       });
     }
     setIsDirty(false);
@@ -156,7 +169,11 @@ export function ServiceAreaSelector({
       if (checked && defaultServiceArea) {
         onSave?.(defaultServiceArea);
       } else {
-        onSave?.({ type: "radius", centerAddress, radiusKm });
+        onSave?.({
+          type: "radius",
+          centerAddress,
+          radiusKm: parseRadiusKm(radiusInput) ?? SERVICE_AREA_RADIUS_KM_DEFAULT,
+        });
       }
     } else {
       setIsDirty(true);
@@ -237,18 +254,23 @@ export function ServiceAreaSelector({
                 </Text>
                 <TextField.Root
                   id="service-radius"
-                  type="number"
-                  min={SERVICE_AREA_RADIUS_KM_MIN}
-                  max={SERVICE_AREA_RADIUS_KM_MAX}
-                  step={1}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
                   size="2"
                   disabled={loading}
                   aria-required="true"
-                  value={radiusKm.toString()}
+                  placeholder={selectorLabels.radiusPlaceholder}
+                  value={radiusInput}
                   onChange={(e) => handleRadiusChange(e.target.value)}
                 />
                 <Text size="1" color="gray" highContrast mt="2">
-                  {formatLabel(selectorLabels.radiusHint, { km: radiusKm })}
+                  {formatLabel(selectorLabels.radiusHint, {
+                    km:
+                      parseRadiusKm(radiusInput) ??
+                      parseInt(selectorLabels.radiusPlaceholder, 10) ??
+                      SERVICE_AREA_RADIUS_KM_DEFAULT,
+                  })}
                 </Text>
               </Box>
             </>
@@ -282,17 +304,22 @@ export function ServiceAreaSelector({
             </Text>
             <TextField.Root
               id="service-radius"
-              type="number"
-              min={SERVICE_AREA_RADIUS_KM_MIN}
-              max={SERVICE_AREA_RADIUS_KM_MAX}
-              step={1}
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
               size="2"
               disabled={loading}
-              value={radiusKm.toString()}
+              placeholder={selectorLabels.radiusPlaceholder}
+              value={radiusInput}
               onChange={(e) => handleRadiusChange(e.target.value)}
             />
             <Text size="1" color="gray" mt="2">
-              {formatLabel(selectorLabels.radiusHint, { km: radiusKm })}
+              {formatLabel(selectorLabels.radiusHint, {
+                km:
+                  parseRadiusKm(radiusInput) ??
+                  parseInt(selectorLabels.radiusPlaceholder, 10) ??
+                  SERVICE_AREA_RADIUS_KM_DEFAULT,
+              })}
             </Text>
           </Box>
         </>

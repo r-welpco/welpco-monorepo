@@ -954,6 +954,7 @@
           "selector": {
             "centerAddress": "Adresse centrale",
             "serviceRadius": "Rayon de service (km)",
+            "radiusPlaceholder": "25",
             "radiusHint": "Les services seront disponibles dans un rayon de {km} km autour de l'adresse centrale."
           },
           "address": {
@@ -989,7 +990,8 @@
             "titleRequired": "Donnez un titre à ce service",
             "rateRequired": "Indiquez un tarif horaire",
             "rateMin": "Le tarif doit être d'au moins 1 $",
-            "descriptionRequired": "Ajoutez une courte description"
+            "descriptionRequired": "Ajoutez une courte description",
+            "descriptionMin": "La description doit contenir au moins {min} caractères"
           }
         },
         "welperAvailability": {
