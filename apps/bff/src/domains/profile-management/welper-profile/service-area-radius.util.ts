@@ -21,9 +21,10 @@ export interface RadiusServiceAreaPayload {
   radiusMiles?: number;
 }
 
-export function resolveRadiusKmFromPayload(
-  serviceArea: Pick<RadiusServiceAreaPayload, 'radiusKm' | 'radiusMiles'>,
-): number {
+export function resolveRadiusKmFromPayload(serviceArea: {
+  radiusKm?: unknown;
+  radiusMiles?: unknown;
+}): number {
   const km = Number(serviceArea.radiusKm);
   if (Number.isFinite(km) && km > 0) return km;
   const miles = Number(serviceArea.radiusMiles);
@@ -39,7 +40,11 @@ export function isRadiusServiceAreaPayload(
   if (!value || typeof value !== 'object') return false;
   const sa = value as Record<string, unknown>;
   if (sa.type !== 'radius') return false;
-  const hasRadius = resolveRadiusKmFromPayload(sa as RadiusServiceAreaPayload) > 0;
+  const hasRadius =
+    resolveRadiusKmFromPayload({
+      radiusKm: sa.radiusKm,
+      radiusMiles: sa.radiusMiles,
+    }) > 0;
   const addr = sa.centerAddress as Record<string, unknown> | undefined;
   const city = typeof addr?.city === 'string' ? addr.city.trim() : '';
   const province =
