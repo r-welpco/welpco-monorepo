@@ -16,6 +16,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from "@welpco/ui/sel
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm, Controller } from "react-hook-form";
 import { ServiceAreaSelector, type ServiceArea } from "./service-area-selector";
+import { resolveServiceAreaRadiusKm } from "./service-area-utils";
 import { useEffect } from "react";
 import {
   serviceOfferingSchema,
@@ -271,7 +272,7 @@ function ServiceAreaField({
       {!useOverride && (
         <Callout.Root color={SEMANTIC_COLOR.success} variant="soft" mt="2">
           <Callout.Text>
-            Using default service area: {defaultServiceArea.radiusMiles} miles from{" "}
+                Using default service area: {resolveServiceAreaRadiusKm(defaultServiceArea)} km from{" "}
             {defaultServiceArea.centerAddress?.city || "your location"}
           </Callout.Text>
         </Callout.Root>

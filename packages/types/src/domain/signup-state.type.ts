@@ -93,7 +93,7 @@ export interface SignupFilledData {
     province: string;
     country: string;
     postalCodes: string[];
-    radiusMiles?: number;
+    radiusKm?: number;
     serviceArea?: {
       type: "radius";
       centerAddress: {
@@ -103,8 +103,9 @@ export interface SignupFilledData {
         zipPostalCode?: string;
         country?: string;
       };
-      radiusMiles: number;
-      radiusKm?: number;
+      radiusKm: number;
+      /** @deprecated Legacy payloads */
+      radiusMiles?: number;
     };
   };
   welperOffering?: {

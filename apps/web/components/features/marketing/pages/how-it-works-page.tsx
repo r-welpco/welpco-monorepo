@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { HowItWorks } from "../sections/how-it-works";
 import { BecomeWelperCTA } from "../sections/become-welper-cta";
-import { MarketingImage } from "../shared/marketing-image";
+import { MarketingImageGallery } from "../shared/marketing-image-gallery";
 
 /**
  * HowItWorksPage — onboarding deep-dive.
@@ -10,6 +10,7 @@ import { MarketingImage } from "../shared/marketing-image";
 
 export async function HowItWorksPage() {
   const t = await getTranslations("marketing.howItWorksPage");
+  const tA11y = await getTranslations("marketing.a11y");
   const steps = t.raw("welper.steps") as [string, string][];
 
   return (
@@ -102,28 +103,28 @@ export async function HowItWorksPage() {
                 {t("welper.cta")} <span aria-hidden="true">→</span>
               </Link>
             </div>
-            <div style={{ display: "grid", gap: 18 }}>
-              <MarketingImage
-                src="/marketing/how-it-works-onboarding.jpg"
-                alt={t("welper.images.onboarding")}
-                ratio="4 / 3"
-                radius="var(--radius-md)"
-              />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
-                <MarketingImage
-                  src="/marketing/how-it-works-profile.jpg"
-                  alt={t("welper.images.profile")}
-                  ratio="1 / 1"
-                  radius="var(--radius-md)"
-                />
-                <MarketingImage
-                  src="/marketing/how-it-works-verification.jpg"
-                  alt={t("welper.images.verification")}
-                  ratio="1 / 1"
-                  radius="var(--radius-md)"
-                />
-              </div>
-            </div>
+            <MarketingImageGallery
+              layout="stacked-feature"
+              ariaLabel={tA11y("howItWorksPhotosGallery")}
+              swipeHint={tA11y("swipeHint")}
+              items={[
+                {
+                  src: "/marketing/how-it-works-onboarding.jpg",
+                  alt: t("welper.images.onboarding"),
+                  ratio: "4 / 3",
+                },
+                {
+                  src: "/marketing/how-it-works-profile.jpg",
+                  alt: t("welper.images.profile"),
+                  ratio: "1 / 1",
+                },
+                {
+                  src: "/marketing/how-it-works-verification.jpg",
+                  alt: t("welper.images.verification"),
+                  ratio: "1 / 1",
+                },
+              ]}
+            />
           </div>
         </div>
       </section>

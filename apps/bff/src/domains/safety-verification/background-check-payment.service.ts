@@ -104,17 +104,18 @@ export class BackgroundCheckPaymentService {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       customer_email: user.email,
+      allow_promotion_codes: true,
+      automatic_tax: { enabled: true },
       line_items: [
         {
           quantity: 1,
           price_data: {
             currency: pricing.currency.toLowerCase(),
             unit_amount: pricing.chargePriceCents,
+            tax_behavior: 'exclusive',
             product_data: {
               name: 'Welpco background check',
-              description: pricing.promoEnabled
-                ? 'Promotional rate — Basic Canadian criminal record check'
-                : 'Basic Canadian criminal record check',
+              description: 'Basic Canadian criminal record check (before tax)',
             },
           },
         },

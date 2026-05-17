@@ -159,7 +159,7 @@ export function mapWelperProfileFromApi(
     displayName,
     bio: r.bio ?? "",
     photoUrl: r.profilePhotoUrl ?? null,
-    serviceArea: r.serviceArea ?? { type: "radius", radiusMiles: 10 },
+    serviceArea: r.serviceArea ?? { type: "radius", radiusKm: 25 },
     profileVisibility: normalizeProfileVisibility(
       typeof r.profileVisibility === "string" ? r.profileVisibility : undefined,
     ),

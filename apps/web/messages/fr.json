@@ -8,7 +8,11 @@
       "openMenu": "Ouvrir le menu",
       "closeMenu": "Fermer le menu",
       "home": "Welpco — accueil",
-      "comingSoon": "Bientôt disponible"
+      "comingSoon": "Bientôt disponible",
+      "swipeHint": "Glissez pour en voir plus",
+      "welperPhotosGallery": "Photos de Welpers",
+      "howItWorksPhotosGallery": "Photos — Comment ça marche",
+      "personasGallery": "Qui peut devenir Welper"
     },
     "languageSwitcher": {
       "en": "EN",
@@ -945,12 +949,12 @@
             "cityRequired": "La ville est requise.",
             "provinceRequired": "La province ou l'État est requis.",
             "postalRequired": "Le code postal est requis pour vous placer sur la carte.",
-            "radiusRange": "Choisissez un rayon entre 1 et 100 milles."
+            "radiusRange": "Choisissez un rayon entre 1 et 100 km."
           },
           "selector": {
             "centerAddress": "Adresse centrale",
-            "serviceRadius": "Rayon de service (milles)",
-            "radiusHint": "Les services seront disponibles dans un rayon de {miles} milles autour de l'adresse centrale."
+            "serviceRadius": "Rayon de service (km)",
+            "radiusHint": "Les services seront disponibles dans un rayon de {km} km autour de l'adresse centrale."
           },
           "address": {
             "streetAddress": "Adresse",
@@ -1017,7 +1021,8 @@
           "under18Description": "Comme vous avez moins de 18 ans, une vérification des antécédents criminels n'est pas requise pour le moment.",
           "description": "Les Welpers adultes doivent compléter une vérification d'antécédents criminels de base au Canada avant d'être actifs. Payez les frais ci-dessous — vous recevrez un courriel pour compléter la vérification.",
           "limitedTimeRate": "Tarif promotionnel",
-          "payAndContinue": "Payer {amount} et continuer",
+          "pricePlusTax": "+ taxes",
+          "payAndContinue": "Payer {amount} + taxes et continuer",
           "startCertnVerification": "Commencer la vérification Certn",
           "openCertnVerification": "Ouvrir la vérification Certn",
           "certnLinkReady": "Complétez votre vérification des antécédents sur Certn à l'aide du bouton ci-dessous. Vous pouvez poursuivre l'inscription pendant le traitement.",

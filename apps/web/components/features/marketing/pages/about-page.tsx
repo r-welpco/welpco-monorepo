@@ -1,9 +1,11 @@
 import { getTranslations } from "next-intl/server";
 import { SectionHeader } from "../sections/section-header";
 import { MarketingImage } from "../shared/marketing-image";
+import { MarketingSwipeRow } from "../shared/marketing-swipe-row";
 
 export async function AboutPage() {
   const t = await getTranslations("marketing.about");
+  const tA11y = await getTranslations("marketing.a11y");
 
   const personas = t.raw("personas.items") as {
     label: string;
@@ -103,8 +105,9 @@ export async function AboutPage() {
               </>
             }
           />
-          <div
-            data-grid="personas-grid"
+          <MarketingSwipeRow
+            ariaLabel={tA11y("personasGallery")}
+            swipeHint={tA11y("swipeHint")}
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(3, 1fr)",
@@ -135,7 +138,7 @@ export async function AboutPage() {
                 <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--fg-muted)" }}>{p.body}</p>
               </div>
             ))}
-          </div>
+          </MarketingSwipeRow>
         </div>
       </section>
 

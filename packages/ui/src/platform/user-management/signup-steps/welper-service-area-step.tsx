@@ -11,6 +11,10 @@ import { Text } from "@welpco/ui/text";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
   ServiceAreaSelector,
+  resolveServiceAreaRadiusKm,
+  SERVICE_AREA_RADIUS_KM_DEFAULT,
+  SERVICE_AREA_RADIUS_KM_MAX,
+  SERVICE_AREA_RADIUS_KM_MIN,
   type ServiceArea,
 } from "@welpco/ui/platform/profile-management";
 import {
@@ -55,8 +59,12 @@ function filledToDefaultArea(
       zipPostalCode: "",
       country,
     },
-    radiusMiles:
-      typeof filled.radiusMiles === "number" ? filled.radiusMiles : 25,
+    radiusKm: resolveServiceAreaRadiusKm({
+      radiusKm:
+        typeof filled.radiusKm === "number" ? filled.radiusKm : undefined,
+      radiusMiles:
+        typeof filled.radiusMiles === "number" ? filled.radiusMiles : undefined,
+    }),
   };
 }
 
@@ -70,11 +78,13 @@ function validateServiceArea(
   const city = area.centerAddress?.city?.trim() ?? "";
   const province = area.centerAddress?.stateProvince?.trim() ?? "";
   const zip = area.centerAddress?.zipPostalCode?.trim() ?? "";
-  const miles = area.radiusMiles ?? 0;
+  const km = resolveServiceAreaRadiusKm(area);
   if (!city) return v.cityRequired;
   if (province.length < 2) return v.provinceRequired;
   if (!zip) return v.postalRequired;
-  if (miles < 1 || miles > 100) return v.radiusRange;
+  if (km < SERVICE_AREA_RADIUS_KM_MIN || km > SERVICE_AREA_RADIUS_KM_MAX) {
+    return v.radiusRange;
+  }
   return null;
 }
 
@@ -103,7 +113,7 @@ export function WelperServiceAreaStep({
           zipPostalCode: "",
           country: "CA",
         },
-        radiusMiles: 25,
+        radiusKm: SERVICE_AREA_RADIUS_KM_DEFAULT,
       }
     );
   });

@@ -12,10 +12,12 @@ import { BackgroundCheckService } from './background-check.service';
 import { CertnApiClient } from './certn-api.client';
 import { VerificationController } from './verification.controller';
 import { CertnWebhookController } from './certn-webhook.controller';
+import { EmailModule } from '../user-management/email/email.module';
 
 @Module({
   imports: [
     ConfigModule,
+    EmailModule,
     TypeOrmModule.forFeature([
       BackgroundCheckOrder,
       ApplicationSetting,

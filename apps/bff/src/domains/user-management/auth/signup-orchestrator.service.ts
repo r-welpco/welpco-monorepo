@@ -103,7 +103,7 @@ interface SignupFilledData {
     province: string;
     country: string;
     postalCodes: string[];
-    radiusMiles?: number;
+    radiusKm?: number;
     serviceArea?: RadiusServiceAreaPayload;
   };
   welperOffering?: {
@@ -517,9 +517,9 @@ export class SignupOrchestratorService {
         filledData.welperBackgroundCheck = {
           paid: false,
           certnStatus: 'not_started',
-          listPriceCents: 2599,
-          promoPriceCents: 1599,
-          promoEnabled: true,
+          listPriceCents: 1999,
+          promoPriceCents: 1999,
+          promoEnabled: false,
         };
       }
       if (

@@ -1,6 +1,11 @@
 import type { WelperProfile } from '../entities/welper-profile.entity';
 import type { IGeocodeService } from '../../geocode/geocode.interface';
 
+const MILES_TO_KM = 1.60934;
+export const SERVICE_AREA_RADIUS_KM_MIN = 1;
+export const SERVICE_AREA_RADIUS_KM_MAX = 100;
+export const SERVICE_AREA_RADIUS_KM_DEFAULT = 25;
+
 /** Dashboard / signup JSON stored on `welper_profiles.service_area`. */
 export interface RadiusServiceAreaPayload {
   type: 'radius';
@@ -11,8 +16,21 @@ export interface RadiusServiceAreaPayload {
     zipPostalCode?: string;
     country?: string;
   };
-  radiusMiles: number;
-  radiusKm?: number;
+  radiusKm: number;
+  /** @deprecated Legacy payloads; converted on read */
+  radiusMiles?: number;
+}
+
+export function resolveRadiusKmFromPayload(
+  serviceArea: Pick<RadiusServiceAreaPayload, 'radiusKm' | 'radiusMiles'>,
+): number {
+  const km = Number(serviceArea.radiusKm);
+  if (Number.isFinite(km) && km > 0) return km;
+  const miles = Number(serviceArea.radiusMiles);
+  if (Number.isFinite(miles) && miles > 0) {
+    return Math.round(miles * MILES_TO_KM * 10) / 10;
+  }
+  return SERVICE_AREA_RADIUS_KM_DEFAULT;
 }
 
 export function isRadiusServiceAreaPayload(
@@ -21,10 +39,7 @@ export function isRadiusServiceAreaPayload(
   if (!value || typeof value !== 'object') return false;
   const sa = value as Record<string, unknown>;
   if (sa.type !== 'radius') return false;
-  const miles = Number(sa.radiusMiles);
-  const km = Number(sa.radiusKm);
-  const hasRadius =
-    (Number.isFinite(miles) && miles > 0) || (Number.isFinite(km) && km > 0);
+  const hasRadius = resolveRadiusKmFromPayload(sa as RadiusServiceAreaPayload) > 0;
   const addr = sa.centerAddress as Record<string, unknown> | undefined;
   const city = typeof addr?.city === 'string' ? addr.city.trim() : '';
   const province =
@@ -50,7 +65,7 @@ export function buildWelperServiceAreaFilledData(welper: WelperProfile) {
     country: welper.countryCode ?? sa?.centerAddress.country ?? '',
     postalCodes: welper.serviceAreaPostalCodes ?? [],
     serviceArea: sa,
-    radiusMiles: sa?.radiusMiles,
+    radiusKm: sa ? resolveRadiusKmFromPayload(sa) : undefined,
   };
 }
 
@@ -81,7 +96,10 @@ export async function applyRadiusServiceAreaToWelperProfile(
   geocodeService: IGeocodeService,
   log?: { warn: (msg: string) => void },
 ): Promise<void> {
-  const miles = Math.min(100, Math.max(1, Math.round(serviceArea.radiusMiles)));
+  const km = Math.min(
+    SERVICE_AREA_RADIUS_KM_MAX,
+    Math.max(SERVICE_AREA_RADIUS_KM_MIN, Math.round(resolveRadiusKmFromPayload(serviceArea))),
+  );
   const payload: RadiusServiceAreaPayload = {
     type: 'radius',
     centerAddress: {
@@ -91,8 +109,7 @@ export async function applyRadiusServiceAreaToWelperProfile(
       zipPostalCode: serviceArea.centerAddress.zipPostalCode?.trim() || undefined,
       country: serviceArea.centerAddress.country?.trim() || undefined,
     },
-    radiusMiles: miles,
-    radiusKm: Math.round(miles * 1.60934 * 10) / 10,
+    radiusKm: km,
   };
 
   profile.serviceArea = payload as unknown as WelperProfile['serviceArea'];

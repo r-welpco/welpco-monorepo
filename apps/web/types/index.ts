@@ -148,6 +148,8 @@ export interface CustomerProfile {
 export interface ServiceArea {
   type: "radius" | "address";
   centerAddress?: Address;
+  radiusKm?: number;
+  /** @deprecated Legacy payloads; converted on read */
   radiusMiles?: number;
   description?: string;
 }

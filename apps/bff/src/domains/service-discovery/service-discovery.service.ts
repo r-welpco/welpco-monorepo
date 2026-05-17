@@ -221,10 +221,10 @@ export class ServiceDiscoveryService {
       qb.andWhere(
         `p.latitude IS NOT NULL AND p.longitude IS NOT NULL AND earth_distance(ll_to_earth(p.latitude::float8, p.longitude::float8), ll_to_earth(:searchLat::float8, :searchLng::float8)) <= (
           CASE
-            WHEN (p.service_area->>'radiusMiles') ~ '^[0-9]+\.?[0-9]*$' AND (p.service_area->>'radiusMiles')::float > 0
-              THEN (p.service_area->>'radiusMiles')::float * 1.60934 * 1000
             WHEN (p.service_area->>'radiusKm') ~ '^[0-9]+\.?[0-9]*$' AND (p.service_area->>'radiusKm')::float > 0
               THEN (p.service_area->>'radiusKm')::float * 1000
+            WHEN (p.service_area->>'radiusMiles') ~ '^[0-9]+\.?[0-9]*$' AND (p.service_area->>'radiusMiles')::float > 0
+              THEN (p.service_area->>'radiusMiles')::float * 1.60934 * 1000
             ELSE 25000
           END
         )`,

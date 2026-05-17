@@ -9,6 +9,7 @@ export * from "./favorite-welper-card";
 export * from "./profile-completion-status";
 export * from "./profile-photo-upload";
 export * from "./service-area-selector";
+export * from "./service-area-utils";
 export * from "./service-area-card";
 export * from "./time-slot-availability";
 export * from "./availability-schedule-stats";

@@ -1,0 +1,107 @@
+/* Three-up marketing photos — separate desktop grid vs mobile swipe track. */
+
+.root {
+  width: 100%;
+}
+
+.slide {
+  min-width: 0;
+}
+
+/* Hidden by default; desktop layouts only ≥768px */
+.desktop {
+  display: none;
+}
+
+.mobile {
+  display: block;
+}
+
+.mobileTrack {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+  margin-left: calc(-1 * var(--container-pad, 18px));
+  margin-right: calc(-1 * var(--container-pad, 18px));
+  padding-left: var(--container-pad, 18px);
+  padding-right: var(--container-pad, 18px);
+}
+
+.mobileTrack::-webkit-scrollbar {
+  display: none;
+}
+
+.mobileTrack .slide {
+  flex: 0 0 min(82vw, 300px);
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Same aspect ratio for every swipe frame (overrides per-item desktop ratios). */
+.mobileSlide > * {
+  width: 100%;
+  aspect-ratio: 4 / 3 !important;
+  flex: 1 1 auto;
+}
+
+.hint {
+  display: block;
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .desktop[data-layout="welper-collage"] {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .desktop[data-layout="welper-collage"] .slide:first-child {
+    grid-row: 1 / span 2;
+  }
+
+  .desktop[data-layout="welper-collage"] .slide:nth-child(2) {
+    margin-top: 32px;
+  }
+
+  .desktop[data-layout="stacked-feature"] {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  .desktop[data-layout="stacked-feature"] .slide:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .mobile {
+    display: none;
+  }
+
+  .hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobileTrack {
+    scroll-behavior: auto;
+  }
+}

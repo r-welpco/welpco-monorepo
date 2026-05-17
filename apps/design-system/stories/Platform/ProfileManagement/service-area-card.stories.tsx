@@ -37,7 +37,7 @@ export const WithRadiusArea: Story = {
         zipPostalCode: '94102',
         country: 'United States',
       },
-      radiusMiles: 15,
+      radiusKm: 40,
     });
     return (
       <div style={{ width: '700px' }}>

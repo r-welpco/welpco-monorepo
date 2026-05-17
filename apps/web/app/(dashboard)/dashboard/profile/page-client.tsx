@@ -51,7 +51,10 @@ import {
 import { Dialog, DialogContent } from "@welpco/ui/dialog";
 import { Card } from "@welpco/ui/card";
 import { Callout } from "@welpco/ui/callout";
-import type { ServiceArea } from "@welpco/ui/platform/profile-management";
+import {
+  resolveServiceAreaRadiusKm,
+  type ServiceArea,
+} from "@welpco/ui/platform/profile-management";
 import type {
   CustomerProfileValues,
   WelperProfileValues,
@@ -66,7 +69,7 @@ function radiusServiceAreaForForm(area: AppServiceArea | undefined | null): Serv
   return {
     type: "radius",
     centerAddress: area.centerAddress,
-    radiusMiles: area.radiusMiles,
+    radiusKm: resolveServiceAreaRadiusKm(area),
     description: area.description,
   };
 }

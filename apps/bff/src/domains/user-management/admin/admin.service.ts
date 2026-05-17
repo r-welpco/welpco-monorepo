@@ -19,6 +19,22 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { EventPublisherService } from '../events/event-publisher.service';
 import { UpdateUserAccountStatusDto } from './dto/update-user-account-status.dto';
+import { BackgroundCheckService } from '../../safety-verification/background-check.service';
+import {
+  BackgroundCheckOrder,
+  BackgroundCheckPaymentStatus,
+} from '../../safety-verification/entities/background-check-order.entity';
+
+export type AdminUserListRow = UserAccount & {
+  backgroundCheckPaid: boolean | null;
+  backgroundCheckStatus: string | null;
+};
+
+export type AdminUserDetailExtras = {
+  backgroundCheckPaid: boolean | null;
+  backgroundCheckPaidAt: string | null;
+  backgroundCheckCertnStatus: string | null;
+};
 
 @Injectable()
 export class AdminService {
@@ -43,6 +59,9 @@ export class AdminService {
     private referralRepository: Repository<Referral>,
     private usersService: UsersService,
     private eventPublisher: EventPublisherService,
+    @InjectRepository(BackgroundCheckOrder)
+    private backgroundCheckOrderRepo: Repository<BackgroundCheckOrder>,
+    private backgroundCheckService: BackgroundCheckService,
   ) {}
 
   async findAll(filters?: {
@@ -52,8 +71,10 @@ export class AdminService {
     search?: string;
     limit?: number;
     offset?: number;
-  }): Promise<{ users: UserAccount[]; total: number }> {
-    const queryBuilder = this.userRepository.createQueryBuilder('user');
+  }): Promise<{ users: AdminUserListRow[]; total: number }> {
+    const queryBuilder = this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.verificationStatus', 'verificationStatus');
 
     const rawSearch = filters?.search?.trim();
     if (rawSearch) {
@@ -101,8 +122,22 @@ export class AdminService {
     queryBuilder.orderBy('user.createdAt', 'DESC');
 
     const users = await queryBuilder.getMany();
+    const paymentMap = await this.backgroundCheckService.getPaymentSummaryByUserIds(
+      users.map((u) => u.id),
+    );
 
-    return { users, total };
+    const enriched: AdminUserListRow[] = users.map((user) => {
+      const payment = paymentMap.get(user.id);
+      const isWelper = user.accountType === AccountType.WELPER;
+      return {
+        ...user,
+        backgroundCheckPaid: isWelper ? (payment?.paid ?? false) : null,
+        backgroundCheckStatus:
+          user.verificationStatus?.backgroundCheckStatus ?? null,
+      };
+    });
+
+    return { users: enriched, total };
   }
 
   async findOne(userId: string): Promise<UserAccount> {
@@ -114,6 +149,23 @@ export class AdminService {
       throw new NotFoundException('User not found');
     }
     return user;
+  }
+
+  async getBackgroundCheckExtras(userId: string): Promise<AdminUserDetailExtras> {
+    const user = await this.usersService.findById(userId);
+    if (user.accountType !== AccountType.WELPER) {
+      return {
+        backgroundCheckPaid: null,
+        backgroundCheckPaidAt: null,
+        backgroundCheckCertnStatus: null,
+      };
+    }
+    const order = await this.backgroundCheckOrderRepo.findOne({ where: { userId } });
+    return {
+      backgroundCheckPaid: order?.paymentStatus === BackgroundCheckPaymentStatus.PAID,
+      backgroundCheckPaidAt: order?.paidAt?.toISOString() ?? null,
+      backgroundCheckCertnStatus: order?.certnStatus ?? null,
+    };
   }
 
   /**

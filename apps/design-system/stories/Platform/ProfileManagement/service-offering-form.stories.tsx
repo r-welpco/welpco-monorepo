@@ -41,7 +41,7 @@ export const WithDefaultServiceArea: Story = {
           zipPostalCode: '94102',
           country: 'United States',
         },
-        radiusMiles: 10,
+        radiusKm: 25,
       }}
       serviceCategories={[
         { id: 'home-cleaning', name: 'Home Cleaning' },
@@ -72,7 +72,7 @@ export const WithServiceAreaOverride: Story = {
             zipPostalCode: '94601',
             country: 'United States',
           },
-          radiusMiles: 5,
+          radiusKm: 15,
         },
       }}
       defaultServiceArea={{
@@ -84,7 +84,7 @@ export const WithServiceAreaOverride: Story = {
           zipPostalCode: '94102',
           country: 'United States',
         },
-        radiusMiles: 10,
+        radiusKm: 25,
       }}
       serviceCategories={[
         { id: 'home-cleaning', name: 'Home Cleaning' },

@@ -5,9 +5,9 @@ export class SeedBackgroundCheckPricingSettings20260516120002 implements Migrati
     await queryRunner.query(`
       INSERT INTO application_settings (key, value, description)
       VALUES
-        ('background_check_list_price_cents', '2599', 'List price for welper background check (CAD cents)'),
-        ('background_check_promo_price_cents', '1599', 'Promotional price for welper background check (CAD cents)'),
-        ('background_check_promo_enabled', 'true', 'When true, charge promo price at signup')
+        ('background_check_list_price_cents', '1999', 'List price for welper background check (CAD cents, before tax)'),
+        ('background_check_promo_price_cents', '1999', 'Promotional price for welper background check (CAD cents, before tax)'),
+        ('background_check_promo_enabled', 'false', 'When true, charge promo price at signup')
       ON CONFLICT (key) DO NOTHING
     `);
   }

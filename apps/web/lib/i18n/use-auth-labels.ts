@@ -283,6 +283,7 @@ export function useWelperBackgroundCheckStepLabels(): WelperBackgroundCheckStepL
     under18Description: t("under18Description"),
     description: t("description"),
     limitedTimeRate: t("limitedTimeRate"),
+    pricePlusTax: t("pricePlusTax"),
     payAndContinue: bg.payAndContinue,
     startCertnVerification: "",
     openCertnVerification: "",

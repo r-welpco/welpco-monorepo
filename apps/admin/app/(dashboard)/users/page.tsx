@@ -141,6 +141,8 @@ export default async function AdminUsersPage({
               <th>Type</th>
               <th>Status</th>
               <th>Verified</th>
+              <th>BG fee paid</th>
+              <th>BG status</th>
               <th>Created</th>
               <th />
             </tr>
@@ -148,7 +150,7 @@ export default async function AdminUsersPage({
           <tbody>
             {data.users.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ color: "var(--admin-muted)", padding: "1.5rem" }}>
+                <td colSpan={8} style={{ color: "var(--admin-muted)", padding: "1.5rem" }}>
                   No users.
                 </td>
               </tr>
@@ -161,6 +163,18 @@ export default async function AdminUsersPage({
                   </td>
                   <td>{u.status}</td>
                   <td>{u.emailVerified ? "Yes" : "No"}</td>
+                  <td>
+                    {u.backgroundCheckPaid === null
+                      ? "—"
+                      : u.backgroundCheckPaid
+                        ? "Yes"
+                        : "No"}
+                  </td>
+                  <td style={{ fontSize: "0.85rem" }}>
+                    {u.accountType === "Welper"
+                      ? u.backgroundCheckStatus ?? "—"
+                      : "—"}
+                  </td>
                   <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}>
                     {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
                   </td>

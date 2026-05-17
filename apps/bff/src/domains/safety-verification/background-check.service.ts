@@ -5,8 +5,10 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
+import { EmailService } from '../user-management/email/email.service';
 import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
 import { UserAccount, AccountType } from '../user-management/entities/user-account.entity';
 import {
@@ -46,7 +48,43 @@ export class BackgroundCheckService {
     private readonly verificationRepo: Repository<VerificationStatus>,
     private readonly pricingService: BackgroundCheckPricingService,
     private readonly certnClient: CertnApiClient,
+    private readonly emailService: EmailService,
+    private readonly config: ConfigService,
   ) {}
+
+  /** When false (default), applicants receive the manual screening link by email. */
+  isCertnApiEnabled(): boolean {
+    const raw = this.config.get<string>('CERTN_API_ENABLED')?.trim().toLowerCase();
+    return raw === 'true' || raw === '1';
+  }
+
+  resolveManualApplicantUrl(): string | null {
+    const url = this.config.get<string>('BACKGROUND_CHECK_APPLICANT_URL')?.trim();
+    return url && url.startsWith('http') ? url : null;
+  }
+
+  async getPaymentSummaryByUserIds(
+    userIds: string[],
+  ): Promise<Map<string, { paid: boolean; paidAt: string | null; certnStatus: string | null }>> {
+    const map = new Map<
+      string,
+      { paid: boolean; paidAt: string | null; certnStatus: string | null }
+    >();
+    if (userIds.length === 0) return map;
+
+    const orders = await this.orderRepo.find({
+      where: { userId: In(userIds) },
+      select: ['userId', 'paymentStatus', 'paidAt', 'certnStatus'],
+    });
+    for (const order of orders) {
+      map.set(order.userId, {
+        paid: order.paymentStatus === BackgroundCheckPaymentStatus.PAID,
+        paidAt: order.paidAt?.toISOString() ?? null,
+        certnStatus: order.certnStatus,
+      });
+    }
+    return map;
+  }
 
   async getPricing(): Promise<BackgroundCheckPricing> {
     return this.pricingService.getPricing();
@@ -227,9 +265,14 @@ export class BackgroundCheckService {
       where: { welperId: order.userId },
     });
     if (!user || !welper?.firstName || !welper.lastName || !welper.dateOfBirth) {
-      this.logger.error(`Cannot invite Certn — missing welper profile for ${order.userId}`);
+      this.logger.error(`Cannot start background check — missing welper profile for ${order.userId}`);
       order.failureReason = 'missing_profile';
       await this.orderRepo.save(order);
+      return;
+    }
+
+    if (!this.isCertnApiEnabled()) {
+      await this.sendManualBackgroundCheckEmail(order, user, welper.firstName);
       return;
     }
 
@@ -249,6 +292,7 @@ export class BackgroundCheckService {
       order.certnApplicationId = result.applicationId;
       order.certnApplicantUrl = sanitizeCertnApplicantUrl(result.applicantUrl);
       order.certnStatus = BackgroundCheckCertnStatus.INVITED;
+      order.failureReason = null;
       if (result.inviteDeliveredViaEmail && !order.certnApplicantUrl) {
         this.logger.log(
           `Certn invite ${result.applicationId}: screening link emailed to ${user.email}`,
@@ -262,6 +306,43 @@ export class BackgroundCheckService {
       order.failureReason = message.includes('Certn invite failed')
         ? `certn_invite_failed:${message.slice(0, 200)}`
         : 'certn_invite_failed';
+      await this.orderRepo.save(order);
+    }
+  }
+
+  private async sendManualBackgroundCheckEmail(
+    order: BackgroundCheckOrder,
+    user: UserAccount,
+    firstName: string,
+  ): Promise<void> {
+    const applicantUrl = this.resolveManualApplicantUrl();
+    if (!applicantUrl) {
+      this.logger.error(
+        'BACKGROUND_CHECK_APPLICANT_URL is not set — cannot email screening link',
+      );
+      order.failureReason = 'missing_background_check_url';
+      await this.orderRepo.save(order);
+      return;
+    }
+
+    try {
+      await this.emailService.sendBackgroundCheckInviteEmail(user.email, applicantUrl, {
+        locale: user.preferredLocale,
+        firstName,
+      });
+      order.certnApplicationId = order.certnApplicationId ?? `manual-${order.id}`;
+      order.certnApplicantUrl = applicantUrl;
+      order.certnStatus = BackgroundCheckCertnStatus.INVITED;
+      order.failureReason = null;
+      order.submittedAt = new Date();
+      await this.orderRepo.save(order);
+      this.logger.log(
+        `Background check link emailed to ${user.email} (manual Certn flow)`,
+      );
+    } catch (err) {
+      const message = (err as Error).message;
+      this.logger.error(`Background check email failed for order ${order.id}: ${message}`);
+      order.failureReason = 'background_check_email_failed';
       await this.orderRepo.save(order);
     }
   }

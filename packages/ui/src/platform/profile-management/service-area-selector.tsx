@@ -15,11 +15,18 @@ import {
   type AddressInputLabels,
   type AddressValues,
 } from "./address-input";
+import {
+  resolveServiceAreaRadiusKm,
+  SERVICE_AREA_RADIUS_KM_MAX,
+  SERVICE_AREA_RADIUS_KM_MIN,
+} from "./service-area-utils";
 import { useState, useEffect } from "react";
 
 export interface ServiceArea {
   type: "radius";
   centerAddress?: AddressValues;
+  radiusKm?: number;
+  /** @deprecated Legacy payloads; converted on read */
   radiusMiles?: number;
   description?: string;
 }
@@ -32,9 +39,9 @@ export interface ServiceAreaSelectorLabels {
 
 const DEFAULT_SELECTOR_LABELS: ServiceAreaSelectorLabels = {
   centerAddress: "Center address",
-  serviceRadius: "Service radius (miles)",
+  serviceRadius: "Service radius (km)",
   radiusHint:
-    "Services will be available within {miles} miles of the center address.",
+    "Services will be available within {km} km of the center address.",
 };
 
 function formatLabel(
@@ -87,8 +94,8 @@ export function ServiceAreaSelector({
       country: "",
     }
   );
-  const [radiusMiles, setRadiusMiles] = useState<number>(
-    defaultArea?.radiusMiles || 10
+  const [radiusKm, setRadiusKm] = useState<number>(
+    resolveServiceAreaRadiusKm(defaultArea),
   );
   const [useDefault, setUseDefault] = useState(allowOverride && !defaultArea);
   const [isDirty, setIsDirty] = useState(false);
@@ -105,7 +112,7 @@ export function ServiceAreaSelector({
           country: "",
         }
       );
-      setRadiusMiles(defaultArea.radiusMiles || 10);
+      setRadiusKm(resolveServiceAreaRadiusKm(defaultArea));
       setIsDirty(false);
     }
   }, [defaultArea]);
@@ -121,13 +128,13 @@ export function ServiceAreaSelector({
 
   const handleAddressChange = (address: AddressValues) => {
     setCenterAddress(address);
-    fireImmediate({ type: "radius", centerAddress: address, radiusMiles });
+    fireImmediate({ type: "radius", centerAddress: address, radiusKm });
   };
 
   const handleRadiusChange = (value: string) => {
     const radius = parseInt(value, 10) || 0;
-    setRadiusMiles(radius);
-    fireImmediate({ type: "radius", centerAddress, radiusMiles: radius });
+    setRadiusKm(radius);
+    fireImmediate({ type: "radius", centerAddress, radiusKm: radius });
   };
 
   const handleSave = () => {
@@ -137,7 +144,7 @@ export function ServiceAreaSelector({
       onSave?.({
         type: "radius",
         centerAddress,
-        radiusMiles,
+        radiusKm,
       });
     }
     setIsDirty(false);
@@ -149,7 +156,7 @@ export function ServiceAreaSelector({
       if (checked && defaultServiceArea) {
         onSave?.(defaultServiceArea);
       } else {
-        onSave?.({ type: "radius", centerAddress, radiusMiles });
+        onSave?.({ type: "radius", centerAddress, radiusKm });
       }
     } else {
       setIsDirty(true);
@@ -196,7 +203,7 @@ export function ServiceAreaSelector({
           {useDefault && defaultServiceArea && (
             <Callout.Root color={SEMANTIC_COLOR.success} variant="soft">
               <Callout.Text>
-                Using default service area: {defaultServiceArea.radiusMiles} miles from{" "}
+                Using default service area: {resolveServiceAreaRadiusKm(defaultServiceArea)} km from{" "}
                 {defaultServiceArea.centerAddress?.city || "your location"}
               </Callout.Text>
             </Callout.Root>
@@ -231,17 +238,17 @@ export function ServiceAreaSelector({
                 <TextField.Root
                   id="service-radius"
                   type="number"
-                  min={1}
-                  max={100}
+                  min={SERVICE_AREA_RADIUS_KM_MIN}
+                  max={SERVICE_AREA_RADIUS_KM_MAX}
                   step={1}
                   size="2"
                   disabled={loading}
                   aria-required="true"
-                  value={radiusMiles.toString()}
+                  value={radiusKm.toString()}
                   onChange={(e) => handleRadiusChange(e.target.value)}
                 />
                 <Text size="1" color="gray" highContrast mt="2">
-                  {formatLabel(selectorLabels.radiusHint, { miles: radiusMiles })}
+                  {formatLabel(selectorLabels.radiusHint, { km: radiusKm })}
                 </Text>
               </Box>
             </>
@@ -276,16 +283,16 @@ export function ServiceAreaSelector({
             <TextField.Root
               id="service-radius"
               type="number"
-              min={1}
-              max={100}
+              min={SERVICE_AREA_RADIUS_KM_MIN}
+              max={SERVICE_AREA_RADIUS_KM_MAX}
               step={1}
               size="2"
               disabled={loading}
-              value={radiusMiles.toString()}
+              value={radiusKm.toString()}
               onChange={(e) => handleRadiusChange(e.target.value)}
             />
             <Text size="1" color="gray" mt="2">
-              {formatLabel(selectorLabels.radiusHint, { miles: radiusMiles })}
+              {formatLabel(selectorLabels.radiusHint, { km: radiusKm })}
             </Text>
           </Box>
         </>
@@ -320,4 +327,3 @@ export function ServiceAreaSelector({
     </Card>
   );
 }
-

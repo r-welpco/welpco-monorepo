@@ -27,9 +27,9 @@ export class BackgroundCheckPricingService {
     const rows = await this.settingsRepo.find({ where: keys.map((key) => ({ key })) });
     const byKey = new Map(rows.map((r) => [r.key, r.value]));
 
-    const listPriceCents = this.parseCents(byKey.get(BG_CHECK_LIST_PRICE_KEY), 2599);
-    const promoPriceCents = this.parseCents(byKey.get(BG_CHECK_PROMO_PRICE_KEY), 1599);
-    const promoEnabled = (byKey.get(BG_CHECK_PROMO_ENABLED_KEY) ?? 'true').toLowerCase() === 'true';
+    const listPriceCents = this.parseCents(byKey.get(BG_CHECK_LIST_PRICE_KEY), 1999);
+    const promoPriceCents = this.parseCents(byKey.get(BG_CHECK_PROMO_PRICE_KEY), 1999);
+    const promoEnabled = (byKey.get(BG_CHECK_PROMO_ENABLED_KEY) ?? 'false').toLowerCase() === 'true';
     const chargePriceCents = promoEnabled ? promoPriceCents : listPriceCents;
 
     return {

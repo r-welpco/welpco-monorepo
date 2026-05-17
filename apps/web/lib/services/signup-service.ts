@@ -57,7 +57,7 @@ export interface WelperServiceAreaStepParams {
       zipPostalCode?: string;
       country?: string;
     };
-    radiusMiles: number;
+    radiusKm: number;
   };
 }
 

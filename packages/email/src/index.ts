@@ -7,3 +7,4 @@ export * from "./templates/prelaunch";
 export * from "./templates/auth";
 export * from "./templates/contact";
 export * from "./templates/booking";
+export * from "./templates/background-check";

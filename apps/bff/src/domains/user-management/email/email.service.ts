@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
+  getBackgroundCheckInviteEmailHtml,
+  getBackgroundCheckInviteEmailSubject,
+  getBackgroundCheckInviteEmailText,
   getPasswordResetEmailHtml,
   getPasswordResetEmailSubject,
   getVerificationEmailHtml,
@@ -151,6 +154,27 @@ export class EmailService {
       to: email,
       subject: getPasswordResetEmailSubject(locale),
       html,
+    });
+  }
+
+  async sendBackgroundCheckInviteEmail(
+    email: string,
+    applicantUrl: string,
+    options?: { locale?: UserPreferredLocale; firstName?: string },
+  ): Promise<void> {
+    const locale = resolvePreferredLocale(options?.locale) as EmailLocale;
+    const params = {
+      applicantUrl,
+      locale,
+      publicAppUrl: this.publicAppUrl,
+      firstName: options?.firstName,
+    };
+
+    await this.sendEmail({
+      to: email,
+      subject: getBackgroundCheckInviteEmailSubject(locale),
+      html: getBackgroundCheckInviteEmailHtml(params),
+      text: getBackgroundCheckInviteEmailText(params),
     });
   }
 }

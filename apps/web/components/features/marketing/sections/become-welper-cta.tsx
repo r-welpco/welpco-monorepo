@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { MarketingImage } from "../shared/marketing-image";
+import { MarketingImageGallery } from "../shared/marketing-image-gallery";
 
 /**
  * BecomeWelperCTA — provider-side recruiting block.
@@ -10,6 +10,7 @@ import { MarketingImage } from "../shared/marketing-image";
 
 export function BecomeWelperCTA() {
   const t = useTranslations("marketing.home.becomeWelper");
+  const tA11y = useTranslations("marketing.a11y");
   const points = t.raw("points") as string[];
 
   return (
@@ -26,28 +27,28 @@ export function BecomeWelperCTA() {
           }}
         >
           <div style={{ position: "relative" }}>
-            <div data-grid="becomewelper-images" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-              <MarketingImage
-                src="/marketing/become-welper-lawncare.jpg"
-                alt={t("images.lawn")}
-                ratio="3 / 4"
-                radius="var(--radius-md)"
-              />
-              <div style={{ display: "grid", gap: 16, marginTop: 32 }}>
-                <MarketingImage
-                  src="/marketing/become-welper-baking.jpg"
-                  alt={t("images.baking")}
-                  ratio="1 / 1"
-                  radius="var(--radius-md)"
-                />
-                <MarketingImage
-                  src="/marketing/become-welper-tutoring.jpg"
-                  alt={t("images.tutoring")}
-                  ratio="1 / 1"
-                  radius="var(--radius-md)"
-                />
-              </div>
-            </div>
+            <MarketingImageGallery
+              layout="welper-collage"
+              ariaLabel={tA11y("welperPhotosGallery")}
+              swipeHint={tA11y("swipeHint")}
+              items={[
+                {
+                  src: "/marketing/become-welper-lawncare.jpg",
+                  alt: t("images.lawn"),
+                  ratio: "3 / 4",
+                },
+                {
+                  src: "/marketing/become-welper-baking.jpg",
+                  alt: t("images.baking"),
+                  ratio: "1 / 1",
+                },
+                {
+                  src: "/marketing/become-welper-tutoring.jpg",
+                  alt: t("images.tutoring"),
+                  ratio: "1 / 1",
+                },
+              ]}
+            />
           </div>
           <div>
             <div className="eyebrow" style={{ marginBottom: 18 }}>

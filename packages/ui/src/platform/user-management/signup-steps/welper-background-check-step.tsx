@@ -54,9 +54,9 @@ export function WelperBackgroundCheckStep({
   error,
   labels: labelsProp,
   pricingLoading,
-  listPriceCents = 2599,
-  promoPriceCents = 1599,
-  promoEnabled = true,
+  listPriceCents = 1999,
+  promoPriceCents = 1999,
+  promoEnabled = false,
   paymentStatus,
   failureReason,
   signupStepComplete,
@@ -121,14 +121,22 @@ export function WelperBackgroundCheckStep({
               <Text size="8" weight="bold">
                 {formatCad(promoPriceCents)}
               </Text>
+              <Text size="4" weight="medium" color="gray">
+                {labels.pricePlusTax}
+              </Text>
               <Text size="2" color="green">
                 {labels.limitedTimeRate}
               </Text>
             </Flex>
           ) : (
-            <Text size="8" weight="bold">
-              {formatCad(listPriceCents)}
-            </Text>
+            <Flex align="baseline" gap="1" wrap="wrap">
+              <Text size="8" weight="bold">
+                {formatCad(listPriceCents)}
+              </Text>
+              <Text size="4" weight="medium" color="gray">
+                {labels.pricePlusTax}
+              </Text>
+            </Flex>
           )}
         </Box>
 

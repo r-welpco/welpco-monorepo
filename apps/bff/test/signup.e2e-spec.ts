@@ -309,7 +309,7 @@ describe('BFF Signup wizard (e2e)', () => {
               zipPostalCode: 'M5V 2T6',
               country: 'CA',
             },
-            radiusMiles: 25,
+            radiusKm: 25,
           },
         })
         .expect(200);

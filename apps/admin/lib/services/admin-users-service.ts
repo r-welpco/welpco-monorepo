@@ -8,6 +8,9 @@ export interface AdminUserRow {
   emailVerified: boolean;
   createdAt?: string;
   lastLoginAt?: string | null;
+  /** Welper only: fee paid for background check. null for non-welpers. */
+  backgroundCheckPaid?: boolean | null;
+  backgroundCheckStatus?: string | null;
 }
 
 export interface AdminUserVerification {
@@ -20,6 +23,8 @@ export interface AdminUserVerification {
 
 export interface AdminUserDetail extends AdminUserRow {
   updatedAt?: string;
+  backgroundCheckPaidAt?: string | null;
+  backgroundCheckCertnStatus?: string | null;
   verificationStatus?: AdminUserVerification | null;
   statusChangedAt?: string | null;
   statusChangedByAdminId?: string | null;

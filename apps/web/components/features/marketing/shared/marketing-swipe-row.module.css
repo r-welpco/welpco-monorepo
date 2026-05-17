@@ -1,0 +1,70 @@
+/* Multi-card row: grid on desktop, horizontal swipe when stacked on smaller viewports. */
+
+.swipeRow {
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .swipeRow[data-swipe-row] {
+    display: flex !important;
+    flex-direction: row;
+    gap: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    margin-left: calc(-1 * var(--container-pad, 24px));
+    margin-right: calc(-1 * var(--container-pad, 24px));
+    padding-left: var(--container-pad, 24px);
+    padding-right: var(--container-pad, 24px);
+    padding-bottom: 4px;
+  }
+
+  .swipeRow[data-swipe-row]::-webkit-scrollbar {
+    display: none;
+  }
+
+  .swipeRow[data-swipe-row] > * {
+    flex: 0 0 min(85vw, 340px);
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+  }
+}
+
+@media (max-width: 640px) {
+  .swipeRow[data-swipe-row] {
+    margin-left: calc(-1 * var(--container-pad, 18px));
+    margin-right: calc(-1 * var(--container-pad, 18px));
+    padding-left: var(--container-pad, 18px);
+    padding-right: var(--container-pad, 18px);
+  }
+
+  .swipeRow[data-swipe-row] > * {
+    flex: 0 0 min(88vw, 320px);
+  }
+}
+
+.hint {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .hint {
+    display: block;
+    margin-top: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-faint);
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipeRow[data-swipe-row] {
+    scroll-behavior: auto;
+  }
+}

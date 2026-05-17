@@ -8,7 +8,11 @@
       "openMenu": "Open menu",
       "closeMenu": "Close menu",
       "home": "Welpco — home",
-      "comingSoon": "Coming soon"
+      "comingSoon": "Coming soon",
+      "swipeHint": "Swipe to see more",
+      "welperPhotosGallery": "Welper photos",
+      "howItWorksPhotosGallery": "How it works photos",
+      "personasGallery": "Who can become a Welper"
     },
     "languageSwitcher": {
       "en": "EN",
@@ -946,12 +950,12 @@
             "cityRequired": "City is required.",
             "provinceRequired": "Province / state is required.",
             "postalRequired": "Postal code is required so we can place you on the map.",
-            "radiusRange": "Choose a radius between 1 and 100 miles."
+            "radiusRange": "Choose a radius between 1 and 100 km."
           },
           "selector": {
             "centerAddress": "Center address",
-            "serviceRadius": "Service radius (miles)",
-            "radiusHint": "Services will be available within {miles} miles of the center address."
+            "serviceRadius": "Service radius (km)",
+            "radiusHint": "Services will be available within {km} km of the center address."
           },
           "address": {
             "streetAddress": "Street address",
@@ -1018,7 +1022,8 @@
           "under18Description": "Because you are under 18, a criminal background check is not required at this time.",
           "description": "Adult Welpers must complete a Basic Canadian criminal record check before going live. Pay the fee below — you'll receive an email with steps to complete screening.",
           "limitedTimeRate": "Limited-time rate",
-          "payAndContinue": "Pay {amount} and continue",
+          "pricePlusTax": "+ tax",
+          "payAndContinue": "Pay {amount} + tax and continue",
           "startCertnVerification": "Start Certn verification",
           "openCertnVerification": "Open Certn verification",
           "certnLinkReady": "Complete your background check on Certn using the button below. You can continue signup while screening is in progress.",

@@ -248,9 +248,9 @@ export const DEFAULT_WELPER_BIO_LABELS: WelperBioStepLabels = {
 
 const DEFAULT_WELPER_SERVICE_AREA_SELECTOR: ServiceAreaSelectorLabels = {
   centerAddress: "Center address",
-  serviceRadius: "Service radius (miles)",
+  serviceRadius: "Service radius (km)",
   radiusHint:
-    "Services will be available within {miles} miles of the center address.",
+    "Services will be available within {km} km of the center address.",
 };
 
 const DEFAULT_WELPER_SERVICE_AREA_ADDRESS: AddressInputLabels = {
@@ -285,7 +285,7 @@ export const DEFAULT_WELPER_SERVICE_AREA_LABELS: WelperServiceAreaStepLabels = {
     cityRequired: "City is required.",
     provinceRequired: "Province / state is required.",
     postalRequired: "Postal code is required so we can place you on the map.",
-    radiusRange: "Choose a radius between 1 and 100 miles.",
+    radiusRange: "Choose a radius between 1 and 100 km.",
   },
   selector: DEFAULT_WELPER_SERVICE_AREA_SELECTOR,
   address: DEFAULT_WELPER_SERVICE_AREA_ADDRESS,
@@ -400,6 +400,7 @@ export interface WelperBackgroundCheckStepLabels extends SignupCommonLabels {
   under18Description: string;
   description: string;
   limitedTimeRate: string;
+  pricePlusTax: string;
   payAndContinue: string;
   startCertnVerification: string;
   openCertnVerification: string;
@@ -425,7 +426,8 @@ export const DEFAULT_WELPER_BACKGROUND_CHECK_LABELS: WelperBackgroundCheckStepLa
     description:
       "Adult Welpers must complete a Basic Canadian criminal record check before going live. Pay the fee below, then finish identity verification with our screening partner.",
     limitedTimeRate: "Limited-time rate",
-    payAndContinue: "Pay {amount} and continue",
+    pricePlusTax: "+ tax",
+    payAndContinue: "Pay {amount} + tax and continue",
     startCertnVerification: "Start Certn verification",
     openCertnVerification: "Open Certn verification",
     certnLinkReady:

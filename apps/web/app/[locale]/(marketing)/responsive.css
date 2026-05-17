@@ -74,7 +74,6 @@
   .welpco [data-grid="howitworks-page-grid"],
   .welpco [data-grid="about-hero"],
   .welpco [data-grid="about-mission"],
-  .welpco [data-grid="personas-grid"],
   .welpco [data-grid="values-grid"],
   .welpco [data-grid="contact-grid"],
   .welpco [data-grid="faq-grid"],
@@ -114,16 +113,6 @@
   .welpco [data-searchbar] button[type="submit"] {
     width: 100%;
     justify-content: center;
-  }
-}
-
-/* ---------- Become-Welper CTA: image grid stays 2-col on tablet, stacks on mobile ---------- */
-@media (max-width: 640px) {
-  .welpco [data-grid="becomewelper-images"] {
-    grid-template-columns: 1fr !important;
-  }
-  .welpco [data-grid="becomewelper-images"] > div:nth-child(2) {
-    margin-top: 0 !important;
   }
 }
 

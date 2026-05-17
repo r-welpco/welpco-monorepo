@@ -22,12 +22,15 @@ import { DisputeModule } from '../../dispute/dispute.module';
 import { BookingModule } from '../../booking/booking.module';
 import { AdminAuditModule } from './admin-audit.module';
 import { AdminDashboardService } from './admin-dashboard.service';
+import { BackgroundCheckOrder } from '../../safety-verification/entities/background-check-order.entity';
+import { SafetyVerificationModule } from '../../safety-verification/safety-verification.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       UserAccount,
       VerificationStatus,
+      BackgroundCheckOrder,
       CustomerProfile,
       WelperProfile,
       ServiceOffering,
@@ -47,6 +50,7 @@ import { AdminDashboardService } from './admin-dashboard.service';
     DisputeModule,
     BookingModule,
     AdminAuditModule,
+    SafetyVerificationModule,
   ],
   controllers: [AdminController],
   providers: [AdminService, AdminDashboardService],

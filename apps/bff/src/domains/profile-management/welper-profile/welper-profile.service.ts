@@ -190,7 +190,7 @@ export class WelperProfileService {
     if (updateDto.serviceArea !== undefined) {
       profile.serviceArea = updateDto.serviceArea;
       let point = latLngFromServiceArea(updateDto.serviceArea as ServiceArea);
-      // Dashboard sends { type, centerAddress, radiusMiles } without coordinates; geocode from address so search has lat/lng
+      // Dashboard sends { type, centerAddress, radiusKm } without coordinates; geocode from address so search has lat/lng
       if (!point && updateDto.serviceArea && typeof updateDto.serviceArea === 'object') {
         const sa = updateDto.serviceArea as unknown as Record<string, unknown>;
         const addr = postalAndCountryFromCenterAddress(sa.centerAddress as Record<string, unknown>);

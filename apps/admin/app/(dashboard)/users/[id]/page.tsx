@@ -45,6 +45,46 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
         {user.emailVerified ? "Email verified" : "Email not verified"}
       </p>
 
+      {user.accountType === "Welper" ? (
+        <div className="admin-card" style={{ marginTop: "1.25rem" }}>
+          <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Background check</h2>
+          <table style={{ fontSize: "0.9rem", borderCollapse: "collapse" }}>
+            <tbody>
+              <tr>
+                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Fee paid</td>
+                <td style={{ padding: "4px 0" }}>
+                  {user.backgroundCheckPaid === true
+                    ? "Yes"
+                    : user.backgroundCheckPaid === false
+                      ? "No"
+                      : "—"}
+                </td>
+              </tr>
+              {user.backgroundCheckPaidAt ? (
+                <tr>
+                  <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Paid at</td>
+                  <td style={{ padding: "4px 0" }}>
+                    {new Date(user.backgroundCheckPaidAt).toLocaleString()}
+                  </td>
+                </tr>
+              ) : null}
+              <tr>
+                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Screening</td>
+                <td style={{ padding: "4px 0" }}>
+                  {user.backgroundCheckCertnStatus ?? "—"}
+                </td>
+              </tr>
+              <tr>
+                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Result status</td>
+                <td style={{ padding: "4px 0" }}>
+                  <span className="badge">{bg ?? "—"}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
       <div className="admin-card" style={{ marginTop: "1.25rem" }}>
         <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Account</h2>
         <p style={{ fontSize: "0.9rem", fontFamily: "ui-monospace, monospace" }}>

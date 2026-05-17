@@ -11,7 +11,7 @@ export const serviceAreaSchema = z.object({
       country: z.string().optional(),
     })
     .optional(),
-  radiusMiles: z.number().min(1).max(100).optional(),
+  radiusKm: z.number().min(1).max(100).optional(),
 });
 
 export const serviceOfferingSchema = z.object({

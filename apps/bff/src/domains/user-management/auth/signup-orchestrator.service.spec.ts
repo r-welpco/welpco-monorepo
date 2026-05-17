@@ -211,8 +211,8 @@ describe('SignupOrchestratorService', () => {
             getFilledData: jest.fn().mockResolvedValue({
               paid: false,
               certnStatus: 'not_started',
-              listPriceCents: 2599,
-              promoPriceCents: 1599,
+              listPriceCents: 1999,
+              promoPriceCents: 1999,
               promoEnabled: true,
             }),
           },
