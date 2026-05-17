@@ -1,6 +1,7 @@
 export * from "./layout";
 export * from "./styles";
 export * from "./transport";
+export * from "./resend";
 export * from "./types";
 export * from "./templates/prelaunch";
 export * from "./templates/auth";

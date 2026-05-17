@@ -1,15 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
-  createSmtpTransport,
   getPasswordResetEmailHtml,
   getPasswordResetEmailSubject,
   getVerificationEmailHtml,
   getVerificationEmailSubject,
+  hasResendApiKey,
+  sendMail,
   type EmailLocale,
   type SmtpConfig,
 } from '@welpco/email';
-import type { Transporter } from 'nodemailer';
 import {
   localePathPrefix,
   resolvePreferredLocale,
@@ -26,12 +26,13 @@ export interface EmailOptions {
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: Transporter;
-  private readonly smtpConfig: SmtpConfig;
+  private readonly mailConfig: SmtpConfig;
   private readonly publicAppUrl: string;
+  private readonly deliveryMode: 'resend' | 'smtp';
 
   constructor(private configService: ConfigService) {
     const isProduction = process.env.NODE_ENV === 'production';
+    const resendApiKey = this.configService.get<string>('RESEND_API_KEY');
     const smtpHost = this.configService.get<string>('SMTP_HOST');
     const smtpPort = this.configService.get<number>('SMTP_PORT');
     const smtpUser = this.configService.get<string>('SMTP_USER') || '';
@@ -40,33 +41,45 @@ export class EmailService {
       this.configService.get<string>('SMTP_PASSWORD') ||
       '';
 
-    if (isProduction) {
+    this.mailConfig = {
+      host: smtpHost || 'localhost',
+      port: smtpPort || 1025,
+      from: this.configService.get<string>('SMTP_FROM') || 'noreply@welpco.com',
+      user: smtpUser || undefined,
+      pass: smtpPass || undefined,
+      resendApiKey: resendApiKey || undefined,
+    };
+
+    this.deliveryMode = hasResendApiKey(this.mailConfig) ? 'resend' : 'smtp';
+
+    if (isProduction && this.deliveryMode === 'smtp') {
       if (!smtpHost || smtpHost === 'localhost') {
-        throw new Error('SMTP_HOST must be set to a real mail server in production');
+        throw new Error(
+          'Set RESEND_API_KEY (recommended on Vercel) or SMTP_HOST to a real mail server in production',
+        );
       }
       if (!smtpPort || smtpPort === 1025) {
         throw new Error('SMTP_PORT must be set to a valid port in production (not 1025)');
       }
     }
 
-    const host = smtpHost || 'localhost';
-    const port = smtpPort || 1025;
+    if (isProduction && this.deliveryMode === 'resend' && !this.mailConfig.from) {
+      throw new Error('SMTP_FROM must be set when using Resend in production');
+    }
 
-    this.smtpConfig = {
-      host,
-      port,
-      from: this.configService.get<string>('SMTP_FROM') || 'noreply@welpco.com',
-      user: smtpUser || undefined,
-      pass: smtpPass || undefined,
-    };
-
-    this.transporter = createSmtpTransport(this.smtpConfig);
     this.publicAppUrl =
       this.configService.get<string>('PUBLIC_APP_URL') ||
       this.configService.get<string>('FRONTEND_URL') ||
       'http://localhost:8081';
 
-    this.logger.log(`Email service configured: ${host}:${port} (secure=${port === 465})`);
+    if (this.deliveryMode === 'resend') {
+      this.logger.log('Email service configured: Resend HTTP API');
+    } else {
+      const { host, port } = this.mailConfig;
+      this.logger.log(
+        `Email service configured: SMTP ${host}:${port} (secure=${port === 465})`,
+      );
+    }
   }
 
   private localizedAuthUrl(path: string, locale: UserPreferredLocale): string {
@@ -76,17 +89,19 @@ export class EmailService {
 
   async sendEmail(options: EmailOptions): Promise<void> {
     try {
-      const from = this.smtpConfig.from ?? 'noreply@welpco.com';
+      await sendMail(
+        {
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+          text: options.text,
+          from: this.mailConfig.from,
+        },
+        undefined,
+        this.mailConfig,
+      );
 
-      const info = await this.transporter.sendMail({
-        from,
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text || options.html.replace(/<[^>]*>/g, ''),
-      });
-
-      this.logger.log(`Email sent successfully to ${options.to}: ${info.messageId}`);
+      this.logger.log(`Email sent successfully to ${options.to}`);
     } catch (error) {
       this.logger.error(
         `Failed to send email to ${options.to}: ${(error as Error).message}`,

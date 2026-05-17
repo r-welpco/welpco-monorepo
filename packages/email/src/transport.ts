@@ -1,4 +1,5 @@
 import nodemailer, { type Transporter } from "nodemailer";
+import { hasResendApiKey, sendMailViaResend } from "./resend";
 
 export interface SmtpConfig {
   host?: string;
@@ -6,6 +7,8 @@ export interface SmtpConfig {
   from?: string;
   user?: string;
   pass?: string;
+  /** Resend HTTP API key — preferred on Vercel (SMTP ports are blocked). */
+  resendApiKey?: string;
 }
 
 export interface SendMailOptions {
@@ -40,6 +43,14 @@ export async function sendMail(
   transport?: Transporter,
   config?: SmtpConfig,
 ): Promise<void> {
+  if (hasResendApiKey(config)) {
+    await sendMailViaResend(options, {
+      apiKey: config?.resendApiKey,
+      from: config?.from,
+    });
+    return;
+  }
+
   const tx = transport ?? createSmtpTransport(config);
   const from =
     options.from ??
