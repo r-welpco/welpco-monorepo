@@ -25,19 +25,36 @@ export function sortMigrationsChronologically(
   );
 }
 
-/** SSL for managed Postgres (Neon, RDS, etc.). Set DB_SSL=true or use PGSSLMODE=require. */
+/**
+ * SSL for managed Postgres (Neon, RDS, etc.).
+ * Enabled when NODE_ENV=production, DB_SSL=true, or PGSSLMODE=require|verify-*.
+ * Set DB_SSL=false or PGSSLMODE=disable to opt out (e.g. local prod-like runs).
+ */
 export function postgresSslOption():
   | boolean
   | { rejectUnauthorized: boolean }
   | undefined {
   const mode = process.env.PGSSLMODE?.toLowerCase();
   if (
+    process.env.DB_SSL === 'false' ||
+    process.env.DB_SSL === '0' ||
+    mode === 'disable' ||
+    mode === 'allow' ||
+    mode === 'prefer'
+  ) {
+    return undefined;
+  }
+
+  const isProduction = process.env.NODE_ENV === 'production';
+  const sslRequired =
+    isProduction ||
     process.env.DB_SSL === 'true' ||
     process.env.DB_SSL === '1' ||
     mode === 'require' ||
     mode === 'verify-full' ||
-    mode === 'verify-ca'
-  ) {
+    mode === 'verify-ca';
+
+  if (sslRequired) {
     return { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false' };
   }
   return undefined;

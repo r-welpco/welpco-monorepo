@@ -41,6 +41,7 @@ import { SupportTicket } from '../domains/dispute/entities/support-ticket.entity
 import { Resolution } from '../domains/dispute/entities/resolution.entity';
 import { ApplicationSetting, BookingPayment, ProcessedWebhookEvent } from '../domains/payment/entities';
 import { BackgroundCheckOrder } from '../domains/safety-verification/entities';
+import { postgresSslOption } from './db-cli-options';
 
 const allEntities = [
   UserAccount,
@@ -99,6 +100,7 @@ const allEntities = [
           username: configService.get<string>('DB_USERNAME') || 'welpco',
           password: password!,
           database: configService.get<string>('DB_DATABASE') || 'welpco_dev',
+          ssl: postgresSslOption(),
           entities: allEntities,
           synchronize: false, // Always use migrations - synchronize can cause data loss
           logging: process.env.NODE_ENV === 'development',
