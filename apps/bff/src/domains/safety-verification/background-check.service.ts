@@ -26,6 +26,11 @@ import {
   sanitizeCertnApplicantUrl,
 } from './certn-api.client';
 import { isAdultWelper } from './background-check-age.util';
+import {
+  resolvePreferredLocale,
+  type UserPreferredLocale,
+} from '../../common/preferred-locale';
+import { emailLocaleForUser } from '../user-management/auth/user-locale.helper';
 
 const SIGNUP_COMPLETE_CERTN_STATUSES = new Set<BackgroundCheckCertnStatus>([
   BackgroundCheckCertnStatus.INVITED,
@@ -58,9 +63,18 @@ export class BackgroundCheckService {
     return raw === 'true' || raw === '1';
   }
 
-  resolveManualApplicantUrl(): string | null {
-    const url = this.config.get<string>('BACKGROUND_CHECK_APPLICANT_URL')?.trim();
-    return url && url.startsWith('http') ? url : null;
+  /** Manual Certn screening link for email (locale-specific when configured). */
+  resolveManualApplicantUrl(locale?: UserPreferredLocale | string): string | null {
+    const resolved = resolvePreferredLocale(locale);
+    const pick = (key: string) => {
+      const url = this.config.get<string>(key)?.trim();
+      return url && url.startsWith('http') ? url : null;
+    };
+
+    if (resolved === 'fr') {
+      return pick('BACKGROUND_CHECK_APPLICANT_URL_FR') ?? pick('BACKGROUND_CHECK_APPLICANT_URL');
+    }
+    return pick('BACKGROUND_CHECK_APPLICANT_URL');
   }
 
   async getPaymentSummaryByUserIds(
@@ -315,11 +329,14 @@ export class BackgroundCheckService {
     user: UserAccount,
     firstName: string,
   ): Promise<void> {
-    const applicantUrl = this.resolveManualApplicantUrl();
+    const locale = emailLocaleForUser(user);
+    const applicantUrl = this.resolveManualApplicantUrl(locale);
     if (!applicantUrl) {
-      this.logger.error(
-        'BACKGROUND_CHECK_APPLICANT_URL is not set — cannot email screening link',
-      );
+      const envKeys =
+        locale === 'fr'
+          ? 'BACKGROUND_CHECK_APPLICANT_URL_FR or BACKGROUND_CHECK_APPLICANT_URL'
+          : 'BACKGROUND_CHECK_APPLICANT_URL';
+      this.logger.error(`${envKeys} is not set — cannot email screening link`);
       order.failureReason = 'missing_background_check_url';
       await this.orderRepo.save(order);
       return;
@@ -327,7 +344,7 @@ export class BackgroundCheckService {
 
     try {
       await this.emailService.sendBackgroundCheckInviteEmail(user.email, applicantUrl, {
-        locale: user.preferredLocale,
+        locale,
         firstName,
       });
       order.certnApplicationId = order.certnApplicationId ?? `manual-${order.id}`;
