@@ -40,8 +40,8 @@ export class InitialSchema20260104004142 implements MigrationInterface {
           {
             name: 'profile_completion_status',
             type: 'enum',
-            enum: ['INCOMPLETE', 'PENDING_REVIEW', 'COMPLETE'],
-            default: "'INCOMPLETE'",
+            enum: ['Incomplete', 'Complete'],
+            default: "'Incomplete'",
           },
           {
             name: 'onboarding_completed',
@@ -104,14 +104,14 @@ export class InitialSchema20260104004142 implements MigrationInterface {
           {
             name: 'profile_completion_status',
             type: 'enum',
-            enum: ['INCOMPLETE', 'PENDING_REVIEW', 'COMPLETE'],
-            default: "'INCOMPLETE'",
+            enum: ['Incomplete', 'Complete'],
+            default: "'Incomplete'",
           },
           {
             name: 'profile_visibility',
             type: 'enum',
-            enum: ['PUBLIC', 'PRIVATE'],
-            default: "'PUBLIC'",
+            enum: ['Public', 'Private'],
+            default: "'Public'",
           },
           {
             name: 'onboarding_completed',
@@ -208,7 +208,7 @@ export class InitialSchema20260104004142 implements MigrationInterface {
           {
             name: 'day_of_week',
             type: 'enum',
-            enum: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'],
+            enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
           },
           {
             name: 'start_time',
@@ -221,7 +221,7 @@ export class InitialSchema20260104004142 implements MigrationInterface {
           {
             name: 'recurring_pattern',
             type: 'enum',
-            enum: ['DAILY', 'WEEKLY', 'MONTHLY', 'NONE'],
+            enum: ['Daily', 'Weekly', 'Monthly'],
           },
           {
             name: 'available',

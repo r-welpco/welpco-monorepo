@@ -45,7 +45,7 @@ async function main() {
     const p = profile.rows[0];
     console.log('welper_id:', p.welper_id);
     console.log('first_name:', p.first_name, 'last_name:', p.last_name);
-    console.log('profile_completion_status:', p.profile_completion_status, '(need: Complete)');
+    console.log('profile_completion_status:', p.profile_completion_status, '(need: COMPLETE)');
     console.log('profile_visibility:', p.profile_visibility, '(need: Public)');
     console.log('latitude:', p.latitude, 'longitude:', p.longitude);
     console.log('service_area:', JSON.stringify(p.service_area, null, 2));

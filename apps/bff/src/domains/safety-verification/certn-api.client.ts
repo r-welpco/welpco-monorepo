@@ -64,6 +64,18 @@ export class CertnApiClient {
 
   constructor(private readonly config: ConfigService) {}
 
+  /**
+   * Identity verification is a separate Certn plan feature. Production "Team Welpco"
+   * may only have CRC — set CERTN_REQUEST_IDENTITY_VERIFICATION=false to invite with
+   * criminal record check only (or contact support@certn.co to enable IDV).
+   */
+  shouldRequestIdentityVerification(): boolean {
+    const raw = this.config.get<string>('CERTN_REQUEST_IDENTITY_VERIFICATION');
+    if (raw === 'false' || raw === '0') return false;
+    if (raw === 'true' || raw === '1') return true;
+    return true;
+  }
+
   /** Sandbox in development unless `CERTN_API_BASE_URL` is set explicitly. */
   resolveApiBaseUrl(): string {
     const configured = this.config.get<string>('CERTN_API_BASE_URL')?.trim();
@@ -90,17 +102,25 @@ export class CertnApiClient {
     const inviteUrl = `${baseUrl}/hr/v1/applications/invite/`;
     this.logger.log(`Certn invite → ${inviteUrl}`);
 
+    const requestIdentityVerification = this.shouldRequestIdentityVerification();
+
     const body: Record<string, unknown> = {
       email: payload.email,
       request_criminal_record_check: true,
-      // Certn requires identity verification alongside Canadian CRC (not a separate Welpco product).
-      request_identity_verification: true,
       information: {
         first_name: payload.firstName,
         last_name: payload.lastName,
         date_of_birth: payload.dateOfBirth,
       },
     };
+
+    if (requestIdentityVerification) {
+      body.request_identity_verification = true;
+    } else {
+      this.logger.log(
+        'Certn invite: request_criminal_record_check only (CERTN_REQUEST_IDENTITY_VERIFICATION=false)',
+      );
+    }
 
     const res = await fetchJson(inviteUrl, {
       method: 'POST',

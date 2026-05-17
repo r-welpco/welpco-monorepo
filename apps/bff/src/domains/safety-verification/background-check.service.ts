@@ -96,11 +96,18 @@ export class BackgroundCheckService {
     let order = await this.orderRepo.findOne({ where: { userId } });
     const verification = await this.verificationRepo.findOne({ where: { userId } });
 
+    const certnInviteRetryable =
+      order?.failureReason == null ||
+      order.failureReason.startsWith('certn_invite_failed');
     if (
       order?.paymentStatus === BackgroundCheckPaymentStatus.PAID &&
       order.certnStatus === BackgroundCheckCertnStatus.NOT_STARTED &&
-      !order.failureReason
+      certnInviteRetryable
     ) {
+      if (order.failureReason) {
+        order.failureReason = null;
+        await this.orderRepo.save(order);
+      }
       await this.onPaymentSucceeded(order.id);
       order = await this.orderRepo.findOne({ where: { userId } });
     }

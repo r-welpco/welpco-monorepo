@@ -153,7 +153,10 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
         currentStatus={user.status}
         currentBackgroundCheck={bg}
         profileType={profile?.type ?? null}
-        currentProfileComplete={profile?.profileCompletionStatus === "Complete"}
+        currentProfileComplete={
+          profile?.profileCompletionStatus === "COMPLETE" ||
+          profile?.profileCompletionStatus === "Complete"
+        }
         currentOnboardingCompleted={profile?.onboardingCompleted ?? false}
       />
     </div>

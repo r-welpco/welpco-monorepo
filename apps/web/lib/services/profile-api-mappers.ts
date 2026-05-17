@@ -4,6 +4,23 @@ function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
+/** BFF stores INCOMPLETE/COMPLETE; UI uses Incomplete/Complete labels. */
+export function normalizeProfileCompletionStatusLabel(
+  status?: string,
+): string | undefined {
+  if (!status) return undefined;
+  if (status === "COMPLETE" || status === "Complete") return "Complete";
+  if (status === "INCOMPLETE" || status === "Incomplete") return "Incomplete";
+  if (status === "PENDING_REVIEW") return "PendingReview";
+  return status;
+}
+
+/** BFF stores PUBLIC/PRIVATE; UI types use Public/Private. */
+export function normalizeProfileVisibility(visibility?: string): "Public" | "Private" {
+  if (visibility === "PRIVATE" || visibility === "Private") return "Private";
+  return "Public";
+}
+
 /** Narrow shape for BFF `/api/profiles/me` customer payload */
 export interface CustomerProfileMeApi {
   id?: string;
@@ -72,8 +89,9 @@ export function mapCustomerProfileFromApi(response: unknown): CustomerProfile | 
     photoUrl: r.profilePhotoUrl ?? null,
     phone: r.phoneNumber?.formatted ?? r.phoneNumber?.number ?? "",
     address: r.address ? normalizeAddressFromApi(r.address) : emptyAddress(),
-    profileCompletionStatusLabel:
+    profileCompletionStatusLabel: normalizeProfileCompletionStatusLabel(
       typeof r.profileCompletionStatus === "string" ? r.profileCompletionStatus : undefined,
+    ),
     hasDefaultPaymentMethod: !!r.hasDefaultPaymentMethod,
     profileCompletionStatus: {
       name: !!(r.firstName && r.lastName),
@@ -142,7 +160,9 @@ export function mapWelperProfileFromApi(
     bio: r.bio ?? "",
     photoUrl: r.profilePhotoUrl ?? null,
     serviceArea: r.serviceArea ?? { type: "radius", radiusMiles: 10 },
-    profileVisibility: (r.profileVisibility === "Private" ? "Private" : "Public") as "Public" | "Private",
+    profileVisibility: normalizeProfileVisibility(
+      typeof r.profileVisibility === "string" ? r.profileVisibility : undefined,
+    ),
     profileCompletionStatus: {
       name: !!(r.firstName && r.lastName),
       phone: !!r.phoneNumber,
