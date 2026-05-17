@@ -15,6 +15,7 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { fetchJson } from '../../common/http/fetch-json';
 import type { GeocodeResultDto } from './dto/geocode-result.dto';
 import { IGeocodeService } from './geocode.interface';
 import { RateLimiterService } from './rate-limiter.service';
@@ -158,7 +159,7 @@ export class GoogleMapsGeocodeService
       url.searchParams.set('latlng', `${latitude},${longitude}`);
       url.searchParams.set('key', this.apiKey);
 
-      const res = await fetch(url.toString(), {
+      const res = await fetchJson(url.toString(), {
         signal: AbortSignal.timeout(10_000),
       });
 
@@ -257,7 +258,7 @@ export class GoogleMapsGeocodeService
 
       url.searchParams.set('key', this.apiKey);
 
-      const res = await fetch(url.toString(), {
+      const res = await fetchJson(url.toString(), {
         signal: AbortSignal.timeout(10_000),
       });
 

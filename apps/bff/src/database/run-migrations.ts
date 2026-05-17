@@ -1,11 +1,24 @@
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
-import { join } from 'path';
+import { globSync } from 'node:fs';
+import { basename, join } from 'path';
 import {
   ServiceCategory,
   Question,
   ServiceQuestion,
 } from '../domains/content-management/entities';
+import {
+  basePostgresDataSourceOptions,
+  migrationTimestampKey,
+  runPendingMigrationsInOrder,
+} from './db-cli-options';
+
+function discoverMigrationPaths(): string[] {
+  const paths = globSync(join(__dirname, '..', '**', 'migrations', '*-*.{ts,js}'));
+  return paths.sort((a, b) =>
+    migrationTimestampKey(basename(a)).localeCompare(migrationTimestampKey(basename(b))),
+  );
+}
 
 /**
  * Migration runner — auto-discovers every migration class via filesystem glob.
@@ -32,25 +45,17 @@ config({ path: join(__dirname, '../../.env') });
 config({ path: join(__dirname, '../../.env.local') });
 
 async function runMigrations() {
-  const dataSource = new DataSource({
-    type: 'postgres',
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    username: process.env.DB_USERNAME || 'welpco',
-    password: process.env.DB_PASSWORD || 'welpco_dev',
-    database: process.env.DB_DATABASE || 'welpco_dev',
-    // Per-migration transactions so `transaction = false` on individual migrations is respected.
-    migrationsTransactionMode: 'each',
-    // Glob-discover every migration anywhere under `apps/bff/src/`. Filenames are
-    // timestamp-prefixed (`YYYYMMDDHHmmss-*` or unix-ms-`-*`) so lexical sort
-    // matches chronological order.
-    migrations: [join(__dirname, '..', '**', 'migrations', '*-*.{ts,js}')],
-    migrationsRun: false,
-    synchronize: false,
-    logging: process.env.DB_LOGGING === 'true',
-    // Content taxonomy sync migration uses repositories (ServiceCategory, etc.).
-    entities: [ServiceCategory, Question, ServiceQuestion],
-  });
+  const dataSource = new DataSource(
+    basePostgresDataSourceOptions({
+      // Per-migration transactions so `transaction = false` on individual migrations is respected.
+      migrationsTransactionMode: 'each',
+      migrations: discoverMigrationPaths(),
+      migrationsRun: false,
+      synchronize: false,
+      logging: process.env.DB_LOGGING === 'true',
+      entities: [ServiceCategory, Question, ServiceQuestion],
+    }),
+  );
 
   try {
     await dataSource.initialize();
@@ -68,7 +73,7 @@ async function runMigrations() {
       `🔎 Discovered ${allKnownMigrations.length} migration class${allKnownMigrations.length === 1 ? '' : 'es'}`
     );
 
-    const applied = await dataSource.runMigrations();
+    const applied = await runPendingMigrationsInOrder(dataSource);
     if (applied.length === 0) {
       console.log('✅ Migrations completed (nothing pending)');
     } else {

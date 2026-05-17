@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { fetchJson } from '../../common/http/fetch-json';
 
 export interface CertnInvitePayload {
   email: string;
@@ -101,7 +102,7 @@ export class CertnApiClient {
       },
     };
 
-    const res = await fetch(inviteUrl, {
+    const res = await fetchJson(inviteUrl, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,

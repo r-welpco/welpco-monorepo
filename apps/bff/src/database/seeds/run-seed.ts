@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
 import { join } from 'path';
+import { basePostgresDataSourceOptions } from '../db-cli-options';
 import { seedDatabase } from './seed';
 import { isProductionLikeSeed } from './seed-flags';
 import {
@@ -74,17 +75,13 @@ function assertSeedAllowed(): void {
 async function runSeed() {
   assertSeedAllowed();
 
-  const dataSource = new DataSource({
-    type: 'postgres',
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    username: process.env.DB_USERNAME || 'welpco',
-    password: process.env.DB_PASSWORD || 'welpco_dev',
-    database: process.env.DB_DATABASE || 'welpco_dev',
-    entities: allEntities,
-    synchronize: false,
-    logging: false,
-  });
+  const dataSource = new DataSource(
+    basePostgresDataSourceOptions({
+      entities: allEntities,
+      synchronize: false,
+      logging: false,
+    }),
+  );
 
   try {
     await dataSource.initialize();
