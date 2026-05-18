@@ -88,7 +88,7 @@ export type SignupStepName =
   | 'welperPayout'
   | 'optionalProfile';
 
-interface SignupFilledData {
+export interface SignupFilledData {
   identity?: {
     firstName: string;
     lastName: string;
