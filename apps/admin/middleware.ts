@@ -28,6 +28,10 @@ export default auth((req): NextResponse => {
     return NextResponse.redirect(new URL("/login?error=Forbidden", req.url));
   }
 
+  if (session.user.status && session.user.status !== "Active") {
+    return NextResponse.redirect(new URL("/login?error=AccountInactive", req.url));
+  }
+
   if (isLogin) {
     return NextResponse.redirect(new URL("/", req.url));
   }

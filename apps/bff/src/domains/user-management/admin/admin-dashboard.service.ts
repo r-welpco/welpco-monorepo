@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { UserAccount, AccountType, AccountStatus } from '../entities/user-account.entity';
+import {
+  VerificationStatus,
+  BackgroundCheckStatus,
+} from '../entities/verification-status.entity';
 import { Dispute } from '../../dispute/entities/dispute.entity';
 import { SupportTicket } from '../../dispute/entities/support-ticket.entity';
 import { BookingRequest, BookingRequestStatus } from '../../booking/entities/booking-request.entity';
@@ -18,6 +22,10 @@ export interface AdminDashboardSnapshot {
     customers: number;
     welpers: number;
     guardians: number;
+    welpersPending: number;
+    welpersSignupIncomplete: number;
+    welpersBgInProgress: number;
+    welpersBgFailed: number;
   };
   disputes: {
     open: number;
@@ -53,6 +61,8 @@ export class AdminDashboardService {
     private readonly bookingRepository: Repository<BookingRequest>,
     @InjectRepository(BookingPayment)
     private readonly bookingPaymentRepository: Repository<BookingPayment>,
+    @InjectRepository(VerificationStatus)
+    private readonly verificationRepository: Repository<VerificationStatus>,
   ) {}
 
   async getSnapshot(): Promise<AdminDashboardSnapshot> {
@@ -69,6 +79,10 @@ export class AdminDashboardService {
       customers,
       welpers,
       guardians,
+      welpersPending,
+      welpersSignupIncomplete,
+      welpersBgInProgress,
+      welpersBgFailed,
       disputesOpen,
       disputesInReview,
       disputesEscalated,
@@ -88,6 +102,31 @@ export class AdminDashboardService {
       this.userRepository.count({ where: { accountType: AccountType.CUSTOMER } }),
       this.userRepository.count({ where: { accountType: AccountType.WELPER } }),
       this.userRepository.count({ where: { accountType: AccountType.GUARDIAN } }),
+      this.userRepository.count({
+        where: { accountType: AccountType.WELPER, status: AccountStatus.PENDING },
+      }),
+      this.userRepository.count({
+        where: {
+          accountType: AccountType.WELPER,
+          signupCompleted: false,
+        },
+      }),
+      this.verificationRepository
+        .createQueryBuilder('vs')
+        .innerJoin(UserAccount, 'u', 'u.id = vs.user_id')
+        .where('u.account_type = :welper', { welper: AccountType.WELPER })
+        .andWhere('vs.background_check_status = :inProgress', {
+          inProgress: BackgroundCheckStatus.IN_PROGRESS,
+        })
+        .getCount(),
+      this.verificationRepository
+        .createQueryBuilder('vs')
+        .innerJoin(UserAccount, 'u', 'u.id = vs.user_id')
+        .where('u.account_type = :welper', { welper: AccountType.WELPER })
+        .andWhere('vs.background_check_status = :failed', {
+          failed: BackgroundCheckStatus.FAILED,
+        })
+        .getCount(),
       this.disputeRepository.count({ where: { status: 'open' } }),
       this.disputeRepository.count({ where: { status: 'in_review' } }),
       this.disputeRepository.count({ where: { status: 'escalated' } }),
@@ -124,6 +163,10 @@ export class AdminDashboardService {
         customers,
         welpers,
         guardians,
+        welpersPending,
+        welpersSignupIncomplete,
+        welpersBgInProgress,
+        welpersBgFailed,
       },
       disputes: {
         open: disputesOpen,

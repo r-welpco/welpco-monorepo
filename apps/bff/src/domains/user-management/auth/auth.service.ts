@@ -169,7 +169,8 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
-    const { email, password, preferredLocale } = loginDto;
+    const { password, preferredLocale } = loginDto;
+    const email = loginDto.email.trim().toLowerCase();
 
     // Check account lockout before attempting login
     await this.accountLockoutService.checkLockout(email);

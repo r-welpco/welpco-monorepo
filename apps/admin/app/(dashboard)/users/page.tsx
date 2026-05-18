@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { listAdminUsers } from "@/lib/services/admin-users-service";
+import {
+  BACKGROUND_CHECK_STATUSES,
+  listAdminUsers,
+} from "@/lib/services/admin-users-service";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +11,25 @@ const PAGE_SIZE = 25;
 const ACCOUNT_TYPES = ["", "Customer", "Welper", "Guardian", "Admin"] as const;
 const STATUSES = ["", "Pending", "Active", "Suspended", "Deactivated"] as const;
 
+const QUICK_PRESETS: { label: string; query: Record<string, string> }[] = [
+  {
+    label: "Welpers · Pending",
+    query: { accountType: "Welper", status: "Pending" },
+  },
+  {
+    label: "Welpers · signup incomplete",
+    query: { accountType: "Welper", signupCompleted: "false" },
+  },
+  {
+    label: "Welpers · BG in progress",
+    query: { accountType: "Welper", backgroundCheckStatus: "In Progress" },
+  },
+  {
+    label: "Welpers · BG failed",
+    query: { accountType: "Welper", backgroundCheckStatus: "Failed" },
+  },
+];
+
 export default async function AdminUsersPage({
   searchParams,
 }: {
@@ -15,6 +37,8 @@ export default async function AdminUsersPage({
     accountType?: string;
     status?: string;
     emailVerified?: string;
+    signupCompleted?: string;
+    backgroundCheckStatus?: string;
     search?: string;
     offset?: string;
   }>;
@@ -36,6 +60,18 @@ export default async function AdminUsersPage({
   if (sp.emailVerified === "true") emailVerified = true;
   else if (sp.emailVerified === "false") emailVerified = false;
 
+  let signupCompleted: boolean | undefined;
+  if (sp.signupCompleted === "true") signupCompleted = true;
+  else if (sp.signupCompleted === "false") signupCompleted = false;
+
+  const backgroundCheckStatus =
+    sp.backgroundCheckStatus &&
+    BACKGROUND_CHECK_STATUSES.includes(
+      sp.backgroundCheckStatus as (typeof BACKGROUND_CHECK_STATUSES)[number],
+    )
+      ? sp.backgroundCheckStatus
+      : undefined;
+
   let data;
   let err: string | null = null;
   try {
@@ -45,6 +81,8 @@ export default async function AdminUsersPage({
       accountType,
       status,
       emailVerified,
+      signupCompleted,
+      backgroundCheckStatus,
       search,
     });
   } catch (e) {
@@ -57,12 +95,27 @@ export default async function AdminUsersPage({
   const hasNext = nextOffset < data.total;
   const hasPrev = offset > 0;
 
-  const buildHref = (o: number) => {
+  const buildHref = (o: number, overrides?: Record<string, string | undefined>) => {
     const q = new URLSearchParams();
-    if (accountType) q.set("accountType", accountType);
-    if (status) q.set("status", status);
-    if (sp.emailVerified === "true" || sp.emailVerified === "false") q.set("emailVerified", sp.emailVerified);
-    if (search) q.set("search", search);
+    const merged = {
+      accountType,
+      status,
+      emailVerified: sp.emailVerified,
+      signupCompleted: sp.signupCompleted,
+      backgroundCheckStatus,
+      search,
+      ...overrides,
+    };
+    if (merged.accountType) q.set("accountType", merged.accountType);
+    if (merged.status) q.set("status", merged.status);
+    if (merged.emailVerified === "true" || merged.emailVerified === "false") {
+      q.set("emailVerified", merged.emailVerified);
+    }
+    if (merged.signupCompleted === "true" || merged.signupCompleted === "false") {
+      q.set("signupCompleted", merged.signupCompleted);
+    }
+    if (merged.backgroundCheckStatus) q.set("backgroundCheckStatus", merged.backgroundCheckStatus);
+    if (merged.search) q.set("search", merged.search);
     if (o > 0) q.set("offset", String(o));
     const qs = q.toString();
     return qs ? `/users?${qs}` : "/users";
@@ -72,8 +125,24 @@ export default async function AdminUsersPage({
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 style={{ marginTop: 0 }}>Users</h1>
-        <Link href="/users/new" className="btn btn-primary">Create admin</Link>
+        <Link href="/users/new" className="btn btn-primary">
+          Create admin
+        </Link>
       </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+        {QUICK_PRESETS.map((preset) => (
+          <Link
+            key={preset.label}
+            href={buildHref(0, preset.query)}
+            className="btn"
+            style={{ fontSize: "0.8rem", padding: "6px 12px" }}
+          >
+            {preset.label}
+          </Link>
+        ))}
+      </div>
+
       <form
         method="get"
         className="admin-card"
@@ -103,17 +172,44 @@ export default async function AdminUsersPage({
         </label>
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
           Email verified
-          <select
-            name="emailVerified"
-            defaultValue={sp.emailVerified ?? ""}
-            className="admin-input"
-          >
+          <select name="emailVerified" defaultValue={sp.emailVerified ?? ""} className="admin-input">
             <option value="">All</option>
             <option value="true">Yes</option>
             <option value="false">No</option>
           </select>
         </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem", minWidth: 220 }}>
+        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
+          Signup complete
+          <select name="signupCompleted" defaultValue={sp.signupCompleted ?? ""} className="admin-input">
+            <option value="">All</option>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
+          BG status
+          <select
+            name="backgroundCheckStatus"
+            defaultValue={backgroundCheckStatus ?? ""}
+            className="admin-input"
+          >
+            <option value="">All</option>
+            {BACKGROUND_CHECK_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+            fontSize: "0.85rem",
+            minWidth: 220,
+          }}
+        >
           Search (email or user ID)
           <input
             type="search"
@@ -133,16 +229,18 @@ export default async function AdminUsersPage({
         {data.total} accounts · showing {data.users.length} (offset {offset})
       </p>
       {err ? <p className="err">{err}</p> : null}
-      <div className="admin-card" style={{ padding: 0, overflow: "hidden" }}>
+      <div className="admin-card" style={{ padding: 0, overflow: "auto" }}>
         <table className="admin-table">
           <thead>
             <tr>
               <th>Email</th>
               <th>Type</th>
               <th>Status</th>
+              <th>Signup</th>
               <th>Verified</th>
-              <th>BG fee paid</th>
+              <th>BG paid</th>
               <th>BG status</th>
+              <th>Locale</th>
               <th>Created</th>
               <th />
             </tr>
@@ -150,7 +248,7 @@ export default async function AdminUsersPage({
           <tbody>
             {data.users.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ color: "var(--admin-muted)", padding: "1.5rem" }}>
+                <td colSpan={10} style={{ color: "var(--admin-muted)", padding: "1.5rem" }}>
                   No users.
                 </td>
               </tr>
@@ -162,19 +260,15 @@ export default async function AdminUsersPage({
                     <span className="badge">{u.accountType}</span>
                   </td>
                   <td>{u.status}</td>
+                  <td>{u.signupCompleted ? "Yes" : "No"}</td>
                   <td>{u.emailVerified ? "Yes" : "No"}</td>
                   <td>
-                    {u.backgroundCheckPaid === null
-                      ? "—"
-                      : u.backgroundCheckPaid
-                        ? "Yes"
-                        : "No"}
+                    {u.backgroundCheckPaid === null ? "—" : u.backgroundCheckPaid ? "Yes" : "No"}
                   </td>
                   <td style={{ fontSize: "0.85rem" }}>
-                    {u.accountType === "Welper"
-                      ? u.backgroundCheckStatus ?? "—"
-                      : "—"}
+                    {u.accountType === "Welper" ? (u.backgroundCheckStatus ?? "—") : "—"}
                   </td>
+                  <td style={{ fontSize: "0.85rem" }}>{u.preferredLocale ?? "—"}</td>
                   <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}>
                     {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
                   </td>

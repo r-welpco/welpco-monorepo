@@ -16,6 +16,7 @@
     "db:migrate": "pnpm --filter @welpco/bff migration:run",
     "seed:users": "pnpm --filter @welpco/bff seed",
     "clean:non-admin-users": "pnpm --filter @welpco/bff clean:non-admin-users",
+    "create:admin": "pnpm --filter @welpco/bff create:admin",
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "eslint . --max-warnings=9999",

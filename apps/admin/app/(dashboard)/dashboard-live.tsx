@@ -116,11 +116,9 @@ export function DashboardLive() {
   return (
     <div>
       <p style={{ color: "var(--admin-muted)", maxWidth: 640 }}>
-        Platform overview. Open{" "}
-        <Link href="/disputes">disputes</Link>, <Link href="/users">users</Link>,{" "}
-        <Link href="/payments">payments</Link>, <Link href="/settings">settings</Link>,{" "}
-        <Link href="/bookings">bookings</Link>, <Link href="/support-tickets">support</Link>,{" "}
-        <Link href="/audit-logs">audit</Link>.
+        Welper launch overview. Manage accounts in{" "}
+        <Link href="/users">Users</Link> and review actions in{" "}
+        <Link href="/audit-logs">Audit</Link>.
       </p>
 
       <div
@@ -201,6 +199,36 @@ export function DashboardLive() {
             <StatCard label="Customers" value={snap.users.customers} />
             <StatCard label="Welpers" value={snap.users.welpers} />
             <StatCard label="Guardians" value={snap.users.guardians} />
+          </div>
+          <SectionTitle>Welper launch</SectionTitle>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+              gap: "0.75rem",
+            }}
+          >
+            <Link href="/users?accountType=Welper&status=Pending" style={{ textDecoration: "none", color: "inherit" }}>
+              <StatCard label="Welpers pending" value={snap.users.welpersPending} />
+            </Link>
+            <Link
+              href="/users?accountType=Welper&signupCompleted=false"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <StatCard label="Signup incomplete" value={snap.users.welpersSignupIncomplete} />
+            </Link>
+            <Link
+              href="/users?accountType=Welper&backgroundCheckStatus=In+Progress"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <StatCard label="BG in progress" value={snap.users.welpersBgInProgress} />
+            </Link>
+            <Link
+              href="/users?accountType=Welper&backgroundCheckStatus=Failed"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <StatCard label="BG failed" value={snap.users.welpersBgFailed} />
+            </Link>
           </div>
           <SectionTitle>Disputes</SectionTitle>
           <div

@@ -49,6 +49,10 @@ export const authProviders: NextAuthConfig["providers"] = [
           return null;
         }
 
+        if (data.user.status !== "Active") {
+          return null;
+        }
+
         return {
           id: data.user.id,
           email: data.user.email,

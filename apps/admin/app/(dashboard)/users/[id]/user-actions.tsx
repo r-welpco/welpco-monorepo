@@ -39,6 +39,7 @@ export function UserActions({
   accountType,
   currentStatus,
   currentBackgroundCheck,
+  signupCompleted,
   profileType,
   currentProfileComplete,
   currentOnboardingCompleted,
@@ -47,6 +48,7 @@ export function UserActions({
   accountType: string;
   currentStatus: string;
   currentBackgroundCheck?: string | null;
+  signupCompleted: boolean;
   profileType: "customer" | "welper" | null;
   currentProfileComplete: boolean;
   currentOnboardingCompleted: boolean;
@@ -224,8 +226,14 @@ export function UserActions({
         <div className="admin-card">
           <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Profile flags</h2>
           <p style={{ marginTop: 0, fontSize: "0.85rem", color: "var(--admin-muted)" }}>
-            Override profile completion status and onboarding flag for this user.
+            Override profile completion status and onboarding flag for this user. Signup wizard state is the
+            source of truth for launch readiness.
           </p>
+          {!signupCompleted ? (
+            <p style={{ fontSize: "0.85rem", color: "var(--admin-warn, #b45309)", marginTop: 0 }}>
+              Signup is not complete — prefer letting the user finish the wizard before overriding flags.
+            </p>
+          ) : null}
           <form onSubmit={(e) => void onProfileFlagsSubmit(e)}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: 480 }}>
               <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>

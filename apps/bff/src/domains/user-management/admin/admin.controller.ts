@@ -77,6 +77,8 @@ export class AdminController {
   @ApiQuery({ name: 'accountType', enum: AccountType, required: false })
   @ApiQuery({ name: 'status', enum: AccountStatus, required: false })
   @ApiQuery({ name: 'emailVerified', type: Boolean, required: false })
+  @ApiQuery({ name: 'signupCompleted', type: Boolean, required: false })
+  @ApiQuery({ name: 'backgroundCheckStatus', enum: BackgroundCheckStatus, required: false })
   @ApiQuery({ name: 'limit', type: Number, required: false })
   @ApiQuery({ name: 'offset', type: Number, required: false })
   @ApiQuery({
@@ -92,14 +94,24 @@ export class AdminController {
     @Query('accountType') accountType?: AccountType,
     @Query('status') status?: AccountStatus,
     @Query('emailVerified') emailVerified?: string,
+    @Query('signupCompleted') signupCompleted?: string,
+    @Query('backgroundCheckStatus') backgroundCheckStatus?: BackgroundCheckStatus,
     @Query('search') search?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
+    const bgStatus =
+      backgroundCheckStatus &&
+      Object.values(BackgroundCheckStatus).includes(backgroundCheckStatus)
+        ? backgroundCheckStatus
+        : undefined;
     const result = await this.adminService.findAll({
       accountType,
       status,
       emailVerified: emailVerified === 'true' ? true : emailVerified === 'false' ? false : undefined,
+      signupCompleted:
+        signupCompleted === 'true' ? true : signupCompleted === 'false' ? false : undefined,
+      backgroundCheckStatus: bgStatus,
       search: search?.trim() || undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
@@ -108,6 +120,15 @@ export class AdminController {
       users: result.users.map((u) => sanitizeAdminUser(u)),
       total: result.total,
     };
+  }
+
+  @Get('users/:id/signup-state')
+  @ApiOperation({ summary: 'Get signup wizard progress for a user (read-only)' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'Signup state summary' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async getUserSignupState(@Param('id') id: string) {
+    return this.adminService.getSignupStateForAdmin(id);
   }
 
   @Get('users/:id')

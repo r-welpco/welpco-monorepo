@@ -24,6 +24,12 @@ import {
   BackgroundCheckOrder,
   BackgroundCheckPaymentStatus,
 } from '../../safety-verification/entities/background-check-order.entity';
+import {
+  SignupOrchestratorService,
+  type SignupFilledData,
+  type SignupState,
+} from '../auth/signup-orchestrator.service';
+import { PayoutMethodChoice } from '../../profile-management/entities/payout-method-choice.enum';
 
 export type AdminUserListRow = UserAccount & {
   backgroundCheckPaid: boolean | null;
@@ -34,6 +40,26 @@ export type AdminUserDetailExtras = {
   backgroundCheckPaid: boolean | null;
   backgroundCheckPaidAt: string | null;
   backgroundCheckCertnStatus: string | null;
+  backgroundCheckCertnApplicantUrl: string | null;
+  backgroundCheckFailureReason: string | null;
+};
+
+export type AdminSignupStateReadout = {
+  signupCompleted: boolean;
+  selectedRole: string | null;
+  completedSteps: string[];
+  nextStep: string | null;
+  requiredSteps: string[];
+  stepSummaries: {
+    welperBackgroundCheck?: {
+      paid: boolean;
+      certnStatus: string;
+      skipped?: boolean;
+    };
+    welperPayout?: {
+      stripeOnboardingCompleted?: boolean;
+    };
+  };
 };
 
 @Injectable()
@@ -62,12 +88,50 @@ export class AdminService {
     @InjectRepository(BackgroundCheckOrder)
     private backgroundCheckOrderRepo: Repository<BackgroundCheckOrder>,
     private backgroundCheckService: BackgroundCheckService,
+    private signupOrchestrator: SignupOrchestratorService,
   ) {}
+
+  private sanitizeFilledDataForAdmin(
+    filledData: SignupFilledData,
+  ): AdminSignupStateReadout['stepSummaries'] {
+    const summaries: AdminSignupStateReadout['stepSummaries'] = {};
+    if (filledData.welperBackgroundCheck) {
+      summaries.welperBackgroundCheck = {
+        paid: filledData.welperBackgroundCheck.paid,
+        certnStatus: filledData.welperBackgroundCheck.certnStatus,
+        skipped: filledData.welperBackgroundCheck.skipped,
+      };
+    }
+    if (filledData.welperPayout) {
+      summaries.welperPayout = {
+        stripeOnboardingCompleted: filledData.welperPayout.stripeOnboardingCompleted,
+      };
+    }
+    return summaries;
+  }
+
+  async getSignupStateForAdmin(userId: string): Promise<AdminSignupStateReadout> {
+    const state = await this.signupOrchestrator.getState(userId);
+    return this.toAdminSignupReadout(state);
+  }
+
+  private toAdminSignupReadout(state: SignupState): AdminSignupStateReadout {
+    return {
+      signupCompleted: state.signupCompleted,
+      selectedRole: state.selectedRole,
+      completedSteps: state.completedSteps,
+      nextStep: state.nextStep,
+      requiredSteps: state.requiredSteps,
+      stepSummaries: this.sanitizeFilledDataForAdmin(state.filledData),
+    };
+  }
 
   async findAll(filters?: {
     accountType?: AccountType;
     status?: AccountStatus;
     emailVerified?: boolean;
+    signupCompleted?: boolean;
+    backgroundCheckStatus?: BackgroundCheckStatus;
     search?: string;
     limit?: number;
     offset?: number;
@@ -108,6 +172,19 @@ export class AdminService {
       queryBuilder.andWhere('user.emailVerified = :emailVerified', {
         emailVerified: filters.emailVerified,
       });
+    }
+
+    if (filters?.signupCompleted !== undefined) {
+      queryBuilder.andWhere('user.signupCompleted = :signupCompleted', {
+        signupCompleted: filters.signupCompleted,
+      });
+    }
+
+    if (filters?.backgroundCheckStatus) {
+      queryBuilder.andWhere(
+        'verificationStatus.background_check_status = :backgroundCheckStatus',
+        { backgroundCheckStatus: filters.backgroundCheckStatus },
+      );
     }
 
     const total = await queryBuilder.getCount();
@@ -158,6 +235,8 @@ export class AdminService {
         backgroundCheckPaid: null,
         backgroundCheckPaidAt: null,
         backgroundCheckCertnStatus: null,
+        backgroundCheckCertnApplicantUrl: null,
+        backgroundCheckFailureReason: null,
       };
     }
     const order = await this.backgroundCheckOrderRepo.findOne({ where: { userId } });
@@ -165,6 +244,8 @@ export class AdminService {
       backgroundCheckPaid: order?.paymentStatus === BackgroundCheckPaymentStatus.PAID,
       backgroundCheckPaidAt: order?.paidAt?.toISOString() ?? null,
       backgroundCheckCertnStatus: order?.certnStatus ?? null,
+      backgroundCheckCertnApplicantUrl: order?.certnApplicantUrl ?? null,
+      backgroundCheckFailureReason: order?.failureReason ?? null,
     };
   }
 
@@ -316,6 +397,9 @@ export class AdminService {
     phoneNumber?: unknown;
     address?: unknown;
     bio?: string | null;
+    payoutMethodChoice?: string | null;
+    stripeConnectConnected?: boolean;
+    stripeConnectAccountLast4?: string | null;
   }> {
     const user = await this.findOne(userId);
     if (user.accountType === AccountType.CUSTOMER) {
@@ -338,6 +422,7 @@ export class AdminService {
         where: { welperId: userId },
       });
       if (!profile) return { type: 'welper' };
+      const connectId = profile.stripeConnectAccountId?.trim() ?? '';
       return {
         type: 'welper',
         firstName: profile.firstName ?? undefined,
@@ -346,6 +431,11 @@ export class AdminService {
         onboardingCompleted: profile.onboardingCompleted,
         phoneNumber: profile.phoneNumber,
         bio: profile.bio,
+        payoutMethodChoice: profile.payoutMethodChoice ?? null,
+        stripeConnectConnected:
+          profile.payoutMethodChoice === PayoutMethodChoice.STRIPE && connectId.length > 0,
+        stripeConnectAccountLast4:
+          connectId.length >= 4 ? connectId.slice(-4) : null,
       };
     }
     return { type: null };

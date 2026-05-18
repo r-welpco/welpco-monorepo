@@ -13,7 +13,11 @@ export function LoginForm({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(params.error === "Forbidden" ? "Admin access only." : null);
+  const [error, setError] = useState<string | null>(() => {
+    if (params.error === "Forbidden") return "Admin access only.";
+    if (params.error === "AccountInactive") return "This admin account is not active.";
+    return null;
+  });
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {

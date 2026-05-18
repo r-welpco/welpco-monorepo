@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { auth, signOut } from "@/auth";
+import { ADMIN_LAUNCH_NAV } from "@/lib/admin-nav";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -8,20 +9,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <div className="admin-shell">
       <nav className="admin-nav">
         <strong style={{ marginRight: "auto", letterSpacing: "0.02em" }}>Welpco Admin</strong>
-        <Link href="/">Dashboard</Link>
-        <Link href="/disputes">Disputes</Link>
-        <Link href="/users">Users</Link>
-        <Link href="/payments">Payments</Link>
-        <Link href="/settings">Settings</Link>
-        <Link href="/bookings">Bookings</Link>
-        <Link href="/questions">Questions</Link>
-        <Link href="/categories">Categories</Link>
-        <Link href="/content">Content</Link>
-        <Link href="/reviews">Reviews</Link>
-        <Link href="/notifications">Notifications</Link>
-        <Link href="/referrals">Referrals</Link>
-        <Link href="/support-tickets">Support</Link>
-        <Link href="/audit-logs">Audit</Link>
+        {ADMIN_LAUNCH_NAV.map((item) => (
+          <Link key={item.href} href={item.href}>
+            {item.label}
+          </Link>
+        ))}
         {session?.user?.email ? (
           <span style={{ color: "var(--admin-muted)", fontSize: "0.85rem" }}>{session.user.email}</span>
         ) : null}

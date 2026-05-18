@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { join } from 'path';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DiscoveryCategoriesCacheModule } from './common/discovery-categories-cache/discovery-categories-cache.module';
 import { S3Module } from './clients/s3';
@@ -28,7 +29,11 @@ import { SafetyVerificationModule } from './domains/safety-verification/safety-v
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.local', '.env'],
+      // Resolve from package root so env loads when the process cwd is the monorepo root.
+      envFilePath: [
+        join(__dirname, '..', '.env.local'),
+        join(__dirname, '..', '.env'),
+      ],
     }),
     ScheduleModule.forRoot(),
     DiscoveryCategoriesCacheModule,

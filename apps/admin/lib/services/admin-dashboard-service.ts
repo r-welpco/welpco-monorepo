@@ -11,6 +11,10 @@ export interface AdminDashboardSnapshot {
     customers: number;
     welpers: number;
     guardians: number;
+    welpersPending: number;
+    welpersSignupIncomplete: number;
+    welpersBgInProgress: number;
+    welpersBgFailed: number;
   };
   disputes: {
     open: number;
