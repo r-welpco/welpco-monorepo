@@ -86,6 +86,12 @@ export class AdminController {
     required: false,
     description: 'Filter by user id (UUID) or partial email (case-insensitive)',
   })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    enum: ['createdAt', 'email', 'status', 'lastLoginAt', 'signupSteps'],
+  })
+  @ApiQuery({ name: 'sortDir', required: false, enum: ['asc', 'desc'] })
   @ApiResponse({
     status: 200,
     description: 'List of users',
@@ -99,12 +105,28 @@ export class AdminController {
     @Query('search') search?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortDir') sortDir?: string,
   ) {
     const bgStatus =
       backgroundCheckStatus &&
       Object.values(BackgroundCheckStatus).includes(backgroundCheckStatus)
         ? backgroundCheckStatus
         : undefined;
+    const allowedSortBy = [
+      'createdAt',
+      'email',
+      'status',
+      'lastLoginAt',
+      'signupSteps',
+    ] as const;
+    const resolvedSortBy =
+      sortBy && allowedSortBy.includes(sortBy as (typeof allowedSortBy)[number])
+        ? (sortBy as (typeof allowedSortBy)[number])
+        : undefined;
+    const resolvedSortDir =
+      sortDir === 'asc' || sortDir === 'desc' ? sortDir : undefined;
+
     const result = await this.adminService.findAll({
       accountType,
       status,
@@ -115,6 +137,8 @@ export class AdminController {
       search: search?.trim() || undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
+      sortBy: resolvedSortBy,
+      sortDir: resolvedSortDir,
     });
     return {
       users: result.users.map((u) => sanitizeAdminUser(u)),

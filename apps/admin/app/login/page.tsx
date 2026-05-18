@@ -1,3 +1,4 @@
+import { Flex } from "@welpco/ui";
 import { LoginForm } from "./login-form";
 
 export default function LoginPage({
@@ -6,16 +7,8 @@ export default function LoginPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1.5rem",
-      }}
-    >
+    <Flex align="center" justify="center" minHeight="100vh" p="5">
       <LoginForm searchParams={searchParams} />
-    </div>
+    </Flex>
   );
 }

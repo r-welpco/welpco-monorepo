@@ -26,7 +26,13 @@ export interface AdminUserRow {
   /** Welper only: fee paid for background check. null for non-welpers. */
   backgroundCheckPaid?: boolean | null;
   backgroundCheckStatus?: string | null;
+  /** Customer/Welper signup wizard progress; null for Admin/Guardian. */
+  signupStepsCompleted?: number | null;
+  signupStepsRequired?: number | null;
 }
+
+export type AdminUsersSortBy = "createdAt" | "email" | "status" | "lastLoginAt" | "signupSteps";
+export type AdminUsersSortDir = "asc" | "desc";
 
 export interface AdminUserVerification {
   id?: string;
@@ -95,6 +101,8 @@ export async function listAdminUsers(params?: {
   signupCompleted?: boolean;
   backgroundCheckStatus?: string;
   search?: string;
+  sortBy?: AdminUsersSortBy;
+  sortDir?: AdminUsersSortDir;
 }): Promise<AdminUsersListResponse> {
   return apiClient.get<AdminUsersListResponse>("/api/admin/users", {
     params: {
@@ -106,8 +114,23 @@ export async function listAdminUsers(params?: {
       signupCompleted: params?.signupCompleted,
       backgroundCheckStatus: params?.backgroundCheckStatus,
       search: params?.search?.trim() || undefined,
+      sortBy: params?.sortBy,
+      sortDir: params?.sortDir,
     },
   });
+}
+
+export function formatSignupStepsProgress(user: AdminUserRow): string {
+  if (
+    user.signupStepsCompleted == null ||
+    user.signupStepsRequired == null
+  ) {
+    return "—";
+  }
+  if (user.signupCompleted) {
+    return "Done";
+  }
+  return `${user.signupStepsCompleted}/${user.signupStepsRequired}`;
 }
 
 export async function getAdminUser(id: string): Promise<AdminUserDetail> {
@@ -180,6 +203,25 @@ export interface AdminServiceOffering {
   hourlyRate?: number | string;
   experienceYears?: number | string;
   active?: boolean;
+}
+
+/** Splits stored offering text (`title\\n\\ndescription`) for admin display. */
+export function parseOfferingDescription(desc: string | undefined): {
+  title: string | null;
+  body: string;
+} {
+  const raw = desc?.trim();
+  if (!raw) return { title: null, body: "—" };
+  const splitAt = raw.indexOf("\n\n");
+  if (splitAt > 0 && splitAt <= 120) {
+    const title = raw.slice(0, splitAt).trim();
+    const body = raw.slice(splitAt + 2).trim();
+    return {
+      title: title || null,
+      body: body || "—",
+    };
+  }
+  return { title: null, body: raw };
 }
 
 export async function getAdminUserOfferings(id: string): Promise<AdminServiceOffering[]> {

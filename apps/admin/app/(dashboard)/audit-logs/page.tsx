@@ -1,4 +1,18 @@
+import {
+  Button,
+  Card,
+  Flex,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeaderCell,
+  TableHeader,
+  TableRow,
+  Text,
+} from "@welpco/ui";
 import Link from "next/link";
+import { AdminErrorCallout } from "@/components/admin-callout";
+import { AdminPageHeader } from "@/components/admin-page-header";
 import { listAdminAuditLogs } from "@/lib/services/admin-audit-service";
 
 export const dynamic = "force-dynamic";
@@ -24,66 +38,75 @@ export default async function AuditLogsPage({
   const buildHref = (p: number) => (p > 1 ? `/audit-logs?page=${p}` : "/audit-logs");
 
   return (
-    <div>
-      <h1 style={{ marginTop: 0 }}>Audit log</h1>
-      <p style={{ color: "var(--admin-muted)", maxWidth: 640 }}>
-        Recent staff actions (user status, background check, unlock, payment delay, dispute resolutions). Requires{" "}
-        <code>admin_audit_logs</code> migration applied.
-      </p>
-      <p style={{ color: "var(--admin-muted)" }}>
+    <Flex direction="column" gap="4">
+      <AdminPageHeader
+        title="Audit log"
+        description="Recent staff actions (user status, background check, unlock, payment delay, dispute resolutions). Requires admin_audit_logs migration applied."
+      />
+      <Text size="2" color="gray">
         {list.total} entries · page {list.page} of {list.totalPages}
-      </p>
-      {err ? <p className="err">{err}</p> : null}
-      <div className="admin-card" style={{ padding: 0, overflow: "hidden" }}>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>When</th>
-              <th>Action</th>
-              <th>Actor</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody>
+      </Text>
+      {err ? <AdminErrorCallout message={err} /> : null}
+
+      <Card size="2" style={{ overflow: "auto" }}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableColumnHeaderCell>When</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Action</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Actor</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Details</TableColumnHeaderCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {list.data.length === 0 ? (
-              <tr>
-                <td colSpan={4} style={{ color: "var(--admin-muted)", padding: "1.5rem" }}>
-                  No entries yet.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={4}>
+                  <Text color="gray">No entries yet.</Text>
+                </TableCell>
+              </TableRow>
             ) : (
               list.data.map((row) => (
-                <tr key={row.id}>
-                  <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)", whiteSpace: "nowrap" }}>
-                    {new Date(row.createdAt).toLocaleString()}
-                  </td>
-                  <td>
-                    <code style={{ fontSize: "0.8rem" }}>{row.action}</code>
-                  </td>
-                  <td style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.8rem" }}>
-                    <Link href={`/users/${row.actorUserId}`}>{row.actorUserId.slice(0, 8)}…</Link>
-                  </td>
-                  <td style={{ fontSize: "0.8rem", maxWidth: 360, wordBreak: "break-word" }}>
-                    {row.metadata ? JSON.stringify(row.metadata) : "—"}
-                  </td>
-                </tr>
+                <TableRow key={row.id}>
+                  <TableCell style={{ whiteSpace: "nowrap" }}>
+                    <Text size="1" color="gray">
+                      {new Date(row.createdAt).toLocaleString()}
+                    </Text>
+                  </TableCell>
+                  <TableCell>
+                    <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                      {row.action}
+                    </Text>
+                  </TableCell>
+                  <TableCell>
+                    <Link href={`/users/${row.actorUserId}`}>
+                      <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                        {row.actorUserId.slice(0, 8)}…
+                      </Text>
+                    </Link>
+                  </TableCell>
+                  <TableCell style={{ maxWidth: 360, wordBreak: "break-word" }}>
+                    <Text size="1">{row.metadata ? JSON.stringify(row.metadata) : "—"}</Text>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
-      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+          </TableBody>
+        </Table>
+      </Card>
+
+      <Flex gap="3">
         {list.page > 1 ? (
-          <Link href={buildHref(list.page - 1)} className="btn">
-            Previous
-          </Link>
+          <Button asChild variant="soft">
+            <Link href={buildHref(list.page - 1)}>Previous</Link>
+          </Button>
         ) : null}
         {list.page < list.totalPages ? (
-          <Link href={buildHref(list.page + 1)} className="btn">
-            Next
-          </Link>
+          <Button asChild variant="soft">
+            <Link href={buildHref(list.page + 1)}>Next</Link>
+          </Button>
         ) : null}
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 }

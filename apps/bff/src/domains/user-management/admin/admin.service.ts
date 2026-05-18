@@ -34,7 +34,12 @@ import { PayoutMethodChoice } from '../../profile-management/entities/payout-met
 export type AdminUserListRow = UserAccount & {
   backgroundCheckPaid: boolean | null;
   backgroundCheckStatus: string | null;
+  signupStepsCompleted: number | null;
+  signupStepsRequired: number | null;
 };
+
+export type AdminUsersSortBy = 'createdAt' | 'email' | 'status' | 'lastLoginAt' | 'signupSteps';
+export type AdminUsersSortDir = 'asc' | 'desc';
 
 export type AdminUserDetailExtras = {
   backgroundCheckPaid: boolean | null;
@@ -126,6 +131,49 @@ export class AdminService {
     };
   }
 
+  private async enrichUsersForList(users: UserAccount[]): Promise<AdminUserListRow[]> {
+    const paymentMap = await this.backgroundCheckService.getPaymentSummaryByUserIds(
+      users.map((u) => u.id),
+    );
+    const signupCounts = await Promise.all(
+      users.map((user) => this.getSignupStepCountsForList(user)),
+    );
+
+    return users.map((user, index) => {
+      const payment = paymentMap.get(user.id);
+      const isWelper = user.accountType === AccountType.WELPER;
+      const steps = signupCounts[index];
+      return {
+        ...user,
+        backgroundCheckPaid: isWelper ? (payment?.paid ?? false) : null,
+        backgroundCheckStatus:
+          user.verificationStatus?.backgroundCheckStatus ?? null,
+        signupStepsCompleted: steps.completed,
+        signupStepsRequired: steps.required,
+      };
+    });
+  }
+
+  private async getSignupStepCountsForList(
+    user: UserAccount,
+  ): Promise<{ completed: number | null; required: number | null }> {
+    const hasSignupFlow =
+      user.accountType === AccountType.CUSTOMER ||
+      user.accountType === AccountType.WELPER;
+    if (!hasSignupFlow) {
+      return { completed: null, required: null };
+    }
+    try {
+      const state = await this.signupOrchestrator.getState(user.id);
+      return {
+        completed: state.completedSteps.length,
+        required: state.requiredSteps.length,
+      };
+    } catch {
+      return { completed: null, required: null };
+    }
+  }
+
   async findAll(filters?: {
     accountType?: AccountType;
     status?: AccountStatus;
@@ -135,6 +183,8 @@ export class AdminService {
     search?: string;
     limit?: number;
     offset?: number;
+    sortBy?: AdminUsersSortBy;
+    sortDir?: AdminUsersSortDir;
   }): Promise<{ users: AdminUserListRow[]; total: number }> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
@@ -188,6 +238,33 @@ export class AdminService {
     }
 
     const total = await queryBuilder.getCount();
+    const sortBy = filters?.sortBy ?? 'createdAt';
+    const sortDir: 'ASC' | 'DESC' =
+      filters?.sortDir === 'asc' ? 'ASC' : 'DESC';
+
+    if (sortBy === 'signupSteps') {
+      const allUsers = await queryBuilder.getMany();
+      const enriched = await this.enrichUsersForList(allUsers);
+      enriched.sort((a, b) => {
+        const ac = a.signupStepsCompleted ?? -1;
+        const bc = b.signupStepsCompleted ?? -1;
+        return sortDir === 'ASC' ? ac - bc : bc - ac;
+      });
+      const offset = filters?.offset ?? 0;
+      const limit = filters?.limit ?? enriched.length;
+      return {
+        users: enriched.slice(offset, offset + limit),
+        total,
+      };
+    }
+
+    const sortColumn: Record<Exclude<AdminUsersSortBy, 'signupSteps'>, string> = {
+      createdAt: 'user.createdAt',
+      email: 'user.email',
+      status: 'user.status',
+      lastLoginAt: 'user.lastLoginAt',
+    };
+    queryBuilder.orderBy(sortColumn[sortBy], sortDir);
 
     if (filters?.limit) {
       queryBuilder.limit(filters.limit);
@@ -196,23 +273,8 @@ export class AdminService {
       queryBuilder.offset(filters.offset);
     }
 
-    queryBuilder.orderBy('user.createdAt', 'DESC');
-
     const users = await queryBuilder.getMany();
-    const paymentMap = await this.backgroundCheckService.getPaymentSummaryByUserIds(
-      users.map((u) => u.id),
-    );
-
-    const enriched: AdminUserListRow[] = users.map((user) => {
-      const payment = paymentMap.get(user.id);
-      const isWelper = user.accountType === AccountType.WELPER;
-      return {
-        ...user,
-        backgroundCheckPaid: isWelper ? (payment?.paid ?? false) : null,
-        backgroundCheckStatus:
-          user.verificationStatus?.backgroundCheckStatus ?? null,
-      };
-    });
+    const enriched = await this.enrichUsersForList(users);
 
     return { users: enriched, total };
   }

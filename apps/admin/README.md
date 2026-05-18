@@ -1,21 +1,44 @@
 # Welpco Admin
 
-Next.js admin console (default dev port **8082**).
+Next.js staff console (default dev port **8082**). **Launch slice** UI uses [`@welpco/ui`](../../packages/ui) + Radix Themes (dark). Other routes (bookings, disputes, CMS, etc.) still use legacy CSS until migrated.
 
 ## Environment
 
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_API_URL` | BFF base URL (e.g. `http://localhost:3000`). All `/api/*` requests go here with the admin JWT. |
-| NextAuth variables | See [`auth.ts`](./auth.ts) / your deployment secrets for `AUTH_SECRET`, OAuth or credentials provider settings. |
+Copy [`.env.example`](./.env.example) to `.env.local` and adjust values.
 
-## Production notes
+| Variable | Required (prod) | Description |
+|----------|-----------------|-------------|
+| `NEXT_PUBLIC_API_URL` | Yes | BFF base URL (e.g. `http://localhost:3000`). All `/api/*` requests use the admin JWT. |
+| `NEXTAUTH_SECRET` | Yes | Session signing — `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Yes | Canonical admin URL (e.g. `http://localhost:8082` or `https://admin.example.com`) |
 
-- **CORS**: The BFF must allow this app’s origin. In development, `FRONTEND_URL` alone is not enough if the main app and admin use different ports; the BFF merges common localhost origins in dev. For production, set **`CORS_ORIGINS`** to a comma-separated list of every browser origin that calls the API (e.g. `https://app.example.com,https://admin.example.com`).
-- **HTTPS**: Use secure cookies and correct `NEXTAUTH_URL` for the admin host.
-- **Migration**: After deploying BFF changes, run DB migrations so `user_accounts` moderation columns exist (`pnpm` migration script in `apps/bff`).
+Auth.js v5 may also accept `AUTH_SECRET` / `AUTH_URL` as aliases; this app reads `NEXTAUTH_*` in [`auth.ts`](./auth.ts).
 
 ## Scripts
 
-- `pnpm dev` — `next dev -p 8082`
-- `pnpm build` / `pnpm start` — production build and serve on 8082
+- `pnpm dev` — from monorepo root: `pnpm dev:admin` (admin + BFF)
+- `pnpm build` / `pnpm start` — production build on port 8082
+
+Build order (CI / local):
+
+```bash
+pnpm --filter @welpco/ui build
+pnpm --filter @welpco/admin build
+```
+
+## Production checklist (launch deploy)
+
+1. Set `NEXT_PUBLIC_API_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` on the admin host (Vercel env).
+2. Add the admin origin to BFF **`CORS_ORIGINS`** (comma-separated).
+3. Run BFF DB migrations (`admin_audit_logs`, user moderation columns, etc.).
+4. Create at least one admin user (`pnpm create:admin` against the same DB the BFF uses).
+5. Smoke: login → Dashboard → Users → user detail → Audit log.
+
+## Launch navigation
+
+Dashboard, Users, and Audit (see [`lib/admin-nav.ts`](./lib/admin-nav.ts)). Other modules remain reachable by direct URL with legacy styling.
+
+## Notes
+
+- **CORS**: In development the BFF allows common localhost ports; production requires explicit `CORS_ORIGINS`.
+- **HTTPS**: Use `NEXTAUTH_URL` with `https://` in production; `trustHost: true` is enabled in auth config for Vercel.

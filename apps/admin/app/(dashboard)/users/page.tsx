@@ -1,12 +1,38 @@
+import {
+  Badge,
+  Button,
+  Card,
+  Flex,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeaderCell,
+  TableHeader,
+  TableRow,
+  Text,
+} from "@welpco/ui";
 import Link from "next/link";
+import { AdminErrorCallout } from "@/components/admin-callout";
+import { AdminPageHeader } from "@/components/admin-page-header";
+import { NativeFormField, nativeInputProps, nativeSelectProps } from "@/components/native-form-field";
 import {
   BACKGROUND_CHECK_STATUSES,
+  formatSignupStepsProgress,
   listAdminUsers,
+  type AdminUsersSortBy,
+  type AdminUsersSortDir,
 } from "@/lib/services/admin-users-service";
 
 export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 25;
+
+const SORTABLE_COLUMNS = [
+  "email",
+  "status",
+  "createdAt",
+  "signupSteps",
+] as const satisfies readonly AdminUsersSortBy[];
 
 const ACCOUNT_TYPES = ["", "Customer", "Welper", "Guardian", "Admin"] as const;
 const STATUSES = ["", "Pending", "Active", "Suspended", "Deactivated"] as const;
@@ -41,6 +67,8 @@ export default async function AdminUsersPage({
     backgroundCheckStatus?: string;
     search?: string;
     offset?: string;
+    sortBy?: string;
+    sortDir?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -72,6 +100,13 @@ export default async function AdminUsersPage({
       ? sp.backgroundCheckStatus
       : undefined;
 
+  const sortBy =
+    sp.sortBy && SORTABLE_COLUMNS.includes(sp.sortBy as (typeof SORTABLE_COLUMNS)[number])
+      ? (sp.sortBy as AdminUsersSortBy)
+      : "createdAt";
+  const sortDir: AdminUsersSortDir =
+    sp.sortDir === "asc" || sp.sortDir === "desc" ? sp.sortDir : "desc";
+
   let data;
   let err: string | null = null;
   try {
@@ -84,6 +119,8 @@ export default async function AdminUsersPage({
       signupCompleted,
       backgroundCheckStatus,
       search,
+      sortBy,
+      sortDir,
     });
   } catch (e) {
     err = e instanceof Error ? e.message : "Failed to load users";
@@ -104,6 +141,8 @@ export default async function AdminUsersPage({
       signupCompleted: sp.signupCompleted,
       backgroundCheckStatus,
       search,
+      sortBy,
+      sortDir,
       ...overrides,
     };
     if (merged.accountType) q.set("accountType", merged.accountType);
@@ -116,183 +155,199 @@ export default async function AdminUsersPage({
     }
     if (merged.backgroundCheckStatus) q.set("backgroundCheckStatus", merged.backgroundCheckStatus);
     if (merged.search) q.set("search", merged.search);
+    if (merged.sortBy && merged.sortBy !== "createdAt") q.set("sortBy", merged.sortBy);
+    if (merged.sortDir && merged.sortDir !== "desc") q.set("sortDir", merged.sortDir);
     if (o > 0) q.set("offset", String(o));
     const qs = q.toString();
     return qs ? `/users?${qs}` : "/users";
   };
 
+  const sortHref = (column: AdminUsersSortBy) => {
+    const nextDir: AdminUsersSortDir =
+      sortBy === column && sortDir === "desc" ? "asc" : "desc";
+    return buildHref(0, { sortBy: column, sortDir: nextDir, offset: undefined });
+  };
+
+  const sortIndicator = (column: AdminUsersSortBy) => {
+    if (sortBy !== column) return "";
+    return sortDir === "asc" ? " ↑" : " ↓";
+  };
+
   return (
-    <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 style={{ marginTop: 0 }}>Users</h1>
-        <Link href="/users/new" className="btn btn-primary">
-          Create admin
-        </Link>
-      </div>
+    <Flex direction="column" gap="4">
+      <AdminPageHeader
+        title="Users"
+        actions={
+          <Button asChild>
+            <Link href="/users/new">Create admin</Link>
+          </Button>
+        }
+      />
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+      <Flex gap="2" wrap="wrap">
         {QUICK_PRESETS.map((preset) => (
-          <Link
-            key={preset.label}
-            href={buildHref(0, preset.query)}
-            className="btn"
-            style={{ fontSize: "0.8rem", padding: "6px 12px" }}
-          >
-            {preset.label}
-          </Link>
+          <Button key={preset.label} asChild size="1" variant="soft">
+            <Link href={buildHref(0, preset.query)}>{preset.label}</Link>
+          </Button>
         ))}
-      </div>
+      </Flex>
 
-      <form
-        method="get"
-        className="admin-card"
-        style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "flex-end", marginBottom: "1rem" }}
-      >
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
-          Account type
-          <select name="accountType" defaultValue={accountType ?? ""} className="admin-input">
-            <option value="">All</option>
-            {ACCOUNT_TYPES.filter(Boolean).map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
-          Status
-          <select name="status" defaultValue={status ?? ""} className="admin-input">
-            <option value="">All</option>
-            {STATUSES.filter(Boolean).map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
-          Email verified
-          <select name="emailVerified" defaultValue={sp.emailVerified ?? ""} className="admin-input">
-            <option value="">All</option>
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-        </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
-          Signup complete
-          <select name="signupCompleted" defaultValue={sp.signupCompleted ?? ""} className="admin-input">
-            <option value="">All</option>
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-        </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
-          BG status
-          <select
-            name="backgroundCheckStatus"
-            defaultValue={backgroundCheckStatus ?? ""}
-            className="admin-input"
-          >
-            <option value="">All</option>
-            {BACKGROUND_CHECK_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 4,
-            fontSize: "0.85rem",
-            minWidth: 220,
-          }}
-        >
-          Search (email or user ID)
-          <input
-            type="search"
-            name="search"
-            defaultValue={search ?? ""}
-            className="admin-input"
-            placeholder="user@example.com or UUID"
-            autoComplete="off"
-          />
-        </label>
-        <button type="submit" className="btn">
-          Apply filters
-        </button>
-      </form>
+      <Card size="2">
+        <form method="get">
+          <Flex gap="4" wrap="wrap" align="end">
+            <NativeFormField label="Account type">
+              <select name="accountType" defaultValue={accountType ?? ""} {...nativeSelectProps()}>
+                <option value="">All</option>
+                {ACCOUNT_TYPES.filter(Boolean).map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </NativeFormField>
+            <NativeFormField label="Status">
+              <select name="status" defaultValue={status ?? ""} {...nativeSelectProps()}>
+                <option value="">All</option>
+                {STATUSES.filter(Boolean).map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </NativeFormField>
+            <NativeFormField label="Email verified">
+              <select name="emailVerified" defaultValue={sp.emailVerified ?? ""} {...nativeSelectProps()}>
+                <option value="">All</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </NativeFormField>
+            <NativeFormField label="Signup complete">
+              <select name="signupCompleted" defaultValue={sp.signupCompleted ?? ""} {...nativeSelectProps()}>
+                <option value="">All</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </NativeFormField>
+            <NativeFormField label="BG status">
+              <select
+                name="backgroundCheckStatus"
+                defaultValue={backgroundCheckStatus ?? ""}
+                {...nativeSelectProps()}
+              >
+                <option value="">All</option>
+                {BACKGROUND_CHECK_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </NativeFormField>
+            <NativeFormField label="Search (email or user ID)">
+              <input
+                type="search"
+                name="search"
+                defaultValue={search ?? ""}
+                placeholder="user@example.com or UUID"
+                autoComplete="off"
+                {...nativeInputProps()}
+              />
+            </NativeFormField>
+            <Button type="submit" variant="soft">
+              Apply filters
+            </Button>
+          </Flex>
+        </form>
+      </Card>
 
-      <p style={{ color: "var(--admin-muted)" }}>
+      <Text size="2" color="gray">
         {data.total} accounts · showing {data.users.length} (offset {offset})
-      </p>
-      {err ? <p className="err">{err}</p> : null}
-      <div className="admin-card" style={{ padding: 0, overflow: "auto" }}>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Email</th>
-              <th>Type</th>
-              <th>Status</th>
-              <th>Signup</th>
-              <th>Verified</th>
-              <th>BG paid</th>
-              <th>BG status</th>
-              <th>Locale</th>
-              <th>Created</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
+      </Text>
+      {err ? <AdminErrorCallout message={err} /> : null}
+
+      <Card size="2" style={{ overflow: "auto" }}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableColumnHeaderCell>
+                <Link href={sortHref("email")}>Email{sortIndicator("email")}</Link>
+              </TableColumnHeaderCell>
+              <TableColumnHeaderCell>Type</TableColumnHeaderCell>
+              <TableColumnHeaderCell>
+                <Link href={sortHref("status")}>Status{sortIndicator("status")}</Link>
+              </TableColumnHeaderCell>
+              <TableColumnHeaderCell>Signup</TableColumnHeaderCell>
+              <TableColumnHeaderCell>
+                <Link href={sortHref("signupSteps")}>
+                  Onboarding{sortIndicator("signupSteps")}
+                </Link>
+              </TableColumnHeaderCell>
+              <TableColumnHeaderCell>Verified</TableColumnHeaderCell>
+              <TableColumnHeaderCell>BG paid</TableColumnHeaderCell>
+              <TableColumnHeaderCell>BG status</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Locale</TableColumnHeaderCell>
+              <TableColumnHeaderCell>
+                <Link href={sortHref("createdAt")}>Created{sortIndicator("createdAt")}</Link>
+              </TableColumnHeaderCell>
+              <TableColumnHeaderCell />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {data.users.length === 0 ? (
-              <tr>
-                <td colSpan={10} style={{ color: "var(--admin-muted)", padding: "1.5rem" }}>
-                  No users.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={11}>
+                  <Text color="gray">No users.</Text>
+                </TableCell>
+              </TableRow>
             ) : (
               data.users.map((u) => (
-                <tr key={u.id}>
-                  <td>{u.email}</td>
-                  <td>
-                    <span className="badge">{u.accountType}</span>
-                  </td>
-                  <td>{u.status}</td>
-                  <td>{u.signupCompleted ? "Yes" : "No"}</td>
-                  <td>{u.emailVerified ? "Yes" : "No"}</td>
-                  <td>
+                <TableRow key={u.id}>
+                  <TableCell>{u.email}</TableCell>
+                  <TableCell>
+                    <Badge variant="soft">{u.accountType}</Badge>
+                  </TableCell>
+                  <TableCell>{u.status}</TableCell>
+                  <TableCell>{u.signupCompleted ? "Yes" : "No"}</TableCell>
+                  <TableCell>{formatSignupStepsProgress(u)}</TableCell>
+                  <TableCell>{u.emailVerified ? "Yes" : "No"}</TableCell>
+                  <TableCell>
                     {u.backgroundCheckPaid === null ? "—" : u.backgroundCheckPaid ? "Yes" : "No"}
-                  </td>
-                  <td style={{ fontSize: "0.85rem" }}>
-                    {u.accountType === "Welper" ? (u.backgroundCheckStatus ?? "—") : "—"}
-                  </td>
-                  <td style={{ fontSize: "0.85rem" }}>{u.preferredLocale ?? "—"}</td>
-                  <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}>
-                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
+                    <Text size="1">
+                      {u.accountType === "Welper" ? (u.backgroundCheckStatus ?? "—") : "—"}
+                    </Text>
+                  </TableCell>
+                  <TableCell>
+                    <Text size="1">{u.preferredLocale ?? "—"}</Text>
+                  </TableCell>
+                  <TableCell>
+                    <Text size="1" color="gray">
+                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
+                    </Text>
+                  </TableCell>
+                  <TableCell>
                     <Link href={`/users/${u.id}`}>View</Link>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
-      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+          </TableBody>
+        </Table>
+      </Card>
+
+      <Flex gap="3">
         {hasPrev ? (
-          <Link href={buildHref(prevOffset)} className="btn">
-            Previous
-          </Link>
+          <Button asChild variant="soft">
+            <Link href={buildHref(prevOffset)}>Previous</Link>
+          </Button>
         ) : null}
         {hasNext ? (
-          <Link href={buildHref(nextOffset)} className="btn">
-            Next
-          </Link>
+          <Button asChild variant="soft">
+            <Link href={buildHref(nextOffset)}>Next</Link>
+          </Button>
         ) : null}
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 }

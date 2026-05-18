@@ -1,67 +1,94 @@
 "use client";
 
+import {
+  Badge,
+  Button,
+  Card,
+  Flex,
+  Grid,
+  Heading,
+  Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeaderCell,
+  TableHeader,
+  TableRow,
+  Text,
+} from "@welpco/ui";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
+import { AdminErrorCallout } from "@/components/admin-callout";
 import { getAdminDashboardSnapshot } from "@/lib/services/admin-dashboard-service";
 import { listAdminAuditLogs, type AdminAuditEntry } from "@/lib/services/admin-audit-service";
 
 const LIVE_STORAGE_KEY = "welpco-admin-dashboard-live";
 
-function formatMoney(cents: number, currency: string): string {
-  return `${(cents / 100).toFixed(2)} ${currency.toUpperCase()}`;
-}
-
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="admin-card" style={{ marginBottom: 0 }}>
-      <p style={{ margin: 0, color: "var(--admin-muted)", fontSize: "0.85rem" }}>{label}</p>
-      <p style={{ margin: "0.35rem 0 0", fontSize: "1.75rem", fontWeight: 600 }}>{value}</p>
-    </div>
+    <Card size="2">
+      <Text size="1" color="gray">
+        {label}
+      </Text>
+      <Heading size="6" weight="bold" mt="1">
+        {value}
+      </Heading>
+    </Card>
   );
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 style={{ fontSize: "1rem", marginTop: "1.75rem", marginBottom: "0.75rem" }}>{children}</h2>
+    <Heading size="3" mt="5" mb="3">
+      {children}
+    </Heading>
   );
 }
 
 function AuditTable({ rows }: { rows: AdminAuditEntry[] }) {
   if (rows.length === 0) {
-    return <p style={{ color: "var(--admin-muted)", fontSize: "0.9rem" }}>No recent entries.</p>;
+    return (
+      <Text size="2" color="gray">
+        No recent entries.
+      </Text>
+    );
   }
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>When</th>
-            <th>Action</th>
-            <th>Actor</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id}>
-              <td style={{ whiteSpace: "nowrap", fontSize: "0.8rem" }}>
-                {new Date(r.createdAt).toLocaleString()}
-              </td>
-              <td>
-                <code style={{ fontSize: "0.75rem" }}>{r.action}</code>
-              </td>
-              <td style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.75rem" }}>
-                <Link href={`/users/${r.actorUserId}`}>{r.actorUserId.slice(0, 8)}…</Link>
-              </td>
-              <td style={{ fontSize: "0.8rem", maxWidth: 280, wordBreak: "break-word" }}>
-                {r.metadata ? JSON.stringify(r.metadata) : "—"}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableColumnHeaderCell>When</TableColumnHeaderCell>
+          <TableColumnHeaderCell>Action</TableColumnHeaderCell>
+          <TableColumnHeaderCell>Actor</TableColumnHeaderCell>
+          <TableColumnHeaderCell>Details</TableColumnHeaderCell>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((r) => (
+          <TableRow key={r.id}>
+            <TableCell style={{ whiteSpace: "nowrap" }}>
+              <Text size="1">{new Date(r.createdAt).toLocaleString()}</Text>
+            </TableCell>
+            <TableCell>
+              <Badge variant="soft" size="1">
+                {r.action}
+              </Badge>
+            </TableCell>
+            <TableCell>
+              <Link href={`/users/${r.actorUserId}`}>
+                <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                  {r.actorUserId.slice(0, 8)}…
+                </Text>
+              </Link>
+            </TableCell>
+            <TableCell style={{ maxWidth: 280, wordBreak: "break-word" }}>
+              <Text size="1">{r.metadata ? JSON.stringify(r.metadata) : "—"}</Text>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -70,13 +97,16 @@ export function DashboardLive() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    try {
-      const v = localStorage.getItem(LIVE_STORAGE_KEY);
-      setLive(v === "1" || v === "true");
-    } catch {
-      setLive(false);
-    }
-    setHydrated(true);
+    const frame = requestAnimationFrame(() => {
+      try {
+        const v = localStorage.getItem(LIVE_STORAGE_KEY);
+        setLive(v === "1" || v === "true");
+      } catch {
+        setLive(false);
+      }
+      setHydrated(true);
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const setLivePersist = useCallback((next: boolean) => {
@@ -114,43 +144,27 @@ export function DashboardLive() {
   const err = dashboardQuery.error instanceof Error ? dashboardQuery.error.message : null;
 
   return (
-    <div>
-      <p style={{ color: "var(--admin-muted)", maxWidth: 640 }}>
-        Welper launch overview. Manage accounts in{" "}
-        <Link href="/users">Users</Link> and review actions in{" "}
+    <Flex direction="column" gap="4">
+      <Text size="2" color="gray" style={{ maxWidth: 640 }}>
+        Welper launch overview. Manage accounts in <Link href="/users">Users</Link> and review actions in{" "}
         <Link href="/audit-logs">Audit</Link>.
-      </p>
+      </Text>
 
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          gap: "1rem",
-          marginTop: "1rem",
-        }}
-      >
-        <label
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            cursor: "pointer",
-            fontSize: "0.9rem",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={live}
-            disabled={!hydrated}
-            onChange={(e) => setLivePersist(e.target.checked)}
-          />
-          Live updates (every 5s when this tab is visible)
-        </label>
-        <button
+      <Flex align="center" gap="4" wrap="wrap">
+        <Text as="label" size="2">
+          <Flex gap="2" align="center">
+            <Switch
+              checked={live}
+              disabled={!hydrated}
+              onCheckedChange={(checked) => setLivePersist(checked === true)}
+            />
+            Live updates (every 5s when this tab is visible)
+          </Flex>
+        </Text>
+        <Button
           type="button"
-          className="btn"
-          style={{ fontSize: "0.85rem" }}
+          size="1"
+          variant="soft"
           onClick={() => {
             void dashboardQuery.refetch();
             void auditQuery.refetch();
@@ -158,143 +172,61 @@ export function DashboardLive() {
           disabled={dashboardQuery.isFetching}
         >
           {dashboardQuery.isFetching ? "Refreshing…" : "Refresh now"}
-        </button>
+        </Button>
         {snap ? (
-          <span style={{ color: "var(--admin-muted)", fontSize: "0.8rem" }}>
+          <Text size="1" color="gray">
             Last snapshot: {new Date(snap.generatedAt).toLocaleString()}
-          </span>
+          </Text>
         ) : null}
-      </div>
+      </Flex>
 
-      {err ? <p className="err" style={{ marginTop: "1rem" }}>{err}</p> : null}
+      {err ? <AdminErrorCallout message={err} /> : null}
 
       {dashboardQuery.isLoading && !snap ? (
-        <p style={{ marginTop: "1rem", color: "var(--admin-muted)" }}>Loading metrics…</p>
+        <Text color="gray">Loading metrics…</Text>
       ) : null}
 
       {snap ? (
-        <>
-          <SectionTitle>Accounts</SectionTitle>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-              gap: "0.75rem",
-            }}
+        <Grid columns={{ initial: "1", sm: "2", md: "4" }} gap="3">
+          <Link href="/users?accountType=Welper&status=Pending" style={{ textDecoration: "none", color: "inherit" }}>
+            <StatCard label="Welpers pending" value={snap.users.welpersPending} />
+          </Link>
+          <Link
+            href="/users?accountType=Welper&signupCompleted=false"
+            style={{ textDecoration: "none", color: "inherit" }}
           >
-            <StatCard label="Total users" value={snap.users.totalUsers} />
-            <StatCard label="Active" value={snap.users.activeUsers} />
-            <StatCard label="Pending" value={snap.users.pendingUsers} />
-            <StatCard label="Suspended" value={snap.users.suspendedUsers} />
-            <StatCard label="Deactivated" value={snap.users.deactivatedUsers} />
-          </div>
-          <SectionTitle>By role</SectionTitle>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-              gap: "0.75rem",
-            }}
+            <StatCard label="Signup incomplete" value={snap.users.welpersSignupIncomplete} />
+          </Link>
+          <Link
+            href="/users?accountType=Welper&backgroundCheckStatus=In+Progress"
+            style={{ textDecoration: "none", color: "inherit" }}
           >
-            <StatCard label="Customers" value={snap.users.customers} />
-            <StatCard label="Welpers" value={snap.users.welpers} />
-            <StatCard label="Guardians" value={snap.users.guardians} />
-          </div>
-          <SectionTitle>Welper launch</SectionTitle>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-              gap: "0.75rem",
-            }}
+            <StatCard label="BG in progress" value={snap.users.welpersBgInProgress} />
+          </Link>
+          <Link
+            href="/users?accountType=Welper&backgroundCheckStatus=Failed"
+            style={{ textDecoration: "none", color: "inherit" }}
           >
-            <Link href="/users?accountType=Welper&status=Pending" style={{ textDecoration: "none", color: "inherit" }}>
-              <StatCard label="Welpers pending" value={snap.users.welpersPending} />
-            </Link>
-            <Link
-              href="/users?accountType=Welper&signupCompleted=false"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <StatCard label="Signup incomplete" value={snap.users.welpersSignupIncomplete} />
-            </Link>
-            <Link
-              href="/users?accountType=Welper&backgroundCheckStatus=In+Progress"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <StatCard label="BG in progress" value={snap.users.welpersBgInProgress} />
-            </Link>
-            <Link
-              href="/users?accountType=Welper&backgroundCheckStatus=Failed"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <StatCard label="BG failed" value={snap.users.welpersBgFailed} />
-            </Link>
-          </div>
-          <SectionTitle>Disputes</SectionTitle>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-              gap: "0.75rem",
-            }}
-          >
-            <StatCard label="Open" value={snap.disputes.open} />
-            <StatCard label="In review" value={snap.disputes.inReview} />
-            <StatCard label="Escalated" value={snap.disputes.escalated} />
-            <StatCard label="Resolved" value={snap.disputes.resolved} />
-          </div>
-          <SectionTitle>Support tickets</SectionTitle>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-              gap: "0.75rem",
-            }}
-          >
-            <StatCard label="Open" value={snap.supportTickets.open} />
-            <StatCard label="In progress" value={snap.supportTickets.inProgress} />
-            <StatCard label="Closed" value={snap.supportTickets.closed} />
-          </div>
-          <SectionTitle>Bookings</SectionTitle>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-              gap: "0.75rem",
-            }}
-          >
-            <StatCard label="Created (24h)" value={snap.bookings.createdLast24h} />
-            <StatCard label="Currently disputed" value={snap.bookings.currentlyDisputed} />
-          </div>
-          <SectionTitle>Payments</SectionTitle>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-              gap: "0.75rem",
-            }}
-          >
-            <StatCard
-              label="Captured total (7d)"
-              value={formatMoney(snap.payments.capturedCentsLast7d, snap.payments.currency)}
-            />
-          </div>
-        </>
+            <StatCard label="BG failed" value={snap.users.welpersBgFailed} />
+          </Link>
+        </Grid>
       ) : null}
 
       <SectionTitle>Recent admin actions</SectionTitle>
-      <div className="admin-card">
-        {auditQuery.isLoading ? (
-          <p style={{ color: "var(--admin-muted)", margin: 0 }}>Loading audit…</p>
-        ) : auditQuery.error instanceof Error ? (
-          <p className="err">{auditQuery.error.message}</p>
-        ) : (
-          <AuditTable rows={auditQuery.data?.data ?? []} />
-        )}
-        <p style={{ margin: "0.75rem 0 0", fontSize: "0.85rem" }}>
-          <Link href="/audit-logs">View all audit logs →</Link>
-        </p>
-      </div>
-    </div>
+      <Card size="2">
+        <Flex direction="column" gap="3">
+          {auditQuery.isLoading ? (
+            <Text color="gray">Loading audit…</Text>
+          ) : auditQuery.error instanceof Error ? (
+            <AdminErrorCallout message={auditQuery.error.message} />
+          ) : (
+            <AuditTable rows={auditQuery.data?.data ?? []} />
+          )}
+          <Text size="2">
+            <Link href="/audit-logs">View all audit logs →</Link>
+          </Text>
+        </Flex>
+      </Card>
+    </Flex>
   );
 }

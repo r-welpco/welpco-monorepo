@@ -1,8 +1,11 @@
 "use client";
 
+import { Button, Card, Flex, Heading, Text } from "@welpco/ui";
+import { Input } from "@welpco/ui/input";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
+import { AdminErrorCallout } from "@/components/admin-callout";
 
 export function LoginForm({
   searchParams,
@@ -35,7 +38,7 @@ export function LoginForm({
         setLoading(false);
         return;
       }
-      router.push("/disputes");
+      router.push("/");
       router.refresh();
     } catch {
       setError("Something went wrong. Try again.");
@@ -45,41 +48,43 @@ export function LoginForm({
   }
 
   return (
-    <div className="admin-card" style={{ width: "100%", maxWidth: 400 }}>
-      <h1 style={{ marginTop: 0, fontSize: "1.35rem" }}>Staff sign in</h1>
-      <p style={{ color: "var(--admin-muted)", fontSize: "0.9rem", marginBottom: "1.25rem" }}>
-        Welpco platform administrators only.
-      </p>
-      <form onSubmit={onSubmit}>
-        <div className="field">
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        {error ? <p className="err">{error}</p> : null}
-        <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: "100%" }}>
-          {loading ? "Signing in…" : "Sign in"}
-        </button>
-      </form>
-    </div>
+    <Card size="3" style={{ width: "100%", maxWidth: 400 }}>
+      <Flex direction="column" gap="4">
+        <Flex direction="column" gap="1">
+          <Heading size="5">Staff sign in</Heading>
+          <Text size="2" color="gray">
+            Welpco platform administrators only.
+          </Text>
+        </Flex>
+        <form onSubmit={onSubmit}>
+          <Flex direction="column" gap="3">
+            <Input
+              label="Email"
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <Input
+              label="Password"
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            {error ? <AdminErrorCallout message={error} /> : null}
+            <Button type="submit" disabled={loading} style={{ width: "100%" }}>
+              {loading ? "Signing in…" : "Sign in"}
+            </Button>
+          </Flex>
+        </form>
+      </Flex>
+    </Card>
   );
 }

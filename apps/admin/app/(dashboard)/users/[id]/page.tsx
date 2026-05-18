@@ -1,10 +1,26 @@
+import {
+  Badge,
+  Card,
+  Flex,
+  Heading,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeaderCell,
+  TableHeader,
+  TableRow,
+  Text,
+} from "@welpco/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminErrorCallout } from "@/components/admin-callout";
+import { DetailRow, DetailTable } from "@/components/detail-rows";
 import {
   getAdminUser,
   getAdminUserProfile,
   getAdminUserOfferings,
   getAdminUserSignupState,
+  parseOfferingDescription,
   type AdminServiceOffering,
   type AdminSignupStateReadout,
   type AdminUserDetail,
@@ -26,14 +42,6 @@ function formatProfileValue(value: unknown): string {
   } catch {
     return String(value);
   }
-}
-
-function SectionError({ message }: { message: string }) {
-  return (
-    <p className="err" style={{ fontSize: "0.85rem", margin: "0.5rem 0 0" }}>
-      {message}
-    </p>
-  );
 }
 
 export default async function AdminUserDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -83,317 +91,275 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
   const payoutStep = signupState?.stepSummaries?.welperPayout;
 
   return (
-    <div>
-      <p style={{ marginTop: 0 }}>
-        <Link href="/users">&larr; Users</Link>
-      </p>
-      <h1 style={{ marginBottom: "0.25rem" }}>{user.email}</h1>
-      <p style={{ color: "var(--admin-muted)" }}>
-        <span className="badge">{user.accountType}</span> &middot;{" "}
-        <span className="badge">{user.status}</span> &middot;{" "}
-        {user.emailVerified ? "Email verified" : "Email not verified"}
-      </p>
+    <Flex direction="column" gap="4">
+      <Text size="2">
+        <Link href="/users">← Users</Link>
+      </Text>
+      <Flex direction="column" gap="1">
+        <Heading size="6">{user.email}</Heading>
+        <Flex gap="2" wrap="wrap" align="center">
+          <Badge variant="soft">{user.accountType}</Badge>
+          <Badge variant="soft">{user.status}</Badge>
+          <Text size="2" color="gray">
+            {user.emailVerified ? "Email verified" : "Email not verified"}
+          </Text>
+        </Flex>
+      </Flex>
 
       {isWelper ? (
-        <div className="admin-card" style={{ marginTop: "1.25rem" }}>
-          <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Launch readiness</h2>
-          {signupStateError ? <SectionError message={signupStateError} /> : null}
-          <table style={{ fontSize: "0.9rem", borderCollapse: "collapse" }}>
-            <tbody>
-              <tr>
-                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Signup completed</td>
-                <td style={{ padding: "4px 0" }}>{user.signupCompleted ? "Yes" : "No"}</td>
-              </tr>
-              <tr>
-                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Preferred locale</td>
-                <td style={{ padding: "4px 0" }}>{user.preferredLocale ?? "—"}</td>
-              </tr>
-              <tr>
-                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Identity verified</td>
-                <td style={{ padding: "4px 0" }}>{identityVerified ? "Yes" : "No"}</td>
-              </tr>
-              {signupState ? (
-                <>
-                  <tr>
-                    <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Next signup step</td>
-                    <td style={{ padding: "4px 0" }}>
-                      <code style={{ fontSize: "0.8rem" }}>{signupState.nextStep ?? "—"}</code>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style={{
-                        padding: "4px 12px 4px 0",
-                        color: "var(--admin-muted)",
-                        verticalAlign: "top",
-                      }}
-                    >
-                      Completed steps
-                    </td>
-                    <td style={{ padding: "4px 0", fontSize: "0.85rem" }}>
-                      {signupState.completedSteps.length > 0
-                        ? signupState.completedSteps.join(", ")
-                        : "—"}
-                    </td>
-                  </tr>
-                </>
-              ) : null}
-              {bgStep ? (
-                <>
-                  <tr>
-                    <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>BG step · fee paid</td>
-                    <td style={{ padding: "4px 0" }}>{bgStep.paid ? "Yes" : "No"}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>BG step · Certn status</td>
-                    <td style={{ padding: "4px 0" }}>{bgStep.certnStatus || "—"}</td>
-                  </tr>
-                  {bgStep.skipped ? (
-                    <tr>
-                      <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>BG step</td>
-                      <td style={{ padding: "4px 0" }}>Skipped</td>
-                    </tr>
-                  ) : null}
-                </>
-              ) : null}
-              {payoutStep ? (
-                <tr>
-                  <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>
-                    Payout step · Stripe onboarding
-                  </td>
-                  <td style={{ padding: "4px 0" }}>
-                    {payoutStep.stripeOnboardingCompleted ? "Completed" : "Not completed"}
-                  </td>
-                </tr>
-              ) : null}
-              {profileError ? (
-                <tr>
-                  <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)", verticalAlign: "top" }}>
-                    Profile (payout)
-                  </td>
-                  <td style={{ padding: "4px 0" }}>
-                    <SectionError message={profileError} />
-                  </td>
-                </tr>
-              ) : profile?.type === "welper" ? (
-                <>
-                  <tr>
-                    <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Payout method</td>
-                    <td style={{ padding: "4px 0" }}>{profile.payoutMethodChoice ?? "—"}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Stripe Connect</td>
-                    <td style={{ padding: "4px 0" }}>
-                      {profile.stripeConnectConnected
-                        ? `Connected (account id …${profile.stripeConnectAccountLast4 ?? "????"})`
-                        : "Not connected"}
-                    </td>
-                  </tr>
-                </>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-
-      {isWelper ? (
-        <div className="admin-card" style={{ marginTop: "1.25rem" }}>
-          <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Background check</h2>
-          <table style={{ fontSize: "0.9rem", borderCollapse: "collapse" }}>
-            <tbody>
-              <tr>
-                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Fee paid</td>
-                <td style={{ padding: "4px 0" }}>
-                  {user.backgroundCheckPaid === true
-                    ? "Yes"
-                    : user.backgroundCheckPaid === false
-                      ? "No"
+        <Card size="2" title="Launch readiness">
+          {signupStateError ? <AdminErrorCallout message={signupStateError} /> : null}
+          <DetailTable>
+            <DetailRow label="Signup completed">{user.signupCompleted ? "Yes" : "No"}</DetailRow>
+            <DetailRow label="Preferred locale">{user.preferredLocale ?? "—"}</DetailRow>
+            <DetailRow label="Identity verified">{identityVerified ? "Yes" : "No"}</DetailRow>
+            {signupState ? (
+              <>
+                <DetailRow label="Next signup step">
+                  <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                    {signupState.nextStep ?? "—"}
+                  </Text>
+                </DetailRow>
+                <DetailRow label="Completed steps">
+                  <Text size="1">
+                    {signupState.completedSteps.length > 0
+                      ? signupState.completedSteps.join(", ")
                       : "—"}
-                </td>
-              </tr>
-              {user.backgroundCheckPaidAt ? (
-                <tr>
-                  <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Paid at</td>
-                  <td style={{ padding: "4px 0" }}>
-                    {new Date(user.backgroundCheckPaidAt).toLocaleString()}
-                  </td>
-                </tr>
-              ) : null}
-              <tr>
-                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Screening</td>
-                <td style={{ padding: "4px 0" }}>{user.backgroundCheckCertnStatus ?? "—"}</td>
-              </tr>
-              <tr>
-                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Result status</td>
-                <td style={{ padding: "4px 0" }}>
-                  <span className="badge">{bg ?? "—"}</span>
-                </td>
-              </tr>
-              {user.backgroundCheckFailureReason ? (
-                <tr>
-                  <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Failure reason</td>
-                  <td style={{ padding: "4px 0" }}>{user.backgroundCheckFailureReason}</td>
-                </tr>
-              ) : null}
-              {user.backgroundCheckCertnApplicantUrl ? (
-                <tr>
-                  <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Certn link</td>
-                  <td style={{ padding: "4px 0", wordBreak: "break-all" }}>
-                    <a href={user.backgroundCheckCertnApplicantUrl} target="_blank" rel="noopener noreferrer">
-                      Open screening link
-                    </a>
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
+                  </Text>
+                </DetailRow>
+              </>
+            ) : null}
+            {bgStep ? (
+              <>
+                <DetailRow label="BG step · fee paid">{bgStep.paid ? "Yes" : "No"}</DetailRow>
+                <DetailRow label="BG step · Certn status">{bgStep.certnStatus || "—"}</DetailRow>
+                {bgStep.skipped ? <DetailRow label="BG step">Skipped</DetailRow> : null}
+              </>
+            ) : null}
+            {payoutStep ? (
+              <DetailRow label="Payout step · Stripe onboarding">
+                {payoutStep.stripeOnboardingCompleted ? "Completed" : "Not completed"}
+              </DetailRow>
+            ) : null}
+            {profileError ? (
+              <DetailRow label="Profile (payout)">
+                <AdminErrorCallout message={profileError} />
+              </DetailRow>
+            ) : profile?.type === "welper" ? (
+              <>
+                <DetailRow label="Payout method">{profile.payoutMethodChoice ?? "—"}</DetailRow>
+                <DetailRow label="Stripe Connect">
+                  {profile.stripeConnectConnected
+                    ? `Connected (account id …${profile.stripeConnectAccountLast4 ?? "????"})`
+                    : "Not connected"}
+                </DetailRow>
+              </>
+            ) : null}
+          </DetailTable>
+        </Card>
       ) : null}
 
-      <div className="admin-card" style={{ marginTop: "1.25rem" }}>
-        <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Account</h2>
-        <p style={{ fontSize: "0.9rem", fontFamily: "ui-monospace, monospace" }}>
-          <strong>ID:</strong> {user.id}
-        </p>
-        <p style={{ fontSize: "0.9rem", color: "var(--admin-muted)" }}>
-          Created {user.createdAt ? new Date(user.createdAt).toLocaleString() : "—"}
-          {user.lastLoginAt ? (
-            <> &middot; Last login {new Date(user.lastLoginAt).toLocaleString()}</>
-          ) : (
-            ""
-          )}
-        </p>
-      </div>
+      {isWelper ? (
+        <Card size="2" title="Background check">
+          <DetailTable>
+            <DetailRow label="Fee paid">
+              {user.backgroundCheckPaid === true
+                ? "Yes"
+                : user.backgroundCheckPaid === false
+                  ? "No"
+                  : "—"}
+            </DetailRow>
+            {user.backgroundCheckPaidAt ? (
+              <DetailRow label="Paid at">
+                {new Date(user.backgroundCheckPaidAt).toLocaleString()}
+              </DetailRow>
+            ) : null}
+            <DetailRow label="Screening">{user.backgroundCheckCertnStatus ?? "—"}</DetailRow>
+            <DetailRow label="Result status">
+              <Badge variant="soft">{bg ?? "—"}</Badge>
+            </DetailRow>
+            {user.backgroundCheckFailureReason ? (
+              <DetailRow label="Failure reason">{user.backgroundCheckFailureReason}</DetailRow>
+            ) : null}
+            {user.backgroundCheckCertnApplicantUrl ? (
+              <DetailRow label="Certn link">
+                <Link href={user.backgroundCheckCertnApplicantUrl} target="_blank" rel="noopener noreferrer">
+                  Open screening link
+                </Link>
+              </DetailRow>
+            ) : null}
+          </DetailTable>
+        </Card>
+      ) : null}
+
+      <Card size="2" title="Account">
+        <Flex direction="column" gap="2">
+          <Text size="2" style={{ fontFamily: "ui-monospace, monospace" }}>
+            <Text weight="bold">ID:</Text> {user.id}
+          </Text>
+          <Text size="2" color="gray">
+            Created {user.createdAt ? new Date(user.createdAt).toLocaleString() : "—"}
+            {user.lastLoginAt
+              ? ` · Last login ${new Date(user.lastLoginAt).toLocaleString()}`
+              : ""}
+          </Text>
+        </Flex>
+      </Card>
 
       {profileError ? (
-        <div className="admin-card" style={{ marginTop: "1.25rem" }}>
-          <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Profile</h2>
-          <SectionError message={profileError} />
-        </div>
+        <Card size="2" title="Profile">
+          <AdminErrorCallout message={profileError} />
+        </Card>
       ) : profile && profile.type ? (
-        <div className="admin-card" style={{ marginTop: "1.25rem" }}>
-          <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Profile</h2>
-          <table style={{ fontSize: "0.9rem", borderCollapse: "collapse" }}>
-            <tbody>
-              {profile.firstName || profile.lastName ? (
-                <tr>
-                  <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Name</td>
-                  <td style={{ padding: "4px 0" }}>
-                    {[profile.firstName, profile.lastName].filter(Boolean).join(" ") || "—"}
-                  </td>
-                </tr>
-              ) : null}
-              <tr>
-                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Profile status</td>
-                <td style={{ padding: "4px 0" }}>
-                  <span className="badge">{profile.profileCompletionStatus ?? "—"}</span>
-                </td>
-              </tr>
-              <tr>
-                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Onboarding</td>
-                <td style={{ padding: "4px 0" }}>
-                  {profile.onboardingCompleted ? "Completed" : "Not completed"}
-                </td>
-              </tr>
-              <tr>
-                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)", verticalAlign: "top" }}>
-                  Phone
-                </td>
-                <td style={{ padding: "4px 0", whiteSpace: "pre-wrap", fontFamily: "ui-monospace, monospace", fontSize: "0.8rem" }}>
-                  {formatProfileValue(profile.phoneNumber)}
-                </td>
-              </tr>
-              <tr>
-                <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)", verticalAlign: "top" }}>
-                  Address
-                </td>
-                <td style={{ padding: "4px 0", whiteSpace: "pre-wrap", fontFamily: "ui-monospace, monospace", fontSize: "0.8rem" }}>
-                  {formatProfileValue(profile.address)}
-                </td>
-              </tr>
-              {profile.bio !== undefined && profile.bio !== null ? (
-                <tr>
-                  <td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)", verticalAlign: "top" }}>Bio</td>
-                  <td style={{ padding: "4px 0", maxWidth: 400, whiteSpace: "pre-wrap" }}>
-                    {profile.bio || "—"}
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
+        <Card size="2" title="Profile">
+          <DetailTable>
+            {profile.firstName || profile.lastName ? (
+              <DetailRow label="Name">
+                {[profile.firstName, profile.lastName].filter(Boolean).join(" ") || "—"}
+              </DetailRow>
+            ) : null}
+            <DetailRow label="Profile status">
+              <Badge variant="soft">{profile.profileCompletionStatus ?? "—"}</Badge>
+            </DetailRow>
+            <DetailRow label="Onboarding">
+              {profile.onboardingCompleted ? "Completed" : "Not completed"}
+            </DetailRow>
+            <DetailRow label="Phone">
+              <Text
+                size="1"
+                style={{ whiteSpace: "pre-wrap", fontFamily: "ui-monospace, monospace" }}
+              >
+                {formatProfileValue(profile.phoneNumber)}
+              </Text>
+            </DetailRow>
+            <DetailRow label="Address">
+              <Text
+                size="1"
+                style={{ whiteSpace: "pre-wrap", fontFamily: "ui-monospace, monospace" }}
+              >
+                {formatProfileValue(profile.address)}
+              </Text>
+            </DetailRow>
+            {profile.bio !== undefined && profile.bio !== null ? (
+              <DetailRow label="Bio">
+                <Text size="2" style={{ whiteSpace: "pre-wrap", maxWidth: 400 }}>
+                  {profile.bio || "—"}
+                </Text>
+              </DetailRow>
+            ) : null}
+          </DetailTable>
+        </Card>
       ) : null}
 
       {isWelper ? (
-        <div className="admin-card" style={{ marginTop: "1.25rem" }}>
-          <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Service offerings ({offerings.length})</h2>
-          {offeringsError ? <SectionError message={offeringsError} /> : null}
+        <Card size="2" title={`Service offerings (${offerings.length})`}>
+          {offeringsError ? <AdminErrorCallout message={offeringsError} /> : null}
           {offeringsLoaded && offerings.length === 0 && !offeringsError ? (
-            <p style={{ fontSize: "0.9rem", color: "var(--admin-muted)", margin: "0.5rem 0 0" }}>
+            <Text size="2" color="gray">
               No service offerings yet.
-            </p>
+            </Text>
           ) : null}
           {offerings.length > 0 ? (
-            <table className="admin-table" style={{ fontSize: "0.9rem", marginTop: "0.75rem" }}>
-              <thead>
-                <tr>
-                  <th>Description</th>
-                  <th>Rate</th>
-                  <th>Experience</th>
-                  <th>Active</th>
-                </tr>
-              </thead>
-              <tbody>
-                {offerings.map((o, i) => (
-                  <tr key={o.id ?? i}>
-                    <td
-                      style={{
-                        maxWidth: 300,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {o.serviceDescription ?? "—"}
-                    </td>
-                    <td>${String(o.hourlyRate ?? "—")}/hr</td>
-                    <td>{String(o.experienceYears ?? "—")} yrs</td>
-                    <td>{o.active ? "Yes" : "No"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div style={{ marginTop: "var(--space-3)", overflowX: "auto" }}>
+              <Table style={{ tableLayout: "fixed", width: "100%", minWidth: 480 }}>
+                <TableHeader>
+                  <TableRow>
+                    <TableColumnHeaderCell style={{ width: "58%" }}>
+                      Description
+                    </TableColumnHeaderCell>
+                    <TableColumnHeaderCell style={{ width: "14%" }}>Rate</TableColumnHeaderCell>
+                    <TableColumnHeaderCell style={{ width: "14%" }}>
+                      Experience
+                    </TableColumnHeaderCell>
+                    <TableColumnHeaderCell style={{ width: "14%" }}>Active</TableColumnHeaderCell>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {offerings.map((o, i) => {
+                    const { title, body } = parseOfferingDescription(o.serviceDescription);
+                    return (
+                      <TableRow key={o.id ?? i} align="start">
+                        <TableCell
+                          style={{
+                            verticalAlign: "top",
+                            overflow: "hidden",
+                            wordBreak: "break-word",
+                            overflowWrap: "anywhere",
+                          }}
+                        >
+                          <Flex direction="column" gap="1" style={{ minWidth: 0 }}>
+                            {title ? (
+                              <Text size="2" weight="medium">
+                                {title}
+                              </Text>
+                            ) : null}
+                            <Text
+                              size="1"
+                              color={title ? "gray" : undefined}
+                              style={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}
+                            >
+                              {body}
+                            </Text>
+                          </Flex>
+                        </TableCell>
+                        <TableCell style={{ verticalAlign: "top", whiteSpace: "nowrap" }}>
+                          ${String(o.hourlyRate ?? "—")}/hr
+                        </TableCell>
+                        <TableCell style={{ verticalAlign: "top", whiteSpace: "nowrap" }}>
+                          {String(o.experienceYears ?? "—")} yrs
+                        </TableCell>
+                        <TableCell style={{ verticalAlign: "top", whiteSpace: "nowrap" }}>
+                          {o.active ? "Yes" : "No"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           ) : null}
-        </div>
+        </Card>
       ) : null}
 
       {user.statusChangedAt ? (
-        <div className="admin-card" style={{ marginTop: "1.25rem" }}>
-          <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Last account status change</h2>
-          <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.9rem" }}>
-            <li>
-              <strong>When:</strong> {new Date(user.statusChangedAt).toLocaleString()}
-            </li>
-            {user.statusChangedByAdminId ? (
+        <Card size="2" title="Last account status change">
+          <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
               <li>
-                <strong>By admin:</strong>{" "}
-                <Link href={`/users/${user.statusChangedByAdminId}`} style={{ fontFamily: "ui-monospace, monospace" }}>
-                  {user.statusChangedByAdminId}
-                </Link>
+                <Text size="2">
+                  <Text weight="bold">When:</Text> {new Date(user.statusChangedAt).toLocaleString()}
+                </Text>
               </li>
-            ) : null}
-            {user.statusChangeReasonCode ? (
-              <li>
-                <strong>Reason code:</strong> <code>{user.statusChangeReasonCode}</code>
-              </li>
-            ) : null}
-            {user.statusChangeReasonDetail ? (
-              <li style={{ whiteSpace: "pre-wrap" }}>
-                <strong>Notes:</strong> {user.statusChangeReasonDetail}
-              </li>
-            ) : null}
-          </ul>
-        </div>
+              {user.statusChangedByAdminId ? (
+                <li>
+                  <Text size="2">
+                    <Text weight="bold">By admin:</Text>{" "}
+                    <Link href={`/users/${user.statusChangedByAdminId}`}>
+                      <Text style={{ fontFamily: "ui-monospace, monospace" }}>
+                        {user.statusChangedByAdminId}
+                      </Text>
+                    </Link>
+                  </Text>
+                </li>
+              ) : null}
+              {user.statusChangeReasonCode ? (
+                <li>
+                  <Text size="2">
+                    <Text weight="bold">Reason code:</Text>{" "}
+                    <Text style={{ fontFamily: "ui-monospace, monospace" }}>
+                      {user.statusChangeReasonCode}
+                    </Text>
+                  </Text>
+                </li>
+              ) : null}
+              {user.statusChangeReasonDetail ? (
+                <li>
+                  <Text size="2" style={{ whiteSpace: "pre-wrap" }}>
+                    <Text weight="bold">Notes:</Text> {user.statusChangeReasonDetail}
+                  </Text>
+                </li>
+              ) : null}
+            </ul>
+        </Card>
       ) : null}
 
       <UserActions
@@ -410,6 +376,6 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
         }
         currentOnboardingCompleted={profile?.onboardingCompleted ?? false}
       />
-    </div>
+    </Flex>
   );
 }

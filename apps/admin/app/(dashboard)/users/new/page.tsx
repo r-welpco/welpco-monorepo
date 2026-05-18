@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Button, Card, Flex, Heading, Text } from "@welpco/ui";
+import { Input } from "@welpco/ui/input";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { AdminErrorCallout } from "@/components/admin-callout";
 import { createAdminUser } from "@/lib/services/admin-users-service";
 
 export default function CreateAdminUserPage() {
@@ -35,27 +38,47 @@ export default function CreateAdminUserPage() {
   }
 
   return (
-    <div>
-      <p><Link href="/users">&larr; Users</Link></p>
-      <h1 style={{ marginTop: 0 }}>Create Admin User</h1>
-      <form onSubmit={handleSubmit} className="admin-card" style={{ maxWidth: 480 }}>
-        <div className="field">
-          <label>Email</label>
-          <input className="admin-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="off" />
-        </div>
-        <div className="field">
-          <label>Password</label>
-          <input className="admin-input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} autoComplete="new-password" />
-        </div>
-        <div className="field">
-          <label>Confirm password</label>
-          <input className="admin-input" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} autoComplete="new-password" />
-        </div>
-        {error ? <p className="err">{error}</p> : null}
-        <button type="submit" className="btn btn-primary" disabled={loading} style={{ marginTop: "0.5rem" }}>
-          {loading ? "Creating..." : "Create admin account"}
-        </button>
-      </form>
-    </div>
+    <Flex direction="column" gap="4">
+      <Text size="2">
+        <Link href="/users">← Users</Link>
+      </Text>
+      <Heading size="6">Create admin user</Heading>
+      <Card size="2" style={{ maxWidth: 480 }}>
+        <form onSubmit={handleSubmit}>
+          <Flex direction="column" gap="3">
+            <Input
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="off"
+            />
+            <Input
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+              autoComplete="new-password"
+            />
+            <Input
+              label="Confirm password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={8}
+              autoComplete="new-password"
+            />
+            {error ? <AdminErrorCallout message={error} /> : null}
+            <Button type="submit" disabled={loading}>
+              {loading ? "Creating…" : "Create admin account"}
+            </Button>
+          </Flex>
+        </form>
+      </Card>
+    </Flex>
   );
 }

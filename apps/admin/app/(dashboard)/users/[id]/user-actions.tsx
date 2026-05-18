@@ -1,7 +1,20 @@
 "use client";
 
+import {
+  Button,
+  Card,
+  Checkbox,
+  Flex,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Text,
+  TextArea,
+} from "@welpco/ui";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { AdminErrorCallout, AdminSuccessCallout } from "@/components/admin-callout";
 import {
   setAdminUserBackgroundCheck,
   setAdminUserProfileFlags,
@@ -57,23 +70,19 @@ export function UserActions({
   const isWelper = accountType === "Welper";
   const hasProfile = profileType === "customer" || profileType === "welper";
 
-  // Status form
   const [status, setStatus] = useState(currentStatus);
   const [reasonCode, setReasonCode] = useState<StatusChangeReasonCode>("tos_violation");
   const [reasonDetail, setReasonDetail] = useState("");
 
-  // Background check form
   const [bgStatus, setBgStatus] = useState(
     currentBackgroundCheck && BG_STATUSES.includes(currentBackgroundCheck as (typeof BG_STATUSES)[number])
       ? currentBackgroundCheck
-      : "Pending"
+      : "Pending",
   );
 
-  // Profile flags form
   const [profileComplete, setProfileComplete] = useState(currentProfileComplete);
   const [onboardingCompleted, setOnboardingCompleted] = useState(currentOnboardingCompleted);
 
-  // Shared state
   const [loading, setLoading] = useState<null | "status" | "bg" | "unlock" | "profile">(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -87,7 +96,7 @@ export function UserActions({
 
     if (needsModerationReason(status)) {
       if (reasonCode === "other" && !reasonDetail.trim()) {
-        setError("Please enter a reason when \u201cOther\u201d is selected.");
+        setError("Please enter a reason when “Other” is selected.");
         return;
       }
     }
@@ -162,139 +171,149 @@ export function UserActions({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-      {error ? <p className="err">{error}</p> : null}
-      {success ? <p className="ok">{success}</p> : null}
+    <Flex direction="column" gap="4" mt="4">
+      {error ? <AdminErrorCallout message={error} /> : null}
+      {success ? <AdminSuccessCallout message={success} /> : null}
 
-      {/* Account Status */}
-      <div className="admin-card">
-        <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Account status</h2>
+      <Card size="2" title="Account status">
         <form onSubmit={(e) => void onStatusSubmit(e)}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: 480 }}>
-            <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
-              Status
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="admin-input"
-                aria-label="Account status"
-              >
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </label>
+          <Flex direction="column" gap="3" style={{ maxWidth: 480 }}>
+            <Flex direction="column" gap="1">
+              <Text size="1" weight="medium">
+                Status
+              </Text>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger />
+                <SelectContent>
+                  {STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Flex>
             {showReason ? (
               <>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
-                  Reason (required for suspend / deactivate)
-                  <select
+                <Flex direction="column" gap="1">
+                  <Text size="1" weight="medium">
+                    Reason (required for suspend / deactivate)
+                  </Text>
+                  <Select
                     value={reasonCode}
-                    onChange={(e) => setReasonCode(e.target.value as StatusChangeReasonCode)}
-                    className="admin-input"
+                    onValueChange={(v) => setReasonCode(v as StatusChangeReasonCode)}
                   >
-                    {REASON_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </label>
-                <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
-                  {reasonCode === "other" ? "Details (required)" : "Additional notes (optional)"}
-                  <textarea
-                    className="admin-input"
+                    <SelectTrigger />
+                    <SelectContent>
+                      {REASON_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Flex>
+                <Flex direction="column" gap="1">
+                  <Text size="1" weight="medium">
+                    {reasonCode === "other" ? "Details (required)" : "Additional notes (optional)"}
+                  </Text>
+                  <TextArea
                     rows={3}
                     value={reasonDetail}
                     onChange={(e) => setReasonDetail(e.target.value)}
                     placeholder={
                       reasonCode === "other"
-                        ? "Describe the reason\u2026"
-                        : "Optional context for the audit log\u2026"
+                        ? "Describe the reason…"
+                        : "Optional context for the audit log…"
                     }
                   />
-                </label>
+                </Flex>
               </>
             ) : null}
-            <button type="submit" className="btn btn-primary" disabled={loading !== null}>
-              {loading === "status" ? "Saving\u2026" : "Save status"}
-            </button>
-          </div>
+            <Button type="submit" disabled={loading !== null}>
+              {loading === "status" ? "Saving…" : "Save status"}
+            </Button>
+          </Flex>
         </form>
-      </div>
+      </Card>
 
-      {/* Profile Flags (customer/welper only) */}
       {hasProfile ? (
-        <div className="admin-card">
-          <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Profile flags</h2>
-          <p style={{ marginTop: 0, fontSize: "0.85rem", color: "var(--admin-muted)" }}>
-            Override profile completion status and onboarding flag for this user. Signup wizard state is the
-            source of truth for launch readiness.
-          </p>
-          {!signupCompleted ? (
-            <p style={{ fontSize: "0.85rem", color: "var(--admin-warn, #b45309)", marginTop: 0 }}>
-              Signup is not complete — prefer letting the user finish the wizard before overriding flags.
-            </p>
-          ) : null}
-          <form onSubmit={(e) => void onProfileFlagsSubmit(e)}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: 480 }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
-                <input
-                  type="checkbox"
-                  checked={profileComplete}
-                  onChange={(e) => setProfileComplete(e.target.checked)}
-                />
-                Profile complete
-              </label>
-              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
-                <input
-                  type="checkbox"
-                  checked={onboardingCompleted}
-                  onChange={(e) => setOnboardingCompleted(e.target.checked)}
-                />
-                Onboarding completed
-              </label>
-              <button type="submit" className="btn btn-primary" disabled={loading !== null}>
-                {loading === "profile" ? "Saving\u2026" : "Save profile flags"}
-              </button>
-            </div>
-          </form>
-        </div>
+        <Card size="2" title="Profile flags">
+          <Flex direction="column" gap="3">
+            <Text size="2" color="gray">
+              Override profile completion status and onboarding flag for this user.
+            </Text>
+            {!signupCompleted ? (
+              <Text size="2" color="amber">
+                Signup is not complete — prefer letting the user finish the wizard before overriding flags.
+              </Text>
+            ) : null}
+            <form onSubmit={(e) => void onProfileFlagsSubmit(e)}>
+              <Flex direction="column" gap="3" style={{ maxWidth: 480 }}>
+                <Text as="label" size="2">
+                  <Flex gap="2" align="center">
+                    <Checkbox
+                      checked={profileComplete}
+                      onCheckedChange={(c) => setProfileComplete(c === true)}
+                    />
+                    Profile complete
+                  </Flex>
+                </Text>
+                <Text as="label" size="2">
+                  <Flex gap="2" align="center">
+                    <Checkbox
+                      checked={onboardingCompleted}
+                      onCheckedChange={(c) => setOnboardingCompleted(c === true)}
+                    />
+                    Onboarding completed
+                  </Flex>
+                </Text>
+                <Button type="submit" disabled={loading !== null}>
+                  {loading === "profile" ? "Saving…" : "Save profile flags"}
+                </Button>
+              </Flex>
+            </form>
+          </Flex>
+        </Card>
       ) : null}
 
-      {/* Background Check (welpers only) */}
       {isWelper ? (
-        <div className="admin-card">
-          <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Background check</h2>
-          <p style={{ marginTop: 0, fontSize: "0.85rem", color: "var(--admin-muted)" }}>
-            Current: {currentBackgroundCheck ?? "\u2014"}
-          </p>
-          <form onSubmit={(e) => void onBgSubmit(e)} style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
-            <select
-              value={bgStatus}
-              onChange={(e) => setBgStatus(e.target.value)}
-              className="admin-input"
-              aria-label="Background check status"
-            >
-              {BG_STATUSES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-            <button type="submit" className="btn btn-primary" disabled={loading !== null}>
-              {loading === "bg" ? "Saving\u2026" : "Save background check"}
-            </button>
-          </form>
-        </div>
+        <Card size="2" title="Background check">
+          <Flex direction="column" gap="3">
+            <Text size="2" color="gray">
+              Current: {currentBackgroundCheck ?? "—"}
+            </Text>
+            <form onSubmit={(e) => void onBgSubmit(e)}>
+              <Flex gap="3" wrap="wrap" align="center">
+                <Select value={bgStatus} onValueChange={setBgStatus}>
+                  <SelectTrigger aria-label="Background check status" />
+                  <SelectContent>
+                    {BG_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button type="submit" disabled={loading !== null}>
+                  {loading === "bg" ? "Saving…" : "Save background check"}
+                </Button>
+              </Flex>
+            </form>
+          </Flex>
+        </Card>
       ) : null}
 
-      {/* Login Lockout */}
-      <div className="admin-card">
-        <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Login lockout</h2>
-        <p style={{ marginTop: 0, fontSize: "0.85rem", color: "var(--admin-muted)" }}>
-          Clear failed-attempt lockout for this user&apos;s email (after too many wrong passwords).
-        </p>
-        <button type="button" className="btn" disabled={loading !== null} onClick={() => void onUnlock()}>
-          {loading === "unlock" ? "Working\u2026" : "Unlock account"}
-        </button>
-      </div>
-    </div>
+      <Card size="2" title="Login lockout">
+        <Flex direction="column" gap="3">
+          <Text size="2" color="gray">
+            Clear failed-attempt lockout for this user&apos;s email (after too many wrong passwords).
+          </Text>
+          <Button type="button" variant="soft" disabled={loading !== null} onClick={() => void onUnlock()}>
+            {loading === "unlock" ? "Working…" : "Unlock account"}
+          </Button>
+        </Flex>
+      </Card>
+    </Flex>
   );
 }

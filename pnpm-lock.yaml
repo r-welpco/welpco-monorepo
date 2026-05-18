@@ -41,9 +41,15 @@ importers:
 
   apps/admin:
     dependencies:
+      '@radix-ui/themes':
+        specifier: 3.3.0
+        version: 3.3.0(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@tanstack/react-query':
         specifier: ^5.62.11
         version: 5.90.11(react@19.2.0)
+      '@welpco/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       next:
         specifier: 16.2.3
         version: 16.2.3(@babel/core@7.28.5)(@playwright/test@1.57.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)

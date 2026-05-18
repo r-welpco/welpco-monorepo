@@ -1,3 +1,5 @@
+@import "@radix-ui/themes/styles.css";
+
 :root {
   --admin-bg: #0f1419;
   --admin-surface: #1a2332;
