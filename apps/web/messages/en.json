@@ -437,6 +437,16 @@
               ]
             ],
             [
+              "How do I set up my Stripe account?",
+              [
+                "When creating your Welper profile, there will be a step to create your Stripe account. Once you create your login, simply follow the directions below:",
+                "Business type: Select \"Individual or Sole proprietorship.\"",
+                "Personal details: for \"Job Title\" you can enter \"Contractor\" or more specifically \"Dog walker,\" \"House cleaner,\" \"Cook,\" etc.",
+                "Business details — Industry: select \"Personal Services – Other personal services.\" Your website: www.welpco.com. Product description: provide a brief description of the services you offer.",
+                "Bank details: enter your personal bank account details to receive your weekly payout."
+              ]
+            ],
+            [
               "Can a minor sign up as a Welper?",
               "Minors over the age of 14 can become a Welper via our platform, however, their account must be created and managed by a legal guardian. Welpers who are minors will not be subjected to a background check."
             ],
