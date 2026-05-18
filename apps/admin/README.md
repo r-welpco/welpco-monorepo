@@ -28,7 +28,7 @@ pnpm --filter @welpco/admin build
 
 ## Production checklist (launch deploy)
 
-1. Set `NEXT_PUBLIC_API_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` on the admin host (Vercel env).
+1. Set `NEXT_PUBLIC_API_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` on the admin host (Vercel env). For monorepo deploys with Turborepo, these are listed in root [`turbo.json`](../../turbo.json) `globalEnv` so Vercel passes them into `turbo run build`.
 2. Add the admin origin to BFF **`CORS_ORIGINS`** (comma-separated).
 3. Run BFF DB migrations (`admin_audit_logs`, user moderation columns, etc.).
 4. Create at least one admin user (`pnpm create:admin` against the same DB the BFF uses).
