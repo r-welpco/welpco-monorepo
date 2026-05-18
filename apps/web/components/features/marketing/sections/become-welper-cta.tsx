@@ -26,7 +26,7 @@ export function BecomeWelperCTA() {
             padding: "24px 0",
           }}
         >
-          <div style={{ position: "relative" }}>
+          <div data-become-welper-media style={{ position: "relative", minWidth: 0 }}>
             <MarketingImageGallery
               layout="welper-collage"
               ariaLabel={tA11y("welperPhotosGallery")}
@@ -50,7 +50,7 @@ export function BecomeWelperCTA() {
               ]}
             />
           </div>
-          <div>
+          <div data-become-welper-copy style={{ minWidth: 0 }}>
             <div className="eyebrow" style={{ marginBottom: 18 }}>
               {t("eyebrow")}
             </div>
@@ -60,6 +60,7 @@ export function BecomeWelperCTA() {
               <span className="display-italic">{t("titleLine2")}</span>
             </h2>
             <p
+              data-become-welper-body
               style={{
                 marginTop: 20,
                 fontSize: 17,
@@ -106,11 +107,11 @@ export function BecomeWelperCTA() {
                   >
                     ✓
                   </span>
-                  <span>{s}</span>
+                  <span style={{ minWidth: 0 }}>{s}</span>
                 </li>
               ))}
             </ul>
-            <div style={{ display: "flex", gap: 12, marginTop: 36, flexWrap: "wrap" }}>
+            <div data-become-welper-cta-row style={{ display: "flex", gap: 12, marginTop: 36, flexWrap: "wrap" }}>
               <Link href="/register" className="btn btn-primary">
                 {t("ctaPrimary")} <span aria-hidden="true">→</span>
               </Link>
@@ -119,6 +120,7 @@ export function BecomeWelperCTA() {
               </Link>
             </div>
             <div
+              data-become-welper-footnote
               style={{
                 marginTop: 28,
                 fontFamily: "var(--font-mono)",

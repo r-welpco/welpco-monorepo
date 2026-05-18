@@ -15,6 +15,10 @@
 
 .mobile {
   display: block;
+  /* Prevent wide swipe track from expanding parent grid (become-welper CTA, etc.). */
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .mobileTrack {
@@ -22,6 +26,8 @@
   flex-direction: row;
   align-items: stretch;
   gap: 14px;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;

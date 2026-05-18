@@ -17,13 +17,19 @@
 
 /* ---------- Base container + section padding ---------- */
 @media (max-width: 1024px) {
-  .welpco .container { padding: 0 24px; }
+  .welpco .container {
+    padding: 0 24px;
+    --container-pad: 24px;
+  }
   .welpco .section { padding: 72px 0; }
   .welpco .section-tight { padding: 48px 0; }
 }
 
 @media (max-width: 640px) {
-  .welpco .container { padding: 0 18px; }
+  .welpco .container {
+    padding: 0 18px;
+    --container-pad: 18px;
+  }
   .welpco .section { padding: 56px 0; }
   .welpco .section-tight { padding: 40px 0; }
 }
@@ -93,9 +99,38 @@
   .welpco [data-grid="welper-grid"],
   .welpco [data-grid="trust-items"],
   .welpco [data-grid="footer-cols"],
-  .welpco [data-grid="contact-name-row"] {
+  .welpco [data-grid="contact-name-row"],
+  .welpco [data-grid="becomewelper-grid"] {
     grid-template-columns: 1fr !important;
-    gap: 16px !important;
+    gap: 32px !important;
+  }
+}
+
+/* ---------- Become a Welper CTA — mobile copy + CTAs ---------- */
+@media (max-width: 1024px) {
+  .welpco [data-grid="becomewelper-grid"] > * {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .welpco [data-become-welper-body] {
+    max-width: 100% !important;
+  }
+  .welpco [data-become-welper-cta-row] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .welpco [data-become-welper-cta-row] .btn {
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
+  .welpco [data-become-welper-footnote] {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.5;
   }
 }
 
