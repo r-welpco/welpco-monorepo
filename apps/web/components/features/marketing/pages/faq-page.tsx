@@ -8,9 +8,22 @@ import { Link } from "@/i18n/navigation";
  * FAQPage — full Welper + Customer questions, sticky group headings.
  */
 
-type FaqAnswer = string | string[];
+type FaqListItem = string | { lead: string; items: string[] };
+
+type FaqList = {
+  ordered?: boolean;
+  items: FaqListItem[];
+};
+
+type FaqAnswerNode = string | FaqList;
+
+type FaqAnswer = string | FaqAnswerNode[];
 
 type FaqItem = [question: string, answer: FaqAnswer];
+
+function isFaqList(node: FaqAnswerNode): node is FaqList {
+  return typeof node === "object" && node !== null && Array.isArray((node as FaqList).items);
+}
 
 type FaqGroup = {
   label: string;
@@ -26,24 +39,66 @@ const TONE_BG: Record<(typeof GROUP_TONES)[number], string> = {
   pink: "var(--bubblegum)",
 };
 
+const ANSWER_TEXT_STYLE = {
+  fontSize: 16,
+  color: "var(--fg-muted)",
+  lineHeight: 1.6,
+  maxWidth: 640,
+} as const;
+
+function FaqRichList({ list, depth = 0 }: { list: FaqList; depth?: number }) {
+  const ListTag = list.ordered ? "ol" : "ul";
+  return (
+    <ListTag
+      style={{
+        margin: "12px 0 0",
+        paddingLeft: 24,
+        ...ANSWER_TEXT_STYLE,
+        listStyleType: list.ordered ? "decimal" : "disc",
+      }}
+    >
+      {list.items.map((item, index) => {
+        if (typeof item === "string") {
+          return (
+            <li key={index} style={{ marginBottom: 6 }}>
+              {item}
+            </li>
+          );
+        }
+        return (
+          <li key={index} style={{ marginBottom: 6 }}>
+            {item.lead}
+            <FaqRichList list={{ ordered: false, items: item.items }} depth={depth + 1} />
+          </li>
+        );
+      })}
+    </ListTag>
+  );
+}
+
 function FaqAnswerBody({ answer }: { answer: FaqAnswer }) {
-  const parts = Array.isArray(answer) ? answer : [answer];
+  const parts: FaqAnswerNode[] = Array.isArray(answer) ? answer : [answer];
   return (
     <div style={{ paddingBottom: 22 }}>
-      {parts.map((paragraph, index) => (
-        <p
-          key={index}
-          style={{
-            margin: index === 0 ? 0 : "12px 0 0",
-            fontSize: 16,
-            color: "var(--fg-muted)",
-            lineHeight: 1.6,
-            maxWidth: 640,
-          }}
-        >
-          {paragraph}
-        </p>
-      ))}
+      {parts.map((node, index) => {
+        if (typeof node === "string") {
+          return (
+            <p
+              key={index}
+              style={{
+                margin: index === 0 ? 0 : "12px 0 0",
+                ...ANSWER_TEXT_STYLE,
+              }}
+            >
+              {node}
+            </p>
+          );
+        }
+        if (isFaqList(node)) {
+          return <FaqRichList key={index} list={node} />;
+        }
+        return null;
+      })}
     </div>
   );
 }

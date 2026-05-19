@@ -439,10 +439,22 @@
               "Comment configurer mon compte Stripe?",
               [
                 "Lors de la création de votre profil Welper, une étape vous permettra de créer votre compte Stripe. Une fois votre identifiant créé, suivez simplement les instructions ci-dessous :",
-                "Type d'entreprise : sélectionnez « Particulier ou entreprise individuelle ».",
-                "Données personnelles : pour le champ « Intitulé de poste », vous pouvez inscrire « Travailleur autonome » ou plus précisément « Promeneur de chiens », « Femme/Homme de ménage », « Cuisinier », etc.",
-                "Informations sur l'entreprise — Secteur d'activité : sélectionnez « Services personnels – Autres services à la personne ». Votre site web : www.welpco.com. Description du produit/service : fournissez une brève description des services que vous offrez.",
-                "Informations bancaires : entrez les informations de votre compte bancaire personnel afin de recevoir votre paiement hebdomadaire."
+                {
+                  "ordered": true,
+                  "items": [
+                    "Type d'entreprise : sélectionnez « Particulier ou entreprise individuelle ».",
+                    "Données personnelles : pour le champ « Intitulé de poste », vous pouvez inscrire « Travailleur autonome » ou plus précisément « Promeneur de chiens », « Femme/Homme de ménage », « Cuisinier », etc.",
+                    {
+                      "lead": "Informations sur l'entreprise :",
+                      "items": [
+                        "Secteur d'activité : sélectionnez « Services personnels – Autres services à la personne ».",
+                        "Votre site web : www.welpco.com",
+                        "Description du produit/service : fournissez une brève description des services que vous offrez."
+                      ]
+                    },
+                    "Informations bancaires : entrez les informations de votre compte bancaire personnel afin de recevoir votre paiement hebdomadaire."
+                  ]
+                }
               ]
             ],
             [

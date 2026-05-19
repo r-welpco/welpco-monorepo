@@ -420,10 +420,22 @@ const en = {
               "How do I set up my Stripe account?",
               [
                 "When creating your Welper profile, there will be a step to create your Stripe account. Once you create your login, simply follow the directions below:",
-                "Business type: Select \"Individual or Sole proprietorship.\"",
-                "Personal details: for \"Job Title\" you can enter \"Contractor\" or more specifically \"Dog walker,\" \"House cleaner,\" \"Cook,\" etc.",
-                "Business details — Industry: select \"Personal Services – Other personal services.\" Your website: www.welpco.com. Product description: provide a brief description of the services you offer.",
-                "Bank details: enter your personal bank account details to receive your weekly payout.",
+                {
+                  ordered: true,
+                  items: [
+                    "Business type: Select \"Individual or Sole proprietorship.\"",
+                    "Personal details: for \"Job Title\" you can enter \"Contractor\" or more specifically \"Dog walker,\" \"House cleaner,\" \"Cook,\" etc.",
+                    {
+                      lead: "Business details:",
+                      items: [
+                        "Industry: select \"Personal Services – Other personal services.\"",
+                        "Your website: www.welpco.com",
+                        "Product description: provide a brief description of the services you offer.",
+                      ],
+                    },
+                    "Bank details: enter your personal bank account details to receive your weekly payout.",
+                  ],
+                },
               ],
             ],
             [
