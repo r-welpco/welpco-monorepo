@@ -104,7 +104,7 @@ export function TopNav() {
             {tNav("signIn")}
           </Link>
           <Link
-            href="/search"
+            href="/login"
             className="btn btn-primary"
             style={{ padding: "10px 18px", fontSize: 14 }}
           >
@@ -179,7 +179,7 @@ export function TopNav() {
                 {tNav("signIn")}
               </Link>
               <Link
-                href="/search"
+                href="/login"
                 className="btn btn-primary"
                 style={{ justifyContent: "center", fontSize: 14, padding: "12px 16px" }}
                 onClick={() => setDrawerOpen(false)}

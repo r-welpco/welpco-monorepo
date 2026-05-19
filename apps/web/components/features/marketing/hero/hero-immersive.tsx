@@ -135,7 +135,7 @@ export function HeroImmersive() {
             marginTop: 8,
           }}
         >
-          <Link href="/search" className="btn btn-accent" style={{ justifyContent: "center", padding: "14px 22px" }}>
+          <Link href="/login" className="btn btn-accent" style={{ justifyContent: "center", padding: "14px 22px" }}>
             {t("findHelp")} <span aria-hidden="true">→</span>
           </Link>
           <Link

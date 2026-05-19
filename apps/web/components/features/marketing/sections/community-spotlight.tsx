@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { SectionHeader } from "./section-header";
 import { WelperCard } from "./welper-card";
 import { ArrowDown } from "../shared/arrow-down";

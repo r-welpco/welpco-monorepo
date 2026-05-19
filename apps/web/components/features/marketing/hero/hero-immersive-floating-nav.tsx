@@ -119,7 +119,7 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
             {tNav("signIn")}
           </Link>
           <Link
-            href="/search"
+            href="/login"
             data-immersive-header-cta
             className="btn btn-primary"
             style={{ padding: "8px 16px", fontSize: 13, fontWeight: 700, fontFamily: headlineFontCss }}
@@ -231,7 +231,7 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
                 {tNav("signIn")}
               </Link>
               <Link
-                href="/search"
+                href="/login"
                 className="btn btn-primary"
                 style={{ justifyContent: "center", fontSize: 14, fontWeight: 700, fontFamily: headlineFontCss }}
                 onClick={() => setDrawerOpen(false)}
