@@ -121,7 +121,7 @@ test.describe('@auth Signup wizard — welper happy path', () => {
     await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
     expect(page.url()).toContain('/dashboard');
     await expect(page.getByRole('navigation').first()).toBeVisible();
-    await expect(page.getByText(/setup|finish your setup/i).first()).toBeVisible({
+    await expect(page.getByText(/required steps done/i).first()).toBeVisible({
       timeout: 15_000,
     });
   });

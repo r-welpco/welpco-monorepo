@@ -11,7 +11,6 @@ import { Box } from "@welpco/ui/box";
 import { Button } from "@welpco/ui/button";
 import { Callout } from "@welpco/ui/callout";
 import { Flex } from "@welpco/ui/flex";
-import { Heading } from "@welpco/ui/heading";
 import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
@@ -192,12 +191,6 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
     <Box>
       <Flex direction="column" gap="4">
         <Box>
-          <Heading as="h2" size="5" mb="2">
-            {t("title")}
-          </Heading>
-          <Text size="2" color="gray" as="p" mb="3">
-            {t("description")}
-          </Text>
           <Text size="2" weight="medium" mb="2" as="p">
             {t("progress", { done: completedRequired, total: requiredTasks.length })}
           </Text>
