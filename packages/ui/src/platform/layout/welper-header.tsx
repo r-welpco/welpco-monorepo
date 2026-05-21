@@ -34,7 +34,7 @@ import {
   Menu,
   Languages,
 } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type CSSProperties } from "react";
 
 function useResolvedColorScheme(
   themeMode: "light" | "dark" | "system",
@@ -161,6 +161,8 @@ export interface WelperHeaderProps {
   onProfileClick?: () => void;
   onSettingsClick?: () => void;
   onLogout?: () => void;
+  /** Host-provided tint for the desktop tab strip (e.g. from Appearance background). */
+  tabStripStyle?: CSSProperties;
 }
 
 const DEFAULT_WELPER_TABS = [
@@ -190,6 +192,7 @@ export function WelperHeader({
   onProfileClick,
   onSettingsClick,
   onLogout,
+  tabStripStyle,
 }: WelperHeaderProps) {
   const labels = labelsProp;
   const welperTabs = labels
@@ -255,10 +258,10 @@ export function WelperHeader({
       style={{
         zIndex: 50,
         backgroundColor: "var(--color-background)",
-        borderBottom: "2px solid var(--green-6)",
+        width: "100%",
       }}
     >
-      <header>
+      <header style={{ width: "100%" }}>
         {/* Top bar: 52px mobile, 60px desktop */}
         <Box px={{ initial: "4", sm: "6" }} style={{ width: "100%", minWidth: 0 }}>
           <Flex
@@ -546,30 +549,33 @@ export function WelperHeader({
           overflowX="auto"
           overflowY="hidden"
           style={{
-            width: "100%",
-            backgroundColor: "var(--green-1)",
-            borderBottom: "1px solid var(--green-4)",
+            backgroundColor: "var(--gray-2)",
+            ...tabStripStyle,
           }}
         >
-          <Flex minHeight="40px" style={{ width: "max-content", minWidth: "100%" }}>
-            <TabNav>
-              {welperTabs.map((tab) => (
-                <TabNavLink
-                  key={tab.value}
-                  href={tab.href}
-                  active={activeTab === tab.value}
-                  onClick={(e) => {
-                    if (!onTabChange) return;
-                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-                    e.preventDefault();
-                    onTabChange(tab.value);
-                  }}
-                >
-                  {tab.label}
-                </TabNavLink>
-              ))}
-            </TabNav>
-          </Flex>
+          <TabNav
+            style={{
+              width: "100%",
+              borderBottom: "none",
+              boxShadow: "none",
+            }}
+          >
+            {welperTabs.map((tab) => (
+              <TabNavLink
+                key={tab.value}
+                href={tab.href}
+                active={activeTab === tab.value}
+                onClick={(e) => {
+                  if (!onTabChange) return;
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                  e.preventDefault();
+                  onTabChange(tab.value);
+                }}
+              >
+                {tab.label}
+              </TabNavLink>
+            ))}
+          </TabNav>
         </Box>
       </header>
     </Box>

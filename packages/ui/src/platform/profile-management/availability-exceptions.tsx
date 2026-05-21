@@ -398,8 +398,10 @@ export function AvailabilityExceptions({
                       <Flex align="center" gap="3" style={{ flex: 1 }}>
                         <Gift style={{ width: "20px", height: "20px", color: "var(--gray-9)" }} />
                         <Box>
-                          <Text size="2" weight="bold">{holiday.name}</Text>
-                          <Text size="2" color="gray" highContrast>
+                          <Text size="2" weight="bold" as="p">
+                            {holiday.name}
+                          </Text>
+                          <Text size="2" color="gray" highContrast as="p" mt="1">
                             {holiday.endDate && !isSameDateOnly(holiday.date, holiday.endDate)
                               ? `${formatDateOnly(holiday.date, "MMM d", dateLocale)} – ${formatDateOnly(holiday.endDate, "MMM d, yyyy", dateLocale)}`
                               : formatDateOnly(holiday.date, "MMMM d, yyyy", dateLocale)}

@@ -18,6 +18,7 @@ import {
   useWelperNavLabels,
 } from "@/lib/i18n/use-dashboard-labels";
 import { useDashboardLocale } from "@/lib/i18n/dashboard-locale";
+import { getDashboardTabStripStyle } from "@/lib/personalization/dashboard-tab-strip-style";
 interface DashboardLayoutClientProps {
   children: React.ReactNode;
   user: {
@@ -118,6 +119,11 @@ export default function DashboardLayoutClient({
     [userRole]
   );
 
+  const welperTabStripStyle = useMemo(
+    () => getDashboardTabStripStyle(backgroundId),
+    [backgroundId],
+  );
+
   const welperNavLabels = useWelperNavLabels();
   const userMenuLabels = useDashboardUserMenuLabels();
   const { locale, setLocale } = useDashboardLocale();
@@ -179,7 +185,11 @@ export default function DashboardLayoutClient({
       {userRole === "customer" ? (
         <CustomerHeader {...headerProps} labels={userMenuLabels} />
       ) : (
-        <WelperHeader {...headerProps} labels={welperNavLabels} />
+        <WelperHeader
+          {...headerProps}
+          labels={welperNavLabels}
+          tabStripStyle={welperTabStripStyle}
+        />
       )}
       <Box
         py={{ initial: "5", sm: "7" }}

@@ -50,6 +50,7 @@ export const WithError: Story = {
 export const PrivateProfile: Story = {
   render: () => (
     <WelperProfileForm
+      showProfileVisibility
       defaultValues={{
         firstName: 'Alex',
         lastName: 'Carter',

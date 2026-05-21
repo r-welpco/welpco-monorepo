@@ -37,6 +37,8 @@ export interface WelperProfileFormProps {
   error?: string;
   onSubmit?: (values: WelperProfileValues) => void | Promise<void>;
   labels?: WelperProfileFormLabels;
+  /** When false, hides the profile visibility switch (value still submitted from defaults). */
+  showProfileVisibility?: boolean;
 }
 
 const schema = z.object({
@@ -56,6 +58,7 @@ export function WelperProfileForm({
   error,
   onSubmit,
   labels: labelsProp,
+  showProfileVisibility = false,
 }: WelperProfileFormProps) {
   const labels = labelsProp ?? {
     title: "Welper profile",
@@ -223,36 +226,37 @@ export function WelperProfileForm({
             </Text>
           </Box>
 
-          {/* Profile Visibility */}
-          <Box mb={FORM_SPACING.fieldGap}>
-            <Flex align="center" justify="between">
-              <Box style={{ flex: 1 }}>
-                <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap} id="wpf-visibility-label">
-                  {labels.visibility}
-                </Text>
-              </Box>
-              <Controller
-                name="profileVisibility"
-                control={form.control}
-                render={({ field }) => (
-                  <Switch
-                    aria-labelledby="wpf-visibility-label"
-                    checked={field.value === "Public"}
-                    onCheckedChange={(checked) =>
-                      form.setValue("profileVisibility", checked ? "Public" : "Private")
-                    }
-                    disabled={loading}
-                  />
-                )}
-              />
-            </Flex>
-            <Text size="1" color="gray" mt={FORM_SPACING.labelGap}>
-              {labels.visibilityHint}
-            </Text>
-            <Text size="1" color="gray" mt={FORM_SPACING.helperGap}>
-              {labels.visibilityCurrent(form.watch("profileVisibility"))}
-            </Text>
-          </Box>
+          {showProfileVisibility ? (
+            <Box mb={FORM_SPACING.fieldGap}>
+              <Flex align="center" justify="between">
+                <Box style={{ flex: 1 }}>
+                  <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap} id="wpf-visibility-label">
+                    {labels.visibility}
+                  </Text>
+                </Box>
+                <Controller
+                  name="profileVisibility"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Switch
+                      aria-labelledby="wpf-visibility-label"
+                      checked={field.value === "Public"}
+                      onCheckedChange={(checked) =>
+                        form.setValue("profileVisibility", checked ? "Public" : "Private")
+                      }
+                      disabled={loading}
+                    />
+                  )}
+                />
+              </Flex>
+              <Text size="1" color="gray" mt={FORM_SPACING.labelGap}>
+                {labels.visibilityHint}
+              </Text>
+              <Text size="1" color="gray" mt={FORM_SPACING.helperGap}>
+                {labels.visibilityCurrent(form.watch("profileVisibility"))}
+              </Text>
+            </Box>
+          ) : null}
 
           <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
             {loading ? labels.saving : labels.save}

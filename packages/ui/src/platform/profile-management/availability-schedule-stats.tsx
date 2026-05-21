@@ -151,46 +151,54 @@ export function AvailabilityScheduleStats({
           </Text>
         </Box>
 
-        <Flex gap="4" wrap="wrap">
-          <Flex align="center" gap="2" style={{ flex: 1, minWidth: "100px" }}>
-            <Box
-              p="2"
+        <Flex direction="column" gap="4">
+          <Flex align="start" gap="3">
+            <Flex
+              align="center"
+              justify="center"
               style={{
+                width: "40px",
+                height: "40px",
+                flexShrink: 0,
                 borderRadius: "var(--radius-2)",
                 backgroundColor: "var(--green-3)",
                 color: "var(--green-11)",
               }}
             >
-              <CalendarDays style={{ width: "20px", height: "20px" }} />
-            </Box>
-            <Box>
-              <Text size="1" color="gray" highContrast>
+              <CalendarDays style={{ width: "20px", height: "20px" }} aria-hidden />
+            </Flex>
+            <Flex direction="column" gap="1" style={{ minWidth: 0 }}>
+              <Text size="2" color="gray" highContrast as="p" mb="0">
                 Available days
               </Text>
-              <Text size="4" weight="bold">
+              <Text size="6" weight="bold" as="p" mb="0" style={{ lineHeight: 1.2 }}>
                 {daysCount}
               </Text>
-            </Box>
+            </Flex>
           </Flex>
-          <Flex align="center" gap="2" style={{ flex: 1, minWidth: "100px" }}>
-            <Box
-              p="2"
+          <Flex align="start" gap="3">
+            <Flex
+              align="center"
+              justify="center"
               style={{
+                width: "40px",
+                height: "40px",
+                flexShrink: 0,
                 borderRadius: "var(--radius-2)",
                 backgroundColor: "var(--blue-3)",
                 color: "var(--blue-11)",
               }}
             >
-              <Clock style={{ width: "20px", height: "20px" }} />
-            </Box>
-            <Box>
-              <Text size="1" color="gray" highContrast>
+              <Clock style={{ width: "20px", height: "20px" }} aria-hidden />
+            </Flex>
+            <Flex direction="column" gap="1" style={{ minWidth: 0 }}>
+              <Text size="2" color="gray" highContrast as="p" mb="0">
                 Hours / week
               </Text>
-              <Text size="4" weight="bold">
+              <Text size="6" weight="bold" as="p" mb="0" style={{ lineHeight: 1.2 }}>
                 {totalHours.toFixed(1)}
               </Text>
-            </Box>
+            </Flex>
           </Flex>
         </Flex>
 
