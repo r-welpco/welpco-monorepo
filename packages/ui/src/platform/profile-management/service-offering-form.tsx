@@ -61,6 +61,8 @@ export interface ServiceOfferingFormProps {
   onSubmit?: (values: ServiceOfferingValues) => void | Promise<void>;
   serviceCategories?: Array<{ id: string; name: string; children?: Array<{ id: string; name: string }> }>;
   subcategories?: Array<{ id: string; name: string }>;
+  /** Maps canonical English category names to the active locale (from host i18n). */
+  getCategoryDisplayName?: (englishName: string) => string;
   onCategoryChange?: (categoryId: string) => void;
   defaultServiceArea?: ServiceArea;
   inDialog?: boolean;
@@ -104,12 +106,15 @@ function CategoryField({
   serviceCategories,
   loading,
   labels,
+  getCategoryDisplayName,
 }: {
   form: ReturnType<typeof useForm<ServiceOfferingValues>>;
   serviceCategories: Array<{ id: string; name: string }>;
   loading?: boolean;
   labels?: ServiceOfferingFormLabels;
+  getCategoryDisplayName?: (englishName: string) => string;
 }) {
+  const displayName = getCategoryDisplayName ?? ((n: string) => n);
   return (
     <Box mb={FORM_SPACING.fieldGap}>
       <Text
@@ -135,7 +140,9 @@ function CategoryField({
         />
         <SelectContent>
           {serviceCategories.map((category) => (
-            <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+            <SelectItem key={category.id} value={category.id}>
+              {displayName(category.name)}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -152,13 +159,16 @@ function SubcategoriesField({
   onToggle,
   loading,
   labels,
+  getCategoryDisplayName,
 }: {
   subcategories: Array<{ id: string; name: string }>;
   selectedSubcategories: string[];
   onToggle: (id: string, checked: boolean | string) => void;
   loading?: boolean;
   labels?: ServiceOfferingFormLabels;
+  getCategoryDisplayName?: (englishName: string) => string;
 }) {
+  const displayName = getCategoryDisplayName ?? ((n: string) => n);
   if (subcategories.length === 0) return null;
   return (
     <Box mb={FORM_SPACING.fieldGap}>
@@ -185,7 +195,9 @@ function SubcategoriesField({
               disabled={loading}
               size="2"
             />
-            <Text as="label" size="2" htmlFor={`subcategory-${sub.id}`}>{sub.name}</Text>
+            <Text as="label" size="2" htmlFor={`subcategory-${sub.id}`}>
+              {displayName(sub.name)}
+            </Text>
           </Flex>
         ))}
       </Flex>
@@ -406,6 +418,7 @@ export function ServiceOfferingForm({
   onSubmit,
   serviceCategories = defaultCategories,
   subcategories = [],
+  getCategoryDisplayName,
   onCategoryChange,
   defaultServiceArea,
   inDialog = false,
@@ -493,13 +506,20 @@ export function ServiceOfferingForm({
 
       <form onSubmit={handleSubmit}>
         <TitleField form={form} loading={loading} labels={labels} />
-        <CategoryField form={form} serviceCategories={serviceCategories} loading={loading} labels={labels} />
+        <CategoryField
+          form={form}
+          serviceCategories={serviceCategories}
+          loading={loading}
+          labels={labels}
+          getCategoryDisplayName={getCategoryDisplayName}
+        />
         <SubcategoriesField
           subcategories={subcategories}
           selectedSubcategories={selectedSubcategories}
           onToggle={handleSubcategoryToggle}
           loading={loading}
           labels={labels}
+          getCategoryDisplayName={getCategoryDisplayName}
         />
         <RateAndExperienceFields form={form} loading={loading} labels={labels} />
         <DescriptionField form={form} loading={loading} labels={labels} />

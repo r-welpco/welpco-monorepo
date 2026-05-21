@@ -1410,9 +1410,9 @@
       "tabs": {
         "overview": "Overview",
         "profile": "Profile",
-        "offerings": "Service offerings",
+        "offerings": "Services",
         "availability": "Availability",
-        "serviceArea": "Service area",
+        "serviceArea": "Area",
         "backgroundCheck": "Background check",
         "payout": "Payout setup"
       },

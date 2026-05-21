@@ -17,7 +17,6 @@ test.describe('Profile Page Functionality', () => {
     await expect(page.getByText('Preferred service categories')).toBeVisible({ timeout: 5000 });
 
     await switchTab(page, 'Favorites');
-    await switchTab(page, 'Overview');
   });
 
   test('should show validation when required fields are empty', async ({ page }) => {

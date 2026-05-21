@@ -1409,9 +1409,9 @@
       "tabs": {
         "overview": "Aperçu",
         "profile": "Profil",
-        "offerings": "Offres de service",
+        "offerings": "Services",
         "availability": "Disponibilités",
-        "serviceArea": "Zone de service",
+        "serviceArea": "Zone",
         "backgroundCheck": "Vérification des antécédents",
         "payout": "Configuration des paiements"
       },

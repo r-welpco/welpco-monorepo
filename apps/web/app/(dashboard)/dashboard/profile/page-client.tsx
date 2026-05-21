@@ -36,6 +36,7 @@ import {
 } from "@/lib/hooks/use-profile";
 import { getPresignedUrl, uploadFileToS3 } from "@/lib/services/upload-service";
 import { useContentCategories, useCategoriesByParent } from "@/lib/hooks/use-content";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import {
   CustomerProfileForm,
   WelperProfileForm,
@@ -47,7 +48,6 @@ import {
   AvailabilityExceptions,
   FavoriteWelperList,
   ServicePreferences,
-  ProfileCompletionStatus,
   ServiceAreaCard,
 } from "./profile-forms-lazy";
 import { Dialog, DialogContent } from "@welpco/ui/dialog";
@@ -104,7 +104,6 @@ interface ProfilePageClientProps {
 }
 
 const WELPER_PROFILE_TABS = new Set([
-  "overview",
   "profile",
   "offerings",
   "availability",
@@ -126,16 +125,25 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   const [activeTab, setActiveTab] = useState(() =>
     user.role === "welper" && tabFromUrl && WELPER_PROFILE_TABS.has(tabFromUrl)
       ? tabFromUrl
-      : "overview",
+      : user.role === "welper"
+        ? "profile"
+        : "personal",
   );
 
   useEffect(() => {
     if (user.role !== "welper") return;
     const tab = searchParams.get("tab");
+    if (tab === "overview") {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", "profile");
+      router.replace(`/dashboard/profile?${params.toString()}`);
+      setActiveTab("profile");
+      return;
+    }
     if (tab && WELPER_PROFILE_TABS.has(tab)) {
       setActiveTab(tab);
     }
-  }, [searchParams, user.role]);
+  }, [searchParams, user.role, router]);
 
   const handleWelperTabChange = useCallback(
     (value: string) => {
@@ -159,9 +167,13 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
     () => allCategories.filter((cat) => cat.level === 1 && cat.parentId === null && cat.isActive),
     [allCategories]
   );
+  const categoryDisplayName = useCategoryDisplayName();
   const categoryNameById = useMemo(
-    () => new Map(allCategories.map((cat) => [cat.id, cat.name])),
-    [allCategories]
+    () =>
+      new Map(
+        allCategories.map((cat) => [cat.id, categoryDisplayName(cat.name)]),
+      ),
+    [allCategories, categoryDisplayName],
   );
   const { data: subcategoriesData = [] } = useCategoriesByParent(
     selectedCategoryId,
@@ -212,12 +224,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   const { data: availabilitySchedule } = useAvailability(isWelper && sessionReady ? user.id : "");
   const { data: availabilityExceptions = [] } = useAvailabilityExceptions(
     sessionReady && availabilitySchedule?.id ? availabilitySchedule.id : ""
-  );
-
-  // Memoize active offerings count to avoid recalculation on every render
-  const activeOfferingsCount = useMemo(
-    () => serviceOfferings.filter(o => o.active).length,
-    [serviceOfferings]
   );
 
   const updateCustomerProfileMutation = useUpdateCustomerProfile();
@@ -517,48 +523,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
       });
     };
 
-    // Calculate profile completion steps
-    const profileSteps = [
-      {
-        id: "name",
-        label: "Name",
-        completed: !!(customerProfile?.firstName && customerProfile?.lastName),
-        required: true,
-      },
-      {
-        id: "phone",
-        label: "Phone number",
-        completed: !!customerProfile?.phone,
-        required: true,
-      },
-      {
-        id: "address",
-        label: "Address",
-        completed: !!customerProfile?.address?.streetAddress,
-        required: true,
-      },
-      {
-        id: "payment",
-        label: "Payment method",
-        completed: !!customerProfile?.hasDefaultPaymentMethod,
-        required: true,
-      },
-      {
-        id: "preferences",
-        label: "Service preferences",
-        // Don't claim "complete" just because the row exists — only when at least
-        // one preferred category is set (matches what the form's zod schema requires).
-        completed: (servicePreferences?.preferredCategories?.length ?? 0) > 0,
-        required: false,
-      },
-      {
-        id: "photo",
-        label: "Profile photo",
-        completed: !!customerProfile?.photoUrl,
-        required: false,
-      },
-    ];
-
     return (
       <Container size="3" px={{ initial: "4", sm: "6" }}>
         <Flex direction="column" gap="6">
@@ -589,54 +553,10 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="personal">Personal info</TabsTrigger>
             <TabsTrigger value="preferences">Service preferences</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="overview">
-            <Box pt="5">
-              <Flex direction="column" gap="4">
-                <ProfileCompletionStatus
-                  profileType={isCustomer ? "customer" : "welper"}
-                  steps={profileSteps}
-                  onCompleteStep={(stepId) => {
-                    if (stepId === "payment") {
-                      router.push("/dashboard/settings?tab=payment");
-                      return;
-                    }
-                    setActiveTab(
-                      stepId === "name" || stepId === "phone" || stepId === "address" || stepId === "photo"
-                        ? "personal"
-                        : stepId === "preferences"
-                          ? "preferences"
-                          : "overview"
-                    );
-                  }}
-                />
-                <Card size="3" variant="surface">
-                  <Flex direction="column" gap="3">
-                    <Heading size="5" mb="0" trim="start">Quick stats</Heading>
-                    <Flex gap="6" wrap="wrap">
-                      <Box>
-                        <Text size="1" color="gray" highContrast as="div">Payment method</Text>
-                        <Text size="4" weight="bold" as="div">
-                          {customerProfile?.hasDefaultPaymentMethod ? "Saved" : "Not added"}
-                        </Text>
-                      </Box>
-                      <Box>
-                        <Text size="1" color="gray" highContrast as="div">Service preferences</Text>
-                        <Text size="4" weight="bold" as="div">
-                          {servicePreferences ? servicePreferences.preferredCategories.length : 0}
-                        </Text>
-                      </Box>
-                    </Flex>
-                  </Flex>
-                </Card>
-              </Flex>
-            </Box>
-          </TabsContent>
 
           <TabsContent value="personal">
             <Box pt="5">
@@ -758,7 +678,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
 
         <Tabs value={activeTab} onValueChange={handleWelperTabChange}>
           <TabsList>
-            <TabsTrigger value="overview">{welperProfileLabels.tabs.overview}</TabsTrigger>
             <TabsTrigger value="profile">{welperProfileLabels.tabs.profile}</TabsTrigger>
             <TabsTrigger value="offerings">{welperProfileLabels.tabs.offerings}</TabsTrigger>
             <TabsTrigger value="availability">{welperProfileLabels.tabs.availability}</TabsTrigger>
@@ -766,28 +685,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
             <TabsTrigger value="backgroundCheck">{welperProfileLabels.tabs.backgroundCheck}</TabsTrigger>
             <TabsTrigger value="payout">{welperProfileLabels.tabs.payout}</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="overview">
-            <Box pt="5">
-              <Flex direction="column" gap="4">
-                <Card size="3" variant="surface">
-                  <Flex direction="column" gap="3">
-                    <Heading size="5" mb="0" trim="start">{welperProfileLabels.overview.quickStats}</Heading>
-                    <Flex gap="6" wrap="wrap">
-                      <Box>
-                        <Text size="1" color="gray" highContrast as="div">{welperProfileLabels.overview.serviceOfferings}</Text>
-                        <Text size="4" weight="bold" as="div">{serviceOfferings.length}</Text>
-                      </Box>
-                      <Box>
-                        <Text size="1" color="gray" highContrast as="div">{welperProfileLabels.overview.activeOfferings}</Text>
-                        <Text size="4" weight="bold" as="div">{activeOfferingsCount}</Text>
-                      </Box>
-                    </Flex>
-                  </Flex>
-                </Card>
-              </Flex>
-            </Box>
-          </TabsContent>
 
           <TabsContent value="profile">
             <Box pt="5">
@@ -864,7 +761,10 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                   title: o.title,
                   categoryId: o.categoryId,
                   categoryName:
-                    o.category?.name ?? categoryNameById.get(o.categoryId) ?? welperProfileLabels.uncategorized,
+                    categoryNameById.get(o.categoryId) ??
+                    (o.category?.name
+                      ? categoryDisplayName(o.category.name)
+                      : welperProfileLabels.uncategorized),
                   subcategories: (o.subcategoryIds ?? [])
                     .map((id) => {
                       const name = categoryNameById.get(id);
@@ -878,7 +778,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 }))}
                 serviceCategories={mainCategories.map((cat) => ({
                   id: cat.id,
-                  name: cat.name,
+                  name: categoryDisplayName(cat.name),
                 }))}
                 loading={isLoading}
                 onAdd={handleAddServiceOffering}
@@ -1051,6 +951,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
               onSubmit={handleServiceOfferingSubmit}
               serviceCategories={mainCategories}
               subcategories={subcategories}
+              getCategoryDisplayName={categoryDisplayName}
               onCategoryChange={handleCategoryChange}
               defaultServiceArea={radiusServiceAreaForForm(welperProfile?.serviceArea)}
               inDialog={true}

@@ -15,8 +15,7 @@ test.describe('Profile Page', () => {
   test('should show customer profile tabs', async ({ page }) => {
     await page.goto('/dashboard/profile', { waitUntil: 'load' });
 
-    await expect(page.getByRole('tab', { name: /overview/i })).toBeVisible({ timeout: 8000 });
-    await expect(page.getByRole('tab', { name: /personal info/i })).toBeVisible();
+    await expect(page.getByRole('tab', { name: /personal info/i })).toBeVisible({ timeout: 8000 });
     await expect(page.getByRole('tab', { name: /service preferences/i })).toBeVisible();
     await expect(page.getByRole('tab', { name: /favorites/i })).toBeVisible();
   });
