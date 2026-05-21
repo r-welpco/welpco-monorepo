@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Box } from "@welpco/ui/box";
+import { Container } from "@welpco/ui/container";
 import { Flex } from "@welpco/ui/flex";
 import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
@@ -240,10 +241,11 @@ export default function BookingsPageClient() {
   // ── Render ─────────────────────────────────────────────────────────────
 
   return (
+    <Container size="3" px={{ initial: "4", sm: "6" }}>
     <Flex direction="column" gap="6">
       {/* Header */}
       <Box>
-        <Heading as="h1" size="8" mb="2">
+        <Heading as="h1" size="7" mb="2" trim="start">
           {isWelper ? welperLabels.title : "Bookings"}
         </Heading>
         <Text as="p" size="3" color="gray">
@@ -594,5 +596,6 @@ export default function BookingsPageClient() {
         </Flex>
       )}
     </Flex>
+    </Container>
   );
 }

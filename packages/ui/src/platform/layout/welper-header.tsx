@@ -34,7 +34,66 @@ import {
   Menu,
   Languages,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+function useResolvedColorScheme(
+  themeMode: "light" | "dark" | "system",
+): "light" | "dark" {
+  const [resolved, setResolved] = useState<"light" | "dark">("light");
+
+  const sync = useCallback(() => {
+    if (themeMode === "dark") {
+      setResolved("dark");
+      return;
+    }
+    if (themeMode === "light") {
+      setResolved("light");
+      return;
+    }
+    setResolved(
+      window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+    );
+  }, [themeMode]);
+
+  useEffect(() => {
+    sync();
+    if (themeMode !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => sync();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [themeMode, sync]);
+
+  useEffect(() => {
+    const onThemeChange = () => sync();
+    window.addEventListener("theme-change", onThemeChange);
+    return () => window.removeEventListener("theme-change", onThemeChange);
+  }, [sync]);
+
+  return resolved;
+}
+
+function WelperBrandMark({
+  roleBadge,
+  colorScheme,
+}: {
+  roleBadge?: string;
+  colorScheme: "light" | "dark";
+}) {
+  return (
+    <Flex align="center" gap="2">
+      <Box display={{ initial: "block", md: "none" }}>
+        <Logo type="imagotype" size={32} colorScheme={colorScheme} />
+      </Box>
+      <Box display={{ initial: "none", md: "block" }}>
+        <Logo type="imagotype" size={36} colorScheme={colorScheme} />
+      </Box>
+      <Badge color="green" variant="soft" size="1" highContrast>
+        {roleBadge ?? "Welper"}
+      </Badge>
+    </Flex>
+  );
+}
 
 export interface WelperHeaderLabels {
   roleBadge?: string;
@@ -155,6 +214,7 @@ export function WelperHeader({
   }, [themeModeProp]);
 
   const appearance = themeModeProp ?? uncontrolledTheme;
+  const colorScheme = useResolvedColorScheme(appearance);
 
   const handleThemeChange = (theme: "light" | "dark" | "system") => {
     if (themeModeProp === undefined) {
@@ -251,25 +311,15 @@ export function WelperHeader({
                 </DropdownMenu>
               </Box>
 
-              <Box display={{ initial: "block", md: "none" }}>
-                <Logo variant="primary" type="isotype" size={24} />
-              </Box>
-              <Box display={{ initial: "none", md: "block" }}>
-                <Logo variant="primary" type="isotype" size={28} />
-              </Box>
               {onRoleSwitch ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger>
                     <Button variant="ghost" size="2" color="gray">
                       <Flex align="center" gap="2">
-                        <Text size="3" weight="bold">
-                          Welpco
-                        </Text>
-                        <Box display={{ initial: "none", xs: "block" }}>
-                        <Badge color="green" variant="soft" size="1" highContrast>
-                          {labels?.roleBadge ?? "Welper"}
-                        </Badge>
-                        </Box>
+                        <WelperBrandMark
+                          roleBadge={labels?.roleBadge}
+                          colorScheme={colorScheme}
+                        />
                         <ChevronDown size={14} aria-hidden="true" />
                       </Flex>
                     </Button>
@@ -285,16 +335,10 @@ export function WelperHeader({
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Flex align="center" gap="2">
-                  <Text size="3" weight="bold">
-                    Welpco
-                  </Text>
-                  <Box display={{ initial: "none", xs: "block" }}>
-                        <Badge color="green" variant="soft" size="1" highContrast>
-                          {labels?.roleBadge ?? "Welper"}
-                        </Badge>
-                  </Box>
-                </Flex>
+                <WelperBrandMark
+                  roleBadge={labels?.roleBadge}
+                  colorScheme={colorScheme}
+                />
               )}
             </Flex>
 
