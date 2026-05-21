@@ -25,8 +25,14 @@ import {
   useMarkBookingChatRead,
 } from "@/lib/hooks/use-booking-chat";
 import { useBookingById } from "@/lib/hooks/use-bookings";
-import { getStatusColor, formatStatusLabel } from "@/lib/constants/booking";
+import { getStatusColor } from "@/lib/constants/booking";
 import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
+import {
+  useBookingStatusLabel,
+  useWelperMessagesLabels,
+} from "@/lib/i18n/use-dashboard-labels";
+import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
+import type { Locale } from "date-fns";
 import type { ChatInboxItem } from "@/lib/services/communication-service";
 import styles from "./messages-hub.module.css";
 
@@ -68,14 +74,14 @@ function useSplitPaneWide() {
   return useSyncExternalStore(subscribeSplitMq, getSplitMqSnapshot, getSplitMqServerSnapshot);
 }
 
-function formatDateSafe(dateStr: string | null): string {
+function formatDateSafe(dateStr: string | null, dateLocale: Locale): string {
   if (!dateStr) return "—";
   try {
     const d =
       dateStr.length === 10
         ? new Date(dateStr + "T00:00:00")
         : new Date(dateStr);
-    return format(d, "MMM d");
+    return format(d, "MMM d", { locale: dateLocale });
   } catch {
     return dateStr;
   }
@@ -84,9 +90,11 @@ function formatDateSafe(dateStr: string | null): string {
 function InboxCounterpartyLabel({
   viewerRole,
   otherPartyId,
+  welperMsg,
 }: {
   viewerRole: "customer" | "welper";
   otherPartyId: string;
+  welperMsg?: ReturnType<typeof useWelperMessagesLabels>;
 }) {
   const { data: welper } = usePublicWelperProfile(
     viewerRole === "customer" ? otherPartyId : null
@@ -97,7 +105,7 @@ function InboxCounterpartyLabel({
       : null;
   if (name) return <>{name}</>;
   if (viewerRole === "welper") {
-    return <>Customer &middot; #{otherPartyId.slice(-8).toUpperCase()}</>;
+    return <>{welperMsg?.counterpartyCustomer(otherPartyId) ?? `Customer · #${otherPartyId.slice(-8).toUpperCase()}`}</>;
   }
   return <>Welper &middot; #{otherPartyId.slice(-8).toUpperCase()}</>;
 }
@@ -107,11 +115,17 @@ function InboxRow({
   isSelected,
   currentUserId,
   viewerRole,
+  welperMsg,
+  statusLabel,
+  dateLocale,
 }: {
   item: ChatInboxItem;
   isSelected: boolean;
   currentUserId: string;
   viewerRole: "customer" | "welper";
+  welperMsg?: ReturnType<typeof useWelperMessagesLabels>;
+  statusLabel?: (status: string) => string;
+  dateLocale: Locale;
 }) {
   const unread = isInboxRowUnread(item, currentUserId);
   const href = `/dashboard/messages/${item.bookingId}`;
@@ -120,14 +134,21 @@ function InboxRow({
   // "<Counterparty>, booking #ABCD1234, scheduled Apr 27, unread, last message: ..."
   const counterparty =
     viewerRole === "welper"
-      ? `Customer #${item.otherPartyId.slice(-8).toUpperCase()}`
+      ? (welperMsg?.counterpartyCustomer(item.otherPartyId) ??
+        `Customer #${item.otherPartyId.slice(-8).toUpperCase()}`)
       : `Welper #${item.otherPartyId.slice(-8).toUpperCase()}`;
   const ariaSummary = [
     counterparty,
-    `Booking #${item.bookingId.slice(-8).toUpperCase()}`,
-    formatDateSafe(item.scheduledDate),
+    viewerRole === "welper"
+      ? welperMsg?.bookingRef(item.bookingId)
+      : `Booking #${item.bookingId.slice(-8).toUpperCase()}`,
+    formatDateSafe(item.scheduledDate, dateLocale),
     unread ? "unread" : null,
-    item.lastMessagePreview ? `Last message: ${item.lastMessagePreview}` : null,
+    item.lastMessagePreview
+      ? viewerRole === "welper"
+        ? welperMsg?.lastMessage(item.lastMessagePreview)
+        : `Last message: ${item.lastMessagePreview}`
+      : null,
   ]
     .filter(Boolean)
     .join(", ");
@@ -158,23 +179,26 @@ function InboxRow({
               <InboxCounterpartyLabel
                 viewerRole={viewerRole}
                 otherPartyId={item.otherPartyId}
+                welperMsg={welperMsg}
               />
             </Text>
             {unread ? (
               <Box
-                aria-label="Unread messages"
+                aria-label={welperMsg?.unreadAria ?? "Unread messages"}
                 className={styles.unreadDot}
               />
             ) : null}
           </Flex>
           <Text size="1" color="gray" highContrast>
-            #{item.bookingId.slice(-8).toUpperCase()} &middot;{" "}
-            {formatDateSafe(item.scheduledDate)}
+            {viewerRole === "welper"
+              ? welperMsg?.bookingRef(item.bookingId)
+              : `#${item.bookingId.slice(-8).toUpperCase()}`}{" "}
+            &middot; {formatDateSafe(item.scheduledDate, dateLocale)}
             {item.scheduledStartTime ? ` · ${item.scheduledStartTime}` : ""}
           </Text>
           <Flex align="center" gap="2" wrap="wrap">
             <Badge color={getStatusColor(item.status)} variant="soft" size="1" highContrast>
-              {formatStatusLabel(item.status)}
+              {statusLabel ? statusLabel(item.status) : item.status.replace(/_/g, " ")}
             </Badge>
             {item.lastMessagePreview ? (
               <Text
@@ -196,9 +220,15 @@ function InboxRow({
 function MessagesThreadPane({
   bookingId,
   currentUserId,
+  welperMsg,
+  statusLabel,
+  dateLocale,
 }: {
   bookingId: string;
   currentUserId: string;
+  welperMsg?: ReturnType<typeof useWelperMessagesLabels>;
+  statusLabel?: (status: string) => string;
+  dateLocale: Locale;
 }) {
   const [chatError, setChatError] = useState<string | null>(null);
   const { data: booking } = useBookingById(bookingId);
@@ -228,7 +258,7 @@ function MessagesThreadPane({
       message: msg.content,
       sender: msg.senderDisplayName,
       senderId: msg.senderId,
-      timestamp: format(new Date(msg.createdAt), "h:mm a"),
+      timestamp: format(new Date(msg.createdAt), "h:mm a", { locale: dateLocale }),
     }));
   }, [messageRows, showThreadLoading]);
 
@@ -244,7 +274,9 @@ function MessagesThreadPane({
         <Flex direction="column" gap="2" style={{ minWidth: 0 }}>
           <Flex align="center" gap="3" wrap="wrap" aria-live="polite">
             <Heading as="h2" size="5" mb="0" trim="start">
-              Booking #{bookingId.slice(-8).toUpperCase()}
+              {welperMsg
+                ? welperMsg.threadBooking(bookingId)
+                : `Booking #${bookingId.slice(-8).toUpperCase()}`}
             </Heading>
             {booking?.status ? (
               <Badge
@@ -253,14 +285,16 @@ function MessagesThreadPane({
                 size="2"
                 highContrast
               >
-                {formatStatusLabel(booking.status)}
+                {statusLabel
+                  ? statusLabel(booking.status)
+                  : booking.status.replace(/_/g, " ")}
               </Badge>
             ) : null}
           </Flex>
         </Flex>
         <Button size="2" variant="soft" color="gray" asChild>
           <Link href={`/dashboard/bookings/${bookingId}`}>
-            View booking details
+            {welperMsg?.viewBooking ?? "View booking details"}
           </Link>
         </Button>
       </Flex>
@@ -271,7 +305,7 @@ function MessagesThreadPane({
       ) : null}
       <Box className={styles.threadInnerBox}>
         <MessageThread
-          title="Messages"
+          title={welperMsg?.threadTitle ?? "Messages"}
           messages={chatMessagesForThread}
           currentUserId={currentUserId}
           loading={showThreadLoading}
@@ -283,7 +317,8 @@ function MessagesThreadPane({
                 setChatError(
                   err instanceof Error
                     ? err.message
-                    : "We couldn't send your message. Try again in a moment."
+                    : (welperMsg?.sendFailed ??
+                      "We couldn't send your message. Try again in a moment.")
                 ),
             });
           }}
@@ -306,6 +341,10 @@ export function MessagesHub() {
     typeof idFromRoute === "string" && idFromRoute.length > 0 ? idFromRoute : null;
 
   const viewerRole = user?.role === "welper" ? "welper" : "customer";
+  const welperMsg = useWelperMessagesLabels();
+  const bookingStatusLabel = useBookingStatusLabel();
+  const dateLocale = useDateFnsLocale();
+  const isWelper = viewerRole === "welper";
 
   useEffect(() => {
     if (!user || isLoading || selectedBookingId != null) return;
@@ -324,10 +363,10 @@ export function MessagesHub() {
         <Card size="3" variant="surface">
           <Flex direction="column" align="center" gap="3" py="6" px="3">
             <Heading as="h1" size="5" align="center" trim="start">
-              Sign in to read your messages
+              {welperMsg.signInTitle}
             </Heading>
             <Text size="2" color="gray" highContrast align="center" as="p">
-              Messages are tied to bookings. Sign in to see them.
+              {welperMsg.signInDescription}
             </Text>
           </Flex>
         </Card>
@@ -341,15 +380,16 @@ export function MessagesHub() {
         <Flex align="start" justify="between" wrap="wrap" gap="4">
           <Box style={{ minWidth: 0, flex: "1 1 240px" }}>
             <Heading as="h1" size="7" mb="2" trim="start">
-              Messages
+              {isWelper ? welperMsg.title : "Messages"}
             </Heading>
             <Text as="p" size="2" color="gray" highContrast>
-              Pick a booking to chat with your{" "}
-              {viewerRole === "customer" ? "Welper" : "customer"}.
+              {isWelper
+                ? welperMsg.subtitle
+                : "Pick a booking to chat with your Welper."}
             </Text>
           </Box>
           <Button size="2" variant="ghost" color="gray" onClick={handleBackBookings}>
-            Back to bookings
+            {isWelper ? welperMsg.backToBookings : "Back to bookings"}
           </Button>
         </Flex>
 
@@ -369,10 +409,10 @@ export function MessagesHub() {
               className={styles.sidebarHeader}
             >
               <Text as="div" size="2" weight="bold">
-                Conversations
+                {isWelper ? welperMsg.conversations : "Conversations"}
               </Text>
               <Text as="div" size="1" color="gray" highContrast>
-                Bookings you can message
+                {isWelper ? welperMsg.conversationsHint : "Bookings you can message"}
               </Text>
             </Flex>
             <Box className={styles.sidebarBody}>
@@ -388,7 +428,9 @@ export function MessagesHub() {
                     <Callout.Text>
                       {error instanceof Error
                         ? error.message
-                        : "We couldn't load your inbox. Try again in a moment."}
+                        : isWelper
+                          ? welperMsg.loadError
+                          : "We couldn't load your inbox. Try again in a moment."}
                     </Callout.Text>
                   </Callout.Root>
                 </Box>
@@ -415,10 +457,12 @@ export function MessagesHub() {
                   </Flex>
                   <Box>
                     <Text size="2" weight="medium" align="center" as="p" mb="1">
-                      No conversations yet
+                      {isWelper ? welperMsg.emptyTitle : "No conversations yet"}
                     </Text>
                     <Text size="1" color="gray" highContrast align="center" as="p">
-                      New chats appear here once you have a booking.
+                      {isWelper
+                        ? welperMsg.emptyDescription
+                        : "New chats appear here once you have a booking."}
                     </Text>
                   </Box>
                 </Flex>
@@ -431,6 +475,9 @@ export function MessagesHub() {
                       isSelected={item.bookingId === selectedBookingId}
                       currentUserId={user.id}
                       viewerRole={viewerRole}
+                      welperMsg={isWelper ? welperMsg : undefined}
+                      statusLabel={isWelper ? bookingStatusLabel : undefined}
+                      dateLocale={dateLocale}
                     />
                   ))}
                 </ul>
@@ -449,17 +496,22 @@ export function MessagesHub() {
                 key={selectedBookingId}
                 bookingId={selectedBookingId}
                 currentUserId={user.id}
+                welperMsg={isWelper ? welperMsg : undefined}
+                statusLabel={isWelper ? bookingStatusLabel : undefined}
+                dateLocale={dateLocale}
               />
             ) : !isLoading && inbox.length === 0 ? (
               <Flex align="center" justify="center" style={{ flex: 1 }}>
                 <Text size="2" color="gray" highContrast>
-                  No conversation selected.
+                  {isWelper ? welperMsg.noneSelected : "No conversation selected."}
                 </Text>
               </Flex>
             ) : (
               <Flex align="center" justify="center" style={{ flex: 1 }}>
                 <Text size="2" color="gray" highContrast>
-                  Pick a booking from the list to start chatting.
+                  {isWelper
+                    ? welperMsg.pickFromList
+                    : "Pick a booking from the list to start chatting."}
                 </Text>
               </Flex>
             )}

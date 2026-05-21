@@ -13,12 +13,22 @@ import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+export type EmailUpdateFormLabels = {
+  title: string;
+  description: string;
+  emailLabel: string;
+  hint: string;
+  submit: string;
+  submitting?: string;
+};
+
 export interface EmailUpdateFormProps {
   defaultEmail?: string;
   loading?: boolean;
   error?: string;
   successMessage?: string;
   onSubmit?: (values: EmailUpdateValues) => void | Promise<void>;
+  labels?: EmailUpdateFormLabels;
 }
 
 const schema = z.object({
@@ -33,6 +43,7 @@ export function EmailUpdateForm({
   error,
   successMessage,
   onSubmit,
+  labels,
 }: EmailUpdateFormProps) {
   const form = useForm<EmailUpdateValues>({
     resolver: zodResolver(schema),
@@ -54,10 +65,11 @@ export function EmailUpdateForm({
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>
           <Heading size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            Update email
+            {labels?.title ?? "Update email"}
           </Heading>
           <Text size="2" color="gray">
-            Change the email you sign in with. You&apos;ll need to verify the new address before your account is fully secured.
+            {labels?.description ??
+              "Change the email you sign in with. You'll need to verify the new address before your account is fully secured."}
           </Text>
         </Box>
 
@@ -76,7 +88,7 @@ export function EmailUpdateForm({
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="email-update" mb={FORM_SPACING.labelGap}>
-              Email Address
+              {labels?.emailLabel ?? "Email Address"}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
@@ -94,12 +106,13 @@ export function EmailUpdateForm({
               </Text>
             )}
             <Text size="1" color="gray" mt={FORM_SPACING.helperGap}>
-              Your sign-in email changes right away. We&apos;ll ask you to verify the new address from the verification screen.
+              {labels?.hint ??
+                "Your sign-in email changes right away. We'll ask you to verify the new address from the verification screen."}
             </Text>
           </Box>
 
           <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
-            {loading ? "Updating..." : "Update email"}
+            {loading ? (labels?.submitting ?? "Updating...") : (labels?.submit ?? "Update email")}
           </Button>
         </form>
       </Flex>

@@ -31,10 +31,28 @@ export interface AvailabilitySchedule {
   effectiveEndDate?: Date;
 }
 
+export type TimeSlotAvailabilityLabels = {
+  regularTitle: string;
+  regularDescription: string;
+  addSlotsTitle: string;
+  addSlotsHint: string;
+  startTime: string;
+  endTime: string;
+  addSlotsButton: string;
+  currentSlotsTitle: string;
+  to: string;
+  removeSlotAria: string;
+  emptyCallout: string;
+  endAfterStart: string;
+  /** Index 0 = Sunday … 6 = Saturday */
+  dayNames: Record<number, string>;
+};
+
 export interface TimeSlotAvailabilityProps {
   defaultSchedule?: AvailabilitySchedule;
   loading?: boolean;
   onChange?: (schedule: AvailabilitySchedule) => void;
+  labels?: TimeSlotAvailabilityLabels;
 }
 
 const DAYS_OF_WEEK = [
@@ -56,7 +74,9 @@ export function TimeSlotAvailability({
   defaultSchedule,
   loading,
   onChange,
+  labels,
 }: TimeSlotAvailabilityProps) {
+  const endAfterStartMsg = labels?.endAfterStart ?? "End time must be after start time.";
   const [schedule, setSchedule] = useState<AvailabilitySchedule>(
     defaultSchedule || emptySchedule
   );
@@ -91,7 +111,7 @@ export function TimeSlotAvailability({
   const handleAddSlots = () => {
     if (selectedDays.length === 0) return;
     if (isInvertedSlot(newStartTime, newEndTime)) {
-      setAddSlotError("End time must be after start time.");
+      setAddSlotError(endAfterStartMsg);
       return;
     }
     setAddSlotError(null);
@@ -145,7 +165,7 @@ export function TimeSlotAvailability({
     updatedSlots[index] = candidate;
 
     if (isInvertedSlot(candidate.startTime, candidate.endTime)) {
-      setSlotErrors((prev) => ({ ...prev, [index]: "End time must be after start time." }));
+      setSlotErrors((prev) => ({ ...prev, [index]: endAfterStartMsg }));
       // Update local view (so the user sees what they typed) but do NOT emit.
       setSchedule({ ...schedule, timeSlots: updatedSlots });
       return;
@@ -175,7 +195,7 @@ export function TimeSlotAvailability({
   };
 
   const getDayLabel = (dayOfWeek: number) => {
-    return DAYS_OF_WEEK.find((d) => d.value === dayOfWeek)?.label || "Unknown";
+    return labels?.dayNames[dayOfWeek] ?? DAYS_OF_WEEK.find((d) => d.value === dayOfWeek)?.label ?? "Unknown";
   };
 
   return (
@@ -187,20 +207,21 @@ export function TimeSlotAvailability({
       <Flex direction="column" gap="3" style={{ minWidth: 0 }}>
         <Box>
           <Heading size="4" mb="1">
-            Regular schedule
+            {labels?.regularTitle ?? "Regular schedule"}
           </Heading>
           <Text size="2" color="gray" highContrast>
-            Define when you're usually available (e.g. weekdays 9–5). This schedule repeats every week.
+            {labels?.regularDescription ??
+              "Define when you're usually available (e.g. weekdays 9–5). This schedule repeats every week."}
           </Text>
         </Box>
 
         <Box mb="3">
           <Heading as="h3" size="3" mb="3">
-            Add time slots
+            {labels?.addSlotsTitle ?? "Add time slots"}
           </Heading>
           <Flex direction="column" gap="3">
             <Text size="2" color="gray" highContrast>
-              Select which days and times you're available:
+              {labels?.addSlotsHint ?? "Select which days and times you're available:"}
             </Text>
 
             <Flex gap="2" wrap="wrap">
@@ -214,7 +235,7 @@ export function TimeSlotAvailability({
                     size="2"
                   />
                   <Text as="label" size="2" htmlFor={`day-${day.value}`}>
-                    {day.label}
+                    {labels?.dayNames[day.value] ?? day.label}
                   </Text>
                 </Flex>
               ))}
@@ -225,7 +246,7 @@ export function TimeSlotAvailability({
                 <Flex gap="3" align="end">
                   <Box style={{ flex: 1 }}>
                     <Text as="label" size="2" weight="bold" htmlFor="start-time-input" mb="1">
-                      Start time
+                      {labels?.startTime ?? "Start time"}
                     </Text>
                     <TextField.Root
                       type="time"
@@ -243,7 +264,7 @@ export function TimeSlotAvailability({
                   </Box>
                   <Box style={{ flex: 1 }}>
                     <Text as="label" size="2" weight="bold" htmlFor="end-time-input" mb="1">
-                      End time
+                      {labels?.endTime ?? "End time"}
                     </Text>
                     <TextField.Root
                       type="time"
@@ -268,7 +289,7 @@ export function TimeSlotAvailability({
                   >
                     <Flex align="center" gap="2">
                       <Plus style={{ width: "16px", height: "16px" }} />
-                      Add slots
+                      {labels?.addSlotsButton ?? "Add slots"}
                     </Flex>
                   </Button>
                 </Flex>
@@ -285,7 +306,7 @@ export function TimeSlotAvailability({
         {schedule.timeSlots.length > 0 && (
           <Box mb="3">
             <Heading as="h3" size="3" mb="3">
-              Current time slots
+              {labels?.currentSlotsTitle ?? "Current time slots"}
             </Heading>
             <Flex direction="column" gap="2">
               {schedule.timeSlots.map((slot, index) => {
@@ -314,7 +335,7 @@ export function TimeSlotAvailability({
                               style={{ width: "120px" }}
                             />
                             <Text size="2" color="gray" highContrast>
-                              to
+                              {labels?.to ?? "to"}
                             </Text>
                             <TextField.Root
                               type="time"
@@ -338,7 +359,7 @@ export function TimeSlotAvailability({
                           size="2"
                           onClick={() => handleRemoveTimeSlot(index)}
                           disabled={loading}
-                          aria-label="Remove time slot"
+                          aria-label={labels?.removeSlotAria ?? "Remove time slot"}
                         >
                           <X aria-hidden="true" style={{ width: "16px", height: "16px" }} />
                         </Button>
@@ -359,7 +380,8 @@ export function TimeSlotAvailability({
         {schedule.timeSlots.length === 0 && (
           <Callout.Root color="gray" variant="surface">
             <Callout.Text>
-              No time slots defined. Add time slots to set your availability.
+              {labels?.emptyCallout ??
+                "No time slots defined. Add time slots to set your availability."}
             </Callout.Text>
           </Callout.Root>
         )}

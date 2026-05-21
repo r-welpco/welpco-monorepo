@@ -31,11 +31,22 @@ export interface ServiceArea {
   description?: string;
 }
 
+export type ServiceAreaSelectorOverrideLabels = {
+  overrideDescription: string;
+  useDefault: string;
+  defineCustom: string;
+  usingDefault: (km: number, city: string) => string;
+  save?: string;
+  saving?: string;
+};
+
 export interface ServiceAreaSelectorLabels {
   centerAddress: string;
   serviceRadius: string;
   radiusPlaceholder: string;
   radiusHint: string;
+  /** Per-offering override UI when `allowOverride` and `defaultServiceArea` are set. */
+  override?: ServiceAreaSelectorOverrideLabels;
 }
 
 const DEFAULT_SELECTOR_LABELS: ServiceAreaSelectorLabels = {
@@ -204,7 +215,8 @@ export function ServiceAreaSelector({
           </Heading>
           <Text size="2" color="gray" highContrast>
             {allowOverride && useDefault && defaultServiceArea
-              ? "Use default service area or define a custom area for this service."
+              ? (selectorLabels.override?.overrideDescription ??
+                "Use default service area or define a custom area for this service.")
               : "Define the geographic area where you provide services."}
           </Text>
         </Box>
@@ -220,13 +232,17 @@ export function ServiceAreaSelector({
               <Text as="label" size="2">
                 <Flex align="center" gap="2">
                   <RadioGroup.Item value="default" />
-                  <Text weight="medium">Use default service area</Text>
+                  <Text weight="medium">
+                    {selectorLabels.override?.useDefault ?? "Use default service area"}
+                  </Text>
                 </Flex>
               </Text>
               <Text as="label" size="2">
                 <Flex align="center" gap="2">
                   <RadioGroup.Item value="custom" />
-                  <Text weight="medium">Define custom service area</Text>
+                  <Text weight="medium">
+                    {selectorLabels.override?.defineCustom ?? "Define custom service area"}
+                  </Text>
                 </Flex>
               </Text>
             </Flex>
@@ -235,8 +251,12 @@ export function ServiceAreaSelector({
           {useDefault && defaultServiceArea && (
             <Callout.Root color={SEMANTIC_COLOR.success} variant="soft">
               <Callout.Text>
-                Using default service area: {resolveServiceAreaRadiusKm(defaultServiceArea)} km from{" "}
-                {defaultServiceArea.centerAddress?.city || "your location"}
+                {selectorLabels.override?.usingDefault
+                  ? selectorLabels.override.usingDefault(
+                      resolveServiceAreaRadiusKm(defaultServiceArea),
+                      defaultServiceArea.centerAddress?.city || "your location",
+                    )
+                  : `Using default service area: ${resolveServiceAreaRadiusKm(defaultServiceArea)} km from ${defaultServiceArea.centerAddress?.city || "your location"}`}
               </Callout.Text>
             </Callout.Root>
           )}
@@ -350,7 +370,9 @@ export function ServiceAreaSelector({
             disabled={loading || !isDirty}
             onClick={handleSave}
           >
-            {loading ? "Saving…" : "Save service area"}
+            {loading
+              ? (selectorLabels.override?.saving ?? "Saving…")
+              : (selectorLabels.override?.save ?? "Save service area")}
           </Button>
         </Flex>
       )}

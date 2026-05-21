@@ -2,17 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { Card } from "@welpco/ui/card";
-import { Button } from "@welpco/ui/button";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Switch } from "@welpco/ui/switch";
 import { usePersonalizationStore, type ThemeMode } from "@/stores/personalizationStore";
-import { backgrounds, getBackgroundById, type BackgroundDefinition } from "@/lib/personalization/backgrounds";
+import { backgrounds, type BackgroundDefinition } from "@/lib/personalization/backgrounds";
 import { Check, Sun, Moon, Monitor } from "lucide-react";
+import type { PersonalizationAppearanceLabels } from "@/lib/i18n/use-dashboard-labels";
 
-export function PersonalizationSettings() {
+export type PersonalizationSettingsLabels = PersonalizationAppearanceLabels;
+
+export function PersonalizationSettings({
+  labels,
+}: {
+  labels?: PersonalizationSettingsLabels;
+}) {
   const {
     themeMode,
     translucentTheme,
@@ -32,55 +38,55 @@ export function PersonalizationSettings() {
     return null;
   }
 
-  const selectedBackground = getBackgroundById(backgroundId);
-
   return (
     <Card size="4" variant="surface" style={{ width: "100%" }}>
       <Flex direction="column" gap="5">
         <Box>
           <Heading size="7" trim="start" mb="2">
-            Personalization
+            {labels?.title ?? "Personalization"}
           </Heading>
           <Text size="2" color="gray">
-            Customize your app appearance and theme.
+            {labels?.description ?? "Customize your app appearance and theme."}
           </Text>
         </Box>
 
-        {/* Theme Mode */}
         <Box>
           <Text as="label" size="2" weight="bold" mb="3" style={{ display: "block" }}>
-            Theme Mode
+            {labels?.themeMode ?? "Theme Mode"}
           </Text>
           <Flex wrap="wrap" gap="3">
             <ThemePreview
               mode="light"
               isSelected={themeMode === "light"}
               onSelect={() => setThemeMode("light")}
+              copy={labels?.theme.light}
             />
             <ThemePreview
               mode="dark"
               isSelected={themeMode === "dark"}
               onSelect={() => setThemeMode("dark")}
+              copy={labels?.theme.dark}
             />
             <ThemePreview
               mode="system"
               isSelected={themeMode === "system"}
               onSelect={() => setThemeMode("system")}
+              copy={labels?.theme.system}
             />
           </Flex>
         </Box>
 
-        {/* Translucent Theme */}
         <Box>
-          <Flex align="center" justify="between">
-            <Box>
-              <Text size="2" weight="medium">
-                Translucent Theme
+          <Flex align="start" justify="between" gap="3">
+            <Flex direction="column" gap="1" style={{ flex: 1, minWidth: 0 }}>
+              <Text size="2" weight="medium" as="p" style={{ display: "block" }}>
+                {labels?.translucentTheme ?? "Translucent Theme"}
               </Text>
-              <Text size="1" color="gray">
-                Enable translucent panels and backgrounds
+              <Text size="1" color="gray" as="p" style={{ display: "block" }}>
+                {labels?.translucentThemeHint ??
+                  "Enable translucent panels and backgrounds"}
               </Text>
-            </Box>
+            </Flex>
             <Switch
               checked={translucentTheme}
               onCheckedChange={setTranslucentTheme}
@@ -88,62 +94,59 @@ export function PersonalizationSettings() {
           </Flex>
         </Box>
 
-            {/* Background Color Selection */}
-            <Box>
-              <Text as="label" size="2" weight="bold" mb="3" style={{ display: "block" }}>
-                Background Color
-              </Text>
-              <Flex wrap="wrap" gap="3">
-                {backgrounds.map((background) => (
-                  <BackgroundPreview
-                    key={background.id}
-                    background={background}
-                    isSelected={background.id === backgroundId}
-                    onSelect={() => setBackground(background.id)}
-                  />
-                ))}
-              </Flex>
-            </Box>
-
+        <Box>
+          <Text as="label" size="2" weight="bold" mb="3" style={{ display: "block" }}>
+            {labels?.background ?? "Background Color"}
+          </Text>
+          <Flex wrap="wrap" gap="3">
+            {backgrounds.map((background) => (
+              <BackgroundPreview
+                key={background.id}
+                background={background}
+                isSelected={background.id === backgroundId}
+                onSelect={() => setBackground(background.id)}
+                copy={labels?.backgroundById[background.id]}
+              />
+            ))}
           </Flex>
-        </Card>
-      );
-    }
+        </Box>
+      </Flex>
+    </Card>
+  );
+}
 
 interface ThemePreviewProps {
   mode: ThemeMode;
   isSelected: boolean;
   onSelect: () => void;
+  copy?: { name: string; description: string };
 }
 
-function ThemePreview({ mode, isSelected, onSelect }: ThemePreviewProps) {
+function ThemePreview({ mode, isSelected, onSelect, copy }: ThemePreviewProps) {
   const getThemeConfig = () => {
     switch (mode) {
       case "light":
         return {
-          name: "Light",
-          description: "Bright and clean",
+          name: copy?.name ?? "Light",
+          description: copy?.description ?? "Bright and clean",
           icon: Sun,
           gradient: "linear-gradient(135deg, #ffffff 0%, #f5f5f5 50%, #e5e5e5 100%)",
-          color: "#ffffff",
           textColor: "#1a1a1a",
         };
       case "dark":
         return {
-          name: "Dark",
-          description: "Easy on the eyes",
+          name: copy?.name ?? "Dark",
+          description: copy?.description ?? "Easy on the eyes",
           icon: Moon,
           gradient: "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)",
-          color: "#1a1a1a",
           textColor: "#ffffff",
         };
       case "system":
         return {
-          name: "System",
-          description: "Follows device settings",
+          name: copy?.name ?? "System",
+          description: copy?.description ?? "Follows device settings",
           icon: Monitor,
           gradient: "linear-gradient(135deg, #ffffff 0%, #808080 50%, #1a1a1a 100%)",
-          color: "#808080",
           textColor: "#1a1a1a",
         };
     }
@@ -182,7 +185,8 @@ function ThemePreview({ mode, isSelected, onSelect }: ThemePreviewProps) {
             width: "48px",
             height: "48px",
             borderRadius: "50%",
-            backgroundColor: mode === "system" ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)",
+            backgroundColor:
+              mode === "system" ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -216,10 +220,10 @@ function ThemePreview({ mode, isSelected, onSelect }: ThemePreviewProps) {
       </Box>
       <Box p="2" style={{ backgroundColor: "var(--gray-2)" }}>
         <Flex direction="column" gap="1">
-          <Text size="2" weight="medium">
+          <Text size="2" weight="medium" as="p" style={{ display: "block" }}>
             {config.name}
           </Text>
-          <Text size="1" color="gray">
+          <Text size="1" color="gray" as="p" style={{ display: "block" }}>
             {config.description}
           </Text>
         </Flex>
@@ -232,9 +236,10 @@ interface BackgroundPreviewProps {
   background: BackgroundDefinition;
   isSelected: boolean;
   onSelect: () => void;
+  copy?: { name: string; description: string };
 }
 
-function BackgroundPreview({ background, isSelected, onSelect }: BackgroundPreviewProps) {
+function BackgroundPreview({ background, isSelected, onSelect, copy }: BackgroundPreviewProps) {
   return (
     <Box
       style={{
@@ -278,15 +283,14 @@ function BackgroundPreview({ background, isSelected, onSelect }: BackgroundPrevi
       </Box>
       <Box p="2" style={{ backgroundColor: "var(--gray-2)" }}>
         <Flex direction="column" gap="1">
-          <Text size="2" weight="medium">
-            {background.name}
+          <Text size="2" weight="medium" as="p" style={{ display: "block" }}>
+            {copy?.name ?? background.name}
           </Text>
-          <Text size="1" color="gray">
-            {background.description}
+          <Text size="1" color="gray" as="p" style={{ display: "block" }}>
+            {copy?.description ?? background.description}
           </Text>
         </Flex>
       </Box>
     </Box>
   );
 }
-

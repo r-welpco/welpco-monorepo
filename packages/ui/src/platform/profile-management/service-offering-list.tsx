@@ -32,6 +32,29 @@ export interface ServiceOffering {
   active: boolean;
 }
 
+export type ServiceOfferingListLabels = {
+  listTitle: string;
+  listDescription: string;
+  addOffering: string;
+  searchPlaceholder: string;
+  active: string;
+  inactive: string;
+  edit: string;
+  delete: string;
+  activeLabel: string;
+  uncategorized?: string;
+  allCategories?: string;
+  allStatus?: string;
+  activeOnly?: string;
+  inactiveOnly?: string;
+  filterByCategoryAria?: string;
+  filterByStatusAria?: string;
+  showingCount?: (shown: number, total: number) => string;
+  noOfferingsFound?: string;
+  emptyFirst?: string;
+  emptyFiltered?: string;
+};
+
 export interface ServiceOfferingListProps {
   offerings: ServiceOffering[];
   loading?: boolean;
@@ -41,14 +64,15 @@ export interface ServiceOfferingListProps {
   onToggleActive?: (id: string, active: boolean) => void;
   onBook?: (id: string) => void;
   serviceCategories?: Array<{ id: string; name: string }>;
+  labels?: ServiceOfferingListLabels;
 }
 
 function offeringCategoryKey(offering: ServiceOffering): string {
   return offering.categoryId ?? offering.category ?? "";
 }
 
-function offeringCategoryLabel(offering: ServiceOffering): string {
-  return offering.categoryName || offering.category || "Uncategorized";
+function offeringCategoryLabel(offering: ServiceOffering, uncategorized = "Uncategorized"): string {
+  return offering.categoryName || offering.category || uncategorized;
 }
 
 function ServiceOfferingRow({
@@ -58,6 +82,7 @@ function ServiceOfferingRow({
   onDelete,
   onToggleActive,
   onBook,
+  labels,
 }: {
   offering: ServiceOffering;
   loading?: boolean;
@@ -65,6 +90,7 @@ function ServiceOfferingRow({
   onDelete?: (id: string) => void;
   onToggleActive?: (id: string, active: boolean) => void;
   onBook?: (id: string) => void;
+  labels?: ServiceOfferingListLabels;
 }) {
   const subcategories = offering.subcategories ?? [];
 
@@ -90,13 +116,13 @@ function ServiceOfferingRow({
               variant={offering.active ? "solid" : "soft"}
               size="1"
             >
-              {offering.active ? "Active" : "Inactive"}
+              {offering.active ? (labels?.active ?? "Active") : (labels?.inactive ?? "Inactive")}
             </Badge>
           </Flex>
 
           <Flex gap="2" wrap="wrap" align="center" mb={offering.description ? "2" : "0"}>
             <Badge color={SEMANTIC_COLOR.primary} variant="soft" size="1">
-              {offeringCategoryLabel(offering)}
+              {offeringCategoryLabel(offering, labels?.uncategorized)}
             </Badge>
             {subcategories.map((sub) => (
               <Badge key={sub.id} color="gray" variant="outline" size="1">
@@ -149,7 +175,7 @@ function ServiceOfferingRow({
 
           <Flex align="center" justify="between" gap="3">
             <Text size="2" weight="medium" id={`offering-${offering.id}-active-label`}>
-              Active
+              {labels?.activeLabel ?? "Active"}
             </Text>
             <Switch
               aria-labelledby={`offering-${offering.id}-active-label`}
@@ -170,7 +196,7 @@ function ServiceOfferingRow({
               >
                 <Flex align="center" gap="2">
                   <Edit aria-hidden="true" style={{ width: "16px", height: "16px" }} />
-                  Edit
+                  {labels?.edit ?? "Edit"}
                 </Flex>
               </Button>
             )}
@@ -185,7 +211,7 @@ function ServiceOfferingRow({
               >
                 <Flex align="center" gap="2">
                   <Trash2 aria-hidden="true" style={{ width: "16px", height: "16px" }} />
-                  Delete
+                  {labels?.delete ?? "Delete"}
                 </Flex>
               </Button>
             )}
@@ -215,6 +241,7 @@ export function ServiceOfferingList({
   onToggleActive,
   onBook,
   serviceCategories = [],
+  labels,
 }: ServiceOfferingListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -222,7 +249,7 @@ export function ServiceOfferingList({
 
   const filteredOfferings = offerings.filter((offering) => {
     const categoryKey = offeringCategoryKey(offering);
-    const categoryLabel = offeringCategoryLabel(offering);
+    const categoryLabel = offeringCategoryLabel(offering, labels?.uncategorized);
     const subNames = (offering.subcategories ?? []).map((s) => s.name).join(" ");
 
     const matchesSearch =
@@ -251,17 +278,18 @@ export function ServiceOfferingList({
         <Flex align="center" justify="between" wrap="wrap" gap="3">
           <Box>
             <Heading size="4" mb="1">
-              Service offerings
+              {labels?.listTitle ?? "Service offerings"}
             </Heading>
             <Text size="2" color="gray" highContrast>
-              Manage your service offerings. Active offerings appear in search results.
+              {labels?.listDescription ??
+                "Manage your service offerings. Active offerings appear in search results."}
             </Text>
           </Box>
           {onAdd && (
             <Button size="2" color={SEMANTIC_COLOR.primary} onClick={onAdd} disabled={loading}>
               <Flex align="center" gap="2">
                 <Plus style={{ width: "16px", height: "16px" }} />
-                Add offering
+                {labels?.addOffering ?? "Add offering"}
               </Flex>
             </Button>
           )}
@@ -270,7 +298,7 @@ export function ServiceOfferingList({
         <Flex gap="3" wrap="wrap" align="end">
           <Box style={{ flex: 1, minWidth: "200px" }}>
             <TextField.Root
-              placeholder="Search offerings..."
+              placeholder={labels?.searchPlaceholder ?? "Search offerings..."}
               size="2"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -289,11 +317,14 @@ export function ServiceOfferingList({
                 onValueChange={setFilterCategory}
                 disabled={loading}
               >
-                <SelectTrigger aria-label="Filter by category" style={{ width: "100%" }}>
+                <SelectTrigger
+                  aria-label={labels?.filterByCategoryAria ?? "Filter by category"}
+                  style={{ width: "100%" }}
+                >
                   <Filter style={{ width: "16px", height: "16px" }} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
+                  <SelectItem value="all">{labels?.allCategories ?? "All categories"}</SelectItem>
                   {serviceCategories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
@@ -312,18 +343,23 @@ export function ServiceOfferingList({
               }
               disabled={loading}
             >
-              <SelectTrigger aria-label="Filter by status" style={{ width: "100%" }} />
+              <SelectTrigger
+                aria-label={labels?.filterByStatusAria ?? "Filter by status"}
+                style={{ width: "100%" }}
+              />
               <SelectContent>
-                <SelectItem value="all">All status</SelectItem>
-                <SelectItem value="active">Active only</SelectItem>
-                <SelectItem value="inactive">Inactive only</SelectItem>
+                <SelectItem value="all">{labels?.allStatus ?? "All status"}</SelectItem>
+                <SelectItem value="active">{labels?.activeOnly ?? "Active only"}</SelectItem>
+                <SelectItem value="inactive">{labels?.inactiveOnly ?? "Inactive only"}</SelectItem>
               </SelectContent>
             </Select>
           </Box>
         </Flex>
 
         <Text size="2" color="gray" highContrast>
-          Showing {sortedOfferings.length} of {offerings.length} offerings
+          {labels?.showingCount
+            ? labels.showingCount(sortedOfferings.length, offerings.length)
+            : `Showing ${sortedOfferings.length} of ${offerings.length} offerings`}
         </Text>
 
         {sortedOfferings.length === 0 ? (
@@ -342,18 +378,18 @@ export function ServiceOfferingList({
                 <Briefcase aria-hidden="true" style={{ width: "32px", height: "32px", color: "var(--gray-9)" }} />
               </Flex>
               <Heading size="4" align="center" mb="1">
-                No offerings found
+                {labels?.noOfferingsFound ?? "No offerings found"}
               </Heading>
               <Text size="2" color="gray" align="center" highContrast>
                 {offerings.length === 0
-                  ? "Add your first service offering to get started."
-                  : "Try adjusting your search or filters."}
+                  ? (labels?.emptyFirst ?? "Add your first service offering to get started.")
+                  : (labels?.emptyFiltered ?? "Try adjusting your search or filters.")}
               </Text>
               {onAdd && offerings.length === 0 && (
                 <Button size="2" color={SEMANTIC_COLOR.primary} onClick={onAdd}>
                   <Flex align="center" gap="2">
                     <Plus style={{ width: "16px", height: "16px" }} />
-                    Add offering
+                    {labels?.addOffering ?? "Add offering"}
                   </Flex>
                 </Button>
               )}
@@ -370,6 +406,7 @@ export function ServiceOfferingList({
                 onDelete={onDelete}
                 onToggleActive={onToggleActive}
                 onBook={onBook}
+                labels={labels}
               />
             ))}
           </Flex>

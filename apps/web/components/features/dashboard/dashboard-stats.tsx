@@ -64,6 +64,8 @@ export interface DashboardStatsProps {
   loading?: boolean;
   /** Shown under the section heading when stats are partial (e.g. paginated list). */
   footnote?: string;
+  /** Welper-only section heading from i18n. */
+  welperSectionTitle?: string;
 }
 
 const FALLBACK_CUSTOMER: DashboardStatItem[] = [
@@ -79,7 +81,13 @@ const FALLBACK_WELPER: DashboardStatItem[] = [
   { title: "Completed jobs", value: 0 },
 ];
 
-export function DashboardStats({ role, stats: statsProp, loading, footnote }: DashboardStatsProps) {
+export function DashboardStats({
+  role,
+  stats: statsProp,
+  loading,
+  footnote,
+  welperSectionTitle,
+}: DashboardStatsProps) {
   const stats = statsProp ?? (role === "customer" ? FALLBACK_CUSTOMER : FALLBACK_WELPER);
 
   // Stat tiles render bare on the page (no wrapping section card) so they
@@ -89,7 +97,7 @@ export function DashboardStats({ role, stats: statsProp, loading, footnote }: Da
     <Box aria-busy={loading || undefined} aria-live="polite">
       <Box mb="3">
         <Heading as="h2" size="5" trim="start">
-          {role === "customer" ? "Your activity" : "Your numbers"}
+          {role === "customer" ? "Your activity" : (welperSectionTitle ?? "Your numbers")}
         </Heading>
         {footnote ? (
           <Text as="p" size="1" color="gray" mt="1">

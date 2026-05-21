@@ -68,28 +68,35 @@ import {
 import { Tooltip } from "@welpco/ui/tooltip";
 import type { ReceiptEvidenceFile } from "@/lib/services/booking-service";
 import { format } from "date-fns";
+import type { Locale } from "date-fns";
 import { getStatusColor, formatStatusLabel } from "@/lib/constants/booking";
+import {
+  useBookingStatusLabel,
+  useWelperBookingDetailLabels,
+  useWelperBookingsLabels,
+} from "@/lib/i18n/use-dashboard-labels";
+import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import styles from "./booking-detail.module.css";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
-function formatDateTime(dateStr: string | null): string {
+function formatDateTime(dateStr: string | null, locale?: Locale): string {
   if (!dateStr) return "—";
   try {
     // For date-only strings (YYYY-MM-DD), append T00:00:00 to avoid UTC midnight
     // being displayed as the previous day in western timezones
     const d = dateStr.length === 10 ? new Date(dateStr + "T00:00:00") : new Date(dateStr);
-    return format(d, dateStr.length === 10 ? "PPP" : "PPP 'at' p");
+    return format(d, dateStr.length === 10 ? "PPP" : "PPP 'at' p", locale ? { locale } : undefined);
   } catch {
     return dateStr;
   }
 }
 
-function formatDate(dateStr: string | null): string {
+function formatDate(dateStr: string | null, locale?: Locale): string {
   if (!dateStr) return "—";
   try {
     const d = dateStr.length === 10 ? new Date(dateStr + "T00:00:00") : new Date(dateStr);
-    return format(d, "PPP");
+    return format(d, "PPP", locale ? { locale } : undefined);
   } catch {
     return dateStr;
   }
@@ -164,10 +171,31 @@ interface BookingDetailClientProps {
   bookingId: string;
 }
 
+type TimelineKey =
+  | "created"
+  | "accepted"
+  | "checkedIn"
+  | "checkedOut"
+  | "receiptSent"
+  | "completed"
+  | "cancelled"
+  | "declined";
+
 interface TimelineEvent {
-  label: string;
+  key: TimelineKey;
   date: string | null;
 }
+
+const TIMELINE_LABEL_EN: Record<TimelineKey, string> = {
+  created: "Created",
+  accepted: "Accepted",
+  checkedIn: "Checked in",
+  checkedOut: "Checked out",
+  receiptSent: "Receipt sent",
+  completed: "Completed",
+  cancelled: "Cancelled",
+  declined: "Declined",
+};
 
 type ConfirmKind = "accept" | "decline" | "check-in" | "cancel";
 
@@ -333,6 +361,19 @@ export default function BookingDetailClient({
 
   const isWelper = user?.role === "welper";
   const isCustomer = user?.role === "customer";
+  const welperBookings = useWelperBookingsLabels();
+  const welperDetail = useWelperBookingDetailLabels();
+  const bookingStatusLabel = useBookingStatusLabel();
+  const dateFnsLocale = useDateFnsLocale();
+  const dateLocale = isWelper ? dateFnsLocale : undefined;
+
+  const timelineLabel = useCallback(
+    (key: TimelineKey) => {
+      if (!isWelper) return TIMELINE_LABEL_EN[key];
+      return welperDetail.timelineLabels[key];
+    },
+    [isWelper, welperDetail],
+  );
   const actions = booking?.availableActions ?? [];
 
   const { data: receiptDraft, isLoading: receiptDraftLoading } = useServiceReceiptDraft(bookingId, {
@@ -461,38 +502,38 @@ export default function BookingDetailClient({
     if (!booking) return [];
 
     const events: TimelineEvent[] = [
-      { label: "Created", date: booking.createdAt },
+      { key: "created", date: booking.createdAt },
     ];
 
     if (booking.acceptedAt) {
-      events.push({ label: "Accepted", date: booking.acceptedAt });
+      events.push({ key: "accepted", date: booking.acceptedAt });
     }
 
     if (booking.checkedInAt) {
-      events.push({ label: "Checked in", date: booking.checkedInAt });
+      events.push({ key: "checkedIn", date: booking.checkedInAt });
     }
 
     if (booking.checkedOutAt) {
-      events.push({ label: "Checked out", date: booking.checkedOutAt });
+      events.push({ key: "checkedOut", date: booking.checkedOutAt });
     }
 
     if (booking.serviceReceipt) {
       const receiptAt =
         booking.serviceReceipt.sentToCustomerAt ??
         booking.serviceReceipt.confirmedAt;
-      events.push({ label: "Receipt sent", date: receiptAt });
+      events.push({ key: "receiptSent", date: receiptAt });
     }
 
     if (booking.completedAt) {
-      events.push({ label: "Completed", date: booking.completedAt });
+      events.push({ key: "completed", date: booking.completedAt });
     }
 
     if (booking.cancelledAt) {
-      events.push({ label: "Cancelled", date: booking.cancelledAt });
+      events.push({ key: "cancelled", date: booking.cancelledAt });
     }
 
     if (booking.declinedAt) {
-      events.push({ label: "Declined", date: booking.declinedAt });
+      events.push({ key: "declined", date: booking.declinedAt });
     }
 
     return events;
@@ -512,7 +553,7 @@ export default function BookingDetailClient({
               onClick={handleBack}
             >
               <ArrowLeft size={16} aria-hidden />
-              Back to bookings
+              {isWelper ? welperDetail.backToBookings : "Back to bookings"}
             </Button>
           </Box>
 
@@ -553,19 +594,25 @@ export default function BookingDetailClient({
               onClick={handleBack}
             >
               <ArrowLeft size={16} aria-hidden />
-              Back to bookings
+              {isWelper ? welperDetail.backToBookings : "Back to bookings"}
             </Button>
           </Box>
 
           <Card size="4" variant="surface">
             <Flex direction="column" align="center" gap="3" py="7" px="5">
               <Heading as="h2" size="5" mb="0" trim="start">
-                {isError ? "We couldn't load this booking" : "Booking not found"}
+                {isError
+                  ? isWelper
+                    ? welperDetail.loadFailed
+                    : "We couldn't load this booking"
+                  : "Booking not found"}
               </Heading>
               <Text size="2" color="gray" align="center">
                 {error instanceof Error
                   ? error.message
-                  : "Try again, or head back to your bookings list."}
+                  : isWelper
+                    ? welperDetail.notFoundHint
+                    : "Try again, or head back to your bookings list."}
               </Text>
               <Button
                 size="2"
@@ -574,7 +621,7 @@ export default function BookingDetailClient({
                 onClick={handleBack}
                 mt="2"
               >
-                Back to bookings
+                {isWelper ? welperDetail.backToBookings : "Back to bookings"}
               </Button>
             </Flex>
           </Card>
@@ -636,11 +683,12 @@ export default function BookingDetailClient({
     }
   > = {
     accept: {
-      title: "Accept this booking?",
-      description:
-        "We'll place a payment hold on the customer's saved card before confirming. If the hold fails, the booking stays pending.",
-      confirmLabel: "Accept booking",
-      cancelLabel: "Not now",
+      title: isWelper ? welperBookings.confirm.acceptTitle : "Accept this booking?",
+      description: isWelper
+        ? welperBookings.confirm.acceptDescription
+        : "We'll place a payment hold on the customer's saved card before confirming. If the hold fails, the booking stays pending.",
+      confirmLabel: isWelper ? welperBookings.confirm.acceptConfirm : "Accept booking",
+      cancelLabel: isWelper ? welperBookings.confirm.acceptCancel : "Not now",
       variant: "primary",
       pending: acceptMutation.isPending,
       onConfirm: () => {
@@ -648,22 +696,27 @@ export default function BookingDetailClient({
         acceptMutation.mutate(bookingId, {
           onSuccess: () => setConfirmKind(null),
           onError: (err) => {
-            setMutationError(handleBookableError(err, "Failed to accept booking."));
+            setMutationError(
+              handleBookableError(err, isWelper ? welperBookings.acceptFailed : "Failed to accept booking."),
+            );
             setConfirmKind(null);
           },
         });
       },
     },
     decline: {
-      title: "Decline this booking?",
-      description:
-        "Tell the customer why so they can find another welper quickly.",
-      confirmLabel: "Decline",
-      cancelLabel: "Keep pending",
+      title: isWelper ? welperBookings.confirm.declineTitle : "Decline this booking?",
+      description: isWelper
+        ? welperBookings.confirm.declineDescription
+        : "Tell the customer why so they can find another welper quickly.",
+      confirmLabel: isWelper ? welperBookings.confirm.declineConfirm : "Decline",
+      cancelLabel: isWelper ? welperBookings.confirm.declineCancel : "Keep pending",
       variant: "danger",
       reasonField: {
-        label: "Reason (optional)",
-        placeholder: "e.g. Schedule conflict on that day",
+        label: isWelper ? welperBookings.confirm.declineReasonLabel : "Reason (optional)",
+        placeholder: isWelper
+          ? welperBookings.confirm.declineReasonPlaceholder
+          : "e.g. Schedule conflict on that day",
       },
       pending: declineMutation.isPending,
       onConfirm: (reason) => {
@@ -673,7 +726,9 @@ export default function BookingDetailClient({
           {
             onSuccess: () => setConfirmKind(null),
             onError: (err) => {
-              setMutationError(handleBookableError(err, "Failed to decline booking."));
+              setMutationError(
+                handleBookableError(err, isWelper ? welperBookings.declineFailed : "Failed to decline booking."),
+              );
               setConfirmKind(null);
             },
           },
@@ -681,11 +736,12 @@ export default function BookingDetailClient({
       },
     },
     "check-in": {
-      title: "Check in now?",
-      description:
-        "This starts the service. The customer will be notified you're on the clock.",
-      confirmLabel: "Check in",
-      cancelLabel: "Not yet",
+      title: isWelper ? welperDetail.confirmCheckIn.title : "Check in now?",
+      description: isWelper
+        ? welperDetail.confirmCheckIn.description
+        : "This starts the service. The customer will be notified you're on the clock.",
+      confirmLabel: isWelper ? welperDetail.confirmCheckIn.confirm : "Check in",
+      cancelLabel: isWelper ? welperDetail.confirmCheckIn.cancel : "Not yet",
       variant: "primary",
       pending: checkInMutation.isPending,
       onConfirm: () => {
@@ -693,26 +749,27 @@ export default function BookingDetailClient({
         checkInMutation.mutate(bookingId, {
           onSuccess: () => setConfirmKind(null),
           onError: (err) => {
-            setMutationError(handleBookableError(err, "Failed to check in."));
+            setMutationError(
+              handleBookableError(err, isWelper ? welperDetail.checkInFailed : "Failed to check in."),
+            );
             setConfirmKind(null);
           },
         });
       },
     },
     cancel: {
-      title: "Cancel this booking?",
-      // Bible §17.5: what (what happens to the hold), why (so the user knows
-      // the cost), what-to-do (free up to 24h before start). The MVP doesn't
-      // charge a late-cancellation fee — say that honestly. SETTINGS/BOOKING
-      // ticket tracks the fee policy when product turns it on.
-      description:
-        "Free cancellation any time before the service starts — your card hold is released and no fee is charged. Tell us why so we can keep things fair.",
-      confirmLabel: "Cancel booking",
-      cancelLabel: "Keep booking",
+      title: isWelper ? welperBookings.confirm.cancelTitle : "Cancel this booking?",
+      description: isWelper
+        ? welperBookings.confirm.cancelDescription
+        : "Free cancellation any time before the service starts — your card hold is released and no fee is charged. Tell us why so we can keep things fair.",
+      confirmLabel: isWelper ? welperBookings.confirm.cancelConfirm : "Cancel booking",
+      cancelLabel: isWelper ? welperBookings.confirm.cancelCancel : "Keep booking",
       variant: "danger",
       reasonField: {
-        label: "Reason for cancellation",
-        placeholder: "e.g. Plans changed, found another welper",
+        label: isWelper ? welperBookings.confirm.cancelReasonLabel : "Reason for cancellation",
+        placeholder: isWelper
+          ? welperBookings.confirm.cancelReasonPlaceholder
+          : "e.g. Plans changed, found another welper",
         required: true,
       },
       pending: cancelMutation.isPending,
@@ -727,7 +784,9 @@ export default function BookingDetailClient({
           {
             onSuccess: () => setConfirmKind(null),
             onError: (err) => {
-              setMutationError(handleBookableError(err, "Failed to cancel booking."));
+              setMutationError(
+                handleBookableError(err, isWelper ? welperBookings.cancelFailed : "Failed to cancel booking."),
+              );
               setConfirmKind(null);
             },
           },
@@ -764,14 +823,16 @@ export default function BookingDetailClient({
             onClick={handleBack}
           >
             <ArrowLeft size={16} aria-hidden />
-            Back to bookings
+            {isWelper ? welperDetail.backToBookings : "Back to bookings"}
           </Button>
         </Box>
 
         {/* Header: Booking ID + Status. aria-live so SR users hear status changes. */}
         <Flex direction="column" gap="2" aria-live="polite">
           <Heading as="h1" size="7" mb="0" trim="start">
-            Booking #{booking.id.slice(-8).toUpperCase()}
+            {isWelper
+              ? welperDetail.bookingTitle(booking.id.slice(-8).toUpperCase())
+              : `Booking #${booking.id.slice(-8).toUpperCase()}`}
           </Heading>
           <Box>
             <Badge
@@ -780,7 +841,9 @@ export default function BookingDetailClient({
               size="2"
             >
               <Text size="2" weight="bold">
-                {startCase(formatStatusLabel(booking.status))}
+                {isWelper
+                  ? bookingStatusLabel(booking.status)
+                  : startCase(formatStatusLabel(booking.status))}
               </Text>
             </Badge>
           </Box>
@@ -790,17 +853,17 @@ export default function BookingDetailClient({
         <Card size="4" variant="surface">
           <Flex direction="column" gap="3">
             <Heading as="h2" size="5" mb="2">
-              Timeline
+              {isWelper ? welperDetail.timeline : "Timeline"}
             </Heading>
             <Box className={styles.timelineScroll}>
               <Box className={styles.timelineRow}>
                 {timelineEvents.map((event, index) => {
                   const isCancelledOrDeclined =
-                    event.label === "Cancelled" || event.label === "Declined";
+                    event.key === "cancelled" || event.key === "declined";
                   const isLast = index === timelineEvents.length - 1;
                   return (
                     <Flex
-                      key={`${event.label}-${index}`}
+                      key={`${event.key}-${index}`}
                       align="start"
                       gap="0"
                       flexShrink="0"
@@ -814,10 +877,10 @@ export default function BookingDetailClient({
                           }`}
                         />
                         <Text size="2" weight="medium" align="center">
-                          {event.label}
+                          {timelineLabel(event.key)}
                         </Text>
                         <Text size="1" color="gray" align="center">
-                          {formatDateTime(event.date)}
+                          {formatDateTime(event.date, dateLocale)}
                         </Text>
                       </Box>
                       {!isLast ? <Box className={styles.timelineConnector} /> : null}
@@ -835,10 +898,10 @@ export default function BookingDetailClient({
             <Flex direction="column" gap="4">
               <Flex direction="column" gap="2">
                 <Heading as="h2" size="5" mb="0">
-                  Quick actions
+                  {isWelper ? welperDetail.quickActionsTitle : "Quick actions"}
                 </Heading>
                 <Text as="p" size="2" color="gray">
-                  Accept, check in, check out, or cancel this booking.
+                  {isWelper ? welperDetail.quickActionsHint : "Accept, check in, check out, or cancel this booking."}
                 </Text>
               </Flex>
               <Flex gap="3" justify="end" wrap="wrap">
@@ -850,7 +913,7 @@ export default function BookingDetailClient({
                     onClick={() => setConfirmKind("decline")}
                     disabled={declineMutation.isPending}
                   >
-                    Decline
+                    {isWelper ? welperBookings.decline : "Decline"}
                   </Button>
                 )}
                 {actions.includes("cancel") && (
@@ -861,7 +924,7 @@ export default function BookingDetailClient({
                     onClick={() => setConfirmKind("cancel")}
                     disabled={cancelMutation.isPending}
                   >
-                    Cancel booking
+                    {isWelper ? welperBookings.cancelBooking : "Cancel booking"}
                   </Button>
                 )}
                 {actions.includes("check-in") && isWelper && (
@@ -872,7 +935,7 @@ export default function BookingDetailClient({
                     onClick={() => setConfirmKind("check-in")}
                     disabled={checkInMutation.isPending}
                   >
-                    Check in
+                    {welperDetail.checkIn}
                   </Button>
                 )}
                 {actions.includes("check-out") && isWelper && (
@@ -887,7 +950,7 @@ export default function BookingDetailClient({
                     }}
                     disabled={submitReceiptMutation.isPending}
                   >
-                    Check out
+                    {welperDetail.checkOut}
                   </Button>
                 )}
                 {actions.includes("accept") && isWelper && (
@@ -898,7 +961,7 @@ export default function BookingDetailClient({
                     onClick={() => setConfirmKind("accept")}
                     disabled={acceptMutation.isPending}
                   >
-                    Accept booking
+                    {welperDetail.acceptBooking}
                   </Button>
                 )}
               </Flex>
@@ -911,16 +974,20 @@ export default function BookingDetailClient({
           <Flex direction="column" gap="5">
             <Box>
               <Heading as="h2" size="5" mb="2" trim="start">
-                Booking overview
+                {isWelper ? welperDetail.overviewTitle : "Booking overview"}
               </Heading>
               <Text size="4" weight="bold" as="p">
                 {serviceOfferingName ??
-                  `Service #${booking.serviceOfferingId.slice(-8).toUpperCase()}`}
+                  (isWelper
+                    ? welperDetail.serviceFallback(booking.serviceOfferingId.slice(-8).toUpperCase())
+                    : `Service #${booking.serviceOfferingId.slice(-8).toUpperCase()}`)}
               </Text>
               <Text as="p" size="2" color="gray" mt="2">
                 {booking.scheduledDate
-                  ? formatDate(booking.scheduledDate)
-                  : "Schedule to be confirmed"}
+                  ? formatDate(booking.scheduledDate, dateLocale)
+                  : isWelper
+                    ? welperDetail.scheduleTbd
+                    : "Schedule to be confirmed"}
                 {booking.scheduledStartTime
                   ? ` · ${booking.scheduledStartTime}${
                       booking.scheduledEndTime ? ` – ${booking.scheduledEndTime}` : ""
@@ -936,12 +1003,12 @@ export default function BookingDetailClient({
 
             <Flex direction="column" gap="3">
               <Heading as="h3" size="3" mb="1">
-                People
+                {isWelper ? welperDetail.peopleTitle : "People"}
               </Heading>
               <Flex gap="6" wrap="wrap" align="start">
                 <Flex direction="column" gap="1" minWidth="160px" flexBasis="200px" flexGrow="1">
                   <Text size="1" color="gray" weight="medium">
-                    Customer
+                    {isWelper ? welperDetail.customer : "Customer"}
                   </Text>
                   <Flex align="center" gap="2">
                     <Avatar
@@ -956,14 +1023,16 @@ export default function BookingDetailClient({
                     />
                     <Text size="2">
                       {isCustomer && user?.id === booking.customerId
-                        ? "You"
+                        ? isWelper
+                          ? welperDetail.you
+                          : "You"
                         : `#${booking.customerId.slice(-8).toUpperCase()}`}
                     </Text>
                   </Flex>
                 </Flex>
                 <Flex direction="column" gap="1" minWidth="160px" flexBasis="200px" flexGrow="1">
                   <Text size="1" color="gray" weight="medium">
-                    Welper
+                    {isWelper ? welperDetail.welper : "Welper"}
                   </Text>
                   <Flex align="center" gap="2">
                     <Avatar
@@ -977,7 +1046,7 @@ export default function BookingDetailClient({
                     />
                     <Text size="2">
                       {isWelper && user?.id === booking.welperId
-                        ? "You"
+                        ? welperDetail.you
                         : welperDisplayName ??
                           `#${booking.welperId.slice(-8).toUpperCase()}`}
                     </Text>
@@ -1030,7 +1099,7 @@ export default function BookingDetailClient({
 
             <Flex direction="column" gap="3">
               <Heading as="h3" size="3" mb="1">
-                Pricing
+                {isWelper ? welperDetail.pricingTitle : "Pricing"}
               </Heading>
               <Flex gap="6" wrap="wrap" align="end">
                 {booking.durationMinutes != null && (
@@ -1048,7 +1117,7 @@ export default function BookingDetailClient({
                     <Flex align="center" gap="2">
                       <DollarSign size={14} color="var(--gray-9)" aria-hidden />
                       <Text size="1" color="gray" weight="medium">
-                        Hourly rate
+                        {isWelper ? welperDetail.hourlyRate : "Hourly rate"}
                       </Text>
                     </Flex>
                     <Text size="3" weight="medium">
@@ -1061,7 +1130,7 @@ export default function BookingDetailClient({
                     <Flex align="center" gap="2">
                       <DollarSign size={14} color="var(--gray-9)" aria-hidden />
                       <Text size="1" color="gray" weight="medium">
-                        Agreed total
+                        {isWelper ? welperDetail.agreedTotal : "Agreed total"}
                       </Text>
                     </Flex>
                     <Text size="6" weight="bold">
@@ -1076,16 +1145,19 @@ export default function BookingDetailClient({
 
             <Flex direction="column" gap="3">
               <Heading as="h3" size="3" mb="0">
-                Actions
+                {isWelper ? welperDetail.actionsTitle : "Actions"}
               </Heading>
               <Text as="p" size="1" color="gray">
-                Message your {isWelper ? "customer" : "welper"}, leave a review, or
-                report a problem if something is wrong.
+                {isWelper
+                  ? welperDetail.actionsHint
+                  : "Message your welper, leave a review, or report a problem if something is wrong."}
               </Text>
               {booking.status === "disputed" ? (
                 <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface">
                   <Callout.Text>
-                    This booking is under dispute. You cannot cancel it until support resolves the case.
+                    {isWelper
+                      ? welperDetail.disputeBlocked
+                      : "This booking is under dispute. You cannot cancel it until support resolves the case."}
                   </Callout.Text>
                 </Callout.Root>
               ) : null}
@@ -1101,10 +1173,12 @@ export default function BookingDetailClient({
                   >
                     <Flex direction="column" gap="1" flexBasis="200px" flexGrow="1" minWidth="0">
                       <Text size="1" color="gray" weight="medium">
-                        Your review
+                        {isWelper ? welperDetail.yourReview : "Your review"}
                       </Text>
                       <Text size="2">
-                        {bookingReview.rating} out of 5
+                        {isWelper
+                          ? welperDetail.reviewRating(bookingReview.rating)
+                          : `${bookingReview.rating} out of 5`}
                         {bookingReview.comment?.trim()
                           ? ` · ${
                               bookingReview.comment.trim().length > 120
@@ -1120,14 +1194,14 @@ export default function BookingDetailClient({
                       color={SEMANTIC_COLOR.primary}
                       onClick={openEditReviewDialog}
                     >
-                      Edit review
+                      {isWelper ? welperDetail.editReview : "Edit review"}
                     </Button>
                   </Flex>
                 ) : null}
                 {canDispute && hasDispute ? (
                   <Flex align="center" gap="2" wrap="wrap">
                     <Text size="2" color="gray">
-                      Report in progress
+                      {isWelper ? welperDetail.reportInProgress : "Report in progress"}
                     </Text>
                     <DisputeStatusBadge status={bookingDispute!.status} />
                   </Flex>
@@ -1139,7 +1213,7 @@ export default function BookingDetailClient({
                     color={SEMANTIC_COLOR.warning}
                     onClick={() => setDisputeDialogOpen(true)}
                   >
-                    Report a problem
+                    {isWelper ? welperDetail.reportProblem : "Report a problem"}
                   </Button>
                 ) : null}
                 {user?.id ? (
@@ -1151,7 +1225,7 @@ export default function BookingDetailClient({
                   >
                     <Link href={`/dashboard/messages/${bookingId}`}>
                       <MessageCircle size={16} aria-hidden />
-                      {isWelper ? "Message customer" : "Message welper"}
+                      {isWelper ? welperDetail.messageCustomer : "Message welper"}
                     </Link>
                   </Button>
                 ) : null}
@@ -1162,7 +1236,7 @@ export default function BookingDetailClient({
                     color={SEMANTIC_COLOR.primary}
                     onClick={openNewReviewDialog}
                   >
-                    {isWelper ? "Review customer" : "Leave a review"}
+                    {isWelper ? welperDetail.reviewCustomer : "Leave a review"}
                   </Button>
                 ) : null}
               </Flex>
@@ -1197,16 +1271,16 @@ export default function BookingDetailClient({
                   </Flex>
                   <Flex direction="column" gap="1" minWidth="0">
                     <Heading as="h2" size="5" mb="0" trim="start">
-                      Service receipt
+                      {isWelper ? welperDetail.serviceReceiptTitle : "Service receipt"}
                     </Heading>
                     <Text as="p" size="1" color="gray">
-                      Confirmed billing for this booking
+                      {isWelper ? welperDetail.serviceReceiptSubtitle : "Confirmed billing for this booking"}
                     </Text>
                   </Flex>
                 </Flex>
                 <Badge color={SEMANTIC_COLOR.primary} variant="soft" size="2">
                   <Text size="2" weight="bold">
-                    Confirmed
+                    {isWelper ? welperDetail.confirmed : "Confirmed"}
                   </Text>
                 </Badge>
               </Flex>
@@ -1222,16 +1296,16 @@ export default function BookingDetailClient({
                       flexGrow="1"
                     >
                       <Text size="1" color="gray" weight="medium">
-                        Billing period
+                        {isWelper ? welperDetail.billingPeriod : "Billing period"}
                       </Text>
                       <Text size="2">
-                        {formatDateTime(booking.serviceReceipt.billingCheckInAt)} —{" "}
-                        {formatDateTime(booking.serviceReceipt.billingCheckOutAt)}
+                        {formatDateTime(booking.serviceReceipt.billingCheckInAt, dateLocale)} —{" "}
+                        {formatDateTime(booking.serviceReceipt.billingCheckOutAt, dateLocale)}
                       </Text>
                     </Flex>
                     <Flex direction="column" gap="1" minWidth="140px">
                       <Text size="1" color="gray" weight="medium">
-                        Rate on receipt
+                        {isWelper ? welperDetail.rateOnReceipt : "Rate on receipt"}
                       </Text>
                       <Text size="2" weight="medium">
                         {usdFormatter.format(booking.serviceReceipt.hourlyRate)}/hr
@@ -1243,7 +1317,7 @@ export default function BookingDetailClient({
 
                   <Box>
                     <Text size="1" color="gray" weight="medium">
-                      Amount charged
+                      {isWelper ? welperDetail.amountCharged : "Amount charged"}
                     </Text>
                     <Text size="6" weight="bold" mt="2" as="p">
                       {(booking.serviceReceipt.totalCents / 100).toLocaleString(
@@ -1475,8 +1549,12 @@ export default function BookingDetailClient({
           }}
         >
           <DialogContent
-            title="Confirm service receipt"
-            description="Adjust billing check-in and check-out if needed. The customer is charged the total shown when you confirm."
+            title={isWelper ? welperDetail.receiptDialog.title : "Confirm service receipt"}
+            description={
+              isWelper
+                ? welperDetail.receiptDialog.description
+                : "Adjust billing check-in and check-out if needed. The customer is charged the total shown when you confirm."
+            }
           >
             {receiptDraftLoading ? (
               <Skeleton height="120px" width="100%" />
@@ -1492,7 +1570,7 @@ export default function BookingDetailClient({
                     weight="bold"
                     mb={FORM_SPACING.labelGap}
                   >
-                    Billing check-in
+                    {isWelper ? welperDetail.receiptDialog.billingIn : "Billing check-in"}
                     <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                       *
                     </Text>
@@ -1514,7 +1592,7 @@ export default function BookingDetailClient({
                     weight="bold"
                     mb={FORM_SPACING.labelGap}
                   >
-                    Billing check-out
+                    {isWelper ? welperDetail.receiptDialog.billingOut : "Billing check-out"}
                     <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                       *
                     </Text>
@@ -1536,7 +1614,7 @@ export default function BookingDetailClient({
                     weight="bold"
                     mb={FORM_SPACING.labelGap}
                   >
-                    Notes (optional)
+                    {isWelper ? welperDetail.receiptDialog.notes : "Notes (optional)"}
                   </Text>
                   <TextArea
                     id="receipt-notes"
@@ -1588,7 +1666,9 @@ export default function BookingDetailClient({
                             setReceiptDialogOpen(false);
                             if (res.deltaPayment?.requiresAction) {
                               setMutationError(
-                                "Receipt sent. An additional amount is due above the original hold — ask the customer to open this booking and complete card authentication.",
+                                isWelper
+                                  ? welperDetail.receiptDialog.extraAuth
+                                  : "Receipt sent. An additional amount is due above the original hold — ask the customer to open this booking and complete card authentication.",
                               );
                             } else {
                               setMutationError(null);
@@ -1596,15 +1676,23 @@ export default function BookingDetailClient({
                           },
                           onError: (err) =>
                             setMutationError(
-                              err instanceof Error ? err.message : "Could not submit receipt.",
+                              err instanceof Error
+                                ? err.message
+                                : isWelper
+                                  ? welperDetail.receiptDialog.failed
+                                  : "Could not submit receipt.",
                             ),
                         },
                       );
                     }}
                   >
                     {submitReceiptMutation.isPending
-                      ? "Submitting…"
-                      : "Confirm receipt & charge"}
+                      ? isWelper
+                        ? welperDetail.receiptDialog.submitting
+                        : "Submitting…"
+                      : isWelper
+                        ? welperDetail.receiptDialog.submit
+                        : "Confirm receipt & charge"}
                   </Button>
                 </Flex>
               </Flex>
@@ -1631,16 +1719,24 @@ export default function BookingDetailClient({
           <DialogContent
             title={
               bookingReview
-                ? "Edit your review"
+                ? isWelper
+                  ? welperDetail.reviewDialog.editTitle
+                  : "Edit your review"
                 : reviewTarget === "customer"
-                  ? "Review the customer"
+                  ? isWelper
+                    ? welperDetail.reviewDialog.newTitle
+                    : "Review the customer"
                   : `Review ${welperDisplayName ?? "welper"}`
             }
             description={
               bookingReview
-                ? "Update your rating or comment if you need to fix a mistake."
+                ? isWelper
+                  ? welperDetail.reviewDialog.editDescription
+                  : "Update your rating or comment if you need to fix a mistake."
                 : reviewTarget === "customer"
-                  ? "Share your experience with this customer."
+                  ? isWelper
+                    ? welperDetail.reviewDialog.newDescription
+                    : "Share your experience with this customer."
                   : "Your review helps other families find great welpers."
             }
           >
@@ -1661,7 +1757,13 @@ export default function BookingDetailClient({
                     ? "Change your rating or comment below."
                     : undefined
                 }
-                submitLabel={bookingReview ? "Save changes" : undefined}
+                submitLabel={
+                  bookingReview
+                    ? isWelper
+                      ? welperDetail.reviewDialog.saveChanges
+                      : "Save changes"
+                    : undefined
+                }
                 loading={reviewMutationPending}
                 error={reviewMutationError}
                 onSubmit={async (values) => {
@@ -1689,7 +1791,11 @@ export default function BookingDetailClient({
                   }}
                   disabled={reviewMutationPending}
                 >
-                  {bookingReview ? "Cancel" : "Skip for now"}
+                  {bookingReview
+                    ? "Cancel"
+                    : isWelper
+                      ? welperDetail.reviewDialog.skip
+                      : "Skip for now"}
                 </Button>
               </Flex>
             </Flex>
@@ -1704,8 +1810,12 @@ export default function BookingDetailClient({
           }}
         >
           <DialogContent
-            title="Report a problem"
-            description="We'll review your case and get back to you within 48 hours."
+            title={isWelper ? welperDetail.dispute.title : "Report a problem"}
+            description={
+              isWelper
+                ? welperDetail.dispute.description
+                : "We'll review your case and get back to you within 48 hours."
+            }
           >
             {/* DISPUTES-001 + DISPUTES-002 (Day 16): DisputeForm now mirrors
                 the BFF category enum 1:1 (no lossy mapping) AND mounts the

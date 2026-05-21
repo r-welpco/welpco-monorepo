@@ -13,6 +13,11 @@ import { useCustomerProfile, useWelperProfile } from "@/lib/hooks/use-profile";
 import { AuthBackgroundSVG } from "@/components/features/personalization/auth-background-svg";
 import { useUnreadCount } from "@/lib/hooks/use-notifications";
 import { NotificationBellPopover } from "@/components/layout/notification-bell-popover";
+import {
+  useDashboardUserMenuLabels,
+  useWelperNavLabels,
+} from "@/lib/i18n/use-dashboard-labels";
+import { useDashboardLocale } from "@/lib/i18n/dashboard-locale";
 interface DashboardLayoutClientProps {
   children: React.ReactNode;
   user: {
@@ -113,6 +118,10 @@ export default function DashboardLayoutClient({
     [userRole]
   );
 
+  const welperNavLabels = useWelperNavLabels();
+  const userMenuLabels = useDashboardUserMenuLabels();
+  const { locale, setLocale } = useDashboardLocale();
+
   if (!mounted) {
     // Render a lightweight shell to avoid full-page flash / CLS
     return (
@@ -158,6 +167,8 @@ export default function DashboardLayoutClient({
         }
       : {}),
     onThemeChange: handleThemeChange,
+    locale,
+    onLocaleChange: setLocale,
     onProfileClick: handleProfileClick,
     onSettingsClick: handleSettingsClick,
     onLogout: handleLogout,
@@ -166,9 +177,9 @@ export default function DashboardLayoutClient({
   return (
     <Flex direction="column" style={{ minHeight: "100vh", position: "relative" }}>
       {userRole === "customer" ? (
-        <CustomerHeader {...headerProps} />
+        <CustomerHeader {...headerProps} labels={userMenuLabels} />
       ) : (
-        <WelperHeader {...headerProps} />
+        <WelperHeader {...headerProps} labels={welperNavLabels} />
       )}
       <Box
         py={{ initial: "5", sm: "7" }}

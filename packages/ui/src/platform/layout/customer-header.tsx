@@ -32,8 +32,15 @@ import {
   ExternalLink,
   Check,
   Menu,
+  Languages,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import type { DashboardLocale, WelperHeaderLabels } from "./welper-header";
+
+export type CustomerHeaderMenuLabels = Pick<
+  WelperHeaderLabels,
+  "userMenu" | "themeMenu" | "theme" | "languageMenu" | "language"
+>;
 
 export interface CustomerHeaderProps {
   activeTab?: string;
@@ -62,9 +69,13 @@ export interface CustomerHeaderProps {
   onFeedbackClick?: () => void;
   onNotificationClick?: () => void;
   onDocsClick?: () => void;
+  /** Localized user-menu copy (theme, language, account). */
+  labels?: CustomerHeaderMenuLabels;
   /** When set (e.g. from app store), theme menu reflects this value and should be updated via onThemeChange */
   themeMode?: "light" | "dark" | "system";
   onThemeChange?: (theme: "light" | "dark" | "system") => void;
+  locale?: DashboardLocale;
+  onLocaleChange?: (locale: DashboardLocale) => void;
   onProfileClick?: () => void;
   onSettingsClick?: () => void;
   onLogout?: () => void;
@@ -92,8 +103,11 @@ export function CustomerHeader({
   onFeedbackClick,
   onNotificationClick,
   onDocsClick,
+  labels,
   themeMode: themeModeProp,
   onThemeChange,
+  locale: localeProp,
+  onLocaleChange,
   onProfileClick,
   onSettingsClick,
   onLogout,
@@ -132,9 +146,14 @@ export function CustomerHeader({
   };
 
   const themeOptions: Array<{ value: "system" | "light" | "dark"; label: string; Icon: typeof Monitor }> = [
-    { value: "system", label: "System", Icon: Monitor },
-    { value: "light", label: "Light", Icon: Sun },
-    { value: "dark", label: "Dark", Icon: Moon },
+    { value: "system", label: labels?.theme.system ?? "System", Icon: Monitor },
+    { value: "light", label: labels?.theme.light ?? "Light", Icon: Sun },
+    { value: "dark", label: labels?.theme.dark ?? "Dark", Icon: Moon },
+  ];
+
+  const languageOptions: Array<{ value: DashboardLocale; label: string }> = [
+    { value: "en", label: labels?.language.english ?? "English" },
+    { value: "fr", label: labels?.language.french ?? "French" },
   ];
 
   const loginHref = signedOutReturnTo
@@ -391,17 +410,17 @@ export function CustomerHeader({
                     <DropdownMenuItem onClick={onProfileClick}>
                       <Flex align="center" gap="2">
                         <User size={16} aria-hidden="true" />
-                        <Text size="2">Profile</Text>
+                        <Text size="2">{labels?.userMenu.profile ?? "Profile"}</Text>
                       </Flex>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={onSettingsClick}>
                       <Flex align="center" gap="2">
                         <Settings size={16} aria-hidden="true" />
-                        <Text size="2">Account settings</Text>
+                        <Text size="2">{labels?.userMenu.accountSettings ?? "Account settings"}</Text>
                       </Flex>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                    <DropdownMenuLabel>{labels?.themeMenu ?? "Theme"}</DropdownMenuLabel>
                     {themeOptions.map(({ value, label, Icon }) => (
                       <DropdownMenuItem key={value} onClick={() => handleThemeChange(value)}>
                         <Flex align="center" gap="2" justify="between" style={{ width: "100%" }}>
@@ -415,6 +434,28 @@ export function CustomerHeader({
                         </Flex>
                       </DropdownMenuItem>
                     ))}
+                    {onLocaleChange ? (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>{labels?.languageMenu ?? "Language"}</DropdownMenuLabel>
+                        {languageOptions.map(({ value, label }) => (
+                          <DropdownMenuItem
+                            key={value}
+                            onClick={() => onLocaleChange(value)}
+                          >
+                            <Flex align="center" gap="2" justify="between" style={{ width: "100%" }}>
+                              <Flex align="center" gap="2">
+                                <Languages size={16} aria-hidden="true" />
+                                <Text size="2">{label}</Text>
+                              </Flex>
+                              {localeProp === value && (
+                                <Check size={14} aria-hidden="true" />
+                              )}
+                            </Flex>
+                          </DropdownMenuItem>
+                        ))}
+                      </>
+                    ) : null}
                     <DropdownMenuSeparator />
                     {/* Feedback + Docs in menu on mobile (no top-bar buttons there) */}
                     <Box display={{ initial: "block", md: "none" }}>
@@ -440,7 +481,7 @@ export function CustomerHeader({
                     >
                       <Flex align="center" gap="2">
                         <LogOut size={16} aria-hidden="true" />
-                        <Text size="2">Sign out</Text>
+                        <Text size="2">{labels?.userMenu.signOut ?? "Sign out"}</Text>
                       </Flex>
                     </DropdownMenuItem>
                   </DropdownMenuContent>

@@ -43,6 +43,11 @@ import { CustomerPaymentSettings } from "@/components/features/payments/customer
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
 import { EmailVerificationRequiredError } from "@/lib/api/client";
+import {
+  useDashboardSettingsFormLabels,
+  useDashboardSettingsLabels,
+  usePersonalizationSettingsLabels,
+} from "@/lib/i18n/use-dashboard-labels";
 
 const PersonalizationSettings = dynamic(
   () =>
@@ -97,6 +102,27 @@ function SettingsPageContent() {
 
   const isCustomer = user?.role === "customer";
   const isWelper = user?.role === "welper";
+  const settingsLabels = useDashboardSettingsLabels();
+  const settingsFormLabels = useDashboardSettingsFormLabels();
+  const personalizationLabels = usePersonalizationSettingsLabels();
+
+  const emailFormLabels = {
+    title: settingsFormLabels.emailTitle,
+    description: settingsFormLabels.emailDescription,
+    emailLabel: settingsFormLabels.emailLabel,
+    hint: settingsFormLabels.emailHint,
+    submit: settingsFormLabels.emailSubmit,
+    submitting: settingsFormLabels.emailSubmitting,
+  };
+  const passwordFormLabels = {
+    title: settingsFormLabels.passwordTitle,
+    description: settingsFormLabels.passwordDescription,
+    currentPassword: settingsFormLabels.passwordCurrent,
+    newPassword: settingsFormLabels.passwordNew,
+    confirmPassword: settingsFormLabels.passwordConfirm,
+    submit: settingsFormLabels.passwordSubmit,
+    submitting: settingsFormLabels.passwordSubmitting,
+  };
   const allowedTabs = useMemo(
     () => visibleSettingsTabs(!!isCustomer, !!isWelper),
     [isCustomer, isWelper],
@@ -197,9 +223,7 @@ function SettingsPageContent() {
       await bookable.run(() =>
         updateEmailMutation.mutateAsync({ email: values.email }),
       );
-      setSuccessMessage(
-        "Email updated. Sign in with the new address next time, and verify it from the verification screen so we know it’s really you."
-      );
+      setSuccessMessage(settingsLabels.emailUpdated);
     } catch (err) {
       if (err instanceof EmailVerificationRequiredError) {
         // bookable.run already opened the dialog; swallow.
@@ -219,7 +243,7 @@ function SettingsPageContent() {
       currentPassword: values.currentPassword,
       newPassword: values.newPassword,
     });
-    setSuccessMessage("Password updated.");
+    setSuccessMessage(settingsLabels.passwordUpdated);
   };
 
   const handleDeleteAccount = async () => {
@@ -241,10 +265,10 @@ function SettingsPageContent() {
         <Card size="3" variant="surface">
           <Flex direction="column" align="center" gap="3" py="6" px="3">
             <Heading as="h1" size="5" align="center" trim="start">
-              Sign in to view settings
+              {settingsLabels.signInTitle}
             </Heading>
             <Text size="2" color="gray" highContrast align="center" as="p">
-              Your settings are private. Sign in to manage your account.
+              {settingsLabels.signInDescription}
             </Text>
           </Flex>
         </Card>
@@ -264,12 +288,10 @@ function SettingsPageContent() {
       <Flex direction="column" gap="6">
         <Box>
           <Heading as="h1" size="7" mb="2" trim="start">
-            Settings
+            {settingsLabels.title}
           </Heading>
           <Text as="p" size="2" color="gray" highContrast>
-            {isWelper
-              ? "Manage your account and appearance."
-              : "Configure your account, privacy, and notifications."}
+            {isWelper ? settingsLabels.subtitleWelper : settingsLabels.subtitle}
           </Text>
         </Box>
 
@@ -280,13 +302,19 @@ function SettingsPageContent() {
           }}
         >
           <TabsList>
-            <TabsTrigger value="account">Account</TabsTrigger>
-            {!isWelper ? <TabsTrigger value="privacy">Privacy</TabsTrigger> : null}
+            <TabsTrigger value="account">{settingsLabels.tabs.account}</TabsTrigger>
             {!isWelper ? (
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              <TabsTrigger value="privacy">{settingsLabels.tabs.privacy}</TabsTrigger>
             ) : null}
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
-            {isCustomer ? <TabsTrigger value="payment">Payment</TabsTrigger> : null}
+            {!isWelper ? (
+              <TabsTrigger value="notifications">
+                {settingsLabels.tabs.notifications}
+              </TabsTrigger>
+            ) : null}
+            <TabsTrigger value="appearance">{settingsLabels.tabs.appearance}</TabsTrigger>
+            {isCustomer ? (
+              <TabsTrigger value="payment">{settingsLabels.tabs.payment}</TabsTrigger>
+            ) : null}
           </TabsList>
 
           <TabsContent value="account">
@@ -302,7 +330,7 @@ function SettingsPageContent() {
                     <Callout.Text>
                       {(updateEmailMutation.error as Error)?.message ||
                         (changePasswordMutation.error as Error)?.message ||
-                        "Something went wrong. Try again in a moment."}
+                        settingsLabels.genericError}
                     </Callout.Text>
                   </Callout.Root>
                 )}
@@ -312,10 +340,12 @@ function SettingsPageContent() {
                     defaultEmail={user.email || ""}
                     loading={isLoading}
                     onSubmit={handleUpdateEmail}
+                    labels={emailFormLabels}
                   />
                   <PasswordChangeForm
                     loading={isLoading}
                     onSubmit={handleUpdatePassword}
+                    labels={passwordFormLabels}
                   />
                 </Grid>
 
@@ -333,11 +363,11 @@ function SettingsPageContent() {
                         trim="start"
                         color={SEMANTIC_COLOR.danger}
                       >
-                        Delete account
+                        {settingsLabels.deleteAccount}
                       </Heading>
                     </Flex>
                     <Text size="2" color="gray" highContrast>
-                      We&apos;ll deactivate your account and sign you out. Active bookings and reviews stay attached to those records. If something&apos;s wrong, we&apos;d rather hear it &mdash; let us know before you go.
+                      {settingsLabels.deleteDescription}
                     </Text>
                     <Flex justify="end" mt="2">
                       <Button
@@ -346,7 +376,7 @@ function SettingsPageContent() {
                         variant="soft"
                         onClick={() => setShowDeleteDialog(true)}
                       >
-                        Delete my account…
+                        {settingsLabels.deleteButton}
                       </Button>
                     </Flex>
                   </Flex>
@@ -368,7 +398,7 @@ function SettingsPageContent() {
                 />
                 {!isWelper && (
                   <Text size="2" color="gray" highContrast as="p">
-                    Customer profiles aren&apos;t shown to Welpers, so there&apos;s nothing else to manage here yet. As we add reviews and ratings, you&apos;ll be able to choose what appears publicly.
+                    {settingsLabels.privacyCustomerNote}
                   </Text>
                 )}
               </Flex>
@@ -398,7 +428,7 @@ function SettingsPageContent() {
 
           <TabsContent value="appearance">
             <Box pt="5">
-              <PersonalizationSettings />
+              <PersonalizationSettings labels={personalizationLabels} />
             </Box>
           </TabsContent>
 

@@ -1,6 +1,8 @@
 "use client";
 
 import { ActionConfirmDialog } from "@welpco/ui/platform/feedback";
+import { useEmailVerificationDialogLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useAuthStore } from "@/stores/authStore";
 
 /**
  * Day 15 — Phase 3 of the signup ↔ onboarding merge.
@@ -27,15 +29,23 @@ export function EmailVerificationRequiredDialog({
   pending,
   onResend,
 }: EmailVerificationRequiredDialogProps) {
-  const target = email ?? "your email address";
+  const { user } = useAuthStore();
+  const isWelper = user?.role === "welper";
+  const labels = useEmailVerificationDialogLabels();
+  const target = email ?? (isWelper ? labels.emailFallback : "your email address");
+
   return (
     <ActionConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Verify your email"
-      description={`Click the link we sent to ${target} to keep going. Need a new one? We'll send another.`}
-      confirmLabel="Resend email"
-      cancelLabel="Close"
+      title={isWelper ? labels.title : "Verify your email"}
+      description={
+        isWelper
+          ? labels.description(target)
+          : `Click the link we sent to ${target} to keep going. Need a new one? We'll send another.`
+      }
+      confirmLabel={isWelper ? labels.resend : "Resend email"}
+      cancelLabel={isWelper ? labels.close : "Close"}
       variant="primary"
       pending={pending}
       onConfirm={async () => {

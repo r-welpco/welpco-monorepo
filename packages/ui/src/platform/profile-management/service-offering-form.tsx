@@ -17,15 +17,42 @@ import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm, Controller } from "react-hook-form";
 import { ServiceAreaSelector, type ServiceArea } from "./service-area-selector";
 import { resolveServiceAreaRadiusKm } from "./service-area-utils";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
-  serviceOfferingSchema,
+  createServiceOfferingSchema,
   defaultCategories,
+  type ServiceOfferingValidationLabels,
   type ServiceOfferingValues,
 } from "./service-offering-schema";
+import type { AddressInputLabels } from "./address-input";
+import type { ServiceAreaSelectorLabels } from "./service-area-selector";
 
 // Re-export for consumers that import the type from this module
 export type { ServiceOfferingValues } from "./service-offering-schema";
+
+export type ServiceOfferingFormLabels = {
+  pageTitle: string;
+  pageDescription: string;
+  title: string;
+  titlePlaceholder: string;
+  category: string;
+  subcategoriesOptional: string;
+  subcategoriesHint: string;
+  hourlyRate: string;
+  experienceYears: string;
+  description: string;
+  descriptionPlaceholder: string;
+  serviceArea: string;
+  serviceAreaOverrideHint: string;
+  usingDefaultServiceArea: (km: number, city: string) => string;
+  activeStatus: string;
+  activeStatusHint: string;
+  save: string;
+  saving: string;
+  validation?: ServiceOfferingValidationLabels;
+  serviceAreaSelector?: ServiceAreaSelectorLabels;
+  serviceAreaAddress?: AddressInputLabels;
+};
 
 export interface ServiceOfferingFormProps {
   defaultValues?: Partial<ServiceOfferingValues>;
@@ -37,6 +64,7 @@ export interface ServiceOfferingFormProps {
   onCategoryChange?: (categoryId: string) => void;
   defaultServiceArea?: ServiceArea;
   inDialog?: boolean;
+  labels?: ServiceOfferingFormLabels;
 }
 
 // --- Section components ---
@@ -44,19 +72,21 @@ export interface ServiceOfferingFormProps {
 function TitleField({
   form,
   loading,
+  labels,
 }: {
   form: ReturnType<typeof useForm<ServiceOfferingValues>>;
   loading?: boolean;
+  labels?: ServiceOfferingFormLabels;
 }) {
   return (
     <Box mb={FORM_SPACING.fieldGap}>
       <Text as="label" size="2" weight="bold" htmlFor="service-title" mb={FORM_SPACING.labelGap}>
-        Title
+        {labels?.title ?? "Title"}
         <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
       </Text>
       <TextField.Root
         id="service-title"
-        placeholder="Premium home cleaning"
+        placeholder={labels?.titlePlaceholder ?? "Premium home cleaning"}
         size="2"
         disabled={loading}
         aria-required="true"
@@ -73,10 +103,12 @@ function CategoryField({
   form,
   serviceCategories,
   loading,
+  labels,
 }: {
   form: ReturnType<typeof useForm<ServiceOfferingValues>>;
   serviceCategories: Array<{ id: string; name: string }>;
   loading?: boolean;
+  labels?: ServiceOfferingFormLabels;
 }) {
   return (
     <Box mb={FORM_SPACING.fieldGap}>
@@ -88,7 +120,7 @@ function CategoryField({
         mb={FORM_SPACING.labelGap}
         style={{ display: "block" }}
       >
-        Category
+        {labels?.category ?? "Category"}
         <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
       </Text>
       <Select
@@ -119,17 +151,19 @@ function SubcategoriesField({
   selectedSubcategories,
   onToggle,
   loading,
+  labels,
 }: {
   subcategories: Array<{ id: string; name: string }>;
   selectedSubcategories: string[];
   onToggle: (id: string, checked: boolean | string) => void;
   loading?: boolean;
+  labels?: ServiceOfferingFormLabels;
 }) {
   if (subcategories.length === 0) return null;
   return (
     <Box mb={FORM_SPACING.fieldGap}>
       <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
-        Subcategories (optional)
+        {labels?.subcategoriesOptional ?? "Subcategories (optional)"}
       </Text>
       <Text
         as="p"
@@ -138,7 +172,8 @@ function SubcategoriesField({
         mb={FORM_SPACING.helperGap}
         style={{ display: "block", lineHeight: 1.5 }}
       >
-        Select one or more subcategories that apply to this offering.
+        {labels?.subcategoriesHint ??
+          "Select one or more subcategories that apply to this offering."}
       </Text>
       <Flex direction="column" gap="2">
         {subcategories.map((sub) => (
@@ -161,16 +196,18 @@ function SubcategoriesField({
 function RateAndExperienceFields({
   form,
   loading,
+  labels,
 }: {
   form: ReturnType<typeof useForm<ServiceOfferingValues>>;
   loading?: boolean;
+  labels?: ServiceOfferingFormLabels;
 }) {
   return (
     <Box mb={FORM_SPACING.fieldGap}>
       <Flex gap="3" direction={{ initial: "column", sm: "row" }}>
         <Box style={{ flex: 1 }}>
           <Text as="label" size="2" weight="bold" htmlFor="service-rate" mb={FORM_SPACING.labelGap}>
-            Hourly rate ($)
+            {labels?.hourlyRate ?? "Hourly rate ($)"}
             <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
           </Text>
           <TextField.Root
@@ -189,7 +226,7 @@ function RateAndExperienceFields({
         </Box>
         <Box style={{ flex: 1 }}>
           <Text as="label" size="2" weight="bold" htmlFor="service-experience" mb={FORM_SPACING.labelGap}>
-            Experience (years)
+            {labels?.experienceYears ?? "Experience (years)"}
             <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
           </Text>
           <TextField.Root
@@ -214,20 +251,25 @@ function RateAndExperienceFields({
 function DescriptionField({
   form,
   loading,
+  labels,
 }: {
   form: ReturnType<typeof useForm<ServiceOfferingValues>>;
   loading?: boolean;
+  labels?: ServiceOfferingFormLabels;
 }) {
   return (
     <Box mb={FORM_SPACING.fieldGap}>
       <Text as="label" size="2" weight="bold" htmlFor="service-desc" mb={FORM_SPACING.labelGap}>
-        Description
+        {labels?.description ?? "Description"}
         <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
       </Text>
       <TextArea
         id="service-desc"
         rows={5}
-        placeholder="Explain what clients can expect, what's included, and any preparation needed."
+        placeholder={
+          labels?.descriptionPlaceholder ??
+          "Explain what clients can expect, what's included, and any preparation needed."
+        }
         size="2"
         disabled={loading}
         aria-required="true"
@@ -244,17 +286,25 @@ function ServiceAreaField({
   form,
   defaultServiceArea,
   loading,
+  labels,
+  selectorLabels,
+  addressLabels,
 }: {
   form: ReturnType<typeof useForm<ServiceOfferingValues>>;
   defaultServiceArea: ServiceArea;
   loading?: boolean;
+  labels?: ServiceOfferingFormLabels;
+  selectorLabels?: ServiceAreaSelectorLabels;
+  addressLabels?: AddressInputLabels;
 }) {
   const useOverride = form.watch("serviceAreaOverride");
   return (
     <Box mb={FORM_SPACING.fieldGap}>
       <Flex direction="column" gap="2">
         <Flex align="center" justify="between">
-          <Text as="label" size="2" weight="bold" id="so-service-area-label">Service area</Text>
+          <Text as="label" size="2" weight="bold" id="so-service-area-label">
+            {labels?.serviceArea ?? "Service area"}
+          </Text>
           <Controller
             name="serviceAreaOverride"
             control={form.control}
@@ -268,7 +318,9 @@ function ServiceAreaField({
             )}
           />
         </Flex>
-        <Text size="1" color="gray">Override default service area for this offering</Text>
+        <Text size="1" color="gray">
+          {labels?.serviceAreaOverrideHint ?? "Override default service area for this offering"}
+        </Text>
       </Flex>
       {useOverride && (
         <Box mt="3">
@@ -283,6 +335,9 @@ function ServiceAreaField({
                 loading={loading}
                 allowOverride={true}
                 defaultServiceArea={defaultServiceArea}
+                selectorLabels={selectorLabels}
+                addressLabels={addressLabels}
+                showAddressCountry={false}
               />
             )}
           />
@@ -291,8 +346,12 @@ function ServiceAreaField({
       {!useOverride && (
         <Callout.Root color={SEMANTIC_COLOR.success} variant="soft" mt="2">
           <Callout.Text>
-                Using default service area: {resolveServiceAreaRadiusKm(defaultServiceArea)} km from{" "}
-            {defaultServiceArea.centerAddress?.city || "your location"}
+            {labels?.usingDefaultServiceArea
+              ? labels.usingDefaultServiceArea(
+                  resolveServiceAreaRadiusKm(defaultServiceArea),
+                  defaultServiceArea.centerAddress?.city || "your location",
+                )
+              : `Using default service area: ${resolveServiceAreaRadiusKm(defaultServiceArea)} km from ${defaultServiceArea.centerAddress?.city || "your location"}`}
           </Callout.Text>
         </Callout.Root>
       )}
@@ -303,15 +362,19 @@ function ServiceAreaField({
 function ActiveStatusField({
   form,
   loading,
+  labels,
 }: {
   form: ReturnType<typeof useForm<ServiceOfferingValues>>;
   loading?: boolean;
+  labels?: ServiceOfferingFormLabels;
 }) {
   return (
     <Box mb={FORM_SPACING.fieldGap}>
       <Flex direction="column" gap="2">
         <Flex align="center" justify="between">
-          <Text as="label" size="2" weight="bold" id="so-active-label">Active status</Text>
+          <Text as="label" size="2" weight="bold" id="so-active-label">
+            {labels?.activeStatus ?? "Active status"}
+          </Text>
           <Controller
             name="active"
             control={form.control}
@@ -326,7 +389,8 @@ function ActiveStatusField({
           />
         </Flex>
         <Text size="1" color="gray">
-          Active offerings appear in search results. Inactive offerings are hidden.
+          {labels?.activeStatusHint ??
+            "Active offerings appear in search results. Inactive offerings are hidden."}
         </Text>
       </Flex>
     </Box>
@@ -345,9 +409,15 @@ export function ServiceOfferingForm({
   onCategoryChange,
   defaultServiceArea,
   inDialog = false,
+  labels,
 }: ServiceOfferingFormProps) {
+  const offeringSchema = useMemo(
+    () => createServiceOfferingSchema(labels?.validation),
+    [labels?.validation],
+  );
+
   const form = useForm<ServiceOfferingValues>({
-    resolver: zodResolver(serviceOfferingSchema),
+    resolver: zodResolver(offeringSchema),
     defaultValues: {
       title: "",
       category: serviceCategories[0]?.id || "",
@@ -406,8 +476,12 @@ export function ServiceOfferingForm({
     <Flex direction="column" gap="5">
       {!inDialog && (
         <Box>
-          <Heading size="6" trim="start" mb={FORM_SPACING.titleGap}>Service offering</Heading>
-          <Text size="2" color="gray">Describe what you provide and your standard rates.</Text>
+          <Heading size="6" trim="start" mb={FORM_SPACING.titleGap}>
+            {labels?.pageTitle ?? "Service offering"}
+          </Heading>
+          <Text size="2" color="gray">
+            {labels?.pageDescription ?? "Describe what you provide and your standard rates."}
+          </Text>
         </Box>
       )}
 
@@ -418,23 +492,31 @@ export function ServiceOfferingForm({
       )}
 
       <form onSubmit={handleSubmit}>
-        <TitleField form={form} loading={loading} />
-        <CategoryField form={form} serviceCategories={serviceCategories} loading={loading} />
+        <TitleField form={form} loading={loading} labels={labels} />
+        <CategoryField form={form} serviceCategories={serviceCategories} loading={loading} labels={labels} />
         <SubcategoriesField
           subcategories={subcategories}
           selectedSubcategories={selectedSubcategories}
           onToggle={handleSubcategoryToggle}
           loading={loading}
+          labels={labels}
         />
-        <RateAndExperienceFields form={form} loading={loading} />
-        <DescriptionField form={form} loading={loading} />
+        <RateAndExperienceFields form={form} loading={loading} labels={labels} />
+        <DescriptionField form={form} loading={loading} labels={labels} />
         {defaultServiceArea && (
-          <ServiceAreaField form={form} defaultServiceArea={defaultServiceArea} loading={loading} />
+          <ServiceAreaField
+            form={form}
+            defaultServiceArea={defaultServiceArea}
+            loading={loading}
+            labels={labels}
+            selectorLabels={labels?.serviceAreaSelector}
+            addressLabels={labels?.serviceAreaAddress}
+          />
         )}
-        <ActiveStatusField form={form} loading={loading} />
+        <ActiveStatusField form={form} loading={loading} labels={labels} />
 
         <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
-          {loading ? "Saving..." : "Save offering"}
+          {loading ? (labels?.saving ?? "Saving...") : (labels?.save ?? "Save offering")}
         </Button>
       </form>
     </Flex>

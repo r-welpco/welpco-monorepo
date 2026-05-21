@@ -32,11 +32,43 @@ import {
   ExternalLink,
   Check,
   Menu,
+  Languages,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
+export interface WelperHeaderLabels {
+  roleBadge?: string;
+  tabs: {
+    dashboard: string;
+    messages: string;
+    bookings: string;
+    profile: string;
+    settings: string;
+  };
+  userMenu: {
+    profile: string;
+    accountSettings: string;
+    signOut: string;
+  };
+  themeMenu: string;
+  theme: {
+    system: string;
+    light: string;
+    dark: string;
+  };
+  languageMenu: string;
+  language: {
+    english: string;
+    french: string;
+  };
+}
+
+export type DashboardLocale = "en" | "fr";
+
 export interface WelperHeaderProps {
   activeTab?: string;
+  /** Localized nav and menu copy from the host app (next-intl). */
+  labels?: WelperHeaderLabels;
   user?: {
     name?: string;
     email?: string;
@@ -54,12 +86,15 @@ export interface WelperHeaderProps {
   /** When set (e.g. from app store), theme menu reflects this value and should be updated via onThemeChange */
   themeMode?: "light" | "dark" | "system";
   onThemeChange?: (theme: "light" | "dark" | "system") => void;
+  /** Active UI locale; host sets cookie and refreshes on change. */
+  locale?: DashboardLocale;
+  onLocaleChange?: (locale: DashboardLocale) => void;
   onProfileClick?: () => void;
   onSettingsClick?: () => void;
   onLogout?: () => void;
 }
 
-const welperTabs = [
+const DEFAULT_WELPER_TABS = [
   { value: "dashboard", label: "Dashboard", href: "/dashboard" },
   { value: "messages", label: "Messages", href: "/dashboard/messages" },
   { value: "bookings", label: "Bookings", href: "/dashboard/bookings" },
@@ -69,6 +104,7 @@ const welperTabs = [
 
 export function WelperHeader({
   activeTab = "dashboard",
+  labels: labelsProp,
   user,
   notificationCount = 0,
   notificationSlot,
@@ -80,10 +116,23 @@ export function WelperHeader({
   onDocsClick,
   themeMode: themeModeProp,
   onThemeChange,
+  locale: localeProp,
+  onLocaleChange,
   onProfileClick,
   onSettingsClick,
   onLogout,
 }: WelperHeaderProps) {
+  const labels = labelsProp;
+  const welperTabs = labels
+    ? [
+        { value: "dashboard" as const, label: labels.tabs.dashboard, href: "/dashboard" },
+        { value: "messages" as const, label: labels.tabs.messages, href: "/dashboard/messages" },
+        { value: "bookings" as const, label: labels.tabs.bookings, href: "/dashboard/bookings" },
+        { value: "profile" as const, label: labels.tabs.profile, href: "/dashboard/profile" },
+        { value: "settings" as const, label: labels.tabs.settings, href: "/dashboard/settings" },
+      ]
+    : DEFAULT_WELPER_TABS;
+
   const [uncontrolledTheme, setUncontrolledTheme] = useState<"light" | "dark" | "system">("system");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -118,9 +167,14 @@ export function WelperHeader({
   };
 
   const themeOptions: Array<{ value: "system" | "light" | "dark"; label: string; Icon: typeof Monitor }> = [
-    { value: "system", label: "System", Icon: Monitor },
-    { value: "light", label: "Light", Icon: Sun },
-    { value: "dark", label: "Dark", Icon: Moon },
+    { value: "system", label: labels?.theme.system ?? "System", Icon: Monitor },
+    { value: "light", label: labels?.theme.light ?? "Light", Icon: Sun },
+    { value: "dark", label: labels?.theme.dark ?? "Dark", Icon: Moon },
+  ];
+
+  const languageOptions: Array<{ value: DashboardLocale; label: string }> = [
+    { value: "en", label: labels?.language.english ?? "English" },
+    { value: "fr", label: labels?.language.french ?? "French" },
   ];
 
   return (
@@ -200,9 +254,9 @@ export function WelperHeader({
                           Welpco
                         </Text>
                         <Box display={{ initial: "none", xs: "block" }}>
-                          <Badge color="green" variant="soft" size="1" highContrast>
-                            Welper
-                          </Badge>
+                        <Badge color="green" variant="soft" size="1" highContrast>
+                          {labels?.roleBadge ?? "Welper"}
+                        </Badge>
                         </Box>
                         <ChevronDown size={14} aria-hidden="true" />
                       </Flex>
@@ -224,9 +278,9 @@ export function WelperHeader({
                     Welpco
                   </Text>
                   <Box display={{ initial: "none", xs: "block" }}>
-                    <Badge color="green" variant="soft" size="1" highContrast>
-                      Welper
-                    </Badge>
+                        <Badge color="green" variant="soft" size="1" highContrast>
+                          {labels?.roleBadge ?? "Welper"}
+                        </Badge>
                   </Box>
                 </Flex>
               )}
@@ -339,17 +393,17 @@ export function WelperHeader({
                     <DropdownMenuItem onClick={onProfileClick}>
                       <Flex align="center" gap="2">
                         <User size={16} aria-hidden="true" />
-                        <Text size="2">Profile</Text>
+                        <Text size="2">{labels?.userMenu.profile ?? "Profile"}</Text>
                       </Flex>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={onSettingsClick}>
                       <Flex align="center" gap="2">
                         <Settings size={16} aria-hidden="true" />
-                        <Text size="2">Account settings</Text>
+                        <Text size="2">{labels?.userMenu.accountSettings ?? "Account settings"}</Text>
                       </Flex>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                    <DropdownMenuLabel>{labels?.themeMenu ?? "Theme"}</DropdownMenuLabel>
                     {themeOptions.map(({ value, label, Icon }) => (
                       <DropdownMenuItem key={value} onClick={() => handleThemeChange(value)}>
                         <Flex align="center" gap="2" justify="between" style={{ width: "100%" }}>
@@ -363,6 +417,28 @@ export function WelperHeader({
                         </Flex>
                       </DropdownMenuItem>
                     ))}
+                    {onLocaleChange ? (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>{labels?.languageMenu ?? "Language"}</DropdownMenuLabel>
+                        {languageOptions.map(({ value, label }) => (
+                          <DropdownMenuItem
+                            key={value}
+                            onClick={() => onLocaleChange(value)}
+                          >
+                            <Flex align="center" gap="2" justify="between" style={{ width: "100%" }}>
+                              <Flex align="center" gap="2">
+                                <Languages size={16} aria-hidden="true" />
+                                <Text size="2">{label}</Text>
+                              </Flex>
+                              {localeProp === value && (
+                                <Check size={14} aria-hidden="true" />
+                              )}
+                            </Flex>
+                          </DropdownMenuItem>
+                        ))}
+                      </>
+                    ) : null}
                     <DropdownMenuSeparator />
                     {onFeedbackClick || onDocsClick ? (
                       <Box display={{ initial: "block", md: "none" }}>
@@ -393,7 +469,7 @@ export function WelperHeader({
                     >
                       <Flex align="center" gap="2">
                         <LogOut size={16} aria-hidden="true" />
-                        <Text size="2">Sign out</Text>
+                        <Text size="2">{labels?.userMenu.signOut ?? "Sign out"}</Text>
                       </Flex>
                     </DropdownMenuItem>
                   </DropdownMenuContent>

@@ -108,16 +108,26 @@ function computeStats(
   };
 }
 
+export type AvailabilityScheduleStatsLabels = {
+  title?: string;
+  withExceptions: string;
+  regularOnly: string;
+  dayShort?: string[];
+};
+
 export interface AvailabilityScheduleStatsProps {
   timeSlots: TimeSlot[];
   /** When provided, "This week" stats reflect exceptions (e.g. unavailable days). */
   availabilityExceptions?: AvailabilityExceptionForStats[];
+  labels?: AvailabilityScheduleStatsLabels;
 }
 
 export function AvailabilityScheduleStats({
   timeSlots,
   availabilityExceptions,
+  labels,
 }: AvailabilityScheduleStatsProps) {
+  const dayLabels = labels?.dayShort ?? DAY_LABELS;
   const { hoursByDay, totalHours, daysCount, maxHours } = computeStats(
     timeSlots,
     availabilityExceptions
@@ -132,12 +142,12 @@ export function AvailabilityScheduleStats({
       <Flex direction="column" gap="3" style={{ minWidth: 0 }}>
         <Box>
           <Heading size="4" mb="1">
-            This week
+            {labels?.title ?? "This week"}
           </Heading>
           <Text size="2" color="gray" highContrast>
             {availabilityExceptions?.length
-              ? "This week’s availability including exceptions."
-              : "Summary of your regular schedule."}
+              ? (labels?.withExceptions ?? "This week's availability including exceptions.")
+              : (labels?.regularOnly ?? "Summary of your regular schedule.")}
           </Text>
         </Box>
 
@@ -190,7 +200,7 @@ export function AvailabilityScheduleStats({
               Hours by day
             </Heading>
             <Flex gap="1" align="end" style={{ height: "88px" }}>
-              {DAY_LABELS.map((label, i) => {
+              {dayLabels.map((label, i) => {
                 const h = hoursByDay[i] ?? 0;
                 const barHeight = maxHours > 0 ? Math.round((h / maxHours) * 56) : 0;
                 return (

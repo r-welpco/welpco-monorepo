@@ -68,6 +68,16 @@ import type {
   ServiceOfferingValues,
 } from "@welpco/ui/platform/profile-management";
 import type { ServiceArea as AppServiceArea } from "@/types";
+import {
+  useWelperAvailabilityExceptionsLabels,
+  useWelperAvailabilityScheduleLabels,
+  useWelperProfileFormLabels,
+  useWelperProfileLabels,
+  useWelperProfileOfferingLabels,
+  useWelperServiceOfferingFormLabels,
+} from "@/lib/i18n/use-dashboard-labels";
+import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
+import { useWelperServiceAreaStepLabels } from "@/lib/i18n/use-auth-labels";
 
 /** Service offering form only supports radius areas; app `ServiceArea` also allows `"address"`. */
 function radiusServiceAreaForForm(area: AppServiceArea | undefined | null): ServiceArea | undefined {
@@ -150,6 +160,14 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   // Determine user role
   const isCustomer = user.role === "customer";
   const isWelper = user.role === "welper";
+  const welperProfileLabels = useWelperProfileLabels();
+  const welperProfileFormLabels = useWelperProfileFormLabels();
+  const welperOfferingLabels = useWelperProfileOfferingLabels();
+  const welperOfferingFormLabels = useWelperServiceOfferingFormLabels();
+  const welperAvailabilityLabels = useWelperAvailabilityScheduleLabels();
+  const welperAvailabilityExceptionsLabels = useWelperAvailabilityExceptionsLabels();
+  const dateFnsLocale = useDateFnsLocale();
+  const welperServiceAreaLabels = useWelperServiceAreaStepLabels();
 
   const { data: welperSetup } = useWelperSetupChecklist(isWelper && sessionReady);
   const welperSetupIncomplete = useMemo(() => {
@@ -370,7 +388,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
         await createServiceOfferingMutation.mutateAsync({
           welperId: user.id,
           data: {
-            title: values.title || "Service",
+            title: values.title || welperProfileLabels.defaultServiceTitle,
             categoryId: values.category,
             description: serviceDescription,
             hourlyRate: values.hourlyRate,
@@ -703,10 +721,10 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
       <Flex direction="column" gap="6">
         <Box>
           <Heading as="h1" size="7" mb="2" trim="start">
-            Profile
+            {welperProfileLabels.title}
           </Heading>
           <Text as="p" size="2" color="gray" highContrast>
-            Manage your Welper profile and service offerings.
+            {welperProfileLabels.subtitle}
           </Text>
         </Box>
 
@@ -717,20 +735,20 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 ? error.message
                 : updateWelperProfileMutation.error instanceof Error
                   ? updateWelperProfileMutation.error.message
-                  : "We couldn't load your profile. Try again in a moment."}
+                  : welperProfileLabels.loadError}
             </Callout.Text>
           </Callout.Root>
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="offerings">Service offerings</TabsTrigger>
-            <TabsTrigger value="availability">Availability</TabsTrigger>
-            <TabsTrigger value="serviceArea">Service area</TabsTrigger>
-            <TabsTrigger value="backgroundCheck">Background check</TabsTrigger>
-            <TabsTrigger value="payout">Payout setup</TabsTrigger>
+            <TabsTrigger value="overview">{welperProfileLabels.tabs.overview}</TabsTrigger>
+            <TabsTrigger value="profile">{welperProfileLabels.tabs.profile}</TabsTrigger>
+            <TabsTrigger value="offerings">{welperProfileLabels.tabs.offerings}</TabsTrigger>
+            <TabsTrigger value="availability">{welperProfileLabels.tabs.availability}</TabsTrigger>
+            <TabsTrigger value="serviceArea">{welperProfileLabels.tabs.serviceArea}</TabsTrigger>
+            <TabsTrigger value="backgroundCheck">{welperProfileLabels.tabs.backgroundCheck}</TabsTrigger>
+            <TabsTrigger value="payout">{welperProfileLabels.tabs.payout}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -738,14 +756,14 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
               <Flex direction="column" gap="4">
                 <Card size="3" variant="surface">
                   <Flex direction="column" gap="3">
-                    <Heading size="5" mb="0" trim="start">Quick stats</Heading>
+                    <Heading size="5" mb="0" trim="start">{welperProfileLabels.overview.quickStats}</Heading>
                     <Flex gap="6" wrap="wrap">
                       <Box>
-                        <Text size="1" color="gray" highContrast as="div">Service offerings</Text>
+                        <Text size="1" color="gray" highContrast as="div">{welperProfileLabels.overview.serviceOfferings}</Text>
                         <Text size="4" weight="bold" as="div">{serviceOfferings.length}</Text>
                       </Box>
                       <Box>
-                        <Text size="1" color="gray" highContrast as="div">Active offerings</Text>
+                        <Text size="1" color="gray" highContrast as="div">{welperProfileLabels.overview.activeOfferings}</Text>
                         <Text size="4" weight="bold" as="div">{activeOfferingsCount}</Text>
                       </Box>
                     </Flex>
@@ -765,12 +783,12 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                   currentPhotoAlt={
                     welperProfile?.firstName || welperProfile?.lastName
                       ? `${welperProfile.firstName ?? ""} ${welperProfile.lastName ?? ""}`.trim()
-                      : "Profile photo"
+                      : welperProfileLabels.photo.alt
                   }
                   description={
                     welperSetupIncomplete
-                      ? "A profile photo is required to finish setup and appear in customer search."
-                      : "Upload a clear photo of yourself. It appears on your public profile and helps customers recognize you."
+                      ? welperProfileLabels.photo.requiredDescription
+                      : welperProfileLabels.photo.optionalDescription
                   }
                   loading={isLoading || updateWelperProfileMutation.isPending}
                   onUpload={handlePhotoUpload}
@@ -794,6 +812,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                   loading={isLoading || updateWelperProfileMutation.isPending}
                   error={error instanceof Error ? error.message : updateWelperProfileMutation.error instanceof Error ? updateWelperProfileMutation.error.message : undefined}
                   onSubmit={handleWelperProfileSubmit}
+                  labels={welperProfileFormLabels}
                 />
               </Flex>
             </Box>
@@ -802,12 +821,34 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
           <TabsContent value="offerings">
             <Box pt="5">
               <ServiceOfferingList
+                labels={{
+                  listTitle: welperOfferingLabels.listTitle,
+                  listDescription: welperOfferingLabels.listDescription,
+                  addOffering: welperOfferingLabels.addOffering,
+                  searchPlaceholder: welperOfferingLabels.searchPlaceholder,
+                  active: welperOfferingLabels.active,
+                  inactive: welperOfferingLabels.inactive,
+                  edit: welperOfferingLabels.edit,
+                  delete: welperOfferingLabels.delete,
+                  activeLabel: welperOfferingLabels.activeLabel,
+                  uncategorized: welperProfileLabels.uncategorized,
+                  allCategories: welperOfferingLabels.allCategories,
+                  allStatus: welperOfferingLabels.allStatus,
+                  activeOnly: welperOfferingLabels.activeOnly,
+                  inactiveOnly: welperOfferingLabels.inactiveOnly,
+                  filterByCategoryAria: welperOfferingLabels.filterByCategoryAria,
+                  filterByStatusAria: welperOfferingLabels.filterByStatusAria,
+                  showingCount: welperOfferingLabels.showingCount,
+                  noOfferingsFound: welperOfferingLabels.noOfferingsFound,
+                  emptyFirst: welperOfferingLabels.emptyFirst,
+                  emptyFiltered: welperOfferingLabels.emptyFiltered,
+                }}
                 offerings={serviceOfferings.map((o) => ({
                   id: o.id,
                   title: o.title,
                   categoryId: o.categoryId,
                   categoryName:
-                    o.category?.name ?? categoryNameById.get(o.categoryId) ?? "Uncategorized",
+                    o.category?.name ?? categoryNameById.get(o.categoryId) ?? welperProfileLabels.uncategorized,
                   subcategories: (o.subcategoryIds ?? [])
                     .map((id) => {
                       const name = categoryNameById.get(id);
@@ -838,6 +879,21 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 <Box flexGrow="2" flexShrink="1" style={{ flexBasis: "400px", minWidth: 0 }}>
                   <Flex direction="column" gap="6">
                     <TimeSlotAvailability
+                      labels={{
+                        regularTitle: welperAvailabilityLabels.regularTitle,
+                        regularDescription: welperAvailabilityLabels.regularDescription,
+                        addSlotsTitle: welperAvailabilityLabels.addSlotsTitle,
+                        addSlotsHint: welperAvailabilityLabels.addSlotsHint,
+                        startTime: welperAvailabilityLabels.startTime,
+                        endTime: welperAvailabilityLabels.endTime,
+                        addSlotsButton: welperAvailabilityLabels.addSlotsButton,
+                        currentSlotsTitle: welperAvailabilityLabels.currentSlotsTitle,
+                        to: welperAvailabilityLabels.to,
+                        removeSlotAria: welperAvailabilityLabels.removeSlotAria,
+                        emptyCallout: welperAvailabilityLabels.emptyCallout,
+                        endAfterStart: welperAvailabilityLabels.endAfterStart,
+                        dayNames: welperAvailabilityLabels.dayNames,
+                      }}
                       defaultSchedule={availabilitySchedule || undefined}
                       loading={isLoading || updateAvailabilityMutation.isPending}
                       onChange={async (schedule) => {
@@ -859,11 +915,13 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                         {!hasAvailabilityCalendar ? (
                           <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" size="2">
                             <Callout.Text>
-                              Add at least one time slot to your weekly schedule above. Once you have a regular schedule, you can mark exceptions like holidays or time off.
+                              {welperProfileLabels.availability.calendarHint}
                             </Callout.Text>
                           </Callout.Root>
                         ) : (
                           <AvailabilityExceptions
+                            labels={welperAvailabilityExceptionsLabels}
+                            dateLocale={dateFnsLocale}
                             exceptions={availabilityExceptions}
                             holidays={holidaysForUi}
                             holidaysLoading={holidaysLoading}
@@ -910,6 +968,11 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                   <AvailabilityScheduleStats
                     timeSlots={availabilitySchedule?.timeSlots ?? []}
                     availabilityExceptions={availabilityExceptions}
+                    labels={{
+                      withExceptions: welperAvailabilityLabels.statsWithExceptions,
+                      regularOnly: welperAvailabilityLabels.statsRegularOnly,
+                      dayShort: welperAvailabilityLabels.dayLabels,
+                    }}
                   />
                 </Box>
               </Flex>
@@ -922,6 +985,10 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 defaultArea={radiusServiceAreaForForm(welperProfile?.serviceArea)}
                 loading={isLoading || updateWelperProfileMutation.isPending}
                 onSave={handleServiceAreaSave}
+                title={welperProfileLabels.serviceArea.title}
+                description={welperProfileLabels.serviceArea.description}
+                selectorLabels={welperServiceAreaLabels.selector}
+                addressLabels={welperServiceAreaLabels.address}
                 error={
                   updateWelperProfileMutation.error instanceof Error
                     ? updateWelperProfileMutation.error.message
@@ -949,8 +1016,13 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
           open={isServiceOfferingDialogOpen}
           onOpenChange={handleServiceOfferingDialogOpenChange}
         >
-          <DialogContent title={editingOffering ? "Edit service offering" : "Add service offering"}>
+          <DialogContent
+            title={
+              editingOffering ? welperOfferingLabels.dialogEdit : welperOfferingLabels.dialogAdd
+            }
+          >
             <ServiceOfferingForm
+              labels={welperOfferingFormLabels}
               defaultValues={editingOffering || undefined}
               loading={createServiceOfferingMutation.isPending || updateServiceOfferingMutation.isPending}
               error={
@@ -975,10 +1047,10 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
           onOpenChange={(open) => {
             if (!open) setPendingDeleteOfferingId(null);
           }}
-          title="Delete this service offering?"
-          description="Customers won't be able to book this service. You can recreate it any time."
-          confirmLabel="Delete offering"
-          cancelLabel="Keep offering"
+          title={welperOfferingLabels.deleteTitle}
+          description={welperOfferingLabels.deleteDescription}
+          confirmLabel={welperOfferingLabels.deleteConfirm}
+          cancelLabel={welperOfferingLabels.deleteCancel}
           variant="danger"
           pending={deleteServiceOfferingMutation.isPending}
           onConfirm={handleConfirmDeleteOffering}

@@ -32,6 +32,10 @@ import {
   countUpcomingBookings,
   countPendingForWelper,
 } from "@/lib/dashboard/booking-dashboard";
+import {
+  useBookingStatusLabel,
+  useWelperHomeLabels,
+} from "@/lib/i18n/use-dashboard-labels";
 
 const BOOKINGS_DASHBOARD_LIMIT = 50;
 
@@ -59,6 +63,8 @@ function firstNameOf(name: string | null | undefined, email: string | undefined)
 export default function DashboardPageClient({ user: serverUser }: DashboardPageClientProps) {
   const { user } = useDashboardUser(serverUser);
   const { data: session } = useSession();
+  const welperHome = useWelperHomeLabels();
+  const bookingStatusLabel = useBookingStatusLabel();
 
   const userRole = user?.role || "customer";
   const bookingsRole =
@@ -106,15 +112,25 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
       return computeCustomerStatsFromBookings(bookings, favoriteWelpers.length);
     }
     if (userRole === "welper") {
-      return computeWelperStatsFromBookings(bookings);
+      return computeWelperStatsFromBookings(bookings, welperHome.stats);
     }
     return null;
-  }, [userRole, bookings, favoriteWelpers.length]);
+  }, [userRole, bookings, favoriteWelpers.length, welperHome.stats]);
 
   const activities = useMemo(() => {
     if (!bookingsRole) return [];
-    return buildDashboardActivities(bookings, bookingsRole);
-  }, [bookings, bookingsRole]);
+    return buildDashboardActivities(
+      bookings,
+      bookingsRole,
+      8,
+      bookingsRole === "welper"
+        ? {
+            jobTitle: welperHome.activityTitle,
+            formatStatus: bookingStatusLabel,
+          }
+        : undefined,
+    );
+  }, [bookings, bookingsRole, welperHome.activityTitle, bookingStatusLabel]);
 
   const upcomingCount = useMemo(() => countUpcomingBookings(bookings), [bookings]);
   const pendingForWelper = useMemo(
@@ -124,8 +140,11 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
 
   const statsFootnote = useMemo(() => {
     if (!bookingsResponse || bookingsResponse.total <= bookings.length) return undefined;
+    if (userRole === "welper") {
+      return welperHome.statsFootnote(bookings.length);
+    }
     return `Counts use your ${bookings.length} most recent bookings — open Bookings for the full list.`;
-  }, [bookingsResponse, bookings.length]);
+  }, [bookingsResponse, bookings.length, userRole, welperHome]);
 
   const completion = useMemo(() => {
     const steps = [
@@ -156,24 +175,26 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
   // The single concrete state line below the greeting. Avoids generic
   // "here's what's happening" copy — names a number when there is one.
   const stateLine = useMemo(() => {
-    if (bookingsLoading) return "Loading your dashboard…";
+    if (bookingsLoading) {
+      return userRole === "welper" ? welperHome.loading : "Loading your dashboard…";
+    }
     if (userRole === "welper") {
       if (welperSetupIncomplete) {
-        return "Finish your setup below to appear in customer search.";
+        return welperHome.setupIncomplete;
       }
       if (pendingForWelper > 0) {
-        return `${pendingForWelper} ${pendingForWelper === 1 ? "job needs" : "jobs need"} your answer.`;
+        return welperHome.pendingJobs(pendingForWelper);
       }
       const active = bookings.filter((b) =>
         ["accepted", "in_progress"].includes(b.status),
       ).length;
       if (active > 0) {
-        return `You have ${active} active ${active === 1 ? "job" : "jobs"}.`;
+        return welperHome.activeJobs(active);
       }
       if (normalizedWelperSetup?.discoverable) {
-        return "No active jobs right now — you're discoverable, customers will reach out.";
+        return welperHome.noJobsDiscoverable;
       }
-      return "No active jobs right now — complete setup to become discoverable.";
+      return welperHome.noJobsNotDiscoverable;
     }
     if (upcomingCount > 0) {
       return `You have ${upcomingCount} upcoming ${upcomingCount === 1 ? "booking" : "bookings"}.`;
@@ -187,6 +208,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     bookings,
     welperSetupIncomplete,
     normalizedWelperSetup,
+    welperHome,
   ]);
 
   const customerPaymentMissing =
@@ -204,7 +226,9 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
         {/* 1. Orient — greeting + concrete state line. */}
         <Box>
           <Heading as="h1" size="7" mb="2" trim="start">
-            Welcome back, {greetingName}.
+            {userRole === "welper"
+              ? welperHome.greeting(greetingName)
+              : `Welcome back, ${greetingName}.`}
           </Heading>
           <Text as="p" size="3" color="gray" highContrast>
             {stateLine}
@@ -237,19 +261,28 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
 
         {!welperHideDashboardExtras ? (
           <>
-            <QuickActions role={userRole === "welper" ? "welper" : "customer"} />
+            <QuickActions
+              role={userRole === "welper" ? "welper" : "customer"}
+              welperLabels={userRole === "welper" ? welperHome.quickActions : undefined}
+            />
 
             <DashboardStats
               role={userRole === "welper" ? "welper" : "customer"}
               stats={dashboardStats ?? undefined}
               loading={statsLoading}
               footnote={statsFootnote}
+              welperSectionTitle={
+                userRole === "welper" ? welperHome.statsSectionTitle : undefined
+              }
             />
 
             <RecentActivity
               activities={activities}
               role={userRole === "welper" ? "welper" : "customer"}
               loading={statsLoading}
+              welperLabels={
+                userRole === "welper" ? welperHome.recentActivity : undefined
+              }
             />
           </>
         ) : null}

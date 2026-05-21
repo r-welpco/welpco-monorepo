@@ -13,11 +13,22 @@ import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+export type PasswordChangeFormLabels = {
+  title: string;
+  description: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+  submit: string;
+  submitting?: string;
+};
+
 export interface PasswordChangeFormProps {
   defaultValues?: Partial<PasswordChangeValues>;
   loading?: boolean;
   error?: string;
   onSubmit?: (values: PasswordChangeValues) => void | Promise<void>;
+  labels?: PasswordChangeFormLabels;
 }
 
 const schema = z
@@ -42,6 +53,7 @@ export function PasswordChangeForm({
   loading,
   error,
   onSubmit,
+  labels,
 }: PasswordChangeFormProps) {
   const form = useForm<PasswordChangeValues>({
     resolver: zodResolver(schema),
@@ -79,10 +91,10 @@ export function PasswordChangeForm({
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>
           <Heading size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            Change password
+            {labels?.title ?? "Change password"}
           </Heading>
           <Text size="2" color="gray">
-            Update your password to keep your account secure.
+            {labels?.description ?? "Update your password to keep your account secure."}
           </Text>
         </Box>
 
@@ -95,7 +107,7 @@ export function PasswordChangeForm({
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="current-password" mb={FORM_SPACING.labelGap}>
-              Current password
+              {labels?.currentPassword ?? "Current password"}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
@@ -117,7 +129,7 @@ export function PasswordChangeForm({
 
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="new-password" mb={FORM_SPACING.labelGap}>
-              New password
+              {labels?.newPassword ?? "New password"}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
@@ -150,7 +162,7 @@ export function PasswordChangeForm({
               htmlFor="confirm-password"
               mb={FORM_SPACING.labelGap}
             >
-              Confirm new password
+              {labels?.confirmPassword ?? "Confirm new password"}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
@@ -177,7 +189,7 @@ export function PasswordChangeForm({
             disabled={loading}
             mt={FORM_SPACING.submitGap}
           >
-            {loading ? "Updating..." : "Update password"}
+            {loading ? (labels?.submitting ?? "Updating...") : (labels?.submit ?? "Update password")}
           </Button>
         </form>
       </Flex>

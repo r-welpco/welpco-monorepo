@@ -15,11 +15,28 @@ import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm, Controller } from "react-hook-form";
 import { useEffect } from "react";
 import { z } from "zod";
+export interface WelperProfileFormLabels {
+  title: string;
+  description: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  bio: string;
+  bioPlaceholder: string;
+  charCount: (count: number) => string;
+  visibility: string;
+  visibilityHint: string;
+  visibilityCurrent: (value: string) => string;
+  save: string;
+  saving: string;
+}
+
 export interface WelperProfileFormProps {
   defaultValues?: Partial<WelperProfileValues>;
   loading?: boolean;
   error?: string;
   onSubmit?: (values: WelperProfileValues) => void | Promise<void>;
+  labels?: WelperProfileFormLabels;
 }
 
 const schema = z.object({
@@ -38,7 +55,26 @@ export function WelperProfileForm({
   loading,
   error,
   onSubmit,
+  labels: labelsProp,
 }: WelperProfileFormProps) {
+  const labels = labelsProp ?? {
+    title: "Welper profile",
+    description:
+      "Set up your service profile so customers can book you. All fields marked with * are required.",
+    firstName: "First name",
+    lastName: "Last name",
+    phone: "Phone",
+    bio: "Bio",
+    bioPlaceholder:
+      "Describe your expertise, certifications, and approach. Minimum 50 characters.",
+    charCount: (count: number) => `${count} / 600 characters`,
+    visibility: "Profile visibility",
+    visibilityHint:
+      "Public profiles are visible in search results. Private profiles are only visible to customers you've worked with.",
+    visibilityCurrent: (value: string) => `Current: ${value}`,
+    save: "Save profile",
+    saving: "Saving...",
+  };
   const form = useForm<WelperProfileValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -82,10 +118,10 @@ export function WelperProfileForm({
       <Flex direction="column" gap="5">
         <Box>
           <Heading size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            Welper profile
+            {labels.title}
           </Heading>
           <Text size="2" color="gray">
-            Set up your service profile so customers can book you. All fields marked with * are required.
+            {labels.description}
           </Text>
         </Box>
 
@@ -100,7 +136,7 @@ export function WelperProfileForm({
             <Flex gap="3" direction={{ initial: "column", sm: "row" }}>
               <Box style={{ flex: 1 }}>
                 <Text as="label" size="2" weight="bold" htmlFor="welper-first-name" mb={FORM_SPACING.labelGap}>
-                  First name
+                  {labels.firstName}
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
                 </Text>
                 <TextField.Root
@@ -121,7 +157,7 @@ export function WelperProfileForm({
 
               <Box style={{ flex: 1 }}>
                 <Text as="label" size="2" weight="bold" htmlFor="welper-last-name" mb={FORM_SPACING.labelGap}>
-                  Last name
+                  {labels.lastName}
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
                 </Text>
                 <TextField.Root
@@ -144,7 +180,7 @@ export function WelperProfileForm({
 
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="welper-phone" mb={FORM_SPACING.labelGap}>
-              Phone
+              {labels.phone}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
@@ -165,13 +201,13 @@ export function WelperProfileForm({
 
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="welper-bio" mb={FORM_SPACING.labelGap}>
-              Bio
+              {labels.bio}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextArea
               id="welper-bio"
               rows={5}
-              placeholder="Describe your expertise, certifications, and approach. Minimum 50 characters."
+              placeholder={labels.bioPlaceholder}
               size="2"
               disabled={loading}
               aria-required="true"
@@ -183,7 +219,7 @@ export function WelperProfileForm({
               </Text>
             )}
             <Text size="1" color="gray" mt={FORM_SPACING.helperGap}>
-              {form.watch("bio")?.length || 0} / 600 characters
+              {labels.charCount(form.watch("bio")?.length || 0)}
             </Text>
           </Box>
 
@@ -192,7 +228,7 @@ export function WelperProfileForm({
             <Flex align="center" justify="between">
               <Box style={{ flex: 1 }}>
                 <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap} id="wpf-visibility-label">
-                  Profile visibility
+                  {labels.visibility}
                 </Text>
               </Box>
               <Controller
@@ -211,15 +247,15 @@ export function WelperProfileForm({
               />
             </Flex>
             <Text size="1" color="gray" mt={FORM_SPACING.labelGap}>
-              Public profiles are visible in search results. Private profiles are only visible to customers you've worked with.
+              {labels.visibilityHint}
             </Text>
             <Text size="1" color="gray" mt={FORM_SPACING.helperGap}>
-              Current: {form.watch("profileVisibility")}
+              {labels.visibilityCurrent(form.watch("profileVisibility"))}
             </Text>
           </Box>
 
           <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
-            {loading ? "Saving..." : "Save profile"}
+            {loading ? labels.saving : labels.save}
           </Button>
         </form>
       </Flex>

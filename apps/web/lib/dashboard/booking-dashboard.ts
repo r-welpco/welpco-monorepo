@@ -53,14 +53,19 @@ export function buildDashboardActivities(
   bookings: BookingItem[],
   role: "customer" | "welper",
   limit = 8,
+  options?: {
+    jobTitle?: string;
+    formatStatus?: (status: string) => string;
+  },
 ): DashboardActivityItem[] {
   const sorted = [...bookings].sort(
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
   );
+  const formatStatus = options?.formatStatus ?? formatStatusLabel;
   return sorted.slice(0, limit).map((b) => {
-    const statusLabel = formatStatusLabel(b.status);
+    const statusLabel = formatStatus(b.status);
     const when = formatBookingDate(b.scheduledDate);
-    const title = role === "customer" ? "Booking" : "Job";
+    const title = role === "customer" ? "Booking" : (options?.jobTitle ?? "Job");
     const parts = [statusLabel];
     if (when) parts.push(when);
     return {
@@ -99,7 +104,14 @@ export function computeCustomerStatsFromBookings(
   ];
 }
 
-export function computeWelperStatsFromBookings(bookings: BookingItem[]): DashboardStatItem[] {
+export function computeWelperStatsFromBookings(
+  bookings: BookingItem[],
+  labels: {
+    activeJobs: string;
+    totalEarnings: string;
+    completedJobs: string;
+  },
+): DashboardStatItem[] {
   const active = bookings.filter((b) => ACTIVE_STATUSES.has(b.status)).length;
   const completed = bookings.filter((b) => COMPLETED_STATUSES.has(b.status));
   const completedCount = completed.length;
@@ -110,8 +122,8 @@ export function computeWelperStatsFromBookings(bookings: BookingItem[]): Dashboa
   // rating yet, and a placeholder em-dash reads as "we have nothing for you"
   // (bible §22.6 — no fake/empty social proof). Reintroduce when BFF exposes it.
   return [
-    { title: "Active jobs", value: active },
-    { title: "Total earnings", value: earningsLabel },
-    { title: "Completed jobs", value: completedCount },
+    { title: labels.activeJobs, value: active },
+    { title: labels.totalEarnings, value: earningsLabel },
+    { title: labels.completedJobs, value: completedCount },
   ];
 }

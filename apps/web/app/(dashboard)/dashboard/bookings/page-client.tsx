@@ -27,8 +27,13 @@ import {
   Clock,
   DollarSign,
 } from "lucide-react";
-import { format } from "date-fns";
-import { getStatusColor, formatStatusLabel } from "@/lib/constants/booking";
+import { format, type Locale } from "date-fns";
+import { getStatusColor } from "@/lib/constants/booking";
+import {
+  useWelperBookingsLabels,
+  welperBookingTabLabel,
+} from "@/lib/i18n/use-dashboard-labels";
+import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
@@ -36,17 +41,6 @@ import { getStatusColor, formatStatusLabel } from "@/lib/constants/booking";
 // "Disputed" tab (and the off-paths Declined / No-show), a customer with one
 // of those bookings would have no way to filter to it. Bible §17.3: lists
 // must be honest about what's there.
-const STATUS_TABS: Array<{ label: string; value: BookingStatus | undefined }> = [
-  { label: "All", value: undefined },
-  { label: "Pending", value: "pending" },
-  { label: "Upcoming", value: "accepted" },
-  { label: "Active", value: "in_progress" },
-  { label: "Completed", value: "completed" },
-  { label: "Cancelled", value: "cancelled" },
-  { label: "Declined", value: "declined" },
-  { label: "Disputed", value: "disputed" },
-];
-
 type ConfirmKind = "accept" | "decline" | "cancel";
 interface PendingConfirm {
   kind: ConfirmKind;
@@ -57,13 +51,13 @@ const DEFAULT_LIMIT = 10;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
-function formatDateSafe(dateStr: string | null): string {
+function formatDateSafe(dateStr: string | null, dateLocale: Locale): string {
   if (!dateStr) return "—";
   try {
     // For date-only strings (YYYY-MM-DD), append T00:00:00 to avoid UTC midnight
     // being displayed as the previous day in western timezones
     const d = dateStr.length === 10 ? new Date(dateStr + "T00:00:00") : new Date(dateStr);
-    return format(d, "PPP");
+    return format(d, "PPP", { locale: dateLocale });
   } catch {
     return dateStr;
   }
@@ -71,9 +65,33 @@ function formatDateSafe(dateStr: string | null): string {
 
 // ─── Component ────────────────────────────────────────────────────────────
 
+const CUSTOMER_STATUS_TABS: Array<{ label: string; value: BookingStatus | undefined }> = [
+  { label: "All", value: undefined },
+  { label: "Pending", value: "pending" },
+  { label: "Upcoming", value: "accepted" },
+  { label: "Active", value: "in_progress" },
+  { label: "Completed", value: "completed" },
+  { label: "Cancelled", value: "cancelled" },
+  { label: "Declined", value: "declined" },
+  { label: "Disputed", value: "disputed" },
+];
+
+const WELPER_TAB_VALUES: Array<BookingStatus | undefined> = [
+  undefined,
+  "pending",
+  "accepted",
+  "in_progress",
+  "completed",
+  "cancelled",
+  "declined",
+  "disputed",
+];
+
 export default function BookingsPageClient() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const welperLabels = useWelperBookingsLabels();
+  const dateLocale = useDateFnsLocale();
   const [activeTab, setActiveTab] = useState<BookingStatus | undefined>(
     undefined
   );
@@ -101,6 +119,14 @@ export default function BookingsPageClient() {
 
   const isWelper = user?.role === "welper";
   const isCustomer = user?.role === "customer";
+
+  const statusTabs = useMemo(() => {
+    if (!isWelper) return CUSTOMER_STATUS_TABS;
+    return WELPER_TAB_VALUES.map((value) => ({
+      value,
+      label: welperBookingTabLabel(welperLabels, value),
+    }));
+  }, [isWelper, welperLabels]);
 
   const handleTabChange = useCallback(
     (status: BookingStatus | undefined) => {
@@ -132,13 +158,17 @@ export default function BookingsPageClient() {
         onSuccess: () => setPendingConfirm(null),
         onError: (err) => {
           setMutationError(
-            err instanceof Error ? err.message : "Failed to accept booking.",
+            err instanceof Error
+              ? err.message
+              : isWelper
+                ? welperLabels.acceptFailed
+                : "Failed to accept booking.",
           );
           setPendingConfirm(null);
         },
       });
     },
-    [acceptMutation]
+    [acceptMutation, isWelper, welperLabels.acceptFailed]
   );
 
   const runDecline = useCallback(
@@ -149,14 +179,18 @@ export default function BookingsPageClient() {
           onSuccess: () => setPendingConfirm(null),
           onError: (err) => {
             setMutationError(
-              err instanceof Error ? err.message : "Failed to decline booking.",
+              err instanceof Error
+                ? err.message
+                : isWelper
+                  ? welperLabels.declineFailed
+                  : "Failed to decline booking.",
             );
             setPendingConfirm(null);
           },
         },
       );
     },
-    [declineMutation]
+    [declineMutation, isWelper, welperLabels.declineFailed]
   );
 
   const runCancel = useCallback(
@@ -171,14 +205,18 @@ export default function BookingsPageClient() {
           onSuccess: () => setPendingConfirm(null),
           onError: (err) => {
             setMutationError(
-              err instanceof Error ? err.message : "Failed to cancel booking.",
+              err instanceof Error
+                ? err.message
+                : isWelper
+                  ? welperLabels.cancelFailed
+                  : "Failed to cancel booking.",
             );
             setPendingConfirm(null);
           },
         },
       );
     },
-    [cancelMutation]
+    [cancelMutation, isWelper, welperLabels.cancelFailed]
   );
 
   // ── Not authenticated ──────────────────────────────────────────────────
@@ -193,7 +231,7 @@ export default function BookingsPageClient() {
         style={{ minHeight: "400px" }}
       >
         <Text size="3" color="gray">
-          Please sign in to view bookings.
+          {isWelper ? welperLabels.signInRequired : "Please sign in to view bookings."}
         </Text>
       </Flex>
     );
@@ -206,12 +244,12 @@ export default function BookingsPageClient() {
       {/* Header */}
       <Box>
         <Heading as="h1" size="8" mb="2">
-          Bookings
+          {isWelper ? welperLabels.title : "Bookings"}
         </Heading>
         <Text as="p" size="3" color="gray">
           {isCustomer
             ? "Manage your service bookings and appointments."
-            : "Manage incoming booking requests and jobs."}
+            : welperLabels.subtitle}
         </Text>
       </Box>
 
@@ -224,7 +262,7 @@ export default function BookingsPageClient() {
 
       {/* Status Filter Tabs */}
       <Flex gap="2" wrap="wrap">
-        {STATUS_TABS.map((tab) => (
+        {statusTabs.map((tab) => (
           <Button
             key={tab.label}
             size="2"
@@ -283,12 +321,14 @@ export default function BookingsPageClient() {
             style={{ padding: "48px 24px" }}
           >
             <Text size="3" color="red" weight="medium">
-              Failed to load bookings
+              {isWelper ? welperLabels.loadFailed : "Failed to load bookings"}
             </Text>
             <Text size="2" color="gray">
               {error instanceof Error
                 ? error.message
-                : "Something went wrong. Please try again."}
+                : isWelper
+                  ? welperLabels.genericError
+                  : "Something went wrong. Please try again."}
             </Text>
           </Flex>
         </Card>
@@ -305,12 +345,16 @@ export default function BookingsPageClient() {
           >
             <Calendar size={48} color="var(--gray-9)" />
             <Text size="3" weight="medium">
-              No bookings found
+              {isWelper ? welperLabels.emptyTitle : "No bookings found"}
             </Text>
             <Text size="2" color="gray" align="center">
               {activeTab
-                ? `No ${formatStatusLabel(activeTab)} bookings.`
-                : "You don't have any bookings yet."}
+                ? isWelper
+                  ? welperLabels.emptyFiltered(activeTab)
+                  : `No ${activeTab.replace(/_/g, " ")} bookings.`
+                : isWelper
+                  ? welperLabels.emptyAll
+                  : "You don't have any bookings yet."}
             </Text>
             {isCustomer && (
               <Button
@@ -358,7 +402,9 @@ export default function BookingsPageClient() {
                         weight="medium"
                         style={{ textTransform: "capitalize" }}
                       >
-                        {formatStatusLabel(booking.status)}
+                        {isWelper
+                          ? welperLabels.statusLabel(booking.status)
+                          : booking.status.replace(/_/g, " ")}
                       </Text>
                     </Badge>
                     <Text size="2" color="gray">
@@ -373,7 +419,7 @@ export default function BookingsPageClient() {
                     <Flex align="center" gap="2">
                       <Calendar size={14} color="var(--gray-9)" />
                       <Text size="2" color="gray">
-                        {formatDateSafe(booking.scheduledDate)}
+                        {formatDateSafe(booking.scheduledDate, dateLocale)}
                       </Text>
                     </Flex>
                   )}
@@ -400,7 +446,9 @@ export default function BookingsPageClient() {
 
                 {/* Created Date */}
                 <Text size="1" color="gray">
-                  Created {formatDateSafe(booking.createdAt)}
+                  {isWelper
+                    ? welperLabels.created(formatDateSafe(booking.createdAt, dateLocale))
+                    : `Created ${formatDateSafe(booking.createdAt, dateLocale)}`}
                 </Text>
 
                 {/* Actions (driven by availableActions from the API).
@@ -418,7 +466,7 @@ export default function BookingsPageClient() {
                         onClick={openConfirm("decline", booking.id)}
                         disabled={declineMutation.isPending}
                       >
-                        Decline
+                        {welperLabels.decline}
                       </Button>
                     )}
                     {booking.availableActions?.includes("cancel") &&
@@ -433,7 +481,7 @@ export default function BookingsPageClient() {
                           onClick={openConfirm("cancel", booking.id)}
                           disabled={cancelMutation.isPending}
                         >
-                          Cancel booking
+                          {isWelper ? welperLabels.cancelBooking : "Cancel booking"}
                         </Button>
                       )}
                     {isWelper && booking.availableActions?.includes("accept") && (
@@ -444,7 +492,7 @@ export default function BookingsPageClient() {
                         onClick={openConfirm("accept", booking.id)}
                         disabled={acceptMutation.isPending}
                       >
-                        Accept
+                        {welperLabels.accept}
                       </Button>
                     )}
                   </Flex>
@@ -456,32 +504,32 @@ export default function BookingsPageClient() {
       )}
 
       {/* Confirm dialogs — same primitive as bookings/[id]. */}
-      {pendingConfirm?.kind === "accept" && (
+      {pendingConfirm?.kind === "accept" && isWelper && (
         <ActionConfirmDialog
           open
           onOpenChange={(open) => !open && !acceptMutation.isPending && closeConfirm()}
-          title="Accept this booking?"
-          description="We'll place a payment hold on the customer's saved card before confirming. If the hold fails, the booking stays pending."
-          confirmLabel="Accept booking"
-          cancelLabel="Not now"
+          title={welperLabels.confirm.acceptTitle}
+          description={welperLabels.confirm.acceptDescription}
+          confirmLabel={welperLabels.confirm.acceptConfirm}
+          cancelLabel={welperLabels.confirm.acceptCancel}
           variant="primary"
           pending={acceptMutation.isPending}
           onConfirm={() => runAccept(pendingConfirm.bookingId)}
         />
       )}
-      {pendingConfirm?.kind === "decline" && (
+      {pendingConfirm?.kind === "decline" && isWelper && (
         <ActionConfirmDialog
           open
           onOpenChange={(open) => !open && !declineMutation.isPending && closeConfirm()}
-          title="Decline this booking?"
-          description="Tell the customer why so they can find another welper quickly."
-          confirmLabel="Decline"
-          cancelLabel="Keep pending"
+          title={welperLabels.confirm.declineTitle}
+          description={welperLabels.confirm.declineDescription}
+          confirmLabel={welperLabels.confirm.declineConfirm}
+          cancelLabel={welperLabels.confirm.declineCancel}
           variant="danger"
           pending={declineMutation.isPending}
           reasonField={{
-            label: "Reason (optional)",
-            placeholder: "e.g. Schedule conflict on that day",
+            label: welperLabels.confirm.declineReasonLabel,
+            placeholder: welperLabels.confirm.declineReasonPlaceholder,
           }}
           onConfirm={(reason) => runDecline(pendingConfirm.bookingId, reason)}
         />
@@ -490,15 +538,25 @@ export default function BookingsPageClient() {
         <ActionConfirmDialog
           open
           onOpenChange={(open) => !open && !cancelMutation.isPending && closeConfirm()}
-          title="Cancel this booking?"
-          description="Free cancellation up to 24 hours before the start time. Tell us why so we can keep things fair."
-          confirmLabel="Cancel booking"
-          cancelLabel="Keep booking"
+          title={
+            isWelper ? welperLabels.confirm.cancelTitle : "Cancel this booking?"
+          }
+          description={
+            isWelper
+              ? welperLabels.confirm.cancelDescription
+              : "Free cancellation up to 24 hours before the start time. Tell us why so we can keep things fair."
+          }
+          confirmLabel={isWelper ? welperLabels.confirm.cancelConfirm : "Cancel booking"}
+          cancelLabel={isWelper ? welperLabels.confirm.cancelCancel : "Keep booking"}
           variant="danger"
           pending={cancelMutation.isPending}
           reasonField={{
-            label: "Reason for cancellation",
-            placeholder: "e.g. Plans changed, found another welper",
+            label: isWelper
+              ? welperLabels.confirm.cancelReasonLabel
+              : "Reason for cancellation",
+            placeholder: isWelper
+              ? welperLabels.confirm.cancelReasonPlaceholder
+              : "e.g. Plans changed, found another welper",
             required: true,
           }}
           onConfirm={(reason) => runCancel(pendingConfirm.bookingId, reason)}
@@ -514,12 +572,14 @@ export default function BookingsPageClient() {
             size="2"
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            aria-label="Previous page"
+            aria-label={isWelper ? welperLabels.prevPage : "Previous page"}
           >
             <ChevronLeft size={18} />
           </Button>
           <Text size="2" color="gray">
-            Page {page} of {totalPages}
+            {isWelper
+              ? welperLabels.pageOf(page, totalPages)
+              : `Page ${page} of ${totalPages}`}
           </Text>
           <Button
             variant="soft"
@@ -527,7 +587,7 @@ export default function BookingsPageClient() {
             size="2"
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
-            aria-label="Next page"
+            aria-label={isWelper ? welperLabels.nextPage : "Next page"}
           >
             <ChevronRight size={18} />
           </Button>

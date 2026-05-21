@@ -17,8 +17,19 @@ import {
 } from "lucide-react";
 import styles from "./quick-actions.module.css";
 
+type WelperQuickActionLabels = {
+  title: string;
+  viewJobs: string;
+  viewJobsDescription: string;
+  setAvailability: string;
+  setAvailabilityDescription: string;
+  openMessages: string;
+  openMessagesDescription: string;
+};
+
 interface QuickActionsProps {
   role: "customer" | "welper";
+  welperLabels?: WelperQuickActionLabels;
 }
 
 interface ActionTile {
@@ -39,7 +50,7 @@ interface ActionTile {
  * position, which is enough. Equal weight reinforces "these are your three
  * doors", not "here's a CTA + two also-rans".
  */
-export function QuickActions({ role }: QuickActionsProps) {
+export function QuickActions({ role, welperLabels }: QuickActionsProps) {
   const actions: ActionTile[] =
     role === "customer"
       ? [
@@ -65,20 +76,21 @@ export function QuickActions({ role }: QuickActionsProps) {
       : [
           {
             href: "/dashboard/bookings",
-            label: "View jobs",
-            description: "Pending and active.",
+            label: welperLabels?.viewJobs ?? "View jobs",
+            description: welperLabels?.viewJobsDescription ?? "Pending and active.",
             icon: ListChecks,
           },
           {
             href: "/dashboard/profile?tab=availability",
-            label: "Set availability",
-            description: "Adjust when you're available.",
+            label: welperLabels?.setAvailability ?? "Set availability",
+            description:
+              welperLabels?.setAvailabilityDescription ?? "Adjust when you're available.",
             icon: CalendarClock,
           },
           {
             href: "/dashboard/messages",
-            label: "Open messages",
-            description: "Talk to your customers.",
+            label: welperLabels?.openMessages ?? "Open messages",
+            description: welperLabels?.openMessagesDescription ?? "Talk to your customers.",
             icon: MessageSquare,
           },
         ];
@@ -86,7 +98,7 @@ export function QuickActions({ role }: QuickActionsProps) {
   return (
     <Box>
       <Heading as="h2" size="5" mb="3" trim="start">
-        Quick actions
+        {role === "welper" && welperLabels ? welperLabels.title : "Quick actions"}
       </Heading>
       <Grid columns={{ initial: "1", sm: "3" }} gap="3">
         {actions.map((action) => {

@@ -18,6 +18,22 @@ import { useState } from "react";
 
 export type NotificationFilter = "all" | "unread" | "read";
 
+export type NotificationCenterLabels = {
+  title: string;
+  subtitle?: string;
+  markAllRead: string;
+  unreadAria: (count: number) => string;
+  filterAll: string;
+  filterUnread: string;
+  filterRead: string;
+  emptyAllTitle: string;
+  emptyUnreadTitle: string;
+  emptyReadTitle: string;
+  emptyAllDescription: string;
+  emptyUnreadDescription: string;
+  emptyReadDescription: string;
+};
+
 export interface NotificationCenterProps {
   notifications: NotificationCardProps[];
   unreadCount?: number;
@@ -27,15 +43,16 @@ export interface NotificationCenterProps {
   onMarkAllRead?: () => void;
   onNotificationAction?: (id: string) => void;
   onMarkRead?: (id: string) => void;
+  labels?: NotificationCenterLabels;
 }
 
-const EMPTY_DESCRIPTIONS: Record<NotificationFilter, string> = {
+const DEFAULT_EMPTY_DESCRIPTIONS: Record<NotificationFilter, string> = {
   all: "When you get notifications, they'll show up here.",
   unread: "You're all caught up.",
   read: "Once you mark notifications as read, they'll show up here.",
 };
 
-const EMPTY_HEADLINES: Record<NotificationFilter, string> = {
+const DEFAULT_EMPTY_HEADLINES: Record<NotificationFilter, string> = {
   all: "No notifications yet",
   unread: "No unread notifications",
   read: "No read notifications",
@@ -54,8 +71,20 @@ export function NotificationCenter({
   onMarkAllRead,
   onNotificationAction,
   onMarkRead,
+  labels,
 }: NotificationCenterProps) {
   const [filter, setFilter] = useState<NotificationFilter>("all");
+
+  const emptyHeadlines: Record<NotificationFilter, string> = {
+    all: labels?.emptyAllTitle ?? DEFAULT_EMPTY_HEADLINES.all,
+    unread: labels?.emptyUnreadTitle ?? DEFAULT_EMPTY_HEADLINES.unread,
+    read: labels?.emptyReadTitle ?? DEFAULT_EMPTY_HEADLINES.read,
+  };
+  const emptyDescriptions: Record<NotificationFilter, string> = {
+    all: labels?.emptyAllDescription ?? DEFAULT_EMPTY_DESCRIPTIONS.all,
+    unread: labels?.emptyUnreadDescription ?? DEFAULT_EMPTY_DESCRIPTIONS.unread,
+    read: labels?.emptyReadDescription ?? DEFAULT_EMPTY_DESCRIPTIONS.read,
+  };
 
   const cardStyle = compact
     ? { width: "100%", maxWidth: "100%", height: "min(70vh, 340px)" }
@@ -81,7 +110,7 @@ export function NotificationCenter({
           <Flex justify="between" align="center" gap="2">
             <Flex gap="2" align="center">
               <Heading size={compact ? "4" : "6"} mb="0" trim="start">
-                Notifications
+                {labels?.title ?? "Notifications"}
               </Heading>
               {unreadCount > 0 && (
                 <Badge
@@ -90,7 +119,7 @@ export function NotificationCenter({
                   size="1"
                   radius="full"
                   highContrast
-                  aria-label={`${unreadCount} unread`}
+                  aria-label={labels?.unreadAria(unreadCount) ?? `${unreadCount} unread`}
                 >
                   {unreadCount}
                 </Badge>
@@ -103,15 +132,15 @@ export function NotificationCenter({
                 color="gray"
                 onClick={onMarkAllRead}
               >
-                Mark all read
+                {labels?.markAllRead ?? "Mark all read"}
               </Button>
             )}
           </Flex>
-          {!compact && (
+          {!compact ? (
             <Text size="2" color="gray" highContrast mt="1">
-              Stay updated on bookings, payments, and messages.
+              {labels?.subtitle ?? "Stay updated on bookings, payments, and messages."}
             </Text>
-          )}
+          ) : null}
         </Box>
 
         {/* Filter */}
@@ -120,9 +149,9 @@ export function NotificationCenter({
           onValueChange={(value) => setFilter(value as NotificationFilter)}
           size={compact ? "1" : "2"}
         >
-          <SegmentedControl.Item value="all">All</SegmentedControl.Item>
-          <SegmentedControl.Item value="unread">Unread</SegmentedControl.Item>
-          <SegmentedControl.Item value="read">Read</SegmentedControl.Item>
+          <SegmentedControl.Item value="all">{labels?.filterAll ?? "All"}</SegmentedControl.Item>
+          <SegmentedControl.Item value="unread">{labels?.filterUnread ?? "Unread"}</SegmentedControl.Item>
+          <SegmentedControl.Item value="read">{labels?.filterRead ?? "Read"}</SegmentedControl.Item>
         </SegmentedControl.Root>
 
         <Separator size="4" />
@@ -165,10 +194,10 @@ export function NotificationCenter({
                 </Flex>
                 <Box>
                   <Heading size="4" mb="1" align="center" trim="start">
-                    {EMPTY_HEADLINES[filter]}
+                    {emptyHeadlines[filter]}
                   </Heading>
                   <Text size="2" color="gray" highContrast align="center" as="p">
-                    {EMPTY_DESCRIPTIONS[filter]}
+                    {emptyDescriptions[filter]}
                   </Text>
                 </Box>
               </Flex>

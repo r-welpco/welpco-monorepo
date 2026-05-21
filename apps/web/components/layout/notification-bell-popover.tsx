@@ -10,6 +10,10 @@ import { NotificationCenter } from "@welpco/ui/platform/notification";
 import type { NotificationCardProps } from "@welpco/ui/platform/notification";
 import { Bell } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import type { Locale } from "date-fns";
+import { useAuthStore } from "@/stores/authStore";
+import { useDashboardNotificationLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import {
   useNotifications,
   useUnreadCount,
@@ -32,7 +36,11 @@ const CATEGORY_TO_TYPE: Record<string, NotificationCardProps["type"]> = {
   system: "info",
 };
 
-function mapToCardProps(item: NotificationItem): NotificationCardProps {
+function mapToCardProps(
+  item: NotificationItem,
+  viewLabel: string,
+  dateLocale?: Locale,
+): NotificationCardProps {
   const type = CATEGORY_TO_TYPE[item.category] ?? "info";
   const actionUrl =
     item.metadata && typeof item.metadata.actionUrl === "string"
@@ -43,9 +51,12 @@ function mapToCardProps(item: NotificationItem): NotificationCardProps {
     title: item.title,
     message: item.body,
     type,
-    timestamp: formatDistanceToNow(new Date(item.createdAt), { addSuffix: true }),
+    timestamp: formatDistanceToNow(new Date(item.createdAt), {
+      addSuffix: true,
+      locale: dateLocale,
+    }),
     isRead: item.isRead,
-    actionLabel: actionUrl ? "View" : undefined,
+    actionLabel: actionUrl ? viewLabel : undefined,
   };
 }
 
@@ -58,6 +69,11 @@ export interface NotificationBellPopoverProps {
  */
 export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBellPopoverProps) {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const isWelper = user?.role === "welper";
+  const notificationLabels = useDashboardNotificationLabels();
+  const dateFnsLocale = useDateFnsLocale();
+  const dateLocale = isWelper ? dateFnsLocale : undefined;
   const [open, setOpen] = useState(false);
   const { data: unreadData } = useUnreadCount();
   const { data: listData, isLoading: notificationsLoading } = useNotifications({
@@ -69,9 +85,34 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
 
   const notificationCount = unreadData?.count ?? 0;
   const notifications = useMemo(
-    () => (listData?.items ?? []).map(mapToCardProps),
-    [listData?.items]
+    () =>
+      (listData?.items ?? []).map((item) =>
+        mapToCardProps(
+          item,
+          isWelper ? notificationLabels.view : "View",
+          dateLocale,
+        ),
+      ),
+    [listData?.items, isWelper, notificationLabels.view, dateLocale],
   );
+
+  const centerLabels = isWelper
+    ? {
+        title: notificationLabels.title,
+        subtitle: notificationLabels.subtitle,
+        markAllRead: notificationLabels.markAllRead,
+        unreadAria: notificationLabels.unreadCount,
+        filterAll: notificationLabels.filterAll,
+        filterUnread: notificationLabels.filterUnread,
+        filterRead: notificationLabels.filterRead,
+        emptyAllTitle: notificationLabels.emptyAllTitle,
+        emptyUnreadTitle: notificationLabels.emptyUnreadTitle,
+        emptyReadTitle: notificationLabels.emptyReadTitle,
+        emptyAllDescription: notificationLabels.emptyAllDescription,
+        emptyUnreadDescription: notificationLabels.emptyUnreadDescription,
+        emptyReadDescription: notificationLabels.emptyReadDescription,
+      }
+    : undefined;
 
   const handleNotificationAction = useCallback(
     (id: string) => {
@@ -104,7 +145,13 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
             variant="ghost"
             size="3"
             aria-label={
-              notificationCount > 0 ? `Notifications (${notificationCount} unread)` : "Notifications"
+              notificationCount > 0
+                ? isWelper
+                  ? notificationLabels.bellUnreadAria(notificationCount)
+                  : `Notifications (${notificationCount} unread)`
+                : isWelper
+                  ? notificationLabels.bellAria
+                  : "Notifications"
             }
           >
             <Bell size={20} />
@@ -118,6 +165,7 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
             onMarkAllRead={notificationCount > 0 ? handleMarkAllRead : undefined}
             onNotificationAction={handleNotificationAction}
             onMarkRead={handleMarkRead}
+            labels={centerLabels}
             compact
           />
         </PopoverContent>
