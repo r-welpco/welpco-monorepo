@@ -1,9 +1,6 @@
-import CompletePageClient from "./complete-page-client";
+import { redirect } from "next/navigation";
 
-/**
- * Post-signup thank-you page shown during phased launch when dashboard
- * access is gated (`PLATFORM_ACCESS_GATED=true`).
- */
+/** Legacy route — post-signup users go straight to the dashboard. */
 export default function RegisterCompletePage() {
-  return <CompletePageClient />;
+  redirect("/dashboard");
 }

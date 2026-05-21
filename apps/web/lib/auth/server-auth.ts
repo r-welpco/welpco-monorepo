@@ -5,7 +5,6 @@
 
 import { cache } from "react";
 import { auth } from "@/auth";
-import { hasPlatformAccess } from "@/lib/auth/platform-access";
 import { localizedPath } from "@/i18n/locale-routes";
 import type { Locale } from "@/i18n/routing";
 import { redirect } from "next/navigation";
@@ -142,10 +141,6 @@ export async function requireOnboardingComplete(): Promise<NonNullable<AuthCheck
 
   if (user.signupCompleted === false) {
     await localizedRedirect("/register");
-  }
-
-  if (!hasPlatformAccess({ signupCompleted: true })) {
-    await localizedRedirect("/register/complete");
   }
 
   return user;

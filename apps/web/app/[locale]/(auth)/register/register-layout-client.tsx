@@ -20,8 +20,8 @@ function stripRegisterPath(pathname: string): string {
 }
 import { useSignupState } from "@/lib/hooks/use-signup";
 
-/** Matches BFF `WELPER_REQUIRED_STEPS` length — used for progress chrome before role is picked. */
-const WELPER_SIGNUP_STEP_TOTAL = 9;
+/** Matches BFF `WELPER_SIGNUP_REQUIRED_STEPS` length — used for progress chrome before role is picked. */
+const WELPER_SIGNUP_STEP_TOTAL = 3;
 
 function signupProgressTotals(state: {
   selectedRole: string | null;
@@ -49,8 +49,11 @@ export default function RegisterLayoutClient({
   const pathname = usePathname() ?? "/";
   const t = useTranslations("auth.register.chrome");
 
-  const isCompletePage = stripRegisterPath(pathname) === "/register/complete";
-  const showProgressChrome = canResumeSignup && state && !isCompletePage;
+  const registerPath = stripRegisterPath(pathname);
+  const isCompletePage = registerPath === "/register/complete";
+  const isFinishPage = registerPath === "/register/finish";
+  const showProgressChrome =
+    canResumeSignup && state && !isCompletePage && !isFinishPage;
   const showSessionBanner = canResumeSignup && !isCompletePage;
 
   const { totalSteps, stepIndex, progressPct } = state

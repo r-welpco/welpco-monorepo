@@ -77,6 +77,8 @@ export interface ProfilePhotoUploadProps {
   acceptedFormats?: string[];
   minDimensions?: { width: number; height: number };
   maxDimensions?: { width: number; height: number };
+  /** When true, shows a required marker and hides remove unless `onRemove` is provided. */
+  required?: boolean;
 }
 
 const DEFAULT_MAX_SIZE_MB = 5;
@@ -97,6 +99,7 @@ export function ProfilePhotoUpload({
   acceptedFormats = DEFAULT_ACCEPTED_FORMATS,
   minDimensions = DEFAULT_MIN_DIMENSIONS,
   maxDimensions = DEFAULT_MAX_DIMENSIONS,
+  required = false,
 }: ProfilePhotoUploadProps) {
   const labels = labelsProp ?? DEFAULT_PROFILE_PHOTO_UPLOAD_LABELS;
   const photoAlt = currentPhotoAlt ?? labels.photoAlt;
@@ -256,6 +259,11 @@ export function ProfilePhotoUpload({
         <Box>
           <Heading size="4" mb="1">
             {labels.title}
+            {required ? (
+              <Text as="span" color="red" ml="1">
+                *
+              </Text>
+            ) : null}
           </Heading>
           <Text size="2" color="gray" highContrast>
             {helperText}
@@ -310,7 +318,7 @@ export function ProfilePhotoUpload({
               </Button>
             </Text>
 
-            {displayPhoto && (
+            {displayPhoto && onRemove && (
               <Button
                 type="button"
                 variant="ghost"

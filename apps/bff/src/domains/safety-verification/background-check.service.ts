@@ -253,6 +253,14 @@ export class BackgroundCheckService {
     if (!(await this.isBackgroundCheckRequiredForUser(userId))) {
       return true;
     }
+    return this.isAdminBackgroundCheckApproved(userId);
+  }
+
+  /** Dashboard setup checklist — green only after admin marks verification Passed. */
+  async isAdminBackgroundCheckApproved(userId: string): Promise<boolean> {
+    if (!(await this.isBackgroundCheckRequiredForUser(userId))) {
+      return true;
+    }
     const verification = await this.verificationRepo.findOne({ where: { userId } });
     return verification?.backgroundCheckStatus === BackgroundCheckStatus.PASSED;
   }

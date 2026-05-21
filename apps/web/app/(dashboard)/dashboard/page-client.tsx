@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Container } from "@welpco/ui/container";
 import { Flex } from "@welpco/ui/flex";
@@ -15,12 +16,13 @@ import { ArrowRight } from "lucide-react";
 import { DashboardStats } from "@/components/features/dashboard/dashboard-stats";
 import { RecentActivity } from "@/components/features/dashboard/recent-activity";
 import { QuickActions } from "@/components/features/dashboard/quick-actions";
+import { WelperSetupChecklist } from "@/components/features/dashboard/welper-setup-checklist";
+import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
+import { useWelperSetupChecklist } from "@/lib/hooks/use-signup";
 import { useDashboardUser } from "@/lib/hooks/use-dashboard-user";
 import {
   useCustomerProfile,
-  useWelperProfile,
   useFavoriteWelpers,
-  useServiceOfferings,
 } from "@/lib/hooks/use-profile";
 import { useBookings } from "@/lib/hooks/use-bookings";
 import {
@@ -56,26 +58,46 @@ function firstNameOf(name: string | null | undefined, email: string | undefined)
 
 export default function DashboardPageClient({ user: serverUser }: DashboardPageClientProps) {
   const { user } = useDashboardUser(serverUser);
+  const { data: session } = useSession();
 
   const userRole = user?.role || "customer";
   const bookingsRole =
     userRole === "customer" ? "customer" : userRole === "welper" ? "welper" : null;
+
+  const { data: welperSetup, isLoading: welperSetupLoading } = useWelperSetupChecklist(
+    userRole === "welper",
+  );
+
+  const normalizedWelperSetup = useMemo(
+    () =>
+      welperSetup
+        ? normalizeWelperSetupChecklist(
+            welperSetup,
+            session?.user?.emailVerified === true,
+          )
+        : undefined,
+    [welperSetup, session?.user?.emailVerified],
+  );
+
+  const welperSetupIncomplete =
+    userRole === "welper" &&
+    (welperSetupLoading ||
+      !normalizedWelperSetup ||
+      !normalizedWelperSetup.setupComplete);
 
   const {
     data: bookingsResponse,
     isLoading: bookingsLoading,
   } = useBookings(
     { page: 1, limit: BOOKINGS_DASHBOARD_LIMIT, role: bookingsRole ?? "customer" },
-    { enabled: !!bookingsRole },
+    { enabled: !!bookingsRole && !welperSetupIncomplete },
   );
 
   const { data: customerProfile, isSuccess: customerProfileLoaded } = useCustomerProfile(
     user.id,
     userRole === "customer",
   );
-  const { data: welperProfile } = useWelperProfile(user.id, userRole === "welper");
   const { data: favoriteWelpers = [] } = useFavoriteWelpers(user.id);
-  const { data: serviceOfferings = [] } = useServiceOfferings(user.id);
 
   const bookings = useMemo(() => bookingsResponse?.data ?? [], [bookingsResponse?.data]);
 
@@ -106,28 +128,17 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
   }, [bookingsResponse, bookings.length]);
 
   const completion = useMemo(() => {
-    if (userRole === "customer") {
-      const steps = [
-        { id: "name", completed: !!(customerProfile?.firstName && customerProfile?.lastName), required: true },
-        { id: "phone", completed: !!customerProfile?.phone, required: true },
-        { id: "address", completed: !!customerProfile?.address?.streetAddress, required: true },
-        { id: "payment", completed: !!customerProfile?.hasDefaultPaymentMethod, required: true },
-        { id: "favorites", completed: favoriteWelpers.length > 0, required: false },
-      ];
-      const required = steps.filter((s) => s.required && s.completed).length;
-      const totalRequired = steps.filter((s) => s.required).length;
-      return { required, totalRequired };
-    }
     const steps = [
-      { id: "bio", completed: !!welperProfile?.bio, required: true },
-      { id: "photo", completed: !!welperProfile?.photoUrl, required: false },
-      { id: "serviceArea", completed: !!welperProfile?.serviceArea, required: true },
-      { id: "offerings", completed: serviceOfferings.length > 0, required: true },
+      { id: "name", completed: !!(customerProfile?.firstName && customerProfile?.lastName), required: true },
+      { id: "phone", completed: !!customerProfile?.phone, required: true },
+      { id: "address", completed: !!customerProfile?.address?.streetAddress, required: true },
+      { id: "payment", completed: !!customerProfile?.hasDefaultPaymentMethod, required: true },
+      { id: "favorites", completed: favoriteWelpers.length > 0, required: false },
     ];
     const required = steps.filter((s) => s.required && s.completed).length;
     const totalRequired = steps.filter((s) => s.required).length;
     return { required, totalRequired };
-  }, [userRole, customerProfile, welperProfile, favoriteWelpers, serviceOfferings]);
+  }, [customerProfile, favoriteWelpers]);
 
   const isProfileIncomplete =
     userRole === "customer"
@@ -136,13 +147,20 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
           customerProfile &&
           customerProfile.profileCompletionStatusLabel !== "Complete"
         )
-      : completion.required < completion.totalRequired;
+      : welperSetupIncomplete;
+
+  const welperShowSetupChecklist = userRole === "welper" && welperSetupIncomplete;
+
+  const welperHideDashboardExtras = welperSetupIncomplete;
 
   // The single concrete state line below the greeting. Avoids generic
   // "here's what's happening" copy — names a number when there is one.
   const stateLine = useMemo(() => {
     if (bookingsLoading) return "Loading your dashboard…";
     if (userRole === "welper") {
+      if (welperSetupIncomplete) {
+        return "Finish your setup below to appear in customer search.";
+      }
       if (pendingForWelper > 0) {
         return `${pendingForWelper} ${pendingForWelper === 1 ? "job needs" : "jobs need"} your answer.`;
       }
@@ -152,13 +170,24 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
       if (active > 0) {
         return `You have ${active} active ${active === 1 ? "job" : "jobs"}.`;
       }
-      return "No active jobs right now — you're discoverable, customers will reach out.";
+      if (normalizedWelperSetup?.discoverable) {
+        return "No active jobs right now — you're discoverable, customers will reach out.";
+      }
+      return "No active jobs right now — complete setup to become discoverable.";
     }
     if (upcomingCount > 0) {
       return `You have ${upcomingCount} upcoming ${upcomingCount === 1 ? "booking" : "bookings"}.`;
     }
     return "No upcoming bookings — find a Welper to get started.";
-  }, [bookingsLoading, userRole, upcomingCount, pendingForWelper, bookings]);
+  }, [
+    bookingsLoading,
+    userRole,
+    upcomingCount,
+    pendingForWelper,
+    bookings,
+    welperSetupIncomplete,
+    normalizedWelperSetup,
+  ]);
 
   const customerPaymentMissing =
     userRole === "customer" && !customerProfile?.hasDefaultPaymentMethod;
@@ -182,11 +211,11 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
           </Text>
         </Box>
 
-        {/* 2. Attend — anything actionable, stacked. Today this is just the
-             profile-completion callout (and welper-side pending bookings is
-             surfaced via the state line above; richer attention items are
-             follow-ups blocked on the BFF). */}
-        {isProfileIncomplete && (
+        {welperShowSetupChecklist ? (
+          <WelperSetupChecklist variant="full" />
+        ) : null}
+
+        {isProfileIncomplete && userRole === "customer" ? (
           <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="status">
             <Flex
               align={{ initial: "stretch", sm: "center" }}
@@ -204,25 +233,26 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
               </Button>
             </Flex>
           </Callout.Root>
-        )}
+        ) : null}
 
-        {/* 3. Quick actions — 3 tiles, equal weight, position carries primacy. */}
-        <QuickActions role={userRole === "welper" ? "welper" : "customer"} />
+        {!welperHideDashboardExtras ? (
+          <>
+            <QuickActions role={userRole === "welper" ? "welper" : "customer"} />
 
-        {/* 4. Stats — read after the user knows what to do. */}
-        <DashboardStats
-          role={userRole === "welper" ? "welper" : "customer"}
-          stats={dashboardStats ?? undefined}
-          loading={statsLoading}
-          footnote={statsFootnote}
-        />
+            <DashboardStats
+              role={userRole === "welper" ? "welper" : "customer"}
+              stats={dashboardStats ?? undefined}
+              loading={statsLoading}
+              footnote={statsFootnote}
+            />
 
-        {/* 5. Recent activity — secondary, full-width at the bottom. */}
-        <RecentActivity
-          activities={activities}
-          role={userRole === "welper" ? "welper" : "customer"}
-          loading={statsLoading}
-        />
+            <RecentActivity
+              activities={activities}
+              role={userRole === "welper" ? "welper" : "customer"}
+              loading={statsLoading}
+            />
+          </>
+        ) : null}
       </Flex>
     </Container>
   );

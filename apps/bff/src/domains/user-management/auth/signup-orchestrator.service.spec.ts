@@ -59,6 +59,7 @@ describe('SignupOrchestratorService', () => {
   let availabilityRepo: jest.Mocked<Repository<AvailabilityCalendar>>;
   let prefRepo: jest.Mocked<Repository<NotificationPreference>>;
   let profileCreationService: jest.Mocked<ProfileCreationService>;
+  let dataSource: { transaction: jest.Mock };
 
   const mockUser = (overrides: Partial<UserAccount> = {}): UserAccount =>
     ({
@@ -134,7 +135,7 @@ describe('SignupOrchestratorService', () => {
       delete: jest.fn().mockResolvedValue({}),
     });
 
-    const dataSourceMock = {
+    dataSource = {
       createQueryRunner: jest.fn().mockReturnValue({
         connect: jest.fn(),
         startTransaction: jest.fn(),
@@ -202,12 +203,14 @@ describe('SignupOrchestratorService', () => {
           provide: ReferralService,
           useValue: { generateReferralCode: jest.fn() },
         },
-        { provide: DataSource, useValue: dataSourceMock },
+        { provide: DataSource, useValue: dataSource },
         {
           provide: BackgroundCheckService,
           useValue: {
             skipForMinor: jest.fn().mockResolvedValue(undefined),
             isSignupStepComplete: jest.fn().mockResolvedValue(false),
+            isAdminBackgroundCheckApproved: jest.fn().mockResolvedValue(false),
+            assertVisibleInSearch: jest.fn().mockResolvedValue(false),
             getFilledData: jest.fn().mockResolvedValue({
               paid: false,
               certnStatus: 'not_started',
@@ -228,6 +231,9 @@ describe('SignupOrchestratorService', () => {
             getStatus: jest.fn().mockResolvedValue({
               hasAccount: false,
               onboardingComplete: false,
+              chargesEnabled: false,
+              payoutsEnabled: false,
+              detailsSubmitted: false,
             }),
           },
         },
@@ -259,18 +265,12 @@ describe('SignupOrchestratorService', () => {
       ]);
     });
 
-    it('returns the welper step list when role is WELPER (full wizard contract)', () => {
+    it('returns the welper signup step list when role is WELPER (3-step wizard)', () => {
       const steps = service.getRequiredStepsForRole(SelectedRole.WELPER);
       expect(steps).toEqual<SignupStepName[]>([
         'selectRole',
         'identity',
         'welperBio',
-        'welperServiceArea',
-        'welperOffering',
-        'welperAvailability',
-        'welperBackgroundCheck',
-        'welperPayout',
-        'optionalProfile',
       ]);
     });
 
@@ -376,11 +376,94 @@ describe('SignupOrchestratorService', () => {
       expect(caught).toBeInstanceOf(UnprocessableEntityException);
       const body = caught.getResponse() as any;
       expect(body.missingFields).toContain('welperBio');
-      expect(body.missingFields).toContain('welperServiceArea');
-      expect(body.missingFields).toContain('welperOffering');
-      expect(body.missingFields).toContain('welperAvailability');
-      // The first unfilled welper step after identity is `welperBio`.
+      expect(body.missingFields).not.toContain('welperServiceArea');
       expect(body.nextStep).toBe('welperBio');
+    });
+
+    it('completes welper signup when only dashboard setup tasks remain', async () => {
+      const u = mockUser({
+        selectedRole: SelectedRole.WELPER,
+        signupCompleted: false,
+      });
+      const wp = mockWelper({
+        firstName: 'A',
+        lastName: 'B',
+        phoneNumber: {
+          countryCode: '+1',
+          number: '4165551234',
+          formatted: '+1 416-555-1234',
+        },
+        bio: 'x'.repeat(20),
+        dateOfBirth: new Date('1995-01-01'),
+      });
+      userRepo.findOne.mockResolvedValue(u);
+      welperRepo.findOne.mockResolvedValue(wp);
+      offeringRepo.find.mockResolvedValue([] as never);
+      availabilityRepo.find.mockResolvedValue([] as never);
+      prefRepo.find.mockResolvedValue([] as never);
+
+      dataSource.transaction.mockImplementationOnce(async (fn) =>
+        fn({
+          getRepository: jest.fn().mockImplementation((entity) => {
+            if (entity === UserAccount) {
+              return {
+                findOne: jest.fn().mockResolvedValue(u),
+                save: jest
+                  .fn()
+                  .mockImplementation((v) => Promise.resolve({ ...u, ...v })),
+              };
+            }
+            if (entity === WelperProfile) {
+              return {
+                findOne: jest.fn().mockResolvedValue(wp),
+                save: jest
+                  .fn()
+                  .mockImplementation((v) => Promise.resolve({ ...wp, ...v })),
+              };
+            }
+            return {
+              findOne: jest.fn(),
+              save: jest.fn().mockImplementation((v) => Promise.resolve(v)),
+            };
+          }),
+        }),
+      );
+
+      const result = await service.finishSignup('user-1');
+      expect(result.user.signupCompleted).toBe(true);
+      expect(result.signupState.nextStep).toBeNull();
+      expect(result.signupState.setupComplete).toBe(false);
+    });
+
+    it('exposes setup tasks when welper signup steps are complete', async () => {
+      userRepo.findOne.mockResolvedValue(
+        mockUser({ selectedRole: SelectedRole.WELPER, signupCompleted: false }),
+      );
+      welperRepo.findOne.mockResolvedValue(
+        mockWelper({
+          firstName: 'A',
+          lastName: 'B',
+          phoneNumber: {
+            countryCode: '+1',
+            number: '4165551234',
+            formatted: '+1 416-555-1234',
+          },
+          bio: 'x'.repeat(20),
+          dateOfBirth: new Date('1995-01-01'),
+        }),
+      );
+      offeringRepo.find.mockResolvedValue([] as never);
+      availabilityRepo.find.mockResolvedValue([] as never);
+      prefRepo.find.mockResolvedValue([] as never);
+
+      const state = await service.getState('user-1');
+      expect(state.nextStep).toBeNull();
+      expect(state.setupTasks).toHaveLength(7);
+      expect(state.setupTasks?.[0]?.id).toBe('emailVerification');
+      expect(state.setupComplete).toBe(false);
+      expect(state.setupTasks?.some((t) => t.id === 'welperServiceArea' && !t.completed)).toBe(
+        true,
+      );
     });
   });
 

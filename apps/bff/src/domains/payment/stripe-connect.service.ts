@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
+import { PayoutMethodChoice } from '../profile-management/entities/payout-method-choice.enum';
 import { UserAccount } from '../user-management/entities/user-account.entity';
 import { createStripeClient } from './stripe-client';
 import {
@@ -53,7 +54,7 @@ export class StripeConnectService {
 
   private payoutStepPath(locale: string): string {
     const prefix = locale === 'fr' ? '/fr' : '';
-    return `${prefix}/register/step/welper-payout`;
+    return `${prefix}/dashboard/profile?tab=payout`;
   }
 
   private isE2eConnectAccount(accountId: string): boolean {
@@ -81,10 +82,11 @@ export class StripeConnectService {
         detailsSubmitted: false,
       };
     }
-    if (this.isE2eConnectAccount(profile.stripeConnectAccountId)) {
-      return this.e2eConnectStatus();
-    }
-    return this.fetchAccountStatus(profile.stripeConnectAccountId);
+    const status = this.isE2eConnectAccount(profile.stripeConnectAccountId)
+      ? this.e2eConnectStatus()
+      : await this.fetchAccountStatus(profile.stripeConnectAccountId);
+    await this.persistPayoutChoiceIfOnboardingComplete(profile, status);
+    return status;
   }
 
   async syncAccount(userId: string): Promise<StripeConnectStatus> {
@@ -92,7 +94,9 @@ export class StripeConnectService {
     if (!profile.stripeConnectAccountId) {
       throw new BadRequestException('No Stripe Connect account exists yet');
     }
-    return this.fetchAccountStatus(profile.stripeConnectAccountId);
+    const status = await this.fetchAccountStatus(profile.stripeConnectAccountId);
+    await this.persistPayoutChoiceIfOnboardingComplete(profile, status);
+    return status;
   }
 
   async isOnboardingComplete(userId: string): Promise<boolean> {
@@ -173,6 +177,20 @@ export class StripeConnectService {
       );
       throw new BadRequestException('Could not load Stripe Connect account status');
     }
+  }
+
+  private async persistPayoutChoiceIfOnboardingComplete(
+    profile: WelperProfile,
+    status: StripeConnectStatus,
+  ): Promise<void> {
+    if (
+      !status.onboardingComplete ||
+      profile.payoutMethodChoice === PayoutMethodChoice.STRIPE
+    ) {
+      return;
+    }
+    profile.payoutMethodChoice = PayoutMethodChoice.STRIPE;
+    await this.welperProfileRepo.save(profile);
   }
 
   private async requireWelperProfile(userId: string): Promise<WelperProfile> {

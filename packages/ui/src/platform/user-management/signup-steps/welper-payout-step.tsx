@@ -25,6 +25,8 @@ export interface WelperPayoutStepProps {
   labels?: WelperPayoutStepLabels;
   connectLoading?: boolean;
   onboardingComplete?: boolean;
+  /** When false (dashboard profile), connected state shows success only — no Continue. Default true. */
+  showContinueWhenConnected?: boolean;
   onSubmit: (values: WelperPayoutStepValues) => void | Promise<void>;
   onStripeOnboardingStart?: () => void | Promise<void>;
   onBack?: () => void;
@@ -37,6 +39,7 @@ export function WelperPayoutStep({
   labels: labelsProp,
   connectLoading,
   onboardingComplete,
+  showContinueWhenConnected = true,
   onSubmit,
   onStripeOnboardingStart,
   onBack,
@@ -67,16 +70,22 @@ export function WelperPayoutStep({
         ) : null}
 
         {onboardingComplete ? (
-          <Button
-            type="button"
-            size="3"
-            color={SEMANTIC_COLOR.primary}
-            disabled={busy}
-            onClick={() => void handleContinue()}
-            style={{ width: "100%" }}
-          >
-            {loading ? labels.saving : labels.continue}
-          </Button>
+          showContinueWhenConnected ? (
+            <Button
+              type="button"
+              size="3"
+              color={SEMANTIC_COLOR.primary}
+              disabled={busy}
+              onClick={() => void handleContinue()}
+              style={{ width: "100%" }}
+            >
+              {loading ? labels.saving : labels.continue}
+            </Button>
+          ) : (
+            <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
+              <Callout.Text>{labels.successDescription}</Callout.Text>
+            </Callout.Root>
+          )
         ) : (
           <Card variant="surface" size="3">
             <Flex direction="column" gap="3">

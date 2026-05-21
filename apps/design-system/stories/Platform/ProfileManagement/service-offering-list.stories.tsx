@@ -4,7 +4,7 @@ import { ServiceOfferingList } from '@welpco/ui/platform/profile-management';
 const meta = {
   title: 'Platform/ProfileManagement/ServiceOfferingList',
   component: ServiceOfferingList,
-  parameters: { layout: 'centered' },
+  parameters: { layout: 'padded' },
   tags: ['autodocs'],
 } satisfies Meta<typeof ServiceOfferingList>;
 
@@ -13,15 +13,20 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <div style={{ width: '1200px' }}>
+    <div style={{ width: '100%', maxWidth: '960px' }}>
       <ServiceOfferingList
         offerings={[
           {
             id: '1',
             title: 'Premium Home Cleaning',
-            category: 'home-cleaning',
+            categoryId: 'home-cleaning',
+            categoryName: 'Home Cleaning',
+            subcategories: [
+              { id: 'deep-clean', name: 'Deep clean' },
+              { id: 'move-out', name: 'Move-out clean' },
+            ],
             hourlyRate: 45,
-            durationMinutes: 120,
+            experienceYears: 5,
             description: 'Deep cleaning service for your home',
             rating: 4.8,
             reviewsCount: 24,
@@ -30,9 +35,11 @@ export const Default: Story = {
           {
             id: '2',
             title: 'Pet Care Services',
-            category: 'pet-care',
+            categoryId: 'pet-care',
+            categoryName: 'Pet Care',
+            subcategories: [{ id: 'dog-walk', name: 'Dog walking' }],
             hourlyRate: 35,
-            durationMinutes: 60,
+            experienceYears: 2,
             description: 'Professional pet care and walking',
             rating: 4.9,
             reviewsCount: 18,
@@ -41,9 +48,10 @@ export const Default: Story = {
           {
             id: '3',
             title: 'Tutoring Services',
-            category: 'tutoring',
+            categoryId: 'tutoring',
+            categoryName: 'Tutoring',
             hourlyRate: 50,
-            durationMinutes: 90,
+            experienceYears: 8,
             description: 'Math and science tutoring',
             active: false,
           },
@@ -64,7 +72,7 @@ export const Default: Story = {
 
 export const Empty: Story = {
   render: () => (
-    <div style={{ width: '1200px' }}>
+    <div style={{ width: '100%', maxWidth: '960px' }}>
       <ServiceOfferingList
         offerings={[]}
         onAdd={() => console.log('Add offering')}
@@ -75,13 +83,14 @@ export const Empty: Story = {
 
 export const Loading: Story = {
   render: () => (
-    <div style={{ width: '1200px' }}>
+    <div style={{ width: '100%', maxWidth: '960px' }}>
       <ServiceOfferingList
         offerings={[
           {
             id: '1',
             title: 'Premium Home Cleaning',
-            category: 'home-cleaning',
+            categoryId: 'home-cleaning',
+            categoryName: 'Home Cleaning',
             hourlyRate: 45,
             active: true,
           },
@@ -91,4 +100,3 @@ export const Loading: Story = {
     </div>
   ),
 };
-

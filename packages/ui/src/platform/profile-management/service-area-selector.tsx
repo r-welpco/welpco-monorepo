@@ -133,11 +133,17 @@ export function ServiceAreaSelector({
     return Number.isNaN(n) ? undefined : n;
   };
 
+  const withDefaultCountry = (address: AddressValues): AddressValues => ({
+    ...address,
+    country: address.country?.trim() || "CA",
+  });
+
   const handleAddressChange = (address: AddressValues) => {
-    setCenterAddress(address);
+    const normalized = withDefaultCountry(address);
+    setCenterAddress(normalized);
     const radiusKm = parseRadiusKm(radiusInput);
     if (radiusKm !== undefined) {
-      fireImmediate({ type: "radius", centerAddress: address, radiusKm });
+      fireImmediate({ type: "radius", centerAddress: normalized, radiusKm });
     }
   };
 
@@ -146,17 +152,26 @@ export function ServiceAreaSelector({
     setRadiusInput(digits);
     const radiusKm = parseRadiusKm(digits);
     if (radiusKm !== undefined) {
-      fireImmediate({ type: "radius", centerAddress, radiusKm });
+      fireImmediate({
+        type: "radius",
+        centerAddress: withDefaultCountry(centerAddress),
+        radiusKm,
+      });
     }
   };
 
   const handleSave = () => {
     if (useDefault && defaultServiceArea) {
-      onSave?.(defaultServiceArea);
+      onSave?.({
+        ...defaultServiceArea,
+        centerAddress: defaultServiceArea.centerAddress
+          ? withDefaultCountry(defaultServiceArea.centerAddress)
+          : undefined,
+      });
     } else {
       onSave?.({
         type: "radius",
-        centerAddress,
+        centerAddress: withDefaultCountry(centerAddress),
         radiusKm: parseRadiusKm(radiusInput) ?? SERVICE_AREA_RADIUS_KM_DEFAULT,
       });
     }

@@ -21,6 +21,11 @@ import {
   WelperProfileAggregatesService,
   WelperTrustAggregates,
 } from './welper-profile-aggregates.service';
+import {
+  applyRadiusServiceAreaToWelperProfile,
+  isRadiusServiceAreaPayload,
+  syncWelperServiceAreaColumnsFromJson,
+} from './service-area-radius.util';
 
 function latLngFromServiceArea(serviceArea: ServiceArea | null | undefined): { latitude: number; longitude: number } | null {
   if (!serviceArea || serviceArea.type !== 'Point' || !Array.isArray(serviceArea.coordinates) || serviceArea.coordinates.length < 2) {
@@ -186,33 +191,44 @@ export class WelperProfileService {
     }
     if (updateDto.profilePhotoUrl !== undefined) {
       profile.profilePhotoUrl = updateDto.profilePhotoUrl;
+      profile.optionalProfileStepCompletedAt = updateDto.profilePhotoUrl
+        ? new Date()
+        : null;
     }
     if (updateDto.serviceArea !== undefined) {
-      profile.serviceArea = updateDto.serviceArea;
-      let point = latLngFromServiceArea(updateDto.serviceArea as ServiceArea);
-      // Dashboard sends { type, centerAddress, radiusKm } without coordinates; geocode from address so search has lat/lng
-      if (!point && updateDto.serviceArea && typeof updateDto.serviceArea === 'object') {
-        const sa = updateDto.serviceArea as unknown as Record<string, unknown>;
-        const addr = postalAndCountryFromCenterAddress(sa.centerAddress as Record<string, unknown>);
-        if (addr) {
-          try {
-            const geocode = await this.geocodeService.forward(addr.postalCode, addr.countryCode);
-            if (geocode.latitude != null && geocode.longitude != null) {
-              point = { latitude: geocode.latitude, longitude: geocode.longitude };
+      if (isRadiusServiceAreaPayload(updateDto.serviceArea)) {
+        await applyRadiusServiceAreaToWelperProfile(
+          profile,
+          updateDto.serviceArea,
+          this.geocodeService,
+          this.logger,
+        );
+      } else {
+        profile.serviceArea = updateDto.serviceArea;
+        let point = latLngFromServiceArea(updateDto.serviceArea as ServiceArea);
+        if (!point && updateDto.serviceArea && typeof updateDto.serviceArea === 'object') {
+          const sa = updateDto.serviceArea as unknown as Record<string, unknown>;
+          const addr = postalAndCountryFromCenterAddress(sa.centerAddress as Record<string, unknown>);
+          if (addr) {
+            try {
+              const geocode = await this.geocodeService.forward(addr.postalCode, addr.countryCode);
+              if (geocode.latitude != null && geocode.longitude != null) {
+                point = { latitude: geocode.latitude, longitude: geocode.longitude };
+              }
+            } catch (err) {
+              this.logger.warn(
+                `Could not geocode service area for welper ${welperId}: ${err instanceof Error ? err.message : String(err)}`,
+              );
             }
-          } catch (err) {
-            this.logger.warn(
-              `Could not geocode service area for welper ${welperId}: ${err instanceof Error ? err.message : String(err)}`,
-            );
           }
         }
-      }
-      if (point) {
-        profile.latitude = point.latitude;
-        profile.longitude = point.longitude;
-      } else {
-        profile.latitude = null;
-        profile.longitude = null;
+        if (point) {
+          profile.latitude = point.latitude;
+          profile.longitude = point.longitude;
+        } else {
+          profile.latitude = null;
+          profile.longitude = null;
+        }
       }
     }
     if (updateDto.countryCode !== undefined) profile.countryCode = updateDto.countryCode ?? null;
@@ -235,6 +251,8 @@ export class WelperProfileService {
     profile.profileCompletionStatus = await this.calculateCompletionStatus(
       profile,
     );
+
+    syncWelperServiceAreaColumnsFromJson(profile);
 
     const updated = await this.welperProfileRepository.save(profile);
 

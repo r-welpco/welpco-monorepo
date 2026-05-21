@@ -27,6 +27,12 @@ export interface WelperBackgroundCheckStepProps {
   paymentStatus?: string | null;
   failureReason?: string | null;
   signupStepComplete?: boolean;
+  /** `signup` shows Continue after payment; `dashboard` waits for admin approval. */
+  variant?: "signup" | "dashboard";
+  /** Admin verification status (e.g. Pending, Passed, Failed). */
+  backgroundCheckStatus?: string | null;
+  adminReviewPendingMessage?: string;
+  backgroundCheckApprovedMessage?: string;
   onPay: () => void | Promise<void>;
   onContinue: () => void | Promise<void>;
   onBack?: () => void;
@@ -60,12 +66,19 @@ export function WelperBackgroundCheckStep({
   paymentStatus,
   failureReason,
   signupStepComplete,
+  variant = "signup",
+  backgroundCheckStatus,
+  adminReviewPendingMessage,
+  backgroundCheckApprovedMessage,
   onPay,
   onContinue,
   onBack,
   confirmingReturn,
 }: WelperBackgroundCheckStepProps) {
   const labels = labelsProp ?? DEFAULT_WELPER_BACKGROUND_CHECK_LABELS;
+  const isDashboard = variant === "dashboard";
+  const adminApproved =
+    backgroundCheckStatus === "Passed" || backgroundCheckStatus === "passed";
 
   const filled = state.filledData.welperBackgroundCheck as
     | { skipped?: boolean }
@@ -154,6 +167,16 @@ export function WelperBackgroundCheckStep({
             <Callout.Root color="blue" variant="surface">
               <Callout.Text>{labels.certnEmailInvite}</Callout.Text>
             </Callout.Root>
+            {isDashboard && adminApproved && backgroundCheckApprovedMessage ? (
+              <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
+                <Callout.Text>{backgroundCheckApprovedMessage}</Callout.Text>
+              </Callout.Root>
+            ) : null}
+            {isDashboard && !adminApproved && adminReviewPendingMessage ? (
+              <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="status">
+                <Callout.Text>{adminReviewPendingMessage}</Callout.Text>
+              </Callout.Root>
+            ) : null}
             {failureReason === "missing_profile" ? (
               <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
                 <Callout.Text>{labels.failureMissingProfile}</Callout.Text>
@@ -171,7 +194,7 @@ export function WelperBackgroundCheckStep({
                     amount: formatCad(chargeCents),
                   })}
             </Button>
-          ) : (
+          ) : !isDashboard ? (
             <Button
               size="3"
               onClick={() => void handleContinue()}
@@ -179,7 +202,7 @@ export function WelperBackgroundCheckStep({
             >
               {labels.continue}
             </Button>
-          )}
+          ) : null}
           {onBack ? (
             <Button size="2" variant="ghost" onClick={onBack} disabled={busy}>
               {labels.back}

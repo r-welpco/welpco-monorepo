@@ -202,8 +202,11 @@ function MessagesThreadPane({
 }) {
   const [chatError, setChatError] = useState<string | null>(null);
   const { data: booking } = useBookingById(bookingId);
-  const { data: chatMessagesData, isLoading: chatMessagesLoading } =
-    useBookingChatMessages(bookingId, { limit: 100 });
+  const {
+    data: chatMessagesData,
+    isLoading: chatMessagesLoading,
+    isFetching: chatMessagesFetching,
+  } = useBookingChatMessages(bookingId, { limit: 100 });
   const sendMessageMutation = useSendBookingMessage(bookingId);
   const markReadMutation = useMarkBookingChatRead(bookingId);
   const markReadMutate = markReadMutation.mutate;
@@ -217,8 +220,9 @@ function MessagesThreadPane({
   }, [bookingId, markReadMutate]);
 
   const messageRows = chatMessagesData?.data;
+  const showThreadLoading = chatMessagesLoading || chatMessagesFetching;
   const chatMessagesForThread = useMemo(() => {
-    if (!messageRows) return [];
+    if (showThreadLoading || !messageRows) return [];
     return messageRows.map((msg) => ({
       id: msg.id,
       message: msg.content,
@@ -226,7 +230,7 @@ function MessagesThreadPane({
       senderId: msg.senderId,
       timestamp: format(new Date(msg.createdAt), "h:mm a"),
     }));
-  }, [messageRows]);
+  }, [messageRows, showThreadLoading]);
 
   return (
     <Flex direction="column" gap="4" className={styles.threadFlex}>
@@ -270,7 +274,7 @@ function MessagesThreadPane({
           title="Messages"
           messages={chatMessagesForThread}
           currentUserId={currentUserId}
-          loading={chatMessagesLoading}
+          loading={showThreadLoading}
           sending={sendMessageMutation.isPending}
           onSendMessage={(content) => {
             setChatError(null);
@@ -442,6 +446,7 @@ export function MessagesHub() {
           >
             {selectedBookingId && user.id ? (
               <MessagesThreadPane
+                key={selectedBookingId}
                 bookingId={selectedBookingId}
                 currentUserId={user.id}
               />

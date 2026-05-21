@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
@@ -14,29 +14,15 @@ import { Heading } from "@welpco/ui/heading";
 import { Spinner } from "@welpco/ui/spinner";
 import { Text } from "@welpco/ui/text";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { useFinishSignup } from "@/lib/hooks/use-signup";
 import { ApiClientError } from "@/lib/api/client";
-import { stepNameToSlug } from "../step-name-utils";
-import { postSignupDestination } from "@/lib/auth/platform-access";
-import { roleFromSelectedRole } from "@/lib/auth/session-role";
-import { refreshBffTokensInSession } from "@/lib/auth/refresh-session-tokens";
-import { safeNextPath } from "@/lib/auth/safe-next";
-import type {
-  IncompleteSignupErrorBody,
-  SignupStepName,
-} from "@welpco/types";
-
-const SIGNUP_STEP_LABEL_KEYS = [
-  "selectRole",
-  "identity",
-  "welperBio",
-  "welperServiceArea",
-  "welperOffering",
-  "welperAvailability",
-  "welperBackgroundCheck",
-  "welperPayout",
-  "optionalProfile",
-] as const satisfies readonly SignupStepName[];
+import { completeSignupAndRedirect } from "@/lib/auth/complete-signup-and-redirect";
+import {
+  getWelperRegisterEscapeTarget,
+  isOnlyDeferredSetupMissing,
+  stepNameToSlug,
+} from "../step-name-utils";
+import { useSignupState } from "@/lib/hooks/use-signup";
+import type { IncompleteSignupErrorBody } from "@welpco/types";
 
 export default function FinishPageClient() {
   const router = useRouter();
@@ -44,66 +30,62 @@ export default function FinishPageClient() {
   const nextRaw = searchParams.get("next");
   const { update: updateSession } = useSession();
   const t = useTranslations("auth.register.finish");
-  const tStepLabels = useTranslations("auth.register.steps.page.labels");
+  const { data: signupState, isPending: stateLoading } = useSignupState();
 
-  const finish = useFinishSignup();
-  const [missingFields, setMissingFields] = useState<string[] | null>(null);
-  const [resumeStep, setResumeStep] = useState<SignupStepName | null>(null);
+  const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const autoStarted = useRef(false);
 
-  const fired = useRef(false);
-
-  useEffect(() => {
-    if (fired.current) return;
-    fired.current = true;
-
-    void (async () => {
-      try {
-        const finalState = await finish.mutateAsync();
-        const destination = postSignupDestination({ signupCompleted: true });
-        const role =
-          roleFromSelectedRole(finalState.selectedRole) ?? "customer";
-        await updateSession({
-          user: {
-            signupCompleted: true,
-            platformAccessEnabled: finalState.platformAccessEnabled,
-            role,
-          },
-        });
-        await refreshBffTokensInSession(updateSession);
-        router.replace(
-          destination === "/dashboard"
-            ? safeNextPath(nextRaw, "/dashboard")
-            : "/register/complete",
-        );
-      } catch (err) {
-        if (err instanceof ApiClientError && err.code === "INCOMPLETE_SIGNUP") {
-          const body = (err as unknown as { body?: IncompleteSignupErrorBody })
-            .body;
-          setMissingFields(body?.missingFields ?? []);
-          setResumeStep(body?.nextStep ?? null);
+  const goToDashboard = useCallback(async () => {
+    setBusy(true);
+    setErrorMessage(null);
+    try {
+      await completeSignupAndRedirect({
+        nextRaw,
+        updateSession,
+        router,
+      });
+    } catch (err) {
+      if (err instanceof ApiClientError && err.code === "INCOMPLETE_SIGNUP") {
+        const body = err.body as IncompleteSignupErrorBody | undefined;
+        if (isOnlyDeferredSetupMissing(body?.missingFields)) {
+          setErrorMessage(t("errors.restartServer"));
+          setBusy(false);
           return;
         }
-        setErrorMessage(
-          err instanceof Error ? err.message : t("errors.finishFailed"),
-        );
+        if (body?.nextStep) {
+          router.replace(`/register/step/${stepNameToSlug(body.nextStep)}`);
+          return;
+        }
+        setErrorMessage(t("errors.finishFailed"));
+        setBusy(false);
+        return;
       }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      setErrorMessage(
+        err instanceof Error ? err.message : t("errors.finishFailed"),
+      );
+      setBusy(false);
+    }
+  }, [nextRaw, router, t, updateSession]);
 
-  if (!missingFields && !errorMessage) {
-    return (
-      <Flex
-        justify="center"
-        align="center"
-        style={{ minHeight: "40vh" }}
-        aria-busy
-      >
-        <Spinner size="3" />
-      </Flex>
-    );
-  }
+  useEffect(() => {
+    if (stateLoading || !signupState || autoStarted.current) return;
+    if (signupState.signupCompleted) {
+      autoStarted.current = true;
+      router.replace("/dashboard");
+      return;
+    }
+    const welperEscape =
+      getWelperRegisterEscapeTarget(signupState, null) === "dashboard";
+    if (!welperEscape && signupState.nextStep) {
+      router.replace(
+        `/register/step/${stepNameToSlug(signupState.nextStep)}`,
+      );
+      return;
+    }
+    autoStarted.current = true;
+    void goToDashboard();
+  }, [signupState, stateLoading, router, goToDashboard]);
 
   return (
     <Card
@@ -122,47 +104,32 @@ export default function FinishPageClient() {
         </Box>
 
         {errorMessage && (
-          <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
+          <Callout.Root
+            color={SEMANTIC_COLOR.danger}
+            variant="surface"
+            role="alert"
+          >
             <Callout.Text>{errorMessage}</Callout.Text>
           </Callout.Root>
         )}
 
-        {missingFields && missingFields.length > 0 && (
-          <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="alert">
-            <Callout.Text>
-              {t("missingFieldsPrefix")}{" "}
-              {missingFields
-                .map((field) => {
-                  if (
-                    SIGNUP_STEP_LABEL_KEYS.includes(field as SignupStepName)
-                  ) {
-                    return tStepLabels(field as (typeof SIGNUP_STEP_LABEL_KEYS)[number]);
-                  }
-                  return field;
-                })
-                .join(", ")}
-              .
-            </Callout.Text>
-          </Callout.Root>
-        )}
-
-        <Flex direction={{ initial: "column", sm: "row-reverse" }} gap="3">
-          <Button
-            type="button"
-            size="3"
-            color={SEMANTIC_COLOR.primary}
-            style={{ width: "100%" }}
-            onClick={() => {
-              if (resumeStep) {
-                router.replace(`/register/step/${stepNameToSlug(resumeStep)}`);
-              } else {
-                router.replace("/register");
-              }
-            }}
-          >
-            {t("continueSetup")}
-          </Button>
-        </Flex>
+        <Button
+          type="button"
+          size="3"
+          color={SEMANTIC_COLOR.primary}
+          style={{ width: "100%" }}
+          disabled={busy || stateLoading}
+          onClick={() => void goToDashboard()}
+        >
+          {busy || stateLoading ? (
+            <Flex align="center" justify="center" gap="2">
+              <Spinner size="2" />
+              <span>{t("continuing")}</span>
+            </Flex>
+          ) : (
+            t("continueToDashboard")
+          )}
+        </Button>
       </Flex>
     </Card>
   );

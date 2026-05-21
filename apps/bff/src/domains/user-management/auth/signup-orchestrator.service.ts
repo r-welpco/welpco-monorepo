@@ -50,11 +50,15 @@ import { resolvePreferredLocale } from '../../../common/preferred-locale';
 import { applyPreferredLocaleIfProvided } from './user-locale.helper';
 import { isAdultWelper } from '../../safety-verification/background-check-age.util';
 import { GEOCODE_SERVICE } from '../../geocode/geocode.interface';
+import {
+  WELPER_SIGNUP_BIO_MIN_LENGTH,
+} from './signup.constants';
 import type { IGeocodeService } from '../../geocode/geocode.interface';
 import {
   applyRadiusServiceAreaToWelperProfile,
   buildWelperServiceAreaFilledData,
   isWelperServiceAreaStepComplete,
+  syncWelperServiceAreaColumnsFromJson,
   type RadiusServiceAreaPayload,
 } from '../../profile-management/welper-profile/service-area-radius.util';
 
@@ -147,19 +151,6 @@ export interface SignupFilledData {
   };
 }
 
-export interface SignupState {
-  userId: string;
-  email: string;
-  signupCompleted: boolean;
-  platformAccessEnabled: boolean;
-  emailVerified: boolean;
-  selectedRole: SelectedRole | null;
-  completedSteps: SignupStepName[];
-  nextStep: SignupStepName | null;
-  requiredSteps: SignupStepName[];
-  filledData: SignupFilledData;
-}
-
 export interface BeginSignupResult {
   accessToken: string;
   refreshToken: string;
@@ -172,17 +163,87 @@ const CUSTOMER_REQUIRED_STEPS: SignupStepName[] = [
   'optionalProfile',
 ];
 
-const WELPER_REQUIRED_STEPS: SignupStepName[] = [
+/** Wizard steps required before `finishSignup` and dashboard access. */
+export const WELPER_SIGNUP_REQUIRED_STEPS: SignupStepName[] = [
   'selectRole',
   'identity',
   'welperBio',
+];
+
+/** Completed on the platform after signup (dashboard checklist). */
+export const WELPER_SETUP_TASKS = [
   'welperServiceArea',
   'welperOffering',
   'welperAvailability',
   'welperBackgroundCheck',
   'welperPayout',
   'optionalProfile',
-];
+] as const satisfies readonly SignupStepName[];
+
+export type WelperSetupTaskId =
+  | 'emailVerification'
+  | (typeof WELPER_SETUP_TASKS)[number];
+
+export interface WelperSetupTask {
+  id: WelperSetupTaskId;
+  label: string;
+  completed: boolean;
+  required: boolean;
+  href: string;
+  blockingReason?: string;
+}
+
+export interface SignupState {
+  userId: string;
+  email: string;
+  signupCompleted: boolean;
+  platformAccessEnabled: boolean;
+  emailVerified: boolean;
+  selectedRole: SelectedRole | null;
+  completedSteps: SignupStepName[];
+  nextStep: SignupStepName | null;
+  requiredSteps: SignupStepName[];
+  filledData: SignupFilledData;
+  setupTasks?: WelperSetupTask[];
+  setupComplete?: boolean;
+  discoverable?: boolean;
+}
+
+const SETUP_TASK_META: Record<
+  (typeof WELPER_SETUP_TASKS)[number],
+  { label: string; href: string; required: boolean }
+> = {
+  welperServiceArea: {
+    label: 'Service area',
+    href: '/dashboard/profile?tab=serviceArea',
+    required: true,
+  },
+  welperOffering: {
+    label: 'Service offerings',
+    href: '/dashboard/profile?tab=offerings',
+    required: true,
+  },
+  welperAvailability: {
+    label: 'Availability',
+    href: '/dashboard/profile?tab=availability',
+    required: true,
+  },
+  welperBackgroundCheck: {
+    label: 'Background check',
+    href: '/dashboard/profile?tab=backgroundCheck',
+    required: true,
+  },
+  welperPayout: {
+    label: 'Payout setup',
+    href: '/dashboard/profile?tab=payout',
+    required: true,
+  },
+  optionalProfile: {
+    label: 'Profile photo',
+    href: '/dashboard/profile?tab=profile',
+    required: true,
+  },
+};
 
 @Injectable()
 export class SignupOrchestratorService {
@@ -257,10 +318,47 @@ export class SignupOrchestratorService {
    * controller use; the orchestrator's `getState` wires it through.
    */
   getRequiredStepsForRole(role: SelectedRole | null): SignupStepName[] {
-    if (role === SelectedRole.WELPER) return [...WELPER_REQUIRED_STEPS];
+    if (role === SelectedRole.WELPER) return [...WELPER_SIGNUP_REQUIRED_STEPS];
     if (role === SelectedRole.CUSTOMER) return [...CUSTOMER_REQUIRED_STEPS];
     // Role not yet selected — only the role-pick step matters next.
     return ['selectRole'];
+  }
+
+  /**
+   * Welper dashboard setup checklist (same rules as `getState` setupTasks).
+   */
+  async getWelperSetupChecklist(userId: string): Promise<{
+    setupTasks: WelperSetupTask[];
+    setupComplete: boolean;
+    discoverable: boolean;
+  }> {
+    await this.assertWelper(userId);
+
+    let stripePayoutComplete = false;
+    try {
+      const stripe = await this.stripeConnectService.getStatus(userId);
+      stripePayoutComplete = stripe.onboardingComplete;
+    } catch (err) {
+      this.logger.warn(
+        `Stripe Connect status unavailable for setup checklist ${userId}: ${(err as Error).message}`,
+      );
+    }
+
+    const state = await this.getState(userId);
+    const setupTasks = (state.setupTasks ?? []).map((task) =>
+      task.id === 'welperPayout'
+        ? { ...task, completed: stripePayoutComplete || task.completed }
+        : task,
+    );
+    const setupComplete = setupTasks
+      .filter((t) => t.required)
+      .every((t) => t.completed);
+
+    return {
+      setupTasks,
+      setupComplete,
+      discoverable: state.discoverable ?? false,
+    };
   }
 
   // ---------------------------------------------------------------------
@@ -428,6 +526,9 @@ export class SignupOrchestratorService {
       welper = await this.welperProfileRepo.findOne({
         where: { welperId: userId },
       });
+      if (welper && syncWelperServiceAreaColumnsFromJson(welper)) {
+        welper = await this.welperProfileRepo.save(welper);
+      }
       if (welper && welper.firstName && welper.lastName && welper.phoneNumber) {
         completed.add('identity');
         filledData.identity = {
@@ -441,7 +542,7 @@ export class SignupOrchestratorService {
           privacyAcceptedAt: welper.privacyAcceptedAt?.toISOString() ?? '',
         };
       }
-      if (welper?.bio && welper.bio.length >= 120) {
+      if (welper?.bio && welper.bio.length >= WELPER_SIGNUP_BIO_MIN_LENGTH) {
         completed.add('welperBio');
         filledData.welperBio = { bio: welper.bio };
       }
@@ -498,9 +599,7 @@ export class SignupOrchestratorService {
             skipped: true,
           };
         } else if (welper?.dateOfBirth && isAdultWelper(welper.dateOfBirth)) {
-          const bgComplete =
-            await this.backgroundCheckService.isSignupStepComplete(userId);
-          if (bgComplete && welper.backgroundCheckStepAcknowledgedAt) {
+          if (await this.backgroundCheckService.isAdminBackgroundCheckApproved(userId)) {
             completed.add('welperBackgroundCheck');
           }
           filledData.welperBackgroundCheck =
@@ -522,16 +621,19 @@ export class SignupOrchestratorService {
           promoEnabled: false,
         };
       }
-      if (
-        welper?.profilePhotoUrl ||
-        welper?.optionalProfileStepCompletedAt
-      ) {
+      if (welper?.profilePhotoUrl) {
         completed.add('optionalProfile');
         filledData.optionalProfile = {
-          photoUrl: welper.profilePhotoUrl ?? undefined,
+          photoUrl: welper.profilePhotoUrl,
         };
       }
-      if (welper?.payoutMethodChoice === PayoutMethodChoice.STRIPE) {
+      if (
+        welper &&
+        (welper.payoutMethodChoice === PayoutMethodChoice.STRIPE ||
+          (await this.stripeConnectService
+            .isOnboardingComplete(userId)
+            .catch(() => false)))
+      ) {
         completed.add('welperPayout');
         filledData.welperPayout = {
           stripeOnboardingCompleted: true,
@@ -551,6 +653,31 @@ export class SignupOrchestratorService {
       }
     }
 
+    let setupTasks: WelperSetupTask[] | undefined;
+    let setupComplete: boolean | undefined;
+    let discoverable: boolean | undefined;
+
+    if (role === SelectedRole.WELPER) {
+      if (user.signupCompleted) {
+        await this.maybeRefreshWelperDiscoverability(userId, welper, completed);
+        welper =
+          (await this.welperProfileRepo.findOne({
+            where: { welperId: userId },
+          })) ?? welper;
+      }
+      setupTasks = this.buildSetupTasks(completed, user.emailVerified);
+      setupComplete = setupTasks
+        .filter((t) => t.required)
+        .every((t) => t.completed);
+      const profileComplete =
+        welper?.profileCompletionStatus === ProfileCompletionStatus.COMPLETE;
+      const visibleInSearch = user.signupCompleted
+        ? await this.backgroundCheckService.assertVisibleInSearch(userId)
+        : false;
+      discoverable =
+        user.signupCompleted === true && profileComplete === true && visibleInSearch;
+    }
+
     return {
       userId: user.id,
       email: user.email,
@@ -562,6 +689,9 @@ export class SignupOrchestratorService {
       nextStep,
       requiredSteps,
       filledData,
+      setupTasks,
+      setupComplete,
+      discoverable,
     };
   }
 
@@ -693,6 +823,7 @@ export class SignupOrchestratorService {
       this.logger,
     );
     await this.welperProfileRepo.save(profile);
+    await this.afterWelperSetupStepWrite(userId);
     return this.getState(userId);
   }
 
@@ -720,6 +851,7 @@ export class SignupOrchestratorService {
         await repo.save(offering);
       }
     });
+    await this.afterWelperSetupStepWrite(userId);
     return this.getState(userId);
   }
 
@@ -760,6 +892,7 @@ export class SignupOrchestratorService {
       profile.availabilityAdHocOnly = true;
       await this.welperProfileRepo.save(profile);
     }
+    await this.afterWelperSetupStepWrite(userId);
     return this.getState(userId);
   }
 
@@ -781,6 +914,7 @@ export class SignupOrchestratorService {
 
     profile.backgroundCheckStepAcknowledgedAt = new Date();
     await this.welperProfileRepo.save(profile);
+    await this.afterWelperSetupStepWrite(userId);
     return this.getState(userId);
   }
 
@@ -809,6 +943,7 @@ export class SignupOrchestratorService {
 
     profile.payoutMethodChoice = PayoutMethodChoice.STRIPE;
     await this.welperProfileRepo.save(profile);
+    await this.afterWelperSetupStepWrite(userId);
     return this.getState(userId);
   }
 
@@ -884,9 +1019,16 @@ export class SignupOrchestratorService {
         where: { welperId: userId },
       });
       if (!profile) throw new NotFoundException('Welper profile missing');
+      if (dto.skipped || !dto.photoUrl?.trim()) {
+        throw new BadRequestException({
+          code: 'PROFILE_PHOTO_REQUIRED',
+          message: 'A profile photo is required before you can continue.',
+        });
+      }
+      profile.profilePhotoUrl = dto.photoUrl.trim();
       profile.optionalProfileStepCompletedAt = new Date();
-      if (dto.photoUrl !== undefined) profile.profilePhotoUrl = dto.photoUrl;
       await this.welperProfileRepo.save(profile);
+      await this.afterWelperSetupStepWrite(userId);
     }
     return this.getState(userId);
   }
@@ -912,20 +1054,30 @@ export class SignupOrchestratorService {
         signupState: state,
       };
     }
-    if (state.nextStep !== null) {
-      const missing = state.requiredSteps.filter(
-        (s) => !state.completedSteps.includes(s),
-      );
+
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    // Welper: only the 3-step wizard gates finish — dashboard setup tasks never block.
+    const missingSignup =
+      user.selectedRole === SelectedRole.WELPER
+        ? WELPER_SIGNUP_REQUIRED_STEPS.filter(
+            (s) => !state.completedSteps.includes(s),
+          )
+        : this.getRequiredStepsForRole(user.selectedRole).filter(
+            (s) => !state.completedSteps.includes(s),
+          );
+    if (missingSignup.length > 0) {
       throw new UnprocessableEntityException({
         code: 'INCOMPLETE_SIGNUP',
         message:
-          'Some required steps are not yet complete. Finish them and try again.',
-        missingFields: missing,
-        nextStep: state.nextStep,
+          'Some required signup steps are not yet complete. Finish them and try again.',
+        missingFields: missingSignup,
+        nextStep: missingSignup[0] ?? null,
       });
     }
 
-    const user = await this.dataSource.transaction(async (manager) => {
+    const savedUser = await this.dataSource.transaction(async (manager) => {
       const u = await manager.getRepository(UserAccount).findOne({
         where: { id: userId },
       });
@@ -953,8 +1105,9 @@ export class SignupOrchestratorService {
           .findOne({ where: { welperId: userId } });
         if (wp) {
           wp.onboardingCompleted = true;
-          wp.profileCompletionStatus = ProfileCompletionStatus.COMPLETE;
-          wp.profileVisibility = ProfileVisibility.PUBLIC;
+          wp.profileCompletionStatus =
+            await this.computeWelperProfileCompletionStatus(userId, wp);
+          wp.profileVisibility = ProfileVisibility.PRIVATE;
           await manager.getRepository(WelperProfile).save(wp);
         }
       }
@@ -962,7 +1115,7 @@ export class SignupOrchestratorService {
     });
 
     const finalState = await this.getState(userId);
-    return { user, signupState: finalState };
+    return { user: savedUser, signupState: finalState };
   }
 
   // ---------------------------------------------------------------------
@@ -978,5 +1131,105 @@ export class SignupOrchestratorService {
       );
     }
     return user;
+  }
+
+  private buildSetupTasks(
+    completed: Set<SignupStepName>,
+    emailVerified: boolean,
+  ): WelperSetupTask[] {
+    const emailTask: WelperSetupTask = {
+      id: 'emailVerification',
+      label: 'Verify your email',
+      href: '/verification',
+      required: true,
+      completed: emailVerified,
+    };
+    const profileTasks = WELPER_SETUP_TASKS.map((id) => {
+      const meta = SETUP_TASK_META[id];
+      return {
+        id,
+        label: meta.label,
+        href: meta.href,
+        required: meta.required,
+        completed: completed.has(id),
+      };
+    });
+    return [emailTask, ...profileTasks];
+  }
+
+  /** Mirrors `WelperProfileService.calculateCompletionStatus` without circular imports. */
+  private async computeWelperProfileCompletionStatus(
+    userId: string,
+    profile: WelperProfile,
+  ): Promise<ProfileCompletionStatus> {
+    const hasRequiredFields =
+      profile.firstName &&
+      profile.lastName &&
+      profile.phoneNumber &&
+      profile.bio &&
+      profile.profilePhotoUrl &&
+      profile.serviceArea;
+
+    const offerings = await this.serviceOfferingRepo.find({
+      where: { welperId: userId },
+    });
+    const hasActiveOffering =
+      offerings.length > 0 && offerings.some((o) => o.active);
+
+    if (hasRequiredFields && hasActiveOffering) {
+      return ProfileCompletionStatus.COMPLETE;
+    }
+    return ProfileCompletionStatus.INCOMPLETE;
+  }
+
+  private async afterWelperSetupStepWrite(userId: string): Promise<void> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user?.signupCompleted) return;
+    const profile = await this.welperProfileRepo.findOne({
+      where: { welperId: userId },
+    });
+    if (!profile) return;
+    const state = await this.getState(userId);
+    const completed = new Set<SignupStepName>([
+      ...state.completedSteps,
+      ...(state.setupTasks
+        ?.filter((t) => t.completed && t.id !== 'emailVerification')
+        .map((t) => t.id as SignupStepName) ?? []),
+    ]);
+    await this.maybeRefreshWelperDiscoverability(userId, profile, completed);
+  }
+
+  /**
+   * When all required setup tasks are done, mark profile complete and public.
+   * Otherwise keep the welper private until setup finishes.
+   */
+  private async maybeRefreshWelperDiscoverability(
+    userId: string,
+    profile: WelperProfile | null,
+    completed: Set<SignupStepName>,
+  ): Promise<void> {
+    if (!profile) return;
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const setupTasks = this.buildSetupTasks(
+      completed,
+      user?.emailVerified ?? false,
+    );
+    const setupComplete = setupTasks
+      .filter((t) => t.required)
+      .every((t) => t.completed);
+
+    profile.profileCompletionStatus =
+      await this.computeWelperProfileCompletionStatus(userId, profile);
+
+    if (setupComplete && profile.profileCompletionStatus === ProfileCompletionStatus.COMPLETE) {
+      const visible = await this.backgroundCheckService.assertVisibleInSearch(userId);
+      profile.profileVisibility = visible
+        ? ProfileVisibility.PUBLIC
+        : ProfileVisibility.PRIVATE;
+    } else {
+      profile.profileVisibility = ProfileVisibility.PRIVATE;
+    }
+
+    await this.welperProfileRepo.save(profile);
   }
 }

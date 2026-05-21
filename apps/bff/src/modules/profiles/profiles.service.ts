@@ -8,6 +8,7 @@ import { ServiceOfferingService } from '../../domains/profile-management/service
 import { FavoriteService } from '../../domains/profile-management/favorite/favorite.service';
 import { AvailabilityService } from '../../domains/profile-management/availability/availability.service';
 import { UsersService } from '../../domains/user-management/users/users.service';
+import { SignupOrchestratorService } from '../../domains/user-management/auth/signup-orchestrator.service';
 import { DayOfWeek } from '../../domains/profile-management/entities/day-of-week.enum';
 import { RecurringPattern } from '../../domains/profile-management/entities/recurring-pattern.enum';
 import { ProfileVisibility } from '../../domains/profile-management/entities/profile-visibility.enum';
@@ -27,7 +28,12 @@ export class ProfilesService {
     private readonly favoriteService: FavoriteService,
     private readonly availabilityService: AvailabilityService,
     private readonly usersService: UsersService,
+    private readonly signupOrchestrator: SignupOrchestratorService,
   ) {}
+
+  async getWelperSetupChecklist(userId: string) {
+    return this.signupOrchestrator.getWelperSetupChecklist(userId);
+  }
 
   private getRole(accountType: string): 'customer' | 'welper' {
     return accountType.toLowerCase() === 'welper' ? 'welper' : 'customer';
@@ -55,6 +61,7 @@ export class ProfilesService {
       return this.customerProfileService.update(userId, filteredData, userId);
     }
     const updated = await this.welperProfileService.update(userId, filteredData, userId);
+    await this.signupOrchestrator.getWelperSetupChecklist(userId);
     // Return the same hydrated shape /me returns so the welper dashboard's
     // optimistic post-save state stays consistent with subsequent reads.
     return this.welperProfileService.hydrate(updated);

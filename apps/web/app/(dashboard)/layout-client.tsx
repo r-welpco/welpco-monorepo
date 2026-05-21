@@ -13,8 +13,6 @@ import { useCustomerProfile, useWelperProfile } from "@/lib/hooks/use-profile";
 import { AuthBackgroundSVG } from "@/components/features/personalization/auth-background-svg";
 import { useUnreadCount } from "@/lib/hooks/use-notifications";
 import { NotificationBellPopover } from "@/components/layout/notification-bell-popover";
-import { VerificationBanner } from "@/components/features/dashboard/verification-banner";
-
 interface DashboardLayoutClientProps {
   children: React.ReactNode;
   user: {
@@ -63,6 +61,13 @@ export default function DashboardLayoutClient({
     return "dashboard";
   }, [pathname]);
 
+  const contentAnimationKey = useMemo(() => {
+    if (/^\/dashboard\/messages\/[^/]+$/.test(pathname)) {
+      return "/dashboard/messages";
+    }
+    return pathname;
+  }, [pathname]);
+
   const handleTabChange = useCallback((tab: string) => {
     const tabMap: Record<string, string> = {
       dashboard: "/dashboard",
@@ -75,10 +80,6 @@ export default function DashboardLayoutClient({
     router.push(tabMap[tab] || "/dashboard");
   }, [router]);
 
-  const handleRoleSwitch = useCallback(() => {
-    router.push("/dashboard");
-  }, [router]);
-
   const handleSearch = useCallback((query: string) => {
     const q = (query || "").trim();
     if (q) {
@@ -87,14 +88,6 @@ export default function DashboardLayoutClient({
       router.push("/dashboard/search");
     }
   }, [router]);
-
-  const handleFeedbackClick = useCallback(() => {
-    // TODO: Open feedback modal
-  }, []);
-
-  const handleDocsClick = useCallback(() => {
-    window.open("https://docs.welpco.com", "_blank");
-  }, []);
 
   const handleThemeChange = useCallback(
     (mode: "light" | "dark" | "system") => {
@@ -154,10 +147,16 @@ export default function DashboardLayoutClient({
     notificationCount,
     notificationSlot,
     onTabChange: handleTabChange,
-    onRoleSwitch: handleRoleSwitch,
-    onSearch: handleSearch,
-    onFeedbackClick: handleFeedbackClick,
-    onDocsClick: handleDocsClick,
+    ...(userRole === "customer"
+      ? {
+          onSearch: handleSearch,
+          onRoleSwitch: () => router.push("/dashboard"),
+          onFeedbackClick: () => {
+            // TODO: Open feedback modal
+          },
+          onDocsClick: () => window.open("https://docs.welpco.com", "_blank"),
+        }
+      : {}),
     onThemeChange: handleThemeChange,
     onProfileClick: handleProfileClick,
     onSettingsClick: handleSettingsClick,
@@ -186,7 +185,7 @@ export default function DashboardLayoutClient({
       >
         <AuthBackgroundSVG backgroundId={backgroundId} />
         <Box
-          key={pathname}
+          key={contentAnimationKey}
           className="animate-fade-in-up"
           style={{
             width: "100%",
@@ -196,7 +195,6 @@ export default function DashboardLayoutClient({
             animationFillMode: "both",
           }}
         >
-          <VerificationBanner />
           {children}
         </Box>
       </Box>

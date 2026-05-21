@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import { WELPER_SETUP_CHECKLIST_KEY } from "@/lib/hooks/use-signup";
 import {
   getCustomerProfile,
   getWelperProfile,
@@ -70,6 +71,7 @@ export function useUpdateWelperProfile() {
       updateWelperProfile(userId, data),
     onSuccess: (data, variables) => {
       queryClient.setQueryData(["welperProfile", variables.userId], data);
+      void queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
     },
   });
 }
@@ -158,6 +160,7 @@ export function useCreateServiceOffering() {
       createServiceOffering(welperId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["serviceOfferings", variables.welperId] });
+      void queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
     },
   });
 }
@@ -168,9 +171,9 @@ export function useUpdateServiceOffering() {
   return useMutation({
     mutationFn: ({ offeringId, data }: { offeringId: string; data: Parameters<typeof updateServiceOffering>[1] }) =>
       updateServiceOffering(offeringId, data),
-    onSuccess: (data, variables) => {
-      // Invalidate all service offerings queries since we don't know the welperId from the offeringId
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["serviceOfferings"] });
+      void queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
     },
   });
 }
@@ -181,8 +184,8 @@ export function useDeleteServiceOffering() {
   return useMutation({
     mutationFn: (offeringId: string) => deleteServiceOffering(offeringId),
     onSuccess: () => {
-      // Invalidate all service offerings queries
       queryClient.invalidateQueries({ queryKey: ["serviceOfferings"] });
+      void queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
     },
   });
 }

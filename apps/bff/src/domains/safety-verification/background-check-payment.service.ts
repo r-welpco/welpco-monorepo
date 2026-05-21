@@ -52,7 +52,7 @@ export class BackgroundCheckPaymentService {
 
   private backgroundCheckStepPath(locale: string): string {
     const prefix = locale === 'fr' ? '/fr' : '';
-    return `${prefix}/register/step/background-check`;
+    return `${prefix}/dashboard/profile?tab=backgroundCheck`;
   }
 
   async createCheckoutSession(

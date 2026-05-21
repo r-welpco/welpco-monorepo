@@ -3,19 +3,26 @@
 import { AuthBackground, AccountVerification } from "@welpco/ui/platform/user-management";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter, Link } from "@/i18n/navigation";
 import { useSession } from "next-auth/react";
+import { Flex } from "@welpco/ui/flex";
+import { Text } from "@welpco/ui/text";
+import { Button } from "@welpco/ui/button";
+import { Spinner } from "@welpco/ui/spinner";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { verifyAccount, resendVerificationCode } from "@/lib/services/user-service";
 import { useUserStore } from "@/stores/userStore";
 import type { AccountVerificationValues } from "@welpco/ui/platform/user-management";
-import { withNext } from "@/lib/auth/safe-next";
+import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 import { useAccountVerificationLabels } from "@/lib/i18n/use-auth-labels";
+import { WELPER_SETUP_CHECKLIST_KEY } from "@/lib/hooks/use-signup";
 
 export default function VerificationPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { update: updateSession } = useSession();
+  const { update: updateSession, data: session, status: sessionStatus } = useSession();
+  const queryClient = useQueryClient();
   const labels = useAccountVerificationLabels();
   const t = useTranslations("auth.verification");
   const verificationEmail = useUserStore((state) => state.verificationEmail);
@@ -23,7 +30,13 @@ export default function VerificationPageClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const email = searchParams.get("email") || verificationEmail || registrationData?.email || "";
+  const sessionEmail = session?.user?.email?.trim() ?? "";
+  const email =
+    searchParams.get("email")?.trim() ||
+    sessionEmail ||
+    verificationEmail ||
+    registrationData?.email?.trim() ||
+    "";
   const nextRaw = searchParams.get("next");
 
   const handleSubmit = async (values: AccountVerificationValues) => {
@@ -44,7 +57,15 @@ export default function VerificationPageClient() {
         },
       });
 
-      router.replace(withNext("/register", nextRaw));
+      await queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+
+      const signupDone =
+        session?.user?.signupCompleted ??
+        session?.user?.onboardingCompleted ??
+        false;
+      router.replace(
+        signupDone ? safeNextPath(nextRaw, "/dashboard") : withNext("/register", nextRaw),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : t("errors.verifyFailed"));
     } finally {
@@ -64,8 +85,29 @@ export default function VerificationPageClient() {
     }
   };
 
+  if (sessionStatus === "loading") {
+    return (
+      <AuthBackground>
+        <Flex justify="center" align="center" style={{ minHeight: "40vh" }} aria-busy>
+          <Spinner size="3" />
+        </Flex>
+      </AuthBackground>
+    );
+  }
+
   if (!email) {
-    return null;
+    return (
+      <AuthBackground>
+        <Flex direction="column" gap="3" align="center" style={{ minHeight: "40vh", maxWidth: 400, margin: "0 auto" }}>
+          <Text size="2" color="gray" align="center" as="p">
+            {t("errors.missingEmail")}
+          </Text>
+          <Button size="2" asChild>
+            <Link href="/login">{t("backToLogin")}</Link>
+          </Button>
+        </Flex>
+      </AuthBackground>
+    );
   }
 
   return (

@@ -52,13 +52,71 @@ export function isRadiusServiceAreaPayload(
   return hasRadius && city.length > 0 && province.length >= 2;
 }
 
-export function isWelperServiceAreaStepComplete(welper: WelperProfile): boolean {
-  return (
-    Boolean(welper.serviceAreaCity?.trim()) &&
-    Boolean(welper.provinceCode?.trim()) &&
-    Boolean(welper.countryCode?.trim()) &&
-    isRadiusServiceAreaPayload(welper.serviceArea)
+/** Resolve location fields from columns and/or stored radius JSON. */
+export function resolveWelperServiceAreaFields(welper: WelperProfile): {
+  city: string;
+  province: string;
+  country: string;
+  radiusKm: number;
+} | null {
+  const raw: unknown = welper.serviceArea;
+  if (!isRadiusServiceAreaPayload(raw)) return null;
+  const addr = raw.centerAddress;
+  const city = (welper.serviceAreaCity ?? addr.city ?? '').trim();
+  const province = (welper.provinceCode ?? addr.stateProvince ?? '').trim();
+  const country = normalizeCountryCode(
+    welper.countryCode ?? addr.country,
   );
+  const radiusKm = resolveRadiusKmFromPayload(raw);
+  return { city, province, country, radiusKm };
+}
+
+export function isWelperServiceAreaStepComplete(welper: WelperProfile): boolean {
+  const fields = resolveWelperServiceAreaFields(welper);
+  if (!fields) return false;
+  return (
+    fields.city.length > 0 &&
+    fields.province.length >= 2 &&
+    fields.country.length >= 2 &&
+    fields.radiusKm > 0
+  );
+}
+
+/**
+ * Backfill structured columns from stored radius JSON (e.g. legacy saves).
+ * Returns true when the profile was updated in memory.
+ */
+export function syncWelperServiceAreaColumnsFromJson(
+  profile: WelperProfile,
+): boolean {
+  const raw: unknown = profile.serviceArea;
+  if (!isRadiusServiceAreaPayload(raw)) return false;
+  const fields = resolveWelperServiceAreaFields(profile);
+  if (!fields) return false;
+
+  let changed = false;
+  if (!profile.serviceAreaCity?.trim() && fields.city) {
+    profile.serviceAreaCity = fields.city;
+    changed = true;
+  }
+  if (!profile.provinceCode?.trim() && fields.province) {
+    profile.provinceCode = fields.province;
+    changed = true;
+  }
+  if (!profile.countryCode?.trim() && fields.country) {
+    profile.countryCode = fields.country;
+    changed = true;
+  }
+  const zip = raw.centerAddress.zipPostalCode?.trim();
+  if (
+    zip &&
+    (!profile.serviceAreaPostalCodes?.length ||
+      !profile.serviceAreaPostalCodes.includes(zip.toUpperCase()))
+  ) {
+    profile.serviceAreaPostalCodes = [zip.toUpperCase()];
+    changed = true;
+  }
+  return changed;
 }
 
 export function buildWelperServiceAreaFilledData(welper: WelperProfile) {
@@ -74,8 +132,9 @@ export function buildWelperServiceAreaFilledData(welper: WelperProfile) {
   };
 }
 
-function normalizeCountryCode(country: string | undefined): string {
+export function normalizeCountryCode(country: string | undefined): string {
   const c = (country ?? '').trim().toUpperCase();
+  if (!c) return 'CA';
   if (c === 'CANADA' || c === 'CA') return 'CA';
   if (c === 'UNITED STATES' || c === 'US' || c === 'USA') return 'US';
   return c.length === 2 ? c : c.slice(0, 2);
@@ -112,7 +171,7 @@ export async function applyRadiusServiceAreaToWelperProfile(
       city: serviceArea.centerAddress.city.trim(),
       stateProvince: serviceArea.centerAddress.stateProvince.trim().toUpperCase(),
       zipPostalCode: serviceArea.centerAddress.zipPostalCode?.trim() || undefined,
-      country: serviceArea.centerAddress.country?.trim() || undefined,
+      country: normalizeCountryCode(serviceArea.centerAddress.country),
     },
     radiusKm: km,
   };

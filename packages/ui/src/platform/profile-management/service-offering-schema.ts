@@ -4,7 +4,7 @@ export const serviceAreaSchema = z.object({
   type: z.literal("radius"),
   centerAddress: z
     .object({
-      streetAddress: z.string().min(5),
+      streetAddress: z.string().default(""),
       city: z.string().min(2),
       stateProvince: z.string().min(2),
       zipPostalCode: z.string().min(3),

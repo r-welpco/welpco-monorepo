@@ -58,6 +58,18 @@ export interface SignupStateDto {
      * has explicitly provided — never inferred or auto-filled.
      */
     filledData: SignupFilledData;
+    setupTasks?: WelperSetupTaskDto[];
+    setupComplete?: boolean;
+    discoverable?: boolean;
+}
+export type WelperSetupTaskId = 'emailVerification' | 'welperServiceArea' | 'welperOffering' | 'welperAvailability' | 'welperBackgroundCheck' | 'welperPayout' | 'optionalProfile';
+export interface WelperSetupTaskDto {
+    id: WelperSetupTaskId;
+    label: string;
+    completed: boolean;
+    required: boolean;
+    href: string;
+    blockingReason?: string;
 }
 /**
  * Shape of pre-fill data returned to the wizard. Each top-level key

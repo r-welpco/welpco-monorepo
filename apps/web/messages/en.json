@@ -879,12 +879,13 @@
         "Picture hanging": "Picture hanging"
       },
       "finish": {
-        "title": "Almost there",
-        "description": "We need a couple more details before your account's ready.",
-        "missingFieldsPrefix": "The following are still missing:",
-        "continueSetup": "Continue setup",
+        "title": "You're in",
+        "description": "Your account is ready. Finish the setup checklist on your dashboard to start receiving jobs.",
+        "continueToDashboard": "Continue to dashboard",
+        "continuing": "Taking you to your dashboard…",
         "errors": {
-          "finishFailed": "We couldn't finish your signup. Try again in a moment."
+          "finishFailed": "We couldn't finish your signup. Try again in a moment.",
+          "restartServer": "Signup couldn't be finalized. Restart the API server and try again."
         }
       },
       "complete": {
@@ -1177,7 +1178,53 @@
       "errors": {
         "codeRequired": "Enter the 6-digit code we sent you.",
         "verifyFailed": "That code didn't work. It may have expired — request a new one and try again.",
-        "resendFailed": "We couldn't send a new code. Try again in a moment."
+        "resendFailed": "We couldn't send a new code. Try again in a moment.",
+        "missingEmail": "We need your email to send a verification code. Sign in again, then open this page from your dashboard setup checklist."
+      },
+      "backToLogin": "Back to sign in"
+    }
+  },
+  "dashboard": {
+    "setup": {
+      "loading": "Loading your setup checklist…",
+      "loadError": "We couldn't load your setup checklist. Refresh the page and try again.",
+      "taskLabels": {
+        "emailVerification": "Verify your email",
+        "welperServiceArea": "Service area",
+        "welperOffering": "Service offerings",
+        "welperAvailability": "Availability",
+        "welperBackgroundCheck": "Background check",
+        "welperPayout": "Payout setup",
+        "optionalProfile": "Profile photo"
+      },
+      "title": "Finish your setup",
+      "description": "Complete these steps so customers can find you and you can get paid.",
+      "progress": "{done} of {total} required steps done",
+      "progressAria": "Setup progress {percent} percent",
+      "compactProgress": "Setup — {done} of {total} steps done",
+      "continueSetup": "Continue setup",
+      "optional": "optional",
+      "statusDone": "Done",
+      "statusTodo": "Not started",
+      "statusLinkSent": "Link sent",
+      "open": "Open",
+      "verifyEmail": "Enter code",
+      "resendVerification": "Resend email",
+      "resendSending": "Sending…",
+      "resendSent": "Sent. Check your inbox in a minute or two.",
+      "resendFailed": "We couldn't resend the email. Try again in a moment.",
+      "allCompleteDiscoverable": "Setup complete — you're visible in customer search.",
+      "allCompletePendingBg": "Setup complete — we'll show you in search once your background check is approved.",
+      "backgroundCheck": {
+        "pageTitle": "Background check",
+        "pageSubtitle": "Pay the screening fee and complete Certn to work as a Welper.",
+        "adminReviewPending": "Payment received. This step stays open until an admin approves your background check. You can finish Certn while you wait.",
+        "adminApproved": "Your background check is approved."
+      },
+      "payout": {
+        "pageTitle": "Payout setup",
+        "pageSubtitle": "Connect Stripe so you can receive payments for completed jobs.",
+        "connectedSuccess": "Your Stripe account is connected. You're ready to receive payouts."
       }
     }
   }

@@ -22,13 +22,10 @@ import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
 /**
  * Day 15 — Phase 2 Dispatch B. Welper-only step 3 of the unified signup wizard.
  *
- * Captures the public bio that renders in the Welper profile hero (Wave 1
- * trust signal). Floor matches the BFF DTO (≥ 120 chars, ≤ 2000) — anything
- * shorter reads as placeholder on the public page. Live char count keeps the
- * minimum visible without nagging.
+ * Captures the public bio for the welper profile. Floor matches the BFF DTO.
  */
 
-const MIN_BIO = 120;
+const MIN_BIO = 20;
 const MAX_BIO = 2000;
 
 function formatLabel(template: string, vars: Record<string, string | number>): string {

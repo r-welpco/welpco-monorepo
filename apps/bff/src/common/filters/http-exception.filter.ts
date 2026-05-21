@@ -46,8 +46,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
       method: request.method,
       message: messageText,
     };
-    if (typeof message === 'object' && message !== null && 'code' in (message as object)) {
-      errorResponse.code = (message as { code: string }).code;
+    if (typeof message === 'object' && message !== null) {
+      const structured = message as Record<string, unknown>;
+      if (typeof structured.code === 'string') {
+        errorResponse.code = structured.code;
+      }
+      if (Array.isArray(structured.missingFields)) {
+        errorResponse.missingFields = structured.missingFields;
+      }
+      if (typeof structured.nextStep === 'string' || structured.nextStep === null) {
+        errorResponse.nextStep = structured.nextStep;
+      }
     }
 
     // Don't expose internal errors in production

@@ -88,23 +88,17 @@ test.describe('@auth Signup wizard — customer happy path', () => {
 
     await page.getByRole('button', { name: /skip|finish|complete/i }).first().click();
 
-    await page.waitForURL(/\/(dashboard(?!\/onboarding)|register\/complete)/, {
-      timeout: 15_000,
-    });
-    if (page.url().includes('/register/complete')) {
-      await expect(
-        page.getByRole('heading', { name: /thank you for (signing up|registering)/i }),
-      ).toBeVisible();
-    } else {
-      expect(page.url()).toContain('/dashboard');
-    }
+    await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+    expect(page.url()).toContain('/dashboard');
   });
 });
 
 test.describe('@auth Signup wizard — welper happy path', () => {
   test.use({ extraHTTPHeaders: SIGNUP_E2E_HEADERS });
 
-  test('completes the welper wizard and lands on dashboard', async ({ page }) => {
+  test('completes the 3-step welper signup and lands on dashboard with setup checklist', async ({
+    page,
+  }) => {
     const email = generateTestEmail('welper');
     const password = generateTestPassword();
 
@@ -122,44 +116,21 @@ test.describe('@auth Signup wizard — welper happy path', () => {
       );
     await page.getByRole('button', { name: /continue|next/i }).click();
 
-    await page.getByLabel(/city/i).fill('Toronto');
-    await page.getByLabel(/province|state/i).fill('ON');
-    await page.getByRole('button', { name: /continue|next/i }).click();
+    await page.waitForURL(/\/register\/finish/, { timeout: 15_000 });
 
-    await fillWelperOfferingStep(page);
-
-    await page.getByRole('button', { name: /add slot/i }).click();
-    await page.getByRole('button', { name: /continue|next/i }).click();
-
-    await completeBackgroundCheckStep(page);
-    await completePayoutStep(page);
-
-    await page.getByRole('button', { name: /skip|finish|complete/i }).first().click();
-
-    await page.waitForURL(/\/(dashboard(?!\/onboarding)|register\/complete)/, {
-      timeout: 30_000,
+    await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
+    expect(page.url()).toContain('/dashboard');
+    await expect(page.getByRole('navigation').first()).toBeVisible();
+    await expect(page.getByText(/setup|finish your setup/i).first()).toBeVisible({
+      timeout: 15_000,
     });
-    if (page.url().includes('/register/complete')) {
-      await expect(
-        page.getByRole('heading', { name: /thank you for (signing up|registering)/i }),
-      ).toBeVisible();
-    } else {
-      expect(page.url()).toContain('/dashboard');
-      await expect(page.getByRole('navigation').first()).toBeVisible();
-    }
   });
 });
 
-test.describe('@auth Launch thank-you gate', () => {
-  test('signed-in + signupCompleted + no platform access + /dashboard → /register/complete', async ({
+test.describe('@auth Post-signup routing', () => {
+  test('signed-in + signupCompleted + /register/complete → /dashboard', async ({
     page,
   }) => {
-    test.skip(
-      process.env.PLATFORM_ACCESS_GATED === 'false' ||
-        process.env.NEXT_PUBLIC_PLATFORM_ACCESS_GATED === 'false',
-      'Requires PLATFORM_ACCESS_GATED=true (BFF + web)',
-    );
-
     const email = generateTestEmail('gated');
     const password = generateTestPassword();
     await page.goto(WIZARD_URL);
@@ -168,11 +139,11 @@ test.describe('@auth Launch thank-you gate', () => {
     await selectRole(page, 'customer');
     await fillIdentityStep(page, { first: 'Gated', last: 'User' });
     await page.getByRole('button', { name: /skip|finish|complete/i }).first().click();
-    await page.waitForURL(/\/register\/complete/, { timeout: 15_000 });
+    await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
 
-    await page.goto('/dashboard');
-    await page.waitForURL(/\/register\/complete/, { timeout: 10_000 });
-    expect(page.url()).toContain('/register/complete');
+    await page.goto('/register/complete');
+    await page.waitForURL(/\/dashboard/, { timeout: 10_000 });
+    expect(page.url()).toContain('/dashboard');
   });
 });
 

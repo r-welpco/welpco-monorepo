@@ -30,6 +30,16 @@ export type SignupStepName =
   | 'welperPayout'
   | 'optionalProfile';
 
+/** Post-signup dashboard checklist task ids (includes non-wizard items). */
+export type WelperSetupTaskId =
+  | 'emailVerification'
+  | 'welperServiceArea'
+  | 'welperOffering'
+  | 'welperAvailability'
+  | 'welperBackgroundCheck'
+  | 'welperPayout'
+  | 'optionalProfile';
+
 /**
  * Server-driven snapshot of a user's progress through the wizard. Returned
  * by `GET /auth/signup/state` on every step entry — the wizard does not
@@ -72,6 +82,23 @@ export interface SignupStateDto {
    * has explicitly provided — never inferred or auto-filled.
    */
   filledData: SignupFilledData;
+  /** Welper-only: post-signup setup tasks (dashboard checklist). */
+  setupTasks?: WelperSetupTaskDto[];
+  /** Welper-only: all required setup tasks complete. */
+  setupComplete?: boolean;
+  /** Welper-only: visible in customer search (profile complete + BG passed when required). */
+  discoverable?: boolean;
+}
+
+/** Post-signup welper task shown on the dashboard setup checklist. */
+export interface WelperSetupTaskDto {
+  id: WelperSetupTaskId;
+  label: string;
+  completed: boolean;
+  required: boolean;
+  /** Deep-link path segment or route hint for the web app. */
+  href: string;
+  blockingReason?: string;
 }
 
 /**

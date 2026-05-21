@@ -43,7 +43,7 @@ export interface IdentityStepParams {
 }
 
 export interface WelperBioStepParams {
-  /** ≥ 120 characters per the Phase 1 contract. */
+  /** ≥ 20 characters (signup wizard minimum). */
   bio: string;
 }
 
@@ -155,7 +155,7 @@ export async function submitIdentityStep(
   );
 }
 
-/** Welper-only: bio (≥ 120 chars). */
+/** Welper-only: bio (≥ 20 chars). */
 export async function submitWelperBioStep(
   params: WelperBioStepParams,
 ): Promise<SignupStateDto> {

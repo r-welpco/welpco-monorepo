@@ -5,7 +5,6 @@ import { useRouter } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { SessionAccountBanner } from "@/lib/auth/session-account-banner";
 import { hasApiSession } from "@/lib/auth/has-api-session";
-import { hasPlatformAccess } from "@/lib/auth/platform-access";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 import { Button } from "@welpco/ui/button";
 import { Card } from "@welpco/ui/card";
@@ -44,18 +43,12 @@ export function LoginAlreadySignedIn({ nextRaw }: LoginAlreadySignedInProps) {
       router.push(withNext("/register", nextRaw));
       return;
     }
-    if (!hasPlatformAccess({ signupCompleted: true })) {
-      router.push("/register/complete");
-      return;
-    }
     router.push(nextPath);
   };
 
   const primaryLabel = !signupCompleted
     ? t("continueSignup")
-    : !hasPlatformAccess({ signupCompleted: true })
-      ? t("viewLaunchStatus")
-      : t("goToDashboard");
+    : t("goToDashboard");
 
   return (
     <Card size="4" variant="surface" style={CARD_STYLE}>

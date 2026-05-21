@@ -50,6 +50,17 @@ export class ProfilesController {
     return this.profilesService.getMyProfile(user.userId, user.accountType);
   }
 
+  @Get('me/setup-checklist')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Welper post-signup setup checklist (done vs todo)' })
+  @ApiResponse({ status: 200, description: 'Setup checklist retrieved' })
+  @ApiResponse({ status: 403, description: 'Welper accounts only' })
+  async getWelperSetupChecklist(@CurrentUser() user: AuthUser) {
+    return this.profilesService.getWelperSetupChecklist(user.userId);
+  }
+
   @Put('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')

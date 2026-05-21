@@ -14,11 +14,11 @@ import { FORM_SPACING } from "@welpco/ui/tokens";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { EmailPasswordStep } from "@welpco/ui/platform/user-management";
-import { stepNameToSlug } from "./step-name-utils";
+import { getWelperRegisterEscapeTarget, stepNameToSlug } from "./step-name-utils";
+import { WelperRegisterEscape } from "./welper-register-escape";
 import { RegisterResumeShell } from "./register-resume-shell";
 import { useBeginSignup, useSignupState } from "@/lib/hooks/use-signup";
 import { ApiClientError } from "@/lib/api/client";
-import { postSignupDestination } from "@/lib/auth/platform-access";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 import { useEmailPasswordStepLabels } from "@/lib/i18n/use-auth-labels";
 
@@ -49,11 +49,11 @@ export default function RegisterPageClient() {
     if (!state) return;
 
     if (state.signupCompleted) {
-      router.replace(
-        postSignupDestination({ signupCompleted: true }) === "/dashboard"
-          ? safeNextPath(nextRaw, "/dashboard")
-          : "/register/complete",
-      );
+      router.replace(safeNextPath(nextRaw, "/dashboard"));
+      return;
+    }
+
+    if (getWelperRegisterEscapeTarget(state, null) === "dashboard") {
       return;
     }
 
@@ -122,6 +122,10 @@ export default function RegisterPageClient() {
           </Flex>
         </RegisterResumeShell>
       );
+    }
+
+    if (state && getWelperRegisterEscapeTarget(state, null) === "dashboard") {
+      return <WelperRegisterEscape state={state} nextRaw={nextRaw} />;
     }
 
     return <RegisterResumeShell loading />;

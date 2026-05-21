@@ -10,7 +10,6 @@ import { Text } from "@welpco/ui/text";
 import { Badge } from "@welpco/ui/badge";
 import { Switch } from "@welpco/ui/switch";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@welpco/ui/select";
-import { Grid } from "@welpco/ui/grid";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useState } from "react";
 import { Plus, Edit, Trash2, Search, Filter, Briefcase } from "lucide-react";
@@ -18,8 +17,15 @@ import { Plus, Edit, Trash2, Search, Filter, Briefcase } from "lucide-react";
 export interface ServiceOffering {
   id: string;
   title: string;
-  category: string;
+  /** Human-readable category label (preferred for display). */
+  categoryName: string;
+  /** Category id for filtering; falls back to `category` when omitted. */
+  categoryId?: string;
+  /** @deprecated Use `categoryName` + `categoryId`. Kept for backwards compatibility. */
+  category?: string;
+  subcategories?: Array<{ id: string; name: string }>;
   hourlyRate: number;
+  experienceYears?: number;
   description?: string;
   rating?: number;
   reviewsCount?: number;
@@ -37,6 +43,169 @@ export interface ServiceOfferingListProps {
   serviceCategories?: Array<{ id: string; name: string }>;
 }
 
+function offeringCategoryKey(offering: ServiceOffering): string {
+  return offering.categoryId ?? offering.category ?? "";
+}
+
+function offeringCategoryLabel(offering: ServiceOffering): string {
+  return offering.categoryName || offering.category || "Uncategorized";
+}
+
+function ServiceOfferingRow({
+  offering,
+  loading,
+  onEdit,
+  onDelete,
+  onToggleActive,
+  onBook,
+}: {
+  offering: ServiceOffering;
+  loading?: boolean;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onToggleActive?: (id: string, active: boolean) => void;
+  onBook?: (id: string) => void;
+}) {
+  const subcategories = offering.subcategories ?? [];
+
+  return (
+    <Card
+      size="3"
+      variant="surface"
+      style={{ width: "100%", minWidth: 0 }}
+    >
+      <Flex
+        direction={{ initial: "column", sm: "row" }}
+        gap="4"
+        align={{ initial: "stretch", sm: "start" }}
+        justify="between"
+      >
+        <Box flexGrow="1" style={{ minWidth: 0 }}>
+          <Flex align="center" gap="2" wrap="wrap" mb="2">
+            <Heading size="4" trim="start" mb="0">
+              {offering.title}
+            </Heading>
+            <Badge
+              color={offering.active ? "green" : "gray"}
+              variant={offering.active ? "solid" : "soft"}
+              size="1"
+            >
+              {offering.active ? "Active" : "Inactive"}
+            </Badge>
+          </Flex>
+
+          <Flex gap="2" wrap="wrap" align="center" mb={offering.description ? "2" : "0"}>
+            <Badge color={SEMANTIC_COLOR.primary} variant="soft" size="1">
+              {offeringCategoryLabel(offering)}
+            </Badge>
+            {subcategories.map((sub) => (
+              <Badge key={sub.id} color="gray" variant="outline" size="1">
+                {sub.name}
+              </Badge>
+            ))}
+          </Flex>
+
+          {offering.description ? (
+            <Text
+              size="2"
+              color="gray"
+              highContrast
+              style={{
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {offering.description}
+            </Text>
+          ) : null}
+
+          {(typeof offering.rating === "number" || offering.reviewsCount !== undefined) && (
+            <Flex align="center" gap="2" mt="2">
+              {typeof offering.rating === "number" && (
+                <Text size="2" weight="bold">
+                  {offering.rating.toFixed(1)} ★
+                </Text>
+              )}
+              {offering.reviewsCount !== undefined && (
+                <Text size="2" color="gray" highContrast>
+                  ({offering.reviewsCount} reviews)
+                </Text>
+              )}
+            </Flex>
+          )}
+        </Box>
+
+        <Flex
+          direction="column"
+          gap="3"
+          align={{ initial: "stretch", sm: "end" }}
+          style={{ flexShrink: 0, minWidth: "140px" }}
+        >
+          <Text size="4" weight="bold" color={SEMANTIC_COLOR.primary} align={{ initial: "left", sm: "right" }}>
+            ${offering.hourlyRate}/hr
+          </Text>
+
+          <Flex align="center" justify="between" gap="3">
+            <Text size="2" weight="medium" id={`offering-${offering.id}-active-label`}>
+              Active
+            </Text>
+            <Switch
+              aria-labelledby={`offering-${offering.id}-active-label`}
+              checked={offering.active}
+              onCheckedChange={(checked) => onToggleActive?.(offering.id, checked)}
+              disabled={loading}
+            />
+          </Flex>
+
+          <Flex gap="2" justify={{ initial: "start", sm: "end" }} wrap="wrap" align="center">
+            {onEdit && (
+              <Button
+                size="2"
+                variant="outline"
+                onClick={() => onEdit(offering.id)}
+                disabled={loading}
+                aria-label={`Edit ${offering.title}`}
+              >
+                <Flex align="center" gap="2">
+                  <Edit aria-hidden="true" style={{ width: "16px", height: "16px" }} />
+                  Edit
+                </Flex>
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                size="2"
+                variant="outline"
+                color={SEMANTIC_COLOR.danger}
+                onClick={() => onDelete(offering.id)}
+                disabled={loading}
+                aria-label={`Delete ${offering.title}`}
+              >
+                <Flex align="center" gap="2">
+                  <Trash2 aria-hidden="true" style={{ width: "16px", height: "16px" }} />
+                  Delete
+                </Flex>
+              </Button>
+            )}
+            {onBook && (
+              <Button
+                size="2"
+                color={SEMANTIC_COLOR.primary}
+                onClick={() => onBook(offering.id)}
+                disabled={!offering.active}
+              >
+                Book now
+              </Button>
+            )}
+          </Flex>
+        </Flex>
+      </Flex>
+    </Card>
+  );
+}
+
 export function ServiceOfferingList({
   offerings,
   loading,
@@ -50,14 +219,20 @@ export function ServiceOfferingList({
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterActive, setFilterActive] = useState<"all" | "active" | "inactive">("all");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const filteredOfferings = offerings.filter((offering) => {
+    const categoryKey = offeringCategoryKey(offering);
+    const categoryLabel = offeringCategoryLabel(offering);
+    const subNames = (offering.subcategories ?? []).map((s) => s.name).join(" ");
+
     const matchesSearch =
       searchQuery === "" ||
       offering.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      categoryLabel.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      subNames.toLowerCase().includes(searchQuery.toLowerCase()) ||
       offering.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = filterCategory === "all" || offering.category === filterCategory;
+    const matchesCategory =
+      filterCategory === "all" || categoryKey === filterCategory;
     const matchesActive =
       filterActive === "all" ||
       (filterActive === "active" && offering.active) ||
@@ -71,11 +246,7 @@ export function ServiceOfferingList({
   });
 
   return (
-    <Card
-      size="4"
-      variant="surface"
-      style={{ width: "100%", maxWidth: "1200px", minWidth: 0 }}
-    >
+    <Card size="4" variant="surface" style={{ width: "100%", minWidth: 0 }}>
       <Flex direction="column" gap="3" style={{ minWidth: 0 }}>
         <Flex align="center" justify="between" wrap="wrap" gap="3">
           <Box>
@@ -96,7 +267,6 @@ export function ServiceOfferingList({
           )}
         </Flex>
 
-        {/* Filters */}
         <Flex gap="3" wrap="wrap" align="end">
           <Box style={{ flex: 1, minWidth: "200px" }}>
             <TextField.Root
@@ -119,7 +289,7 @@ export function ServiceOfferingList({
                 onValueChange={setFilterCategory}
                 disabled={loading}
               >
-                <SelectTrigger aria-label="Filter by category">
+                <SelectTrigger aria-label="Filter by category" style={{ width: "100%" }}>
                   <Filter style={{ width: "16px", height: "16px" }} />
                 </SelectTrigger>
                 <SelectContent>
@@ -142,7 +312,7 @@ export function ServiceOfferingList({
               }
               disabled={loading}
             >
-              <SelectTrigger aria-label="Filter by status" />
+              <SelectTrigger aria-label="Filter by status" style={{ width: "100%" }} />
               <SelectContent>
                 <SelectItem value="all">All status</SelectItem>
                 <SelectItem value="active">Active only</SelectItem>
@@ -152,14 +322,12 @@ export function ServiceOfferingList({
           </Box>
         </Flex>
 
-        {/* Results count */}
         <Text size="2" color="gray" highContrast>
           Showing {sortedOfferings.length} of {offerings.length} offerings
         </Text>
 
-        {/* Offerings list */}
         {sortedOfferings.length === 0 ? (
-          <Card size="3" variant="surface">
+          <Card size="3" variant="surface" style={{ width: "100%" }}>
             <Flex direction="column" align="center" gap="3" p="9">
               <Flex
                 align="center"
@@ -192,113 +360,21 @@ export function ServiceOfferingList({
             </Flex>
           </Card>
         ) : (
-          <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4">
+          <Flex direction="column" gap="3" style={{ width: "100%" }}>
             {sortedOfferings.map((offering) => (
-              <Card key={offering.id} size="3" variant="surface">
-                <Flex direction="column" gap="3">
-                  <Flex align="start" justify="between" gap="2">
-                    <Box style={{ flex: 1 }}>
-                      <Flex align="center" gap="2" mb="2">
-                        <Heading size="4" mb="1">
-                          {offering.title}
-                        </Heading>
-                        <Badge
-                          color={offering.active ? "green" : "gray"}
-                          variant={offering.active ? "solid" : "soft"}
-                          size="2"
-                        >
-                          {offering.active ? "Active" : "Inactive"}
-                        </Badge>
-                      </Flex>
-                      <Badge color="gray" variant="soft" size="1" mb="2">
-                        {offering.category}
-                      </Badge>
-                      <Text size="4" weight="bold" color={SEMANTIC_COLOR.primary}>
-                        ${offering.hourlyRate}/hr
-                      </Text>
-                    </Box>
-                  </Flex>
-
-                  {offering.description && (
-                    <Text size="2" color="gray" highContrast>
-                      {offering.description}
-                    </Text>
-                  )}
-
-                  <Flex align="center" justify="between" gap="2">
-                    <Flex align="center" gap="2">
-                      {typeof offering.rating === "number" && (
-                        <Text size="2" weight="bold">
-                          {offering.rating.toFixed(1)} ★
-                        </Text>
-                      )}
-                      {offering.reviewsCount !== undefined && (
-                        <Text size="2" color="gray" highContrast>
-                          ({offering.reviewsCount} reviews)
-                        </Text>
-                      )}
-                    </Flex>
-                  </Flex>
-
-                  <Flex gap="2" direction="column">
-                    <Flex align="center" justify="between">
-                      <Text size="2" weight="medium" id={`offering-${offering.id}-active-label`}>
-                        Active status
-                      </Text>
-                      <Switch
-                        aria-labelledby={`offering-${offering.id}-active-label`}
-                        checked={offering.active}
-                        onCheckedChange={(checked) =>
-                          onToggleActive?.(offering.id, checked)
-                        }
-                        disabled={loading}
-                      />
-                    </Flex>
-
-                    <Flex gap="2" justify="end" wrap="wrap">
-                      {onEdit && (
-                        <Button
-                          size="2"
-                          variant="outline"
-                          onClick={() => onEdit(offering.id)}
-                          disabled={loading}
-                          aria-label={`Edit ${offering.title}`}
-                        >
-                          <Edit aria-hidden="true" style={{ width: "16px", height: "16px" }} />
-                        </Button>
-                      )}
-                      {onDelete && (
-                        <Button
-                          size="2"
-                          variant="ghost"
-                          color={SEMANTIC_COLOR.danger}
-                          onClick={() => onDelete(offering.id)}
-                          disabled={loading}
-                          aria-label={`Delete ${offering.title}`}
-                        >
-                          <Trash2 aria-hidden="true" style={{ width: "16px", height: "16px" }} />
-                        </Button>
-                      )}
-                      {onBook && (
-                        <Button
-                          size="2"
-                          color={SEMANTIC_COLOR.primary}
-                          style={{ flex: 1 }}
-                          onClick={() => onBook(offering.id)}
-                          disabled={!offering.active}
-                        >
-                          Book now
-                        </Button>
-                      )}
-                    </Flex>
-                  </Flex>
-                </Flex>
-              </Card>
+              <ServiceOfferingRow
+                key={offering.id}
+                offering={offering}
+                loading={loading}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onToggleActive={onToggleActive}
+                onBook={onBook}
+              />
             ))}
-          </Grid>
+          </Flex>
         )}
       </Flex>
     </Card>
   );
 }
-

@@ -878,12 +878,13 @@
         "Picture hanging": "Accrochage de tableaux"
       },
       "finish": {
-        "title": "Presque terminé",
-        "description": "Il nous manque quelques détails avant que votre compte soit prêt.",
-        "missingFieldsPrefix": "Les éléments suivants sont encore manquants :",
-        "continueSetup": "Continuer l'inscription",
+        "title": "C'est fait",
+        "description": "Votre compte est prêt. Terminez la liste de configuration sur votre tableau de bord pour commencer à recevoir des missions.",
+        "continueToDashboard": "Continuer vers le tableau de bord",
+        "continuing": "Redirection vers votre tableau de bord…",
         "errors": {
-          "finishFailed": "Impossible de terminer votre inscription. Réessayez dans un instant."
+          "finishFailed": "Impossible de terminer votre inscription. Réessayez dans un instant.",
+          "restartServer": "Impossible de finaliser l'inscription. Redémarrez le serveur API et réessayez."
         }
       },
       "complete": {
@@ -1176,7 +1177,53 @@
       "errors": {
         "codeRequired": "Entrez le code à 6 chiffres que nous vous avons envoyé.",
         "verifyFailed": "Ce code n'a pas fonctionné. Il est peut-être expiré — demandez-en un nouveau.",
-        "resendFailed": "Impossible d'envoyer un nouveau code. Réessayez dans un instant."
+        "resendFailed": "Impossible d'envoyer un nouveau code. Réessayez dans un instant.",
+        "missingEmail": "Nous avons besoin de votre courriel pour envoyer un code. Reconnectez-vous, puis ouvrez cette page depuis la liste de configuration du tableau de bord."
+      },
+      "backToLogin": "Retour à la connexion"
+    }
+  },
+  "dashboard": {
+    "setup": {
+      "loading": "Chargement de votre liste de configuration…",
+      "loadError": "Impossible de charger la liste de configuration. Actualisez la page.",
+      "taskLabels": {
+        "emailVerification": "Vérifier votre courriel",
+        "welperServiceArea": "Zone de service",
+        "welperOffering": "Offres de service",
+        "welperAvailability": "Disponibilités",
+        "welperBackgroundCheck": "Vérification des antécédents",
+        "welperPayout": "Configuration des paiements",
+        "optionalProfile": "Photo de profil"
+      },
+      "title": "Terminez votre configuration",
+      "description": "Complétez ces étapes pour que les clients vous trouvent et que vous soyez payé.",
+      "progress": "{done} sur {total} étapes requises terminées",
+      "progressAria": "Progression de la configuration {percent} pour cent",
+      "compactProgress": "Configuration — {done} sur {total} étapes",
+      "continueSetup": "Continuer la configuration",
+      "optional": "facultatif",
+      "statusDone": "Terminé",
+      "statusTodo": "À faire",
+      "statusLinkSent": "Lien envoyé",
+      "open": "Ouvrir",
+      "verifyEmail": "Entrer le code",
+      "resendVerification": "Renvoyer le courriel",
+      "resendSending": "Envoi…",
+      "resendSent": "Envoyé. Vérifiez votre boîte dans une minute ou deux.",
+      "resendFailed": "Impossible de renvoyer le courriel. Réessayez dans un instant.",
+      "allCompleteDiscoverable": "Configuration terminée — vous êtes visible dans la recherche.",
+      "allCompletePendingBg": "Configuration terminée — vous serez visible après approbation de la vérification.",
+      "backgroundCheck": {
+        "pageTitle": "Vérification des antécédents",
+        "pageSubtitle": "Payez les frais et complétez Certn pour travailler comme Welper.",
+        "adminReviewPending": "Paiement reçu. Cette étape reste ouverte jusqu'à l'approbation par un administrateur. Vous pouvez terminer Certn en attendant.",
+        "adminApproved": "Votre vérification des antécédents est approuvée."
+      },
+      "payout": {
+        "pageTitle": "Configuration des paiements",
+        "pageSubtitle": "Connectez Stripe pour recevoir vos paiements.",
+        "connectedSuccess": "Votre compte Stripe est connecté. Vous pouvez recevoir vos paiements."
       }
     }
   }

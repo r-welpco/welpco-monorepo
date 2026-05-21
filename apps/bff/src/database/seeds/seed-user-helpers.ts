@@ -121,7 +121,7 @@ export function applySeedWelperProfileReady(
   if (!profile.privacyAcceptedAt) {
     profile.privacyAcceptedAt = new Date();
   }
-  if (!profile.bio || profile.bio.length < 120) {
+  if (!profile.bio || profile.bio.length < 20) {
     profile.bio = SEED_WELPER_BIO;
   }
   profile.onboardingCompleted = true;

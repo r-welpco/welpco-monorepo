@@ -52,11 +52,28 @@ const PersonalizationSettings = dynamic(
   { ssr: false }
 );
 
-const VALID_TABS = ["appearance", "account", "privacy", "notifications", "payment"] as const;
-type SettingsTab = (typeof VALID_TABS)[number];
+const ALL_SETTINGS_TABS = [
+  "appearance",
+  "account",
+  "privacy",
+  "notifications",
+  "payment",
+] as const;
+type SettingsTab = (typeof ALL_SETTINGS_TABS)[number];
 
-function isSettingsTab(value: string | null): value is SettingsTab {
-  return value !== null && (VALID_TABS as readonly string[]).includes(value);
+function visibleSettingsTabs(isCustomer: boolean, isWelper: boolean): SettingsTab[] {
+  const tabs: SettingsTab[] = ["account", "appearance"];
+  if (!isWelper) {
+    tabs.splice(1, 0, "privacy", "notifications");
+  }
+  if (isCustomer) {
+    tabs.push("payment");
+  }
+  return tabs;
+}
+
+function isSettingsTab(value: string | null, allowed: readonly SettingsTab[]): value is SettingsTab {
+  return value !== null && (allowed as readonly string[]).includes(value);
 }
 
 function SettingsPageContent() {
@@ -80,14 +97,15 @@ function SettingsPageContent() {
 
   const isCustomer = user?.role === "customer";
   const isWelper = user?.role === "welper";
+  const allowedTabs = useMemo(
+    () => visibleSettingsTabs(!!isCustomer, !!isWelper),
+    [isCustomer, isWelper],
+  );
 
   // Resolve tab from URL params synchronously — no setState-in-effect cascade.
   const tabFromQuery = searchParams.get("tab");
   const initialTab: SettingsTab =
-    isSettingsTab(tabFromQuery) &&
-    (tabFromQuery !== "payment" || isCustomer)
-      ? tabFromQuery
-      : "account";
+    isSettingsTab(tabFromQuery, allowedTabs) ? tabFromQuery : "account";
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
 
   // Welper profile (privacy fields)
@@ -249,20 +267,24 @@ function SettingsPageContent() {
             Settings
           </Heading>
           <Text as="p" size="2" color="gray" highContrast>
-            Configure your account, privacy, and notifications.
+            {isWelper
+              ? "Manage your account and appearance."
+              : "Configure your account, privacy, and notifications."}
           </Text>
         </Box>
 
         <Tabs
           value={activeTab}
           onValueChange={(value) => {
-            if (isSettingsTab(value)) setActiveTab(value);
+            if (isSettingsTab(value, allowedTabs)) setActiveTab(value);
           }}
         >
           <TabsList>
             <TabsTrigger value="account">Account</TabsTrigger>
-            <TabsTrigger value="privacy">Privacy</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            {!isWelper ? <TabsTrigger value="privacy">Privacy</TabsTrigger> : null}
+            {!isWelper ? (
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            ) : null}
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
             {isCustomer ? <TabsTrigger value="payment">Payment</TabsTrigger> : null}
           </TabsList>

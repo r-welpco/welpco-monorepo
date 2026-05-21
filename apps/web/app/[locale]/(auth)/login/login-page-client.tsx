@@ -15,7 +15,6 @@ import { localeFromUseLocale } from "@/lib/i18n/app-locale";
 import type { LoginFormValues } from "@welpco/ui/platform/user-management";
 import { clearSessionForSignIn } from "@/lib/auth/clear-session-for-sign-in";
 import { hasApiSession } from "@/lib/auth/has-api-session";
-import { hasPlatformAccess, postSignupDestination } from "@/lib/auth/platform-access";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 import { useLoginFormLabels } from "@/lib/i18n/use-auth-labels";
 import { LoginAlreadySignedIn } from "./login-already-signed-in";
@@ -121,8 +120,6 @@ export default function LoginPageClient() {
 
         if (!signupCompleted) {
           router.push(withNext("/register", nextRaw));
-        } else if (!hasPlatformAccess({ signupCompleted: true })) {
-          router.push("/register/complete");
         } else {
           router.push(nextPath);
         }

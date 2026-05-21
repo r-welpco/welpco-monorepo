@@ -11,7 +11,10 @@ import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 
 export interface ServiceOfferingCardProps {
   title: string;
-  category: string;
+  /** @deprecated Prefer categoryName */
+  category?: string;
+  categoryName?: string;
+  subcategories?: Array<{ id: string; name: string }>;
   hourlyRate: number;
   description?: string;
   rating?: number;
@@ -23,6 +26,8 @@ export interface ServiceOfferingCardProps {
 export function ServiceOfferingCard({
   title,
   category,
+  categoryName,
+  subcategories = [],
   hourlyRate,
   description,
   rating,
@@ -30,6 +35,8 @@ export function ServiceOfferingCard({
   onBook,
   onEdit,
 }: ServiceOfferingCardProps) {
+  const mainCategory = categoryName ?? category ?? "Service";
+
   return (
     <Card size="3" variant="surface" style={{ width: "100%", minWidth: 0 }}>
       <Flex direction="column" gap="3">
@@ -39,9 +46,14 @@ export function ServiceOfferingCard({
               {title}
             </Heading>
             <Flex gap="2" align="center" wrap="wrap">
-              <Badge color="gray" variant="soft" size="1">
-                {category}
+              <Badge color={SEMANTIC_COLOR.primary} variant="soft" size="1">
+                {mainCategory}
               </Badge>
+              {subcategories.map((sub) => (
+                <Badge key={sub.id} color="gray" variant="outline" size="1">
+                  {sub.name}
+                </Badge>
+              ))}
             </Flex>
           </Box>
           <Heading size="4" weight="bold" color={SEMANTIC_COLOR.primary} trim="start" style={{ flexShrink: 0 }}>

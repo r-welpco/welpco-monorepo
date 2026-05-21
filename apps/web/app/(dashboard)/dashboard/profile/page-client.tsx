@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
+import { useWelperSetupChecklist } from "@/lib/hooks/use-signup";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Box } from "@welpco/ui/box";
@@ -55,6 +57,10 @@ import {
   resolveServiceAreaRadiusKm,
   type ServiceArea,
 } from "@welpco/ui/platform/profile-management";
+import {
+  WelperProfileBackgroundCheckPanel,
+  WelperProfilePayoutPanel,
+} from "./welper-setup-tab-panels";
 import type {
   CustomerProfileValues,
   WelperProfileValues,
@@ -87,15 +93,34 @@ interface ProfilePageClientProps {
   };
 }
 
+const WELPER_PROFILE_TABS = new Set([
+  "overview",
+  "profile",
+  "offerings",
+  "availability",
+  "serviceArea",
+  "backgroundCheck",
+  "payout",
+]);
+
 export default function ProfilePageClient({ user: serverUser }: ProfilePageClientProps) {
   const router = useRouter();
-  const { status: sessionStatus } = useSession();
+  const searchParams = useSearchParams();
+  const { status: sessionStatus, data: session } = useSession();
   const { user } = useDashboardUser(serverUser);
 
   // Only run profile API calls when session is ready (avoids "No access token" and infinite loading)
   const sessionReady = sessionStatus === "authenticated";
 
   const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    if (user.role !== "welper") return;
+    const tab = searchParams.get("tab");
+    if (tab && WELPER_PROFILE_TABS.has(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams, user.role]);
   const [isServiceOfferingDialogOpen, setIsServiceOfferingDialogOpen] = useState(false);
   const [editingOffering, setEditingOffering] = useState<{ id?: string } & ServiceOfferingValues | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -106,6 +131,10 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   // Memoize main categories filter to avoid recalculation on every render
   const mainCategories = useMemo(
     () => allCategories.filter((cat) => cat.level === 1 && cat.parentId === null && cat.isActive),
+    [allCategories]
+  );
+  const categoryNameById = useMemo(
+    () => new Map(allCategories.map((cat) => [cat.id, cat.name])),
     [allCategories]
   );
   const { data: subcategoriesData = [] } = useCategoriesByParent(
@@ -121,6 +150,15 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   // Determine user role
   const isCustomer = user.role === "customer";
   const isWelper = user.role === "welper";
+
+  const { data: welperSetup } = useWelperSetupChecklist(isWelper && sessionReady);
+  const welperSetupIncomplete = useMemo(() => {
+    if (!isWelper || !welperSetup) return false;
+    return !normalizeWelperSetupChecklist(
+      welperSetup,
+      session?.user?.emailVerified === true,
+    ).setupComplete;
+  }, [isWelper, welperSetup, session?.user?.emailVerified]);
 
   // React Query hooks - only fetch when session is ready (avoids no-token errors and infinite loading)
   const { data: customerProfile, isLoading: isLoadingCustomer, error: customerError } = useCustomerProfile(
@@ -660,41 +698,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
     );
   }
 
-  // Welper Profile Tabs - handlers defined above (before conditional returns)
-  // Calculate profile completion steps for welper
-  const welperProfileSteps = [
-    {
-      id: "bio",
-      label: "Bio",
-      completed: !!welperProfile?.bio,
-      required: true,
-    },
-    {
-      id: "photo",
-      label: "Profile photo",
-      completed: !!welperProfile?.photoUrl,
-      required: false,
-    },
-    {
-      id: "serviceArea",
-      label: "Service area",
-      completed: !!welperProfile?.serviceArea,
-      required: true,
-    },
-    {
-      id: "serviceOfferings",
-      label: "Service offerings",
-      completed: serviceOfferings.length > 0,
-      required: true,
-    },
-    {
-      id: "availability",
-      label: "Availability",
-      completed: !!availabilitySchedule,
-      required: false,
-    },
-  ];
-
   return (
     <Container size="3" px={{ initial: "4", sm: "6" }}>
       <Flex direction="column" gap="6">
@@ -726,26 +729,13 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
             <TabsTrigger value="offerings">Service offerings</TabsTrigger>
             <TabsTrigger value="availability">Availability</TabsTrigger>
             <TabsTrigger value="serviceArea">Service area</TabsTrigger>
+            <TabsTrigger value="backgroundCheck">Background check</TabsTrigger>
+            <TabsTrigger value="payout">Payout setup</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
             <Box pt="5">
               <Flex direction="column" gap="4">
-                <ProfileCompletionStatus
-                  profileType="welper"
-                  steps={welperProfileSteps}
-                  onCompleteStep={(stepId) => {
-                    const tabMap: Record<string, string> = {
-                      bio: "profile",
-                      photo: "profile",
-                      serviceArea: "serviceArea",
-                      hourlyRate: "profile",
-                      serviceOfferings: "offerings",
-                      availability: "availability",
-                    };
-                    setActiveTab(tabMap[stepId] || "overview");
-                  }}
-                />
                 <Card size="3" variant="surface">
                   <Flex direction="column" gap="3">
                     <Heading size="5" mb="0" trim="start">Quick stats</Heading>
@@ -770,16 +760,23 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
               <Flex direction="column" gap="4">
                 <ProfilePhotoUpload
                   maxWidth="640px"
+                  required
                   currentPhotoUrl={welperProfile?.photoUrl ?? null}
                   currentPhotoAlt={
                     welperProfile?.firstName || welperProfile?.lastName
                       ? `${welperProfile.firstName ?? ""} ${welperProfile.lastName ?? ""}`.trim()
                       : "Profile photo"
                   }
-                  description="Upload a clear photo of yourself. It appears on your public profile and helps customers recognize you."
+                  description={
+                    welperSetupIncomplete
+                      ? "A profile photo is required to finish setup and appear in customer search."
+                      : "Upload a clear photo of yourself. It appears on your public profile and helps customers recognize you."
+                  }
                   loading={isLoading || updateWelperProfileMutation.isPending}
                   onUpload={handlePhotoUpload}
-                  onRemove={handlePhotoRemove}
+                  onRemove={
+                    welperSetupIncomplete ? undefined : handlePhotoRemove
+                  }
                 />
                 <WelperProfileForm
                   defaultValues={
@@ -808,11 +805,23 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 offerings={serviceOfferings.map((o) => ({
                   id: o.id,
                   title: o.title,
-                  category: o.category?.name || o.categoryId,
+                  categoryId: o.categoryId,
+                  categoryName:
+                    o.category?.name ?? categoryNameById.get(o.categoryId) ?? "Uncategorized",
+                  subcategories: (o.subcategoryIds ?? [])
+                    .map((id) => {
+                      const name = categoryNameById.get(id);
+                      return name ? { id, name } : null;
+                    })
+                    .filter((sub): sub is { id: string; name: string } => sub !== null),
                   description: o.description,
                   hourlyRate: o.hourlyRate,
                   experienceYears: o.experienceYears,
                   active: Boolean(o.active),
+                }))}
+                serviceCategories={mainCategories.map((cat) => ({
+                  id: cat.id,
+                  name: cat.name,
                 }))}
                 loading={isLoading}
                 onAdd={handleAddServiceOffering}
@@ -919,6 +928,18 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                     : undefined
                 }
               />
+            </Box>
+          </TabsContent>
+
+          <TabsContent value="backgroundCheck">
+            <Box pt="5">
+              <WelperProfileBackgroundCheckPanel />
+            </Box>
+          </TabsContent>
+
+          <TabsContent value="payout">
+            <Box pt="5">
+              <WelperProfilePayoutPanel />
             </Box>
           </TabsContent>
         </Tabs>

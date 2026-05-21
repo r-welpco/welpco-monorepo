@@ -18,8 +18,9 @@ export function hasPlatformAccess(user: { signupCompleted?: boolean }): boolean 
   return !isPlatformAccessGated();
 }
 
-export function postSignupDestination(user: {
+/** After signup finishes, always open the dashboard (setup checklist lives there). */
+export function postSignupDestination(_user: {
   signupCompleted?: boolean;
-}): '/register/complete' | '/dashboard' {
-  return hasPlatformAccess(user) ? '/dashboard' : '/register/complete';
+}): '/dashboard' {
+  return '/dashboard';
 }

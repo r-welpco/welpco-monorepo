@@ -173,17 +173,17 @@ export default auth((req) => {
     return intlResponse ?? NextResponse.next();
   }
 
-  if (!platformAccess) {
-    const completePath = localizedPathFromRequest("/register/complete", pathname);
+  if (isOnRegisterComplete) {
+    return NextResponse.redirect(
+      new URL(localizedPathFromRequest("/dashboard", pathname), nextUrl),
+    );
+  }
 
-    if (isOnDashboard) {
-      return NextResponse.redirect(new URL(completePath, nextUrl));
-    }
-    if (isOnRegister && !isOnRegisterComplete) {
-      return NextResponse.redirect(new URL(completePath, nextUrl));
-    }
+  if (!platformAccess) {
     if (isOnLogin || isOnOnboarding) {
-      return NextResponse.redirect(new URL(completePath, nextUrl));
+      return NextResponse.redirect(
+        new URL(localizedPathFromRequest("/dashboard", pathname), nextUrl),
+      );
     }
     return intlResponse ?? NextResponse.next();
   }

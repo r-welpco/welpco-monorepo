@@ -191,69 +191,83 @@ export function WelperHeader({
               <Box display={{ initial: "none", md: "block" }}>
                 <Logo variant="primary" type="isotype" size={28} />
               </Box>
-              <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Button variant="ghost" size="2" color="gray">
-                    <Flex align="center" gap="2">
-                      <Text size="3" weight="bold">
-                        Welpco
-                      </Text>
-                      {/* Role badge hidden on small mobile to save horizontal space */}
-                      <Box display={{ initial: "none", xs: "block" }}>
-                        <Badge color="green" variant="soft" size="1" highContrast>
-                          Welper
-                        </Badge>
-                      </Box>
-                      <ChevronDown size={14} aria-hidden="true" />
-                    </Flex>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" style={{ minWidth: "180px", maxWidth: "90vw" }}>
-                  <DropdownMenuLabel>Switch role</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={onRoleSwitch}>
-                    <Flex align="center" gap="2" justify="between" style={{ width: "100%" }}>
-                      <Text size="2">Customer</Text>
-                      <ExternalLink size={14} aria-hidden="true" />
-                    </Flex>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {onRoleSwitch ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <Button variant="ghost" size="2" color="gray">
+                      <Flex align="center" gap="2">
+                        <Text size="3" weight="bold">
+                          Welpco
+                        </Text>
+                        <Box display={{ initial: "none", xs: "block" }}>
+                          <Badge color="green" variant="soft" size="1" highContrast>
+                            Welper
+                          </Badge>
+                        </Box>
+                        <ChevronDown size={14} aria-hidden="true" />
+                      </Flex>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" style={{ minWidth: "180px", maxWidth: "90vw" }}>
+                    <DropdownMenuLabel>Switch role</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={onRoleSwitch}>
+                      <Flex align="center" gap="2" justify="between" style={{ width: "100%" }}>
+                        <Text size="2">Customer</Text>
+                        <ExternalLink size={14} aria-hidden="true" />
+                      </Flex>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Flex align="center" gap="2">
+                  <Text size="3" weight="bold">
+                    Welpco
+                  </Text>
+                  <Box display={{ initial: "none", xs: "block" }}>
+                    <Badge color="green" variant="soft" size="1" highContrast>
+                      Welper
+                    </Badge>
+                  </Box>
+                </Flex>
+              )}
             </Flex>
 
             {/* Right cluster — generous gap keeps hover states from touching */}
             <Flex align="center" gap={{ initial: "3", md: "4" }} flexShrink="0">
-              {/* Desktop search (hidden on mobile per §18/§9.5 to avoid layout breach) */}
-              <Box asChild display={{ initial: "none", md: "block" }}>
-                <form onSubmit={handleSearch}>
-                  <TextField.Root
-                    placeholder="Search jobs…"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    size="2"
-                    style={{ width: "220px", minWidth: "160px" }}
-                  >
-                    <TextField.Slot>
-                      <Search size={15} aria-hidden="true" />
-                    </TextField.Slot>
-                    <TextField.Slot side="right">
-                      <Kbd size="1">⌘F</Kbd>
-                    </TextField.Slot>
-                  </TextField.Root>
-                </form>
-              </Box>
+              {onSearch ? (
+                <Box asChild display={{ initial: "none", md: "block" }}>
+                  <form onSubmit={handleSearch}>
+                    <TextField.Root
+                      placeholder="Search jobs…"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      size="2"
+                      style={{ width: "220px", minWidth: "160px" }}
+                    >
+                      <TextField.Slot>
+                        <Search size={15} aria-hidden="true" />
+                      </TextField.Slot>
+                      <TextField.Slot side="right">
+                        <Kbd size="1">⌘F</Kbd>
+                      </TextField.Slot>
+                    </TextField.Root>
+                  </form>
+                </Box>
+              ) : null}
 
-              {/* Desktop Feedback */}
-              <Box display={{ initial: "none", md: "block" }}>
-                <Button
-                  variant="soft"
-                  size="2"
-                  color={SEMANTIC_COLOR.primary}
-                  highContrast
-                  onClick={onFeedbackClick}
-                >
-                  Feedback
-                </Button>
-              </Box>
+              {onFeedbackClick ? (
+                <Box display={{ initial: "none", md: "block" }}>
+                  <Button
+                    variant="soft"
+                    size="2"
+                    color={SEMANTIC_COLOR.primary}
+                    highContrast
+                    onClick={onFeedbackClick}
+                  >
+                    Feedback
+                  </Button>
+                </Box>
+              ) : null}
 
               {/* Icon cluster — one row, consistent gap */}
               {notificationSlot ?? (
@@ -285,16 +299,18 @@ export function WelperHeader({
                 </Box>
               )}
 
-              <Box display={{ initial: "none", md: "block" }}>
-                <IconButton
-                  variant="ghost"
-                  size="3"
-                  onClick={onDocsClick}
-                  aria-label="Documentation"
-                >
-                  <BookOpen size={20} aria-hidden="true" />
-                </IconButton>
-              </Box>
+              {onDocsClick ? (
+                <Box display={{ initial: "none", md: "block" }}>
+                  <IconButton
+                    variant="ghost"
+                    size="3"
+                    onClick={onDocsClick}
+                    aria-label="Documentation"
+                  >
+                    <BookOpen size={20} aria-hidden="true" />
+                  </IconButton>
+                </Box>
+              ) : null}
 
               {user && (
                 <DropdownMenu>
@@ -348,21 +364,26 @@ export function WelperHeader({
                       </DropdownMenuItem>
                     ))}
                     <DropdownMenuSeparator />
-                    {/* Feedback + Docs in menu on mobile (no top-bar buttons there) */}
-                    <Box display={{ initial: "block", md: "none" }}>
-                      <DropdownMenuItem onClick={onFeedbackClick}>
-                        <Flex align="center" gap="2">
-                          <Text size="2">Feedback</Text>
-                        </Flex>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={onDocsClick}>
-                        <Flex align="center" gap="2">
-                          <BookOpen size={16} aria-hidden="true" />
-                          <Text size="2">Documentation</Text>
-                        </Flex>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                    </Box>
+                    {onFeedbackClick || onDocsClick ? (
+                      <Box display={{ initial: "block", md: "none" }}>
+                        {onFeedbackClick ? (
+                          <DropdownMenuItem onClick={onFeedbackClick}>
+                            <Flex align="center" gap="2">
+                              <Text size="2">Feedback</Text>
+                            </Flex>
+                          </DropdownMenuItem>
+                        ) : null}
+                        {onDocsClick ? (
+                          <DropdownMenuItem onClick={onDocsClick}>
+                            <Flex align="center" gap="2">
+                              <BookOpen size={16} aria-hidden="true" />
+                              <Text size="2">Documentation</Text>
+                            </Flex>
+                          </DropdownMenuItem>
+                        ) : null}
+                        <DropdownMenuSeparator />
+                      </Box>
+                    ) : null}
                     <DropdownMenuItem
                       color={SEMANTIC_COLOR.danger}
                       onSelect={(event) => {

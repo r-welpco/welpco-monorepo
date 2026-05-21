@@ -7,6 +7,7 @@ import {
 import { signIn, useSession } from "next-auth/react";
 import { clearTokenCache } from "@/lib/api/get-token";
 import { hasApiSession } from "@/lib/auth/has-api-session";
+import { getWelperSetupChecklist } from "@/lib/services/welper-setup-service";
 import {
   beginSignup,
   finishSignup,
@@ -148,6 +149,7 @@ function useStepMutation<TParams>(
       // keep refetches honest if other tabs mutate.
       queryClient.setQueryData<SignupStateDto>(SIGNUP_STATE_KEY, state);
       queryClient.invalidateQueries({ queryKey: SIGNUP_STATE_KEY });
+      queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
     },
   });
 }
@@ -185,6 +187,7 @@ export function useCompleteWelperBackgroundCheckStep() {
 }
 
 const BACKGROUND_CHECK_STATUS_KEY = ["verification", "background-check", "status"] as const;
+export const WELPER_SETUP_CHECKLIST_KEY = ["profiles", "me", "setup-checklist"] as const;
 
 export function useBackgroundCheckStatus(enabled = true) {
   const canCallApi = useHasApiSession();
@@ -217,6 +220,7 @@ export function useConfirmBackgroundCheckReturn() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BACKGROUND_CHECK_STATUS_KEY });
       queryClient.invalidateQueries({ queryKey: SIGNUP_STATE_KEY });
+      queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
     },
   });
 }
@@ -246,6 +250,7 @@ export function useSyncStripeConnect() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: STRIPE_CONNECT_STATUS_KEY });
       queryClient.invalidateQueries({ queryKey: SIGNUP_STATE_KEY });
+      queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
     },
   });
 }
@@ -272,6 +277,23 @@ export function useCompleteOptionalProfileStep() {
  * NextAuth session cache (so `proxy.ts` middleware sees the new flag). The
  * caller is responsible for navigating to the post-signup destination.
  */
+export function useWelperSetupChecklist(enabled = true) {
+  const canCallApi = useHasApiSession();
+  return useQuery({
+    queryKey: WELPER_SETUP_CHECKLIST_KEY,
+    queryFn: getWelperSetupChecklist,
+    enabled: canCallApi && enabled,
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+}
+
+export function useInvalidateWelperSetupChecklist() {
+  const queryClient = useQueryClient();
+  return () =>
+    queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+}
+
 export function useFinishSignup() {
   const queryClient = useQueryClient();
   return useMutation<SignupStateDto, Error, void>({

@@ -80,7 +80,14 @@ function CategoryField({
 }) {
   return (
     <Box mb={FORM_SPACING.fieldGap}>
-      <Text as="label" size="2" weight="bold" id="service-category-label" mb={FORM_SPACING.labelGap}>
+      <Text
+        as="label"
+        size="2"
+        weight="bold"
+        id="service-category-label"
+        mb={FORM_SPACING.labelGap}
+        style={{ display: "block" }}
+      >
         Category
         <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
       </Text>
@@ -89,7 +96,11 @@ function CategoryField({
         onValueChange={(value) => form.setValue("category", value)}
         disabled={loading}
       >
-        <SelectTrigger id="service-category" aria-labelledby="service-category-label" />
+        <SelectTrigger
+          id="service-category"
+          aria-labelledby="service-category-label"
+          style={{ width: "100%" }}
+        />
         <SelectContent>
           {serviceCategories.map((category) => (
             <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
@@ -117,8 +128,16 @@ function SubcategoriesField({
   if (subcategories.length === 0) return null;
   return (
     <Box mb={FORM_SPACING.fieldGap}>
-      <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap}>Subcategories (optional)</Text>
-      <Text size="1" color="gray" mb={FORM_SPACING.helperGap}>
+      <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
+        Subcategories (optional)
+      </Text>
+      <Text
+        as="p"
+        size="1"
+        color="gray"
+        mb={FORM_SPACING.helperGap}
+        style={{ display: "block", lineHeight: 1.5 }}
+      >
         Select one or more subcategories that apply to this offering.
       </Text>
       <Flex direction="column" gap="2">
