@@ -593,7 +593,7 @@ Object.assign(fr.marketing.footer, {
 });
 Object.assign(fr.marketing.home.hero, {
   line1: "De l'aide locale.",
-  line2: "De vrais voisins.",
+  line2: "Des gens de confiance.",
   subhead:
     "Connectez-vous à des Welpers de confiance dans votre communauté — garde d'enfants, entretien de pelouse, tutorat, aide technologique et plus.",
   findHelp: "Trouver de l'aide",
