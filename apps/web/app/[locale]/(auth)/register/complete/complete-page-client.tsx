@@ -15,7 +15,7 @@ import { Link } from "@welpco/ui/link";
 import { Text } from "@welpco/ui/text";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { hasFrenchPrefix } from "@/i18n/locale-routes";
-import { useRouter } from "@/i18n/navigation";
+import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { hasPlatformAccess } from "@/lib/auth/platform-access";
 import { useEffect, useRef } from "react";
 import { useSignupState } from "@/lib/hooks/use-signup";
@@ -27,7 +27,7 @@ const CARD_STYLE = {
 } as const;
 
 export default function CompletePageClient() {
-  const router = useRouter();
+  const router = useAppRouter();
   const pathname = usePathname() ?? "/";
   const queryClient = useQueryClient();
   const { status, data: session, update: updateSession } = useSession();

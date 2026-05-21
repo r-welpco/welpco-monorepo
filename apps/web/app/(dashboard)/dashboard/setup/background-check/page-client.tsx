@@ -20,6 +20,7 @@ import {
   useSignupState,
 } from "@/lib/hooks/use-signup";
 import type { SignupStateLite } from "@welpco/ui/platform/user-management";
+import { useDashboardCommonLabels } from "@/lib/i18n/use-dashboard-labels";
 
 export default function BackgroundCheckSetupPageClient() {
   const locale = useLocale();
@@ -32,6 +33,7 @@ export default function BackgroundCheckSetupPageClient() {
   const t = useTranslations("dashboard.setup.backgroundCheck");
   const tCommon = useTranslations("auth.common");
   const labels = useWelperBackgroundCheckStepLabels();
+  const common = useDashboardCommonLabels();
 
   const { data: state } = useSignupState();
   const bgCheckStatus = useBackgroundCheckStatus(true);
@@ -41,10 +43,10 @@ export default function BackgroundCheckSetupPageClient() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const confirmedStripeSessionRef = useRef<string | null>(null);
 
-  const liteState: SignupStateLite = {
+  const liteState = {
     completedSteps: state?.completedSteps ?? [],
     filledData: state?.filledData ?? {},
-  };
+  } as SignupStateLite;
 
   useEffect(() => {
     if (!pendingStripeReturn || !checkoutSessionId) return;
@@ -77,7 +79,12 @@ export default function BackgroundCheckSetupPageClient() {
   return (
     <Container size="3" px={{ initial: "4", sm: "6" }}>
       <Flex direction="column" gap="5">
-        <BoxHeader backHref="/dashboard" title={t("pageTitle")} subtitle={t("pageSubtitle")} />
+        <BoxHeader
+          backHref="/dashboard"
+          backLabel={common.back}
+          title={t("pageTitle")}
+          subtitle={t("pageSubtitle")}
+        />
         <WelperBackgroundCheckStep
           labels={labels}
           state={liteState}
@@ -120,17 +127,19 @@ export default function BackgroundCheckSetupPageClient() {
 
 function BoxHeader({
   backHref,
+  backLabel,
   title,
   subtitle,
 }: {
   backHref: string;
+  backLabel: string;
   title: string;
   subtitle: string;
 }) {
   return (
     <Flex direction="column" gap="2">
       <Button size="2" variant="ghost" asChild style={{ alignSelf: "flex-start" }}>
-        <Link href={backHref}>← Back</Link>
+        <Link href={backHref}>{backLabel}</Link>
       </Button>
       <Heading as="h1" size="7" trim="start">
         {title}

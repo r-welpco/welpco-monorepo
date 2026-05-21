@@ -4,7 +4,7 @@ import { AuthBackground, AccountRecoveryForm } from "@welpco/ui/platform/user-ma
 import { AuthSearchParamsFallback } from "@/components/layout/auth-search-params-fallback";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { useLocale, useTranslations } from "next-intl";
 import { localeFromUseLocale } from "@/lib/i18n/app-locale";
 import { requestPasswordReset } from "@/lib/services/user-service";
@@ -13,7 +13,7 @@ import type { AccountRecoveryValues } from "@welpco/ui/platform/user-management"
 import { withNext } from "@/lib/auth/safe-next";
 
 function ForgotPasswordPageClient() {
-  const router = useRouter();
+  const router = useAppRouter();
   const searchParams = useSearchParams();
   const nextRaw = searchParams.get("next");
   const uiLocale = useLocale();

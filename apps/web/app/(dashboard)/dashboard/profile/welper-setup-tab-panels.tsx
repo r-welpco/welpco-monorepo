@@ -15,6 +15,7 @@ import {
   useWelperBackgroundCheckStepLabels,
   useWelperPayoutStepLabels,
 } from "@/lib/i18n/use-auth-labels";
+import { useDashboardCommonLabels } from "@/lib/i18n/use-dashboard-labels";
 import {
   WELPER_SETUP_CHECKLIST_KEY,
   useBackgroundCheckStatus,
@@ -54,10 +55,10 @@ export function WelperProfileBackgroundCheckPanel() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const confirmedStripeSessionRef = useRef<string | null>(null);
 
-  const liteState: SignupStateLite = {
+  const liteState = {
     completedSteps: state?.completedSteps ?? [],
     filledData: state?.filledData ?? {},
-  };
+  } as SignupStateLite;
 
   useEffect(() => {
     void bgCheckStatus.refetch();
@@ -147,6 +148,7 @@ export function WelperProfilePayoutPanel() {
   const searchParams = useSearchParams();
   const connectReturn = searchParams.get("connect");
   const t = useTranslations("dashboard.setup.payout");
+  const common = useDashboardCommonLabels();
   const labelsBase = useWelperPayoutStepLabels();
   const labels = {
     ...labelsBase,
@@ -161,10 +163,10 @@ export function WelperProfilePayoutPanel() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const syncedConnectReturnRef = useRef(false);
 
-  const liteState: SignupStateLite = {
+  const liteState = {
     completedSteps: state?.completedSteps ?? [],
     filledData: state?.filledData ?? {},
-  };
+  } as SignupStateLite;
 
   useEffect(() => {
     void stripeConnectStatus.refetch().finally(() => {
@@ -186,7 +188,7 @@ export function WelperProfilePayoutPanel() {
         invalidateChecklist();
       } catch (err) {
         syncedConnectReturnRef.current = false;
-        setSubmitError(err instanceof Error ? err.message : "Something went wrong.");
+        setSubmitError(err instanceof Error ? err.message : common.genericError);
       }
     })();
   }, [connectReturn, syncConnect, stripeConnectStatus, invalidateChecklist]);

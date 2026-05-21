@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter } from "@/i18n/navigation";
+import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { useTranslations } from "next-intl";
 import { SessionAccountBanner } from "@/lib/auth/session-account-banner";
 import { hasApiSession } from "@/lib/auth/has-api-session";
@@ -23,7 +23,7 @@ type LoginAlreadySignedInProps = {
 };
 
 export function LoginAlreadySignedIn({ nextRaw }: LoginAlreadySignedInProps) {
-  const router = useRouter();
+  const router = useAppRouter();
   const { data: session, status } = useSession();
   const t = useTranslations("auth.login");
 

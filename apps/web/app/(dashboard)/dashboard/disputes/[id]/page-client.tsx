@@ -18,22 +18,11 @@ import { DisputeStatusBadge, ActionConfirmDialog } from "@welpco/ui";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useDispute, useWithdrawDispute } from "@/lib/hooks/use-disputes";
 import { useUser } from "@/stores/authStore";
+import { useDisputeLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useDisputeCategoryLabel } from "@/lib/i18n/dispute-labels";
+import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 
-/** Wave 2 (BFF): the filer can withdraw only while the report is in one of
- *  these statuses. Once admin escalates or finalises, withdraw is gone. */
 const WITHDRAWABLE_STATUSES = new Set(["open", "in-review"]);
-
-const CATEGORY_LABELS: Record<string, string> = {
-  no_show: "No-show",
-  quality: "Service quality",
-  overcharge: "Pricing",
-  safety: "Safety",
-  other: "Other",
-};
-
-function formatCategory(raw: string): string {
-  return CATEGORY_LABELS[raw] ?? raw.replace(/_/g, " ");
-}
 
 interface DisputeDetailPageClientProps {
   disputeId: string;
@@ -42,6 +31,10 @@ interface DisputeDetailPageClientProps {
 export default function DisputeDetailPageClient({
   disputeId,
 }: DisputeDetailPageClientProps) {
+  const labels = useDisputeLabels();
+  const d = labels.detail;
+  const formatCategory = useDisputeCategoryLabel();
+  const dateLocale = useDateFnsLocale();
   const { data: dispute, isLoading, isError, error } = useDispute(disputeId);
   const user = useUser();
   const withdrawMutation = useWithdrawDispute(disputeId);
@@ -53,6 +46,10 @@ export default function DisputeDetailPageClient({
     isFiler && dispute && WITHDRAWABLE_STATUSES.has(dispute.status);
   const isWithdrawn = dispute?.status === "withdrawn";
 
+  const reportedDate = dispute
+    ? format(new Date(dispute.createdAt), "PPp", { locale: dateLocale })
+    : "";
+
   return (
     <Container size="3" px={{ initial: "4", sm: "6" }}>
       <Flex direction="column" gap="6">
@@ -60,7 +57,7 @@ export default function DisputeDetailPageClient({
           <Button variant="ghost" color="gray" size="2" asChild>
             <Link href="/dashboard/disputes">
               <ArrowLeft size={16} aria-hidden="true" />
-              Back to reports
+              {d.backToReports}
             </Link>
           </Button>
         </Box>
@@ -72,7 +69,7 @@ export default function DisputeDetailPageClient({
               gap="3"
               aria-busy="true"
               aria-live="polite"
-              aria-label="Loading report"
+              aria-label={d.loadingAria}
             >
               <Skeleton height="32px" width="60%" />
               <Skeleton height="20px" width="40%" />
@@ -84,9 +81,7 @@ export default function DisputeDetailPageClient({
         {isError && (
           <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
             <Callout.Text>
-              {error instanceof Error
-                ? error.message
-                : "We couldn't load this report. Try again in a moment."}
+              {error instanceof Error ? error.message : d.loadFailed}
             </Callout.Text>
           </Callout.Root>
         )}
@@ -95,13 +90,13 @@ export default function DisputeDetailPageClient({
           <Card size="3" variant="surface">
             <Flex direction="column" align="center" gap="3" py="6" px="3">
               <Heading size="4" align="center" mb="1" trim="start">
-                Report not found
+                {d.notFoundTitle}
               </Heading>
               <Text size="2" color="gray" highContrast align="center" as="p">
-                This report doesn&apos;t exist, or you don&apos;t have access to it. If this looks wrong, contact support.
+                {d.notFoundDescription}
               </Text>
               <Button size="2" variant="soft" color="gray" asChild>
-                <Link href="/dashboard/disputes">View all reports</Link>
+                <Link href="/dashboard/disputes">{d.viewAllReports}</Link>
               </Button>
             </Flex>
           </Card>
@@ -109,29 +104,18 @@ export default function DisputeDetailPageClient({
 
         {dispute && (
           <Flex direction="column" gap="5">
-            {/* Hero card */}
             <Card size="4" variant="surface">
               <Flex direction="column" gap="4">
                 <Flex justify="between" align="start" gap="3" wrap="wrap">
                   <Box flexGrow="1" style={{ minWidth: 0 }}>
-                    <Heading
-                      as="h1"
-                      size="6"
-                      mb="2"
-                      trim="start"
-                    >
+                    <Heading as="h1" size="6" mb="2" trim="start">
                       {dispute.subject}
                     </Heading>
-                    <Flex
-                      align="center"
-                      gap="2"
-                      wrap="wrap"
-                      aria-live="polite"
-                    >
+                    <Flex align="center" gap="2" wrap="wrap" aria-live="polite">
                       <DisputeStatusBadge status={dispute.status} />
                       <Text size="2" color="gray" highContrast>
-                        {formatCategory(dispute.category)} &middot; Reported{" "}
-                        {format(new Date(dispute.createdAt), "PPp")}
+                        {formatCategory(dispute.category)} &middot;{" "}
+                        {d.reportedAt(reportedDate)}
                       </Text>
                     </Flex>
                   </Box>
@@ -146,15 +130,13 @@ export default function DisputeDetailPageClient({
                       }}
                       disabled={withdrawMutation.isPending}
                     >
-                      Withdraw report
+                      {d.withdrawReport}
                     </Button>
                   ) : null}
                 </Flex>
                 {isWithdrawn ? (
                   <Callout.Root color={SEMANTIC_COLOR.neutral} variant="surface">
-                    <Callout.Text>
-                      This report has been withdrawn. The booking is back to its previous state. You can file a new report later if something else comes up.
-                    </Callout.Text>
+                    <Callout.Text>{d.withdrawnCallout}</Callout.Text>
                   </Callout.Root>
                 ) : null}
                 {withdrawError ? (
@@ -165,7 +147,7 @@ export default function DisputeDetailPageClient({
                 <Separator />
                 <Box>
                   <Heading as="h2" size="4" mb="2" trim="start">
-                    What happened
+                    {d.whatHappened}
                   </Heading>
                   {dispute.description ? (
                     <Text
@@ -179,7 +161,7 @@ export default function DisputeDetailPageClient({
                     </Text>
                   ) : (
                     <Text size="2" color="gray" as="p">
-                      No description provided.
+                      {d.noDescription}
                     </Text>
                   )}
                 </Box>
@@ -188,11 +170,10 @@ export default function DisputeDetailPageClient({
                     <Separator />
                     <Box>
                       <Heading as="h2" size="4" mb="2" trim="start">
-                        Evidence
+                        {d.evidence}
                       </Heading>
                       <Text size="2" color="gray" highContrast as="p">
-                        {dispute.evidence.length} item
-                        {dispute.evidence.length === 1 ? "" : "s"} attached.
+                        {d.evidenceCount(dispute.evidence.length)}
                       </Text>
                     </Box>
                   </>
@@ -200,26 +181,23 @@ export default function DisputeDetailPageClient({
               </Flex>
             </Card>
 
-            {/* What's next */}
             <Card size="3" variant="surface">
               <Flex direction="column" gap="3">
                 <Heading as="h2" size="5" mb="0" trim="start">
-                  What happens next
+                  {d.whatHappensNext}
                 </Heading>
                 <Text size="2" color="gray" highContrast as="p">
-                  Our team reviews every report within 48 hours. We may reach out for more detail before deciding. You&apos;ll see updates here and in your inbox.
+                  {d.whatHappensNextDescription}
                 </Text>
                 <Flex gap="2" wrap="wrap" mt="2">
                   <Button size="2" variant="soft" color="gray" asChild>
-                    <Link
-                      href={`/dashboard/messages/${dispute.bookingId}`}
-                    >
-                      Message about the booking
+                    <Link href={`/dashboard/messages/${dispute.bookingId}`}>
+                      {d.messageAboutBooking}
                     </Link>
                   </Button>
                   <Button size="2" variant="ghost" color="gray" asChild>
                     <Link href={`/dashboard/bookings/${dispute.bookingId}`}>
-                      Open the booking
+                      {d.openTheBooking}
                     </Link>
                   </Button>
                 </Flex>
@@ -228,7 +206,6 @@ export default function DisputeDetailPageClient({
           </Flex>
         )}
 
-        {/* Withdraw report — destructive confirm (bible §17.6 + §22 voice). */}
         <ActionConfirmDialog
           open={withdrawConfirmOpen}
           onOpenChange={(open) => {
@@ -236,10 +213,10 @@ export default function DisputeDetailPageClient({
               setWithdrawConfirmOpen(false);
             }
           }}
-          title="Withdraw your report?"
-          description="This closes the report and tells the team you no longer need a resolution. You can file a new report later if needed."
-          confirmLabel="Withdraw report"
-          cancelLabel="Keep report open"
+          title={d.withdrawConfirmTitle}
+          description={d.withdrawConfirmDescription}
+          confirmLabel={d.withdrawConfirmLabel}
+          cancelLabel={d.withdrawCancelLabel}
           variant="danger"
           pending={withdrawMutation.isPending}
           onConfirm={() => {
@@ -249,13 +226,8 @@ export default function DisputeDetailPageClient({
                 setWithdrawConfirmOpen(false);
               },
               onError: (err) => {
-                // Bible §17.5 — what / why / what-to-do.
-                let message =
-                  "We couldn't withdraw this report. Try again in a moment, or contact support if it keeps happening.";
+                let message = d.withdrawFailed;
                 if (err instanceof Error && err.message) {
-                  // The BFF returns 403 (not the filer) and 400 (already
-                  // resolved/closed/escalated). Surface the underlying message
-                  // so the user sees the actual reason rather than a generic.
                   message = err.message;
                 }
                 setWithdrawError(message);

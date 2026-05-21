@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import { localeFromUseLocale } from "@/lib/i18n/app-locale";
@@ -23,7 +23,7 @@ import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 import { useEmailPasswordStepLabels } from "@/lib/i18n/use-auth-labels";
 
 export default function RegisterPageClient() {
-  const router = useRouter();
+  const router = useAppRouter();
   const searchParams = useSearchParams();
   const nextRaw = searchParams.get("next");
   const { status, data: session } = useSession();

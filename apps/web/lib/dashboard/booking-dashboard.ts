@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import type { Locale } from "date-fns";
 import type { BookingItem } from "@/lib/services/booking-service";
 import { formatStatusLabel } from "@/lib/constants/booking";
 
@@ -39,11 +40,11 @@ export function countPendingForWelper(bookings: BookingItem[]): number {
   return bookings.filter((b) => b.status === "pending").length;
 }
 
-function formatBookingDate(dateStr: string | null): string {
+function formatBookingDate(dateStr: string | null, dateLocale?: Locale): string {
   if (!dateStr) return "";
   try {
     const d = dateStr.length === 10 ? new Date(`${dateStr}T00:00:00`) : new Date(dateStr);
-    return format(d, "MMM d, yyyy");
+    return format(d, "MMM d, yyyy", dateLocale ? { locale: dateLocale } : undefined);
   } catch {
     return dateStr;
   }
@@ -56,6 +57,7 @@ export function buildDashboardActivities(
   options?: {
     jobTitle?: string;
     formatStatus?: (status: string) => string;
+    dateLocale?: Locale;
   },
 ): DashboardActivityItem[] {
   const sorted = [...bookings].sort(
@@ -64,7 +66,7 @@ export function buildDashboardActivities(
   const formatStatus = options?.formatStatus ?? formatStatusLabel;
   return sorted.slice(0, limit).map((b) => {
     const statusLabel = formatStatus(b.status);
-    const when = formatBookingDate(b.scheduledDate);
+    const when = formatBookingDate(b.scheduledDate, options?.dateLocale);
     const title = role === "customer" ? "Booking" : (options?.jobTitle ?? "Job");
     const parts = [statusLabel];
     if (when) parts.push(when);

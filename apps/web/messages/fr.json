@@ -1184,6 +1184,10 @@
     }
   },
   "dashboard": {
+    "common": {
+      "back": "← Retour",
+      "genericError": "Une erreur s'est produite."
+    },
     "setup": {
       "loading": "Chargement de votre liste de configuration…",
       "loadError": "Impossible de charger la liste de configuration. Actualisez la page.",
@@ -1250,6 +1254,16 @@
       "language": {
         "english": "Anglais",
         "french": "Français"
+      },
+      "chrome": {
+        "mobileNavMenu": "Navigation",
+        "feedback": "Commentaires",
+        "documentation": "Documentation",
+        "openNavAria": "Ouvrir le menu de navigation",
+        "bellAria": "Notifications",
+        "bellUnreadAria": "Notifications ({count} non lues)",
+        "searchPlaceholder": "Rechercher des mandats…",
+        "userMenuAria": "Menu utilisateur"
       }
     },
     "home": {
@@ -1619,7 +1633,55 @@
       "reviewSaveChanges": "Enregistrer les modifications",
       "reviewSkip": "Passer pour l'instant",
       "disputeTitle": "Signaler un problème",
-      "disputeDescription": "Nous examinerons votre dossier et vous répondrons dans les 48 heures."
+      "disputeDescription": "Nous examinerons votre dossier et vous répondrons dans les 48 heures.",
+      "attachmentFallback": "Pièce jointe",
+      "previewUnavailable": "Aperçu indisponible pour le moment"
+    },
+    "disputes": {
+      "backToBookings": "Retour aux réservations",
+      "title": "Signalements",
+      "description": "Quand quelque chose ne va pas avec une réservation, dites-le-nous. Suivez vos signalements ici — nous vous tiendrons au courant.",
+      "loadListFailed": "Impossible de charger vos signalements. Réessayez dans un instant.",
+      "emptyTitle": "Rien à signaler",
+      "emptyDescription": "Si une réservation dérape, vous pouvez la signaler depuis la page de réservation et nous réglerons la situation.",
+      "viewBookings": "Voir les réservations",
+      "viewReport": "Voir le signalement",
+      "openBooking": "Ouvrir la réservation",
+      "paginationAria": "Pagination des signalements",
+      "prevPageAria": "Page précédente",
+      "nextPageAria": "Page suivante",
+      "pageOf": "Page {page} sur {totalPages} · {total} signalements",
+      "categories": {
+        "no_show": "Absence",
+        "quality": "Qualité du service",
+        "overcharge": "Tarification",
+        "safety": "Sécurité",
+        "other": "Autre"
+      },
+      "detail": {
+        "backToReports": "Retour aux signalements",
+        "loadingAria": "Chargement du signalement",
+        "loadFailed": "Impossible de charger ce signalement. Réessayez dans un instant.",
+        "notFoundTitle": "Signalement introuvable",
+        "notFoundDescription": "Ce signalement n'existe pas ou vous n'y avez pas accès. Si cela semble incorrect, contactez le soutien.",
+        "viewAllReports": "Voir tous les signalements",
+        "reportedAt": "Signalé le {date}",
+        "withdrawReport": "Retirer le signalement",
+        "withdrawnCallout": "Ce signalement a été retiré. La réservation reprend son état précédent. Vous pourrez en déposer un nouveau plus tard si nécessaire.",
+        "whatHappened": "Ce qui s'est passé",
+        "noDescription": "Aucune description fournie.",
+        "evidence": "Preuves",
+        "evidenceCount": "{count, plural, one {# élément joint.} other {# éléments joints.}}",
+        "whatHappensNext": "Et ensuite",
+        "whatHappensNextDescription": "Notre équipe examine chaque signalement sous 48 heures. Nous pouvons vous contacter pour plus de détails. Les mises à jour apparaîtront ici et dans votre boîte de réception.",
+        "messageAboutBooking": "Message concernant la réservation",
+        "openTheBooking": "Ouvrir la réservation",
+        "withdrawConfirmTitle": "Retirer votre signalement?",
+        "withdrawConfirmDescription": "Cela ferme le signalement et indique à l'équipe que vous n'avez plus besoin d'une résolution. Vous pourrez en déposer un nouveau plus tard si nécessaire.",
+        "withdrawConfirmLabel": "Retirer le signalement",
+        "withdrawCancelLabel": "Garder le signalement ouvert",
+        "withdrawFailed": "Impossible de retirer ce signalement. Réessayez dans un instant ou contactez le soutien si le problème persiste."
+      }
     },
     "notifications": {
       "title": "Notifications",

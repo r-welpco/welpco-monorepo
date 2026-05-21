@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRouter } from "@/i18n/navigation";
+import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { useSession } from "next-auth/react";
 import { Flex } from "@welpco/ui/flex";
 import { Spinner } from "@welpco/ui/spinner";
 import { ApiClientError } from "@/lib/api/client";
 import { completeSignupAndRedirect } from "@/lib/auth/complete-signup-and-redirect";
+import { refreshBffTokensInSession } from "@/lib/auth/refresh-session-tokens";
+import { roleFromSelectedRole } from "@/lib/auth/session-role";
 import { safeNextPath } from "@/lib/auth/safe-next";
+import { clearTokenCache } from "@/lib/api/get-token";
 import {
   isOnlyDeferredSetupMissing,
   stepNameToSlug,
@@ -25,7 +28,7 @@ export function WelperRegisterEscape({
   state: SignupStateDto;
   nextRaw: string | null;
 }) {
-  const router = useRouter();
+  const router = useAppRouter();
   const { update: updateSession } = useSession();
   const started = useRef(false);
 
@@ -37,6 +40,15 @@ export function WelperRegisterEscape({
       const dashboardPath = safeNextPath(nextRaw, "/dashboard");
 
       if (state.signupCompleted) {
+        const role = roleFromSelectedRole(state.selectedRole);
+        if (role) {
+          await updateSession({
+            user: { signupCompleted: true, role },
+          });
+          await refreshBffTokensInSession(updateSession);
+          clearTokenCache();
+          router.refresh?.();
+        }
         router.replace(dashboardPath);
         return;
       }

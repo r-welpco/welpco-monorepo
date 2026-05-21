@@ -5,6 +5,17 @@ import { useTranslations } from "next-intl";
 import type { BookingStatus } from "@/lib/services/booking-service";
 import { useWelperServiceAreaStepLabels } from "@/lib/i18n/use-auth-labels";
 
+export type WelperNavChromeLabels = {
+  mobileNavMenu: string;
+  feedback: string;
+  documentation: string;
+  openNavAria: string;
+  bellAria: string;
+  bellUnreadAria: (count: number) => string;
+  searchPlaceholder: string;
+  userMenuAria: string;
+};
+
 export type WelperNavLabels = {
   roleBadge: string;
   tabs: {
@@ -30,10 +41,12 @@ export type WelperNavLabels = {
     english: string;
     french: string;
   };
+  chrome: WelperNavChromeLabels;
 };
 
 export function useWelperNavLabels(): WelperNavLabels {
   const t = useTranslations("dashboard.nav");
+  const chrome = useTranslations("dashboard.nav.chrome");
   return {
     roleBadge: t("roleBadge"),
     tabs: {
@@ -58,6 +71,69 @@ export function useWelperNavLabels(): WelperNavLabels {
     language: {
       english: t("language.english"),
       french: t("language.french"),
+    },
+    chrome: {
+      mobileNavMenu: chrome("mobileNavMenu"),
+      feedback: chrome("feedback"),
+      documentation: chrome("documentation"),
+      openNavAria: chrome("openNavAria"),
+      bellAria: chrome("bellAria"),
+      bellUnreadAria: (count: number) => chrome("bellUnreadAria", { count }),
+      searchPlaceholder: chrome("searchPlaceholder"),
+      userMenuAria: chrome("userMenuAria"),
+    },
+  };
+}
+
+export function useDashboardCommonLabels() {
+  const t = useTranslations("dashboard.common");
+  return {
+    back: t("back"),
+    genericError: t("genericError"),
+  };
+}
+
+export function useDisputeLabels() {
+  const t = useTranslations("dashboard.disputes");
+  const d = useTranslations("dashboard.disputes.detail");
+  return {
+    backToBookings: t("backToBookings"),
+    title: t("title"),
+    description: t("description"),
+    loadListFailed: t("loadListFailed"),
+    emptyTitle: t("emptyTitle"),
+    emptyDescription: t("emptyDescription"),
+    viewBookings: t("viewBookings"),
+    viewReport: t("viewReport"),
+    openBooking: t("openBooking"),
+    paginationAria: t("paginationAria"),
+    prevPageAria: t("prevPageAria"),
+    nextPageAria: t("nextPageAria"),
+    pageOf: (page: number, totalPages: number, total: number) =>
+      t("pageOf", { page, totalPages, total }),
+    detail: {
+      backToReports: d("backToReports"),
+      loadingAria: d("loadingAria"),
+      loadFailed: d("loadFailed"),
+      notFoundTitle: d("notFoundTitle"),
+      notFoundDescription: d("notFoundDescription"),
+      viewAllReports: d("viewAllReports"),
+      reportedAt: (date: string) => d("reportedAt", { date }),
+      withdrawReport: d("withdrawReport"),
+      withdrawnCallout: d("withdrawnCallout"),
+      whatHappened: d("whatHappened"),
+      noDescription: d("noDescription"),
+      evidence: d("evidence"),
+      evidenceCount: (count: number) => d("evidenceCount", { count }),
+      whatHappensNext: d("whatHappensNext"),
+      whatHappensNextDescription: d("whatHappensNextDescription"),
+      messageAboutBooking: d("messageAboutBooking"),
+      openTheBooking: d("openTheBooking"),
+      withdrawConfirmTitle: d("withdrawConfirmTitle"),
+      withdrawConfirmDescription: d("withdrawConfirmDescription"),
+      withdrawConfirmLabel: d("withdrawConfirmLabel"),
+      withdrawCancelLabel: d("withdrawCancelLabel"),
+      withdrawFailed: d("withdrawFailed"),
     },
   };
 }
@@ -445,6 +521,8 @@ export function useWelperBookingDetailLabels() {
       title: t("disputeTitle"),
       description: t("disputeDescription"),
     },
+    attachmentFallback: t("attachmentFallback"),
+    previewUnavailable: t("previewUnavailable"),
   };
 }
 

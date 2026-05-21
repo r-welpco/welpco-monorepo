@@ -144,9 +144,9 @@ const IMAGE_EXTENSIONS = new Set([
  * but we only rely on "everything after the last slash". Falls back to the
  * raw key when there's no slash.
  */
-function evidenceFilename(file: ReceiptEvidenceFile): string {
+function evidenceFilename(file: ReceiptEvidenceFile, fallback: string): string {
   const tail = file.key.split("/").pop() ?? file.key;
-  return tail || "Attachment";
+  return tail || fallback;
 }
 
 function isImageEvidence(file: ReceiptEvidenceFile): boolean {
@@ -213,7 +213,15 @@ type ConfirmKind = "accept" | "decline" | "check-in" | "cancel";
  * Click → new tab. No lightbox, no inline preview (bible §15.5: don't over-build
  * low-frequency surfaces).
  */
-function ReceiptEvidenceSection({ files }: { files: ReceiptEvidenceFile[] }) {
+function ReceiptEvidenceSection({
+  files,
+  attachmentFallback,
+  previewUnavailable,
+}: {
+  files: ReceiptEvidenceFile[];
+  attachmentFallback: string;
+  previewUnavailable: string;
+}) {
   const images = files.filter(isImageEvidence);
   const others = files.filter((f) => !isImageEvidence(f));
 
@@ -226,11 +234,11 @@ function ReceiptEvidenceSection({ files }: { files: ReceiptEvidenceFile[] }) {
       {images.length > 0 ? (
         <Box className={styles.evidenceGrid}>
           {images.map((file, idx) => {
-            const filename = evidenceFilename(file);
+            const filename = evidenceFilename(file, attachmentFallback);
             const key = file.id ?? `${file.key}-${idx}`;
             if (!file.signedUrl) {
               return (
-                <Tooltip key={key} content="Preview unavailable right now">
+                <Tooltip key={key} content={previewUnavailable}>
                   <Box
                     className={`${styles.evidenceThumb} ${styles.evidenceThumbDisabled}`}
                     aria-label={`${filename} — preview unavailable`}
@@ -259,11 +267,11 @@ function ReceiptEvidenceSection({ files }: { files: ReceiptEvidenceFile[] }) {
       {others.length > 0 ? (
         <Box className={styles.evidenceFileList}>
           {others.map((file, idx) => {
-            const filename = evidenceFilename(file);
+            const filename = evidenceFilename(file, attachmentFallback);
             const key = file.id ?? `${file.key}-${idx}`;
             if (!file.signedUrl) {
               return (
-                <Tooltip key={key} content="Preview unavailable right now">
+                <Tooltip key={key} content={previewUnavailable}>
                   <Box
                     className={`${styles.evidenceFileRow} ${styles.evidenceFileRowDisabled}`}
                     aria-label={`${filename} — preview unavailable`}
@@ -1345,6 +1353,16 @@ export default function BookingDetailClient({
                       <Separator size="4" />
                       <ReceiptEvidenceSection
                         files={booking.serviceReceipt.evidenceFiles}
+                        attachmentFallback={
+                          isWelper
+                            ? welperDetail.attachmentFallback
+                            : "Attachment"
+                        }
+                        previewUnavailable={
+                          isWelper
+                            ? welperDetail.previewUnavailable
+                            : "Preview unavailable right now"
+                        }
                       />
                     </>
                   ) : null}

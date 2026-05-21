@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Link } from "@/i18n/navigation";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { verificationHref } from "@/lib/auth/verification-href";
-import { useTranslations } from "next-intl";
+import { resolveAppHref } from "@/lib/i18n/dashboard-navigation";
+import { useTranslations, useLocale } from "next-intl";
+import type { Locale } from "@/i18n/routing";
 import { Box } from "@welpco/ui/box";
 import { Button } from "@welpco/ui/button";
 import { Callout } from "@welpco/ui/callout";
@@ -49,11 +51,19 @@ const PROFILE_SETUP_TAB_HREFS: Partial<Record<WelperSetupTaskId, string>> = {
   optionalProfile: "/dashboard/profile?tab=profile",
 };
 
-function taskActionHref(task: WelperSetupTaskDto, sessionEmail?: string): string {
+function taskActionHref(
+  task: WelperSetupTaskDto,
+  locale: Locale,
+  sessionEmail?: string,
+): string {
   if (task.id === "emailVerification" && sessionEmail) {
-    return verificationHref(sessionEmail, "/dashboard");
+    return resolveAppHref(verificationHref(sessionEmail, "/dashboard"), locale);
   }
-  return PROFILE_SETUP_TAB_HREFS[task.id] ?? task.href;
+  const profileTab = PROFILE_SETUP_TAB_HREFS[task.id];
+  if (profileTab) {
+    return profileTab;
+  }
+  return resolveAppHref(task.href, locale);
 }
 
 function isBackgroundCheckLinkSent(bg: BackgroundCheckStatusResponse | undefined): boolean {
@@ -85,8 +95,19 @@ interface WelperSetupChecklistProps {
 
 export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistProps) {
   const t = useTranslations("dashboard.setup");
+  const locale = useLocale() as Locale;
   const { data: session } = useSession();
-  const { data: raw, isLoading, isError } = useWelperSetupChecklist();
+  const sessionRole = session?.user?.role;
+  const isWelperSession = sessionRole === "welper";
+  const { data: raw, isLoading, isError, refetch } = useWelperSetupChecklist(
+    isWelperSession,
+  );
+
+  useEffect(() => {
+    if (isWelperSession && isError) {
+      void refetch();
+    }
+  }, [isWelperSession, isError, refetch]);
   const { data: backgroundCheck } = useBackgroundCheckStatus();
 
   const emailVerified = session?.user?.emailVerified === true;
@@ -94,6 +115,14 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
     () => (raw ? normalizeWelperSetupChecklist(raw, emailVerified) : undefined),
     [raw, emailVerified],
   );
+
+  if (!isWelperSession) {
+    return (
+      <Text size="2" color="gray">
+        {t("loading")}
+      </Text>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -122,14 +151,16 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
     );
   }
 
-  const requiredTasks = data.setupTasks.filter((task) => task.required);
-  const completedRequired = requiredTasks.filter((task) => task.completed).length;
+  const requiredTasks = data.setupTasks.filter((task: WelperSetupTaskDto) => task.required);
+  const completedRequired = requiredTasks.filter((task: WelperSetupTaskDto) => task.completed).length;
   const progressPct = Math.round(
     (completedRequired / Math.max(requiredTasks.length, 1)) * 100,
   );
 
   if (variant === "compact") {
-    const nextTask = data.setupTasks.find((task) => task.required && !task.completed);
+    const nextTask = data.setupTasks.find(
+      (task: WelperSetupTaskDto) => task.required && !task.completed,
+    );
     return (
       <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="status">
         <Flex
@@ -147,7 +178,7 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
           </Callout.Text>
           {nextTask ? (
             <Button size="2" color={SEMANTIC_COLOR.warning} variant="soft" asChild>
-              <Link href={taskActionHref(nextTask, session?.user?.email ?? undefined)}>
+              <Link href={taskActionHref(nextTask, locale, session?.user?.email ?? undefined)}>
                 {t("continueSetup")}
               </Link>
             </Button>
@@ -180,12 +211,13 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
 
         <Flex direction="column" gap="2" asChild>
           <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-            {data.setupTasks.map((task) => (
+            {data.setupTasks.map((task: WelperSetupTaskDto) => (
               <SetupTaskRow
                 key={task.id}
                 task={task}
                 label={setupTaskLabel(task, t)}
                 statusLabel={setupTaskStatusLabel(task, t, backgroundCheck)}
+                locale={locale}
                 sessionEmail={session?.user?.email ?? undefined}
               />
             ))}
@@ -200,11 +232,13 @@ function SetupTaskRow({
   task,
   label,
   statusLabel,
+  locale,
   sessionEmail,
 }: {
   task: WelperSetupTaskDto;
   label: string;
   statusLabel: string;
+  locale: Locale;
   sessionEmail?: string;
 }) {
   const t = useTranslations("dashboard.setup");
@@ -277,14 +311,14 @@ function SetupTaskRow({
                   {resend.isPending ? t("resendSending") : t("resendVerification")}
                 </Button>
                 <Button size="1" variant="soft" asChild>
-                  <Link href={taskActionHref(task, sessionEmail)}>
+                  <Link href={taskActionHref(task, locale, sessionEmail)}>
                     {t("verifyEmail")}
                   </Link>
                 </Button>
               </>
             ) : (
               <Button size="1" variant="soft" asChild>
-                <Link href={taskActionHref(task, sessionEmail)}>{t("open")}</Link>
+                <Link href={taskActionHref(task, locale, sessionEmail)}>{t("open")}</Link>
               </Button>
             )}
           </Flex>

@@ -32,6 +32,11 @@ export function safeNextPath(rawNext: string | null | undefined, fallback = "/da
   // Defensive: reject embedded scheme markers and CR/LF.
   if (/[\r\n]/.test(decoded)) return fallback;
 
+  // next-intl may have produced `/fr/dashboard/*`; app shell has no `[locale]` segment.
+  if (decoded === "/fr/dashboard" || decoded.startsWith("/fr/dashboard/")) {
+    return decoded.slice(3) || "/dashboard";
+  }
+
   return decoded;
 }
 

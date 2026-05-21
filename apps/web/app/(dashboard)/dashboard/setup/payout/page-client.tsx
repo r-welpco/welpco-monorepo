@@ -19,6 +19,7 @@ import {
   useStripeConnectStatus,
   useSyncStripeConnect,
 } from "@/lib/hooks/use-signup";
+import { useDashboardCommonLabels } from "@/lib/i18n/use-dashboard-labels";
 
 export default function PayoutSetupPageClient() {
   const locale = useLocale();
@@ -27,6 +28,7 @@ export default function PayoutSetupPageClient() {
   const connectReturn = searchParams.get("connect");
   const t = useTranslations("dashboard.setup.payout");
   const labels = useWelperPayoutStepLabels();
+  const common = useDashboardCommonLabels();
 
   const { data: state } = useSignupState();
   const stripeConnectStatus = useStripeConnectStatus(true);
@@ -36,10 +38,10 @@ export default function PayoutSetupPageClient() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const syncedConnectReturnRef = useRef(false);
 
-  const liteState: SignupStateLite = {
+  const liteState = {
     completedSteps: state?.completedSteps ?? [],
     filledData: state?.filledData ?? {},
-  };
+  } as SignupStateLite;
 
   useEffect(() => {
     if (connectReturn !== "return" && connectReturn !== "refresh") return;
@@ -51,10 +53,10 @@ export default function PayoutSetupPageClient() {
         await syncConnect.mutateAsync();
       } catch (err) {
         syncedConnectReturnRef.current = false;
-        setSubmitError(err instanceof Error ? err.message : "Something went wrong.");
+        setSubmitError(err instanceof Error ? err.message : common.genericError);
       }
     })();
-  }, [connectReturn, syncConnect]);
+  }, [connectReturn, syncConnect, common.genericError]);
 
   const connect = stripeConnectStatus.data;
   const filledPayout = liteState.filledData.welperPayout as
@@ -69,7 +71,7 @@ export default function PayoutSetupPageClient() {
       <Flex direction="column" gap="5">
         <Flex direction="column" gap="2">
           <Button size="2" variant="ghost" asChild style={{ alignSelf: "flex-start" }}>
-            <Link href="/dashboard">← Back</Link>
+            <Link href="/dashboard">{common.back}</Link>
           </Button>
           <Heading as="h1" size="7" trim="start">
             {t("pageTitle")}

@@ -1,4 +1,5 @@
-import type { WelperSetupChecklistDto, WelperSetupTaskDto } from "@welpco/types";
+import type { WelperSetupTaskDto } from "@welpco/types";
+import type { WelperSetupChecklistDto } from "@/lib/services/welper-setup-service";
 
 const EMAIL_VERIFICATION_TASK: WelperSetupTaskDto = {
   id: "emailVerification",

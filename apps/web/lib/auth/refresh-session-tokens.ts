@@ -2,6 +2,7 @@
 
 import type { Session } from "next-auth";
 import { getSession } from "next-auth/react";
+import { clearTokenCache } from "@/lib/api/get-token";
 
 const API_ORIGIN = (
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
@@ -38,6 +39,7 @@ export async function refreshBffTokensInSession(
       accessToken: data.accessToken,
       refreshToken: data.refreshToken,
     });
+    clearTokenCache();
   } catch {
     // Non-fatal — session role is still patched via updateSession user fields.
   }

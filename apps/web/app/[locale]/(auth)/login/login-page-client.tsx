@@ -7,7 +7,7 @@ import { Box } from "@welpco/ui/box";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { signIn, useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
@@ -20,7 +20,7 @@ import { useLoginFormLabels } from "@/lib/i18n/use-auth-labels";
 import { LoginAlreadySignedIn } from "./login-already-signed-in";
 
 export default function LoginPageClient() {
-  const router = useRouter();
+  const router = useAppRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { data: session, status, update: updateSession } = useSession();

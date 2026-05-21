@@ -1,6 +1,6 @@
 "use client";
 
-import { Dialog as RadixDialog, Heading, Text, IconButton, Flex, Box } from "@radix-ui/themes";
+import { Dialog as RadixDialog, IconButton, Flex, Box } from "@radix-ui/themes";
 import { Cross2Icon } from "@radix-ui/react-icons";
 import { type ComponentPropsWithoutRef } from "react";
 
@@ -24,15 +24,13 @@ export function DialogContent({
         {(title || description) && (
           <Box>
             {title && (
-              <RadixDialog.Title>
-                <Heading size="5">{title}</Heading>
+              <RadixDialog.Title size="5" trim="start">
+                {title}
               </RadixDialog.Title>
             )}
             {description && (
-              <RadixDialog.Description>
-                <Text size="2" color="gray" mt="2">
-                  {description}
-                </Text>
+              <RadixDialog.Description size="2" color="gray" mt="2">
+                {description}
               </RadixDialog.Description>
             )}
           </Box>

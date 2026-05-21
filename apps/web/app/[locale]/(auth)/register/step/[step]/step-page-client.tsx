@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/navigation";
+import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { useSession } from "next-auth/react";
 import { refreshBffTokensInSession } from "@/lib/auth/refresh-session-tokens";
 import { localizedPath } from "@/i18n/locale-routes";
@@ -60,7 +60,7 @@ import type { SelectedRole, SignupStepName } from "@welpco/types";
  * user pastes a future step's URL.
  */
 export default function StepPageClient({ slug }: { slug: string }) {
-  const router = useRouter();
+  const router = useAppRouter();
   const locale = useLocale() as Locale;
   const searchParams = useSearchParams();
   const nextRaw = searchParams.get("next");
@@ -80,6 +80,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
   const completeSelectRole = useCompleteSelectRoleStep();
   const completeIdentity = useCompleteIdentityStep();
   const completeWelperBio = useCompleteWelperBioStep();
+  const completeOptionalProfile = useCompleteOptionalProfileStep();
 
   const [submitError, setSubmitError] = useState<string | null>(null);
 

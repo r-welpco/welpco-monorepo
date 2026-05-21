@@ -1185,6 +1185,10 @@
     }
   },
   "dashboard": {
+    "common": {
+      "back": "← Back",
+      "genericError": "Something went wrong."
+    },
     "setup": {
       "loading": "Loading your setup checklist…",
       "loadError": "We couldn't load your setup checklist. Refresh the page and try again.",
@@ -1251,6 +1255,16 @@
       "language": {
         "english": "English",
         "french": "French"
+      },
+      "chrome": {
+        "mobileNavMenu": "Navigate",
+        "feedback": "Feedback",
+        "documentation": "Documentation",
+        "openNavAria": "Open navigation menu",
+        "bellAria": "Notifications",
+        "bellUnreadAria": "Notifications ({count} unread)",
+        "searchPlaceholder": "Search jobs…",
+        "userMenuAria": "User menu"
       }
     },
     "home": {
@@ -1620,7 +1634,55 @@
       "reviewSaveChanges": "Save changes",
       "reviewSkip": "Skip for now",
       "disputeTitle": "Report a problem",
-      "disputeDescription": "We'll review your case and get back to you within 48 hours."
+      "disputeDescription": "We'll review your case and get back to you within 48 hours.",
+      "attachmentFallback": "Attachment",
+      "previewUnavailable": "Preview unavailable right now"
+    },
+    "disputes": {
+      "backToBookings": "Back to bookings",
+      "title": "Problem reports",
+      "description": "When something goes wrong with a booking, we want to know. Track open reports here, and we'll keep you posted.",
+      "loadListFailed": "We couldn't load your reports. Try again in a moment.",
+      "emptyTitle": "Nothing to report",
+      "emptyDescription": "If a booking goes sideways, you can flag it from the booking page and we'll work it out.",
+      "viewBookings": "View bookings",
+      "viewReport": "View report",
+      "openBooking": "Open booking",
+      "paginationAria": "Reports pagination",
+      "prevPageAria": "Previous page",
+      "nextPageAria": "Next page",
+      "pageOf": "Page {page} of {totalPages} · {total} reports",
+      "categories": {
+        "no_show": "No-show",
+        "quality": "Service quality",
+        "overcharge": "Pricing",
+        "safety": "Safety",
+        "other": "Other"
+      },
+      "detail": {
+        "backToReports": "Back to reports",
+        "loadingAria": "Loading report",
+        "loadFailed": "We couldn't load this report. Try again in a moment.",
+        "notFoundTitle": "Report not found",
+        "notFoundDescription": "This report doesn't exist, or you don't have access to it. If this looks wrong, contact support.",
+        "viewAllReports": "View all reports",
+        "reportedAt": "Reported {date}",
+        "withdrawReport": "Withdraw report",
+        "withdrawnCallout": "This report has been withdrawn. The booking is back to its previous state. You can file a new report later if something else comes up.",
+        "whatHappened": "What happened",
+        "noDescription": "No description provided.",
+        "evidence": "Evidence",
+        "evidenceCount": "{count, plural, one {# item attached.} other {# items attached.}}",
+        "whatHappensNext": "What happens next",
+        "whatHappensNextDescription": "Our team reviews every report within 48 hours. We may reach out for more detail before deciding. You'll see updates here and in your inbox.",
+        "messageAboutBooking": "Message about the booking",
+        "openTheBooking": "Open the booking",
+        "withdrawConfirmTitle": "Withdraw your report?",
+        "withdrawConfirmDescription": "This closes the report and tells the team you no longer need a resolution. You can file a new report later if needed.",
+        "withdrawConfirmLabel": "Withdraw report",
+        "withdrawCancelLabel": "Keep report open",
+        "withdrawFailed": "We couldn't withdraw this report. Try again in a moment, or contact support if it keeps happening."
+      }
     },
     "notifications": {
       "title": "Notifications",

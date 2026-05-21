@@ -61,6 +61,16 @@ export interface WelperHeaderLabels {
     english: string;
     french: string;
   };
+  chrome?: {
+    mobileNavMenu?: string;
+    feedback?: string;
+    documentation?: string;
+    openNavAria?: string;
+    bellAria?: string;
+    bellUnreadAria?: (count: number) => string;
+    searchPlaceholder?: string;
+    userMenuAria?: string;
+  };
 }
 
 export type DashboardLocale = "en" | "fr";
@@ -206,13 +216,15 @@ export function WelperHeader({
                     <IconButton
                       variant="ghost"
                       size="3"
-                      aria-label="Open navigation menu"
+                      aria-label={labels?.chrome?.openNavAria ?? "Open navigation menu"}
                     >
                       <Menu size={20} aria-hidden="true" />
                     </IconButton>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" style={{ minWidth: "220px" }}>
-                    <DropdownMenuLabel>Navigate</DropdownMenuLabel>
+                    <DropdownMenuLabel>
+                      {labels?.chrome?.mobileNavMenu ?? "Navigate"}
+                    </DropdownMenuLabel>
                     {welperTabs.map((tab) => (
                       <DropdownMenuItem
                         key={tab.value}
@@ -292,7 +304,7 @@ export function WelperHeader({
                 <Box asChild display={{ initial: "none", md: "block" }}>
                   <form onSubmit={handleSearch}>
                     <TextField.Root
-                      placeholder="Search jobs…"
+                      placeholder={labels?.chrome?.searchPlaceholder ?? "Search jobs…"}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       size="2"
@@ -318,7 +330,7 @@ export function WelperHeader({
                     highContrast
                     onClick={onFeedbackClick}
                   >
-                    Feedback
+                    {labels?.chrome?.feedback ?? "Feedback"}
                   </Button>
                 </Box>
               ) : null}
@@ -332,8 +344,9 @@ export function WelperHeader({
                     onClick={onNotificationClick}
                     aria-label={
                       notificationCount > 0
-                        ? `Notifications (${notificationCount} unread)`
-                        : "Notifications"
+                        ? (labels?.chrome?.bellUnreadAria?.(notificationCount) ??
+                          `Notifications (${notificationCount} unread)`)
+                        : (labels?.chrome?.bellAria ?? "Notifications")
                     }
                   >
                     <Bell size={20} aria-hidden="true" />
@@ -359,7 +372,7 @@ export function WelperHeader({
                     variant="ghost"
                     size="3"
                     onClick={onDocsClick}
-                    aria-label="Documentation"
+                    aria-label={labels?.chrome?.documentation ?? "Documentation"}
                   >
                     <BookOpen size={20} aria-hidden="true" />
                   </IconButton>
@@ -369,7 +382,11 @@ export function WelperHeader({
               {user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger>
-                    <IconButton variant="ghost" size="3" aria-label="User menu">
+                    <IconButton
+                      variant="ghost"
+                      size="3"
+                      aria-label={labels?.chrome?.userMenuAria ?? "User menu"}
+                    >
                       <Avatar
                         src={user.image || undefined}
                         alt={user.name || "User"}
@@ -445,7 +462,7 @@ export function WelperHeader({
                         {onFeedbackClick ? (
                           <DropdownMenuItem onClick={onFeedbackClick}>
                             <Flex align="center" gap="2">
-                              <Text size="2">Feedback</Text>
+                              <Text size="2">{labels?.chrome?.feedback ?? "Feedback"}</Text>
                             </Flex>
                           </DropdownMenuItem>
                         ) : null}
@@ -453,7 +470,7 @@ export function WelperHeader({
                           <DropdownMenuItem onClick={onDocsClick}>
                             <Flex align="center" gap="2">
                               <BookOpen size={16} aria-hidden="true" />
-                              <Text size="2">Documentation</Text>
+                              <Text size="2">{labels?.chrome?.documentation ?? "Documentation"}</Text>
                             </Flex>
                           </DropdownMenuItem>
                         ) : null}

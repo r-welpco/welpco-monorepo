@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Box } from "@welpco/ui/box";
@@ -16,6 +16,10 @@ import { Text } from "@welpco/ui/text";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { ApiClientError } from "@/lib/api/client";
 import { completeSignupAndRedirect } from "@/lib/auth/complete-signup-and-redirect";
+import { refreshBffTokensInSession } from "@/lib/auth/refresh-session-tokens";
+import { roleFromSelectedRole } from "@/lib/auth/session-role";
+import { clearTokenCache } from "@/lib/api/get-token";
+import { safeNextPath } from "@/lib/auth/safe-next";
 import {
   getWelperRegisterEscapeTarget,
   isOnlyDeferredSetupMissing,
@@ -25,7 +29,7 @@ import { useSignupState } from "@/lib/hooks/use-signup";
 import type { IncompleteSignupErrorBody } from "@welpco/types";
 
 export default function FinishPageClient() {
-  const router = useRouter();
+  const router = useAppRouter();
   const searchParams = useSearchParams();
   const nextRaw = searchParams.get("next");
   const { update: updateSession } = useSession();
@@ -72,7 +76,16 @@ export default function FinishPageClient() {
     if (stateLoading || !signupState || autoStarted.current) return;
     if (signupState.signupCompleted) {
       autoStarted.current = true;
-      router.replace("/dashboard");
+      void (async () => {
+        const role = roleFromSelectedRole(signupState.selectedRole);
+        if (role) {
+          await updateSession({ user: { signupCompleted: true, role } });
+          await refreshBffTokensInSession(updateSession);
+          clearTokenCache();
+          router.refresh?.();
+        }
+        router.replace(safeNextPath(nextRaw, "/dashboard"));
+      })();
       return;
     }
     const welperEscape =
@@ -85,7 +98,7 @@ export default function FinishPageClient() {
     }
     autoStarted.current = true;
     void goToDashboard();
-  }, [signupState, stateLoading, router, goToDashboard]);
+  }, [signupState, stateLoading, router, goToDashboard, nextRaw, updateSession]);
 
   return (
     <Card

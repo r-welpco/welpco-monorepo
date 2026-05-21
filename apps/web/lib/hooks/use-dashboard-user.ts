@@ -80,5 +80,14 @@ export function useDashboardUser(serverUser: DashboardServerUser): { user: User 
     ],
   );
 
-  return { user: clientUser ?? fallbackUser };
+  const user = useMemo((): User => {
+    const base = clientUser ?? fallbackUser;
+    const serverRole = serverUser.role as "customer" | "welper";
+    if (serverRole && base.role !== serverRole) {
+      return { ...base, role: serverRole };
+    }
+    return base;
+  }, [clientUser, fallbackUser, serverUser.role]);
+
+  return { user };
 }

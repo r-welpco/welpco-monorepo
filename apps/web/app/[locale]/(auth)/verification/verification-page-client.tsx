@@ -3,7 +3,8 @@
 import { AuthBackground, AccountVerification } from "@welpco/ui/platform/user-management";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter, Link } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
+import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { useSession } from "next-auth/react";
 import { Flex } from "@welpco/ui/flex";
 import { Text } from "@welpco/ui/text";
@@ -19,7 +20,7 @@ import { useAccountVerificationLabels } from "@/lib/i18n/use-auth-labels";
 import { WELPER_SETUP_CHECKLIST_KEY } from "@/lib/hooks/use-signup";
 
 export default function VerificationPageClient() {
-  const router = useRouter();
+  const router = useAppRouter();
   const searchParams = useSearchParams();
   const { update: updateSession, data: session, status: sessionStatus } = useSession();
   const queryClient = useQueryClient();

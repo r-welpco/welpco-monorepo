@@ -36,6 +36,7 @@ import {
   useBookingStatusLabel,
   useWelperHomeLabels,
 } from "@/lib/i18n/use-dashboard-labels";
+import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 
 const BOOKINGS_DASHBOARD_LIMIT = 50;
 
@@ -64,6 +65,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
   const { user } = useDashboardUser(serverUser);
   const { data: session } = useSession();
   const welperHome = useWelperHomeLabels();
+  const dateFnsLocale = useDateFnsLocale();
   const bookingStatusLabel = useBookingStatusLabel();
 
   const userRole = user?.role || "customer";
@@ -127,10 +129,11 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
         ? {
             jobTitle: welperHome.activityTitle,
             formatStatus: bookingStatusLabel,
+            dateLocale: dateFnsLocale,
           }
         : undefined,
     );
-  }, [bookings, bookingsRole, welperHome.activityTitle, bookingStatusLabel]);
+  }, [bookings, bookingsRole, welperHome.activityTitle, bookingStatusLabel, dateFnsLocale]);
 
   const upcomingCount = useMemo(() => countUpcomingBookings(bookings), [bookings]);
   const pendingForWelper = useMemo(
@@ -179,7 +182,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
       return userRole === "welper" ? welperHome.loading : "Loading your dashboard…";
     }
     if (userRole === "welper") {
-      if (welperSetupIncomplete) {
+      if (welperSetupIncomplete && !welperShowSetupChecklist) {
         return welperHome.setupIncomplete;
       }
       if (pendingForWelper > 0) {
@@ -207,6 +210,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     pendingForWelper,
     bookings,
     welperSetupIncomplete,
+    welperShowSetupChecklist,
     normalizedWelperSetup,
     welperHome,
   ]);

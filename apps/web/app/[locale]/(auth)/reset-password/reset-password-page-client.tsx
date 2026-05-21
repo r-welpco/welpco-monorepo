@@ -11,7 +11,7 @@ import { Box } from "@welpco/ui/box";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { useTranslations } from "next-intl";
 import { resetPassword } from "@/lib/services/user-service";
 import type { PasswordResetValues } from "@welpco/ui/platform/user-management";
@@ -19,7 +19,7 @@ import { withNext } from "@/lib/auth/safe-next";
 import { usePasswordResetLabels } from "@/lib/i18n/use-auth-labels";
 
 export default function ResetPasswordPageClient() {
-  const router = useRouter();
+  const router = useAppRouter();
   const searchParams = useSearchParams();
   const labels = usePasswordResetLabels();
   const t = useTranslations("auth.resetPassword");

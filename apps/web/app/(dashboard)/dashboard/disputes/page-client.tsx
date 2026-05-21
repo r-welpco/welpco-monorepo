@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { format } from "date-fns";
 import { Container } from "@welpco/ui/container";
 import { Flex } from "@welpco/ui/flex";
 import { Text } from "@welpco/ui/text";
@@ -16,22 +17,15 @@ import { Callout } from "@welpco/ui/callout";
 import { DisputeStatusBadge } from "@welpco/ui";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useDisputes } from "@/lib/hooks/use-disputes";
+import { useDisputeLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useDisputeCategoryLabel } from "@/lib/i18n/dispute-labels";
+import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import { ArrowLeft, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
-import { format } from "date-fns";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  no_show: "No-show",
-  quality: "Service quality",
-  overcharge: "Pricing",
-  safety: "Safety",
-  other: "Other",
-};
-
-function formatCategory(raw: string): string {
-  return CATEGORY_LABELS[raw] ?? raw.replace(/_/g, " ");
-}
 
 export default function DisputesPageClient() {
+  const labels = useDisputeLabels();
+  const formatCategory = useDisputeCategoryLabel();
+  const dateLocale = useDateFnsLocale();
   const [page, setPage] = useState(1);
   const limit = 10;
   const { data, isLoading, isError, error } = useDisputes({ page, limit });
@@ -44,34 +38,27 @@ export default function DisputesPageClient() {
     <Container size="3" px={{ initial: "4", sm: "6" }}>
       <Flex direction="column" gap="6">
         <Box>
-          <Button
-            variant="ghost"
-            color="gray"
-            size="2"
-            asChild
-          >
+          <Button variant="ghost" color="gray" size="2" asChild>
             <Link href="/dashboard/bookings">
               <ArrowLeft size={16} aria-hidden="true" />
-              Back to bookings
+              {labels.backToBookings}
             </Link>
           </Button>
         </Box>
 
         <Box>
           <Heading as="h1" size="7" mb="2" trim="start">
-            Problem reports
+            {labels.title}
           </Heading>
           <Text size="2" color="gray" highContrast as="p">
-            When something goes wrong with a booking, we want to know. Track open reports here, and we&apos;ll keep you posted.
+            {labels.description}
           </Text>
         </Box>
 
         {isError && (
           <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
             <Callout.Text>
-              {error instanceof Error
-                ? error.message
-                : "We couldn't load your reports. Try again in a moment."}
+              {error instanceof Error ? error.message : labels.loadListFailed}
             </Callout.Text>
           </Callout.Root>
         )}
@@ -102,14 +89,14 @@ export default function DisputesPageClient() {
               </Flex>
               <Box>
                 <Heading size="4" align="center" mb="1" trim="start">
-                  Nothing to report
+                  {labels.emptyTitle}
                 </Heading>
                 <Text size="2" color="gray" highContrast align="center" as="p">
-                  If a booking goes sideways, you can flag it from the booking page and we&apos;ll work it out.
+                  {labels.emptyDescription}
                 </Text>
               </Box>
               <Button size="2" variant="soft" color="gray" asChild>
-                <Link href="/dashboard/bookings">View bookings</Link>
+                <Link href="/dashboard/bookings">{labels.viewBookings}</Link>
               </Button>
             </Flex>
           </Card>
@@ -142,19 +129,19 @@ export default function DisputesPageClient() {
                               <DisputeStatusBadge status={d.status} />
                               <Text size="1" color="gray" highContrast>
                                 {formatCategory(d.category)} &middot;{" "}
-                                {format(new Date(d.createdAt), "PPp")}
+                                {format(new Date(d.createdAt), "PPp", { locale: dateLocale })}
                               </Text>
                             </Flex>
                           </Flex>
                           <Flex gap="2" wrap="wrap">
                             <Button size="2" variant="soft" color="gray" asChild>
                               <Link href={`/dashboard/disputes/${d.id}`}>
-                                View report
+                                {labels.viewReport}
                               </Link>
                             </Button>
                             <Button size="2" variant="ghost" color="gray" asChild>
                               <Link href={`/dashboard/bookings/${d.bookingId}`}>
-                                Open booking
+                                {labels.openBooking}
                               </Link>
                             </Button>
                           </Flex>
@@ -172,7 +159,7 @@ export default function DisputesPageClient() {
                 gap="3"
                 align="center"
                 role="navigation"
-                aria-label="Reports pagination"
+                aria-label={labels.paginationAria}
               >
                 <IconButton
                   size="2"
@@ -180,12 +167,12 @@ export default function DisputesPageClient() {
                   color="gray"
                   disabled={page <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  aria-label="Previous page"
+                  aria-label={labels.prevPageAria}
                 >
                   <ChevronLeft size={16} aria-hidden="true" />
                 </IconButton>
                 <Text size="2" color="gray" highContrast>
-                  Page {page} of {totalPages} &middot; {total} reports
+                  {labels.pageOf(page, totalPages, total)}
                 </Text>
                 <IconButton
                   size="2"
@@ -193,7 +180,7 @@ export default function DisputesPageClient() {
                   color="gray"
                   disabled={page >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  aria-label="Next page"
+                  aria-label={labels.nextPageAria}
                 >
                   <ChevronRight size={16} aria-hidden="true" />
                 </IconButton>

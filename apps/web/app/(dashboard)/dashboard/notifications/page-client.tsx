@@ -18,6 +18,7 @@ import type { Locale } from "date-fns";
 import { useAuthStore } from "@/stores/authStore";
 import { useDashboardNotificationLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
+import { normalizeDashboardActionUrl } from "@/lib/i18n/dashboard-navigation";
 
 // NOTIFICATIONS-001 + NOTIFICATIONS-002 (Day 16 dispatch 2): map every BFF
 // `NotificationCategory` to a card visual type. `message` and `dispute` are
@@ -104,7 +105,7 @@ export default function NotificationsPageClient() {
         item?.metadata && typeof item.metadata.actionUrl === "string"
           ? item.metadata.actionUrl
           : undefined;
-      if (actionUrl) router.push(actionUrl);
+      if (actionUrl) router.push(normalizeDashboardActionUrl(actionUrl));
     },
     [router, listData?.items],
   );

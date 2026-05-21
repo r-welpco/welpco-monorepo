@@ -14,6 +14,7 @@ import type { Locale } from "date-fns";
 import { useAuthStore } from "@/stores/authStore";
 import { useDashboardNotificationLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
+import { normalizeDashboardActionUrl } from "@/lib/i18n/dashboard-navigation";
 import {
   useNotifications,
   useUnreadCount,
@@ -121,7 +122,7 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
         item?.metadata && typeof item.metadata.actionUrl === "string"
           ? item.metadata.actionUrl
           : undefined;
-      if (actionUrl) router.push(actionUrl);
+      if (actionUrl) router.push(normalizeDashboardActionUrl(actionUrl));
     },
     [router, listData?.items]
   );

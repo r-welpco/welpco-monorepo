@@ -70,7 +70,21 @@ function applyGeoRedirect(request: NextRequest): NextResponse | null {
   return response;
 }
 
+/** Legacy next-intl links used `/fr/dashboard/*`; redirect to unprefixed app shell. */
+function redirectPrefixedDashboard(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  if (pathname === "/fr/dashboard" || pathname.startsWith("/fr/dashboard/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.slice(3);
+    return NextResponse.redirect(url);
+  }
+  return null;
+}
+
 export default auth((req) => {
+  const prefixedDashboard = redirectPrefixedDashboard(req);
+  if (prefixedDashboard) return prefixedDashboard;
+
   const { nextUrl } = req;
   const pathname = nextUrl.pathname;
   let intlResponse: NextResponse | null = null;

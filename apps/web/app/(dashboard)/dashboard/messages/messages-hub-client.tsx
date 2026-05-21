@@ -341,10 +341,11 @@ export function MessagesHub() {
     typeof idFromRoute === "string" && idFromRoute.length > 0 ? idFromRoute : null;
 
   const viewerRole = user?.role === "welper" ? "welper" : "customer";
-  const welperMsg = useWelperMessagesLabels();
+  const isWelper = viewerRole === "welper";
+  const messagesLabels = useWelperMessagesLabels();
+  const welperMsg = isWelper ? messagesLabels : undefined;
   const bookingStatusLabel = useBookingStatusLabel();
   const dateLocale = useDateFnsLocale();
-  const isWelper = viewerRole === "welper";
 
   useEffect(() => {
     if (!user || isLoading || selectedBookingId != null) return;
@@ -363,10 +364,10 @@ export function MessagesHub() {
         <Card size="3" variant="surface">
           <Flex direction="column" align="center" gap="3" py="6" px="3">
             <Heading as="h1" size="5" align="center" trim="start">
-              {welperMsg.signInTitle}
+              {messagesLabels.signInTitle}
             </Heading>
             <Text size="2" color="gray" highContrast align="center" as="p">
-              {welperMsg.signInDescription}
+              {messagesLabels.signInDescription}
             </Text>
           </Flex>
         </Card>
@@ -380,16 +381,16 @@ export function MessagesHub() {
         <Flex align="start" justify="between" wrap="wrap" gap="4">
           <Box style={{ minWidth: 0, flex: "1 1 240px" }}>
             <Heading as="h1" size="7" mb="2" trim="start">
-              {isWelper ? welperMsg.title : "Messages"}
+              {isWelper ? messagesLabels.title : "Messages"}
             </Heading>
             <Text as="p" size="2" color="gray" highContrast>
               {isWelper
-                ? welperMsg.subtitle
+                ? messagesLabels.subtitle
                 : "Pick a booking to chat with your Welper."}
             </Text>
           </Box>
           <Button size="2" variant="ghost" color="gray" onClick={handleBackBookings}>
-            {isWelper ? welperMsg.backToBookings : "Back to bookings"}
+            {isWelper ? messagesLabels.backToBookings : "Back to bookings"}
           </Button>
         </Flex>
 
@@ -409,10 +410,10 @@ export function MessagesHub() {
               className={styles.sidebarHeader}
             >
               <Text as="div" size="2" weight="bold">
-                {isWelper ? welperMsg.conversations : "Conversations"}
+                {isWelper ? messagesLabels.conversations : "Conversations"}
               </Text>
               <Text as="div" size="1" color="gray" highContrast>
-                {isWelper ? welperMsg.conversationsHint : "Bookings you can message"}
+                {isWelper ? messagesLabels.conversationsHint : "Bookings you can message"}
               </Text>
             </Flex>
             <Box className={styles.sidebarBody}>
@@ -429,7 +430,7 @@ export function MessagesHub() {
                       {error instanceof Error
                         ? error.message
                         : isWelper
-                          ? welperMsg.loadError
+                          ? messagesLabels.loadError
                           : "We couldn't load your inbox. Try again in a moment."}
                     </Callout.Text>
                   </Callout.Root>
@@ -457,11 +458,11 @@ export function MessagesHub() {
                   </Flex>
                   <Box>
                     <Text size="2" weight="medium" align="center" as="p" mb="1">
-                      {isWelper ? welperMsg.emptyTitle : "No conversations yet"}
+                      {isWelper ? messagesLabels.emptyTitle : "No conversations yet"}
                     </Text>
                     <Text size="1" color="gray" highContrast align="center" as="p">
                       {isWelper
-                        ? welperMsg.emptyDescription
+                        ? messagesLabels.emptyDescription
                         : "New chats appear here once you have a booking."}
                     </Text>
                   </Box>
@@ -503,14 +504,14 @@ export function MessagesHub() {
             ) : !isLoading && inbox.length === 0 ? (
               <Flex align="center" justify="center" style={{ flex: 1 }}>
                 <Text size="2" color="gray" highContrast>
-                  {isWelper ? welperMsg.noneSelected : "No conversation selected."}
+                  {isWelper ? messagesLabels.noneSelected : "No conversation selected."}
                 </Text>
               </Flex>
             ) : (
               <Flex align="center" justify="center" style={{ flex: 1 }}>
                 <Text size="2" color="gray" highContrast>
                   {isWelper
-                    ? welperMsg.pickFromList
+                    ? messagesLabels.pickFromList
                     : "Pick a booking from the list to start chatting."}
                 </Text>
               </Flex>

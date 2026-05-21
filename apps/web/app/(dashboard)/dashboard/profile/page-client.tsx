@@ -122,7 +122,12 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   // Only run profile API calls when session is ready (avoids "No access token" and infinite loading)
   const sessionReady = sessionStatus === "authenticated";
 
-  const [activeTab, setActiveTab] = useState("overview");
+  const tabFromUrl = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(() =>
+    user.role === "welper" && tabFromUrl && WELPER_PROFILE_TABS.has(tabFromUrl)
+      ? tabFromUrl
+      : "overview",
+  );
 
   useEffect(() => {
     if (user.role !== "welper") return;
@@ -131,6 +136,17 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
       setActiveTab(tab);
     }
   }, [searchParams, user.role]);
+
+  const handleWelperTabChange = useCallback(
+    (value: string) => {
+      setActiveTab(value);
+      if (user.role !== "welper") return;
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", value);
+      router.replace(`/dashboard/profile?${params.toString()}`);
+    },
+    [user.role, searchParams, router],
+  );
   const [isServiceOfferingDialogOpen, setIsServiceOfferingDialogOpen] = useState(false);
   const [editingOffering, setEditingOffering] = useState<{ id?: string } & ServiceOfferingValues | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -740,7 +756,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
           </Callout.Root>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleWelperTabChange}>
           <TabsList>
             <TabsTrigger value="overview">{welperProfileLabels.tabs.overview}</TabsTrigger>
             <TabsTrigger value="profile">{welperProfileLabels.tabs.profile}</TabsTrigger>
