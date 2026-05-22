@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UserAccount, AccountType, AccountStatus } from '../entities/user-account.entity';
 import { VerificationStatus, BackgroundCheckStatus } from '../entities/verification-status.entity';
 import { CustomerProfile } from '../../profile-management/entities/customer-profile.entity';
@@ -36,6 +36,7 @@ export type AdminUserListRow = UserAccount & {
   backgroundCheckStatus: string | null;
   signupStepsCompleted: number | null;
   signupStepsRequired: number | null;
+  profilePhotoUrl: string | null;
 };
 
 export type AdminUsersSortBy = 'createdAt' | 'email' | 'status' | 'lastLoginAt' | 'signupSteps';
@@ -131,10 +132,45 @@ export class AdminService {
     };
   }
 
+  private async loadProfilePhotoUrlsByUserIds(
+    users: UserAccount[],
+  ): Promise<Map<string, string | null>> {
+    const photoByUserId = new Map<string, string | null>();
+    const customerIds = users
+      .filter((u) => u.accountType === AccountType.CUSTOMER)
+      .map((u) => u.id);
+    const welperIds = users
+      .filter((u) => u.accountType === AccountType.WELPER)
+      .map((u) => u.id);
+
+    if (customerIds.length > 0) {
+      const rows = await this.customerProfileRepository.find({
+        where: { customerId: In(customerIds) },
+        select: ['customerId', 'profilePhotoUrl'],
+      });
+      for (const row of rows) {
+        photoByUserId.set(row.customerId, row.profilePhotoUrl ?? null);
+      }
+    }
+
+    if (welperIds.length > 0) {
+      const rows = await this.welperProfileRepository.find({
+        where: { welperId: In(welperIds) },
+        select: ['welperId', 'profilePhotoUrl'],
+      });
+      for (const row of rows) {
+        photoByUserId.set(row.welperId, row.profilePhotoUrl ?? null);
+      }
+    }
+
+    return photoByUserId;
+  }
+
   private async enrichUsersForList(users: UserAccount[]): Promise<AdminUserListRow[]> {
     const paymentMap = await this.backgroundCheckService.getPaymentSummaryByUserIds(
       users.map((u) => u.id),
     );
+    const photoByUserId = await this.loadProfilePhotoUrlsByUserIds(users);
     const signupCounts = await Promise.all(
       users.map((user) => this.getSignupStepCountsForList(user)),
     );
@@ -150,6 +186,7 @@ export class AdminService {
           user.verificationStatus?.backgroundCheckStatus ?? null,
         signupStepsCompleted: steps.completed,
         signupStepsRequired: steps.required,
+        profilePhotoUrl: photoByUserId.get(user.id) ?? null,
       };
     });
   }
@@ -288,6 +325,12 @@ export class AdminService {
       throw new NotFoundException('User not found');
     }
     return user;
+  }
+
+  async getProfilePhotoUrlForUser(userId: string): Promise<string | null> {
+    const user = await this.findOne(userId);
+    const map = await this.loadProfilePhotoUrlsByUserIds([user]);
+    return map.get(userId) ?? null;
   }
 
   async getBackgroundCheckExtras(userId: string): Promise<AdminUserDetailExtras> {
@@ -454,6 +497,7 @@ export class AdminService {
     type: 'customer' | 'welper' | null;
     firstName?: string;
     lastName?: string;
+    profilePhotoUrl?: string | null;
     profileCompletionStatus?: string;
     onboardingCompleted?: boolean;
     phoneNumber?: unknown;
@@ -473,6 +517,7 @@ export class AdminService {
         type: 'customer',
         firstName: profile.firstName,
         lastName: profile.lastName,
+        profilePhotoUrl: profile.profilePhotoUrl ?? null,
         profileCompletionStatus: profile.profileCompletionStatus,
         onboardingCompleted: profile.onboardingCompleted,
         phoneNumber: profile.phoneNumber,
@@ -489,6 +534,7 @@ export class AdminService {
         type: 'welper',
         firstName: profile.firstName ?? undefined,
         lastName: profile.lastName ?? undefined,
+        profilePhotoUrl: profile.profilePhotoUrl ?? null,
         profileCompletionStatus: profile.profileCompletionStatus,
         onboardingCompleted: profile.onboardingCompleted,
         phoneNumber: profile.phoneNumber,

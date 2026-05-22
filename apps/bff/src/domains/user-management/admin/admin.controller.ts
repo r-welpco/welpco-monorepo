@@ -165,10 +165,14 @@ export class AdminController {
   @ApiResponse({ status: 404, description: 'User not found' })
   async findOne(@Param('id') id: string) {
     const user = await this.adminService.findOne(id);
-    const backgroundCheck = await this.adminService.getBackgroundCheckExtras(id);
+    const [backgroundCheck, profilePhotoUrl] = await Promise.all([
+      this.adminService.getBackgroundCheckExtras(id),
+      this.adminService.getProfilePhotoUrlForUser(id),
+    ]);
     return {
       ...sanitizeAdminUser(user),
       ...backgroundCheck,
+      profilePhotoUrl,
     };
   }
 

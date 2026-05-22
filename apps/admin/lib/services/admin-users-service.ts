@@ -29,6 +29,7 @@ export interface AdminUserRow {
   /** Customer/Welper signup wizard progress; null for Admin/Guardian. */
   signupStepsCompleted?: number | null;
   signupStepsRequired?: number | null;
+  profilePhotoUrl?: string | null;
 }
 
 export type AdminUsersSortBy = "createdAt" | "email" | "status" | "lastLoginAt" | "signupSteps";
@@ -174,6 +175,7 @@ export interface AdminUserProfile {
   type: "customer" | "welper" | null;
   firstName?: string;
   lastName?: string;
+  profilePhotoUrl?: string | null;
   profileCompletionStatus?: string;
   onboardingCompleted?: boolean;
   phoneNumber?: unknown;

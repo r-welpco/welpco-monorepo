@@ -13,6 +13,7 @@ import {
 } from "@welpco/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminUserAvatar } from "@/components/admin-user-avatar";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { DetailRow, DetailTable } from "@/components/detail-rows";
 import {
@@ -89,20 +90,29 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
   const identityVerified = user.verificationStatus?.identityVerified ?? false;
   const bgStep = signupState?.stepSummaries?.welperBackgroundCheck;
   const payoutStep = signupState?.stepSummaries?.welperPayout;
+  const profilePhotoUrl =
+    profile?.profilePhotoUrl ?? user.profilePhotoUrl ?? null;
 
   return (
     <Flex direction="column" gap="4">
       <Text size="2">
         <Link href="/users">← Users</Link>
       </Text>
-      <Flex direction="column" gap="1">
-        <Heading size="6">{user.email}</Heading>
-        <Flex gap="2" wrap="wrap" align="center">
-          <Badge variant="soft">{user.accountType}</Badge>
-          <Badge variant="soft">{user.status}</Badge>
-          <Text size="2" color="gray">
-            {user.emailVerified ? "Email verified" : "Email not verified"}
-          </Text>
+      <Flex gap="4" align="start" wrap="wrap">
+        <AdminUserAvatar
+          email={user.email}
+          profilePhotoUrl={profilePhotoUrl}
+          size="6"
+        />
+        <Flex direction="column" gap="1" style={{ minWidth: 0, flex: 1 }}>
+          <Heading size="6">{user.email}</Heading>
+          <Flex gap="2" wrap="wrap" align="center">
+            <Badge variant="soft">{user.accountType}</Badge>
+            <Badge variant="soft">{user.status}</Badge>
+            <Text size="2" color="gray">
+              {user.emailVerified ? "Email verified" : "Email not verified"}
+            </Text>
+          </Flex>
         </Flex>
       </Flex>
 
@@ -212,12 +222,23 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
         </Card>
       ) : profile && profile.type ? (
         <Card size="2" title="Profile">
-          <DetailTable>
+          <Flex gap="4" align="center" style={{ marginBottom: "var(--space-3)" }}>
+            <AdminUserAvatar
+              email={user.email}
+              profilePhotoUrl={profilePhotoUrl}
+              size="5"
+            />
             {profile.firstName || profile.lastName ? (
-              <DetailRow label="Name">
-                {[profile.firstName, profile.lastName].filter(Boolean).join(" ") || "—"}
-              </DetailRow>
-            ) : null}
+              <Text size="4" weight="medium">
+                {[profile.firstName, profile.lastName].filter(Boolean).join(" ")}
+              </Text>
+            ) : (
+              <Text size="2" color="gray">
+                No name on profile
+              </Text>
+            )}
+          </Flex>
+          <DetailTable>
             <DetailRow label="Profile status">
               <Badge variant="soft">{profile.profileCompletionStatus ?? "—"}</Badge>
             </DetailRow>

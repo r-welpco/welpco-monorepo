@@ -12,6 +12,7 @@ import {
   Text,
 } from "@welpco/ui";
 import Link from "next/link";
+import { AdminUserAvatar } from "@/components/admin-user-avatar";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { NativeFormField, nativeInputProps, nativeSelectProps } from "@/components/native-form-field";
@@ -269,6 +270,7 @@ export default async function AdminUsersPage({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableColumnHeaderCell style={{ width: 48 }} />
               <TableColumnHeaderCell>
                 <Link href={sortHref("email")}>Email{sortIndicator("email")}</Link>
               </TableColumnHeaderCell>
@@ -295,13 +297,16 @@ export default async function AdminUsersPage({
           <TableBody>
             {data.users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11}>
+                <TableCell colSpan={12}>
                   <Text color="gray">No users.</Text>
                 </TableCell>
               </TableRow>
             ) : (
               data.users.map((u) => (
                 <TableRow key={u.id}>
+                  <TableCell>
+                    <AdminUserAvatar email={u.email} profilePhotoUrl={u.profilePhotoUrl} />
+                  </TableCell>
                   <TableCell>{u.email}</TableCell>
                   <TableCell>
                     <Badge variant="soft">{u.accountType}</Badge>
