@@ -486,6 +486,13 @@ const DEFAULT_OPTIONAL_PROFILE_PHOTO: ProfilePhotoUploadLabels = {
   changePhoto: "Change photo",
   removePhoto: "Remove photo",
   acceptedHint: "Accepted: {formats}. Max {maxSizeMB} MB. Min {minWidth}×{minHeight} px.",
+  crop: {
+    title: "Crop your photo",
+    description: "Drag to reposition. Use the slider to zoom in or out.",
+    zoom: "Zoom",
+    cancel: "Cancel",
+    save: "Save photo",
+  },
   errors: {
     invalidFormat: "File must be one of: {formats}",
     fileTooLarge: "File size must be less than {maxSizeMB} MB",

@@ -9,8 +9,23 @@ import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import type { Area } from "react-easy-crop";
 import { Upload, X } from "lucide-react";
+import {
+  cropProfilePhotoToFile,
+  DEFAULT_JPEG_QUALITY,
+  DEFAULT_OUTPUT_SIZE_PX,
+} from "./crop-profile-photo";
+import { ProfilePhotoCropDialog } from "./profile-photo-crop-dialog";
+
+export interface ProfilePhotoCropLabels {
+  title: string;
+  description: string;
+  zoom: string;
+  cancel: string;
+  save: string;
+}
 
 export interface ProfilePhotoUploadLabels {
   title: string;
@@ -20,6 +35,7 @@ export interface ProfilePhotoUploadLabels {
   changePhoto: string;
   removePhoto: string;
   acceptedHint: string;
+  crop: ProfilePhotoCropLabels;
   errors: {
     invalidFormat: string;
     fileTooLarge: string;
@@ -40,6 +56,13 @@ const DEFAULT_PROFILE_PHOTO_UPLOAD_LABELS: ProfilePhotoUploadLabels = {
   changePhoto: "Change photo",
   removePhoto: "Remove photo",
   acceptedHint: "Accepted: {formats}. Max {maxSizeMB} MB. Min {minWidth}×{minHeight} px.",
+  crop: {
+    title: "Crop your photo",
+    description: "Drag to reposition. Use the slider to zoom in or out.",
+    zoom: "Zoom",
+    cancel: "Cancel",
+    save: "Save photo",
+  },
   errors: {
     invalidFormat: "File must be one of: {formats}",
     fileTooLarge: "File size must be less than {maxSizeMB} MB",
@@ -79,6 +102,12 @@ export interface ProfilePhotoUploadProps {
   maxDimensions?: { width: number; height: number };
   /** When true, shows a required marker and hides remove unless `onRemove` is provided. */
   required?: boolean;
+  /** Square crop + JPEG compression before upload (default true). */
+  enableCrop?: boolean;
+  /** Output edge length in pixels after crop (default 1024). */
+  outputSizePx?: number;
+  /** JPEG quality 0–1 after crop (default 0.82). */
+  outputQuality?: number;
 }
 
 const DEFAULT_MAX_SIZE_MB = 5;
@@ -100,6 +129,9 @@ export function ProfilePhotoUpload({
   minDimensions = DEFAULT_MIN_DIMENSIONS,
   maxDimensions = DEFAULT_MAX_DIMENSIONS,
   required = false,
+  enableCrop = true,
+  outputSizePx = DEFAULT_OUTPUT_SIZE_PX,
+  outputQuality = DEFAULT_JPEG_QUALITY,
 }: ProfilePhotoUploadProps) {
   const labels = labelsProp ?? DEFAULT_PROFILE_PHOTO_UPLOAD_LABELS;
   const photoAlt = currentPhotoAlt ?? labels.photoAlt;
@@ -108,11 +140,26 @@ export function ProfilePhotoUpload({
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const clearCropImageSrc = useCallback(() => {
+    setCropImageSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  }, []);
 
   useEffect(() => {
     setPreview(null);
   }, [currentPhotoUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
+    };
+  }, [cropImageSrc]);
 
   const formatList = acceptedFormats
     .map((f) => f.split("/")[1]?.toUpperCase() ?? f)
@@ -131,14 +178,17 @@ export function ProfilePhotoUpload({
     return null;
   };
 
-  const validateImageDimensions = (file: File): Promise<string | null> => {
+  const validateImageDimensions = (
+    file: File,
+    options?: { skipMaxCheck?: boolean },
+  ): Promise<string | null> => {
     return new Promise((resolve) => {
       const img = new Image();
       const objectUrl = URL.createObjectURL(file);
-      
+
       img.onload = () => {
         URL.revokeObjectURL(objectUrl);
-        
+
         if (img.width < minDimensions.width || img.height < minDimensions.height) {
           resolve(
             formatLabel(labels.errors.imageTooSmall, {
@@ -146,7 +196,10 @@ export function ProfilePhotoUpload({
               minHeight: minDimensions.height,
             }),
           );
-        } else if (img.width > maxDimensions.width || img.height > maxDimensions.height) {
+        } else if (
+          !options?.skipMaxCheck &&
+          (img.width > maxDimensions.width || img.height > maxDimensions.height)
+        ) {
           resolve(
             formatLabel(labels.errors.imageTooLarge, {
               maxWidth: maxDimensions.width,
@@ -157,72 +210,101 @@ export function ProfilePhotoUpload({
           resolve(null);
         }
       };
-      
+
       img.onerror = () => {
         URL.revokeObjectURL(objectUrl);
         resolve(labels.errors.invalidImage);
       };
-      
+
       img.src = objectUrl;
     });
+  };
+
+  const uploadProcessedFile = async (file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    if (!onUpload) return;
+
+    try {
+      await onUpload(file);
+    } catch (err) {
+      setPreview(null);
+      setError(err instanceof Error ? err.message : labels.errors.uploadFailed);
+      throw err;
+    }
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Guard against re-entry: if a previous upload is still in flight, ignore
-    // additional selections. Without this the preview from file 2 races with
-    // the still-uploading file 1, and the saved photoUrl can disagree with
-    // what the user sees on screen.
     if (uploading) {
-      // Reset the input so the same file can be retried after the in-flight
-      // upload finishes.
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
     setError(null);
-    setUploading(true);
 
     try {
-      // Validate file
       const validationError = validateFile(file);
       if (validationError) {
         setError(validationError);
         return;
       }
 
-      // Validate dimensions
-      const dimensionError = await validateImageDimensions(file);
+      const dimensionError = await validateImageDimensions(file, {
+        skipMaxCheck: enableCrop,
+      });
       if (dimensionError) {
         setError(dimensionError);
         return;
       }
 
-      // Create preview AFTER validation passes — no point flashing a preview
-      // for a file we're about to reject.
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      // Upload file
-      if (onUpload) {
-        try {
-          await onUpload(file);
-        } catch (err) {
-          setError(
-            err instanceof Error ? err.message : labels.errors.uploadFailed,
-          );
-        }
+      if (enableCrop) {
+        clearCropImageSrc();
+        setCropImageSrc(URL.createObjectURL(file));
+        setCropDialogOpen(true);
+        return;
       }
+
+      setUploading(true);
+      await uploadProcessedFile(file);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      if (!enableCrop) setUploading(false);
+    }
+  };
+
+  const handleCropConfirm = async (croppedAreaPixels: Area) => {
+    if (!cropImageSrc) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const file = await cropProfilePhotoToFile(cropImageSrc, croppedAreaPixels, {
+        outputSizePx,
+        quality: outputQuality,
+      });
+      await uploadProcessedFile(file);
+      setCropDialogOpen(false);
+      clearCropImageSrc();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : labels.errors.uploadFailed);
     } finally {
       setUploading(false);
-      // Reset the input so picking the same file again re-fires onChange.
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  const handleCropDialogOpenChange = (open: boolean) => {
+    if (uploading) return;
+    setCropDialogOpen(open);
+    if (!open) clearCropImageSrc();
   };
 
   const handleRemove = async () => {
@@ -346,6 +428,17 @@ export function ProfilePhotoUpload({
           </Flex>
         </Flex>
       </Flex>
+
+      {enableCrop && cropImageSrc ? (
+        <ProfilePhotoCropDialog
+          open={cropDialogOpen}
+          imageSrc={cropImageSrc}
+          labels={labels.crop}
+          loading={uploading}
+          onOpenChange={handleCropDialogOpenChange}
+          onConfirm={handleCropConfirm}
+        />
+      ) : null}
     </Card>
   );
 }

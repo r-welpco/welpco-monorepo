@@ -1078,6 +1078,13 @@
             "changePhoto": "Changer la photo",
             "removePhoto": "Retirer la photo",
             "acceptedHint": "Formats : {formats}. Max {maxSizeMB} Mo. Min. {minWidth}×{minHeight} px.",
+            "crop": {
+              "title": "Recadrer votre photo",
+              "description": "Glissez pour repositionner. Utilisez le curseur pour zoomer.",
+              "zoom": "Zoom",
+              "cancel": "Annuler",
+              "save": "Enregistrer la photo"
+            },
             "errors": {
               "invalidFormat": "Le fichier doit être : {formats}",
               "fileTooLarge": "La taille doit être inférieure à {maxSizeMB} Mo",

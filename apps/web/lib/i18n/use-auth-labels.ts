@@ -382,6 +382,13 @@ export function useOptionalProfileStepLabels(): OptionalProfileStepLabels {
       changePhoto: t("photoUpload.changePhoto"),
       removePhoto: t("photoUpload.removePhoto"),
       acceptedHint: photo.acceptedHint,
+      crop: {
+        title: t("photoUpload.crop.title"),
+        description: t("photoUpload.crop.description"),
+        zoom: t("photoUpload.crop.zoom"),
+        cancel: t("photoUpload.crop.cancel"),
+        save: t("photoUpload.crop.save"),
+      },
       errors: {
         invalidFormat: photo.errors.invalidFormat,
         fileTooLarge: photo.errors.fileTooLarge,
