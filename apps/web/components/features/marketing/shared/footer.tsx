@@ -6,19 +6,22 @@ import { Link } from "@/i18n/navigation";
 import { MarketingLogo } from "./marketing-logo";
 
 const SOCIAL_LINKS = [
-  { label: "Facebook", href: "https://www.facebook.com/welpco", Icon: Facebook },
-  { label: "Instagram", href: "https://www.instagram.com/welpco", Icon: Instagram },
-  { label: "LinkedIn", href: "https://www.linkedin.com/company/welpco", Icon: Linkedin },
-  { label: "X", href: "https://x.com/welpco", Icon: XIcon },
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/profile.php?id=61567276187526",
+    Icon: Facebook,
+  },
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/welpco_?igsh=a3dic2l1cnJqNjly",
+    Icon: Instagram,
+  },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/company/societewelpco",
+    Icon: Linkedin,
+  },
 ] as const;
-
-function XIcon({ size = 18 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-    </svg>
-  );
-}
 
 export function Footer() {
   const t = useTranslations("marketing.footer");
@@ -143,11 +146,7 @@ export function Footer() {
                         textDecoration: "none",
                       }}
                     >
-                      {label === "X" ? (
-                        <XIcon size={18} />
-                      ) : (
-                        <Icon size={18} strokeWidth={1.75} aria-hidden />
-                      )}
+                      <Icon size={18} strokeWidth={1.75} aria-hidden />
                     </a>
                   </li>
                 ))}
