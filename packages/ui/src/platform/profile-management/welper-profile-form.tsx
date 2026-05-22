@@ -15,6 +15,8 @@ import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm, Controller } from "react-hook-form";
 import { useEffect } from "react";
 import { z } from "zod";
+import { WELPER_BIO_MAX_LENGTH, WELPER_BIO_MIN_LENGTH } from "./bio-limits";
+
 export interface WelperProfileFormLabels {
   title: string;
   description: string;
@@ -45,7 +47,13 @@ const schema = z.object({
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
   phone: z.string().min(7, "Phone number is required"),
-  bio: z.string().min(50, "Bio must be at least 50 characters").max(600, "Keep your bio concise"),
+  bio: z
+    .string()
+    .min(
+      WELPER_BIO_MIN_LENGTH,
+      `Bio must be at least ${WELPER_BIO_MIN_LENGTH} characters`,
+    )
+    .max(WELPER_BIO_MAX_LENGTH, `Bio must be ${WELPER_BIO_MAX_LENGTH} characters or fewer`),
   profileVisibility: z.enum(["Public", "Private"]),
   photoUrl: z.string().optional().nullable(),
 });
@@ -69,8 +77,8 @@ export function WelperProfileForm({
     phone: "Phone",
     bio: "Bio",
     bioPlaceholder:
-      "Describe your expertise, certifications, and approach. Minimum 50 characters.",
-    charCount: (count: number) => `${count} / 600 characters`,
+      "Describe your expertise, certifications, and approach. Minimum 20 characters.",
+    charCount: (count: number) => `${count} / ${WELPER_BIO_MAX_LENGTH} characters`,
     visibility: "Profile visibility",
     visibilityHint:
       "Public profiles are visible in search results. Private profiles are only visible to customers you've worked with.",
@@ -213,6 +221,7 @@ export function WelperProfileForm({
               placeholder={labels.bioPlaceholder}
               size="2"
               disabled={loading}
+              maxLength={WELPER_BIO_MAX_LENGTH}
               aria-required="true"
               {...form.register("bio")}
             />

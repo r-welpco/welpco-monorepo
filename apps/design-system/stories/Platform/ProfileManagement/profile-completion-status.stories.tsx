@@ -53,7 +53,7 @@ export const WelperIncomplete: Story = {
       <ProfileCompletionStatus
         profileType="welper"
         steps={[
-          { id: 'bio', label: 'Bio', completed: true, required: true, description: 'At least 50 characters describing your expertise' },
+          { id: 'bio', label: 'Bio', completed: true, required: true, description: 'At least 20 characters describing your expertise' },
           { id: 'photo', label: 'Profile photo', completed: true, required: true, description: 'Clear photo of yourself' },
           { id: 'service-area', label: 'Service area', completed: true, required: true, description: 'Geographic area where you provide services' },
           { id: 'hourly-rate', label: 'Hourly rate', completed: true, required: true, description: 'Default hourly rate for services' },
@@ -73,7 +73,7 @@ export const WelperComplete: Story = {
       <ProfileCompletionStatus
         profileType="welper"
         steps={[
-          { id: 'bio', label: 'Bio', completed: true, required: true, description: 'At least 50 characters describing your expertise' },
+          { id: 'bio', label: 'Bio', completed: true, required: true, description: 'At least 20 characters describing your expertise' },
           { id: 'photo', label: 'Profile photo', completed: true, required: true, description: 'Clear photo of yourself' },
           { id: 'service-area', label: 'Service area', completed: true, required: true, description: 'Geographic area where you provide services' },
           { id: 'hourly-rate', label: 'Hourly rate', completed: true, required: true, description: 'Default hourly rate for services' },
@@ -93,7 +93,7 @@ export const WithOptionalSteps: Story = {
       <ProfileCompletionStatus
         profileType="welper"
         steps={[
-          { id: 'bio', label: 'Bio', completed: true, required: true, description: 'At least 50 characters describing your expertise' },
+          { id: 'bio', label: 'Bio', completed: true, required: true, description: 'At least 20 characters describing your expertise' },
           { id: 'photo', label: 'Profile photo', completed: true, required: true, description: 'Clear photo of yourself' },
           { id: 'service-area', label: 'Service area', completed: true, required: true, description: 'Geographic area where you provide services' },
           { id: 'hourly-rate', label: 'Hourly rate', completed: true, required: true, description: 'Default hourly rate for services' },

@@ -35,7 +35,7 @@ const CUSTOMER_REQUIRED_STEPS: Array<{ id: string; label: string; description: s
 ];
 
 const WELPER_REQUIRED_STEPS: Array<{ id: string; label: string; description: string }> = [
-  { id: "bio", label: "Bio", description: "At least 50 characters describing your expertise" },
+  { id: "bio", label: "Bio", description: "At least 20 characters describing your expertise" },
   { id: "photo", label: "Profile photo", description: "Clear photo of yourself" },
   { id: "serviceArea", label: "Service area", description: "Geographic area where you provide services" },
   { id: "serviceOfferings", label: "Service offerings", description: "At least one active service offering with hourly rate and experience" },

@@ -1445,7 +1445,7 @@
         "lastName": "Last name",
         "phone": "Phone",
         "bio": "Bio",
-        "bioPlaceholder": "Describe your expertise, certifications, and approach. Minimum 50 characters.",
+        "bioPlaceholder": "Describe your expertise, certifications, and approach. Minimum 20 characters.",
         "charCount": "{count} / 600 characters",
         "visibility": "Profile visibility",
         "visibilityHint": "Public profiles are visible in search results. Private profiles are only visible to customers you've worked with.",

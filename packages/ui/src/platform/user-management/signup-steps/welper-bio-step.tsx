@@ -17,16 +17,20 @@ import {
   DEFAULT_WELPER_BIO_LABELS,
   type WelperBioStepLabels,
 } from "./labels";
+import {
+  WELPER_BIO_MAX_LENGTH,
+  WELPER_BIO_MIN_LENGTH,
+} from "../../profile-management/bio-limits";
 import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch B. Welper-only step 3 of the unified signup wizard.
  *
- * Captures the public bio for the welper profile. Floor matches the BFF DTO.
+ * Captures the public bio for the welper profile. Bounds match the BFF DTO.
  */
 
-const MIN_BIO = 20;
-const MAX_BIO = 2000;
+const MIN_BIO = WELPER_BIO_MIN_LENGTH;
+const MAX_BIO = WELPER_BIO_MAX_LENGTH;
 
 function formatLabel(template: string, vars: Record<string, string | number>): string {
   return Object.entries(vars).reduce(
@@ -134,6 +138,7 @@ export function WelperBioStep({
               size="2"
               disabled={loading}
               required
+              maxLength={MAX_BIO}
               aria-required="true"
               aria-invalid={form.formState.errors.bio ? true : undefined}
               aria-describedby="signup-bio-helper"

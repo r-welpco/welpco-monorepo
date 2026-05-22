@@ -54,18 +54,15 @@ export class UpdateWelperProfileDto extends PartialType(CreateWelperProfileDto) 
   phoneNumber?: PhoneNumberDto;
 
   @ApiProperty({
-    description: 'Bio/description (50–2000 chars when provided)',
+    description: 'Bio/description (20–600 chars when provided)',
     example: 'Experienced service provider',
     required: false,
   })
-  // bio: same band the FE form enforces. The hard FE cap is 600 today, but
-  // the BFF holds at 2000 to accommodate a richer-text bio variant later
-  // without a migration. Min 50 mirrors the FE schema so the API stops the
-  // same nonsense the form prevents.
+  // bio: same band as signup + profile forms (20–600).
   @IsOptional()
   @IsString()
-  @MinLength(50, { message: 'bio must be at least 50 characters' })
-  @MaxLength(2000, { message: 'bio must be at most 2000 characters' })
+  @MinLength(20, { message: 'bio must be at least 20 characters' })
+  @MaxLength(600, { message: 'bio must be at most 600 characters' })
   bio?: string;
 
   @ApiProperty({
