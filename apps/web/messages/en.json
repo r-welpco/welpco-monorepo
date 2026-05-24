@@ -1206,8 +1206,12 @@
         "welperAvailability": "Availability",
         "welperBackgroundCheck": "Background check",
         "welperPayout": "Payout setup",
-        "optionalProfile": "Profile photo"
+        "optionalProfile": "Profile photo",
+        "customerHomeAddress": "Home address",
+        "customerPayment": "Payment method"
       },
+      "customerProgressTitle": "Finish your profile to start booking",
+      "customerAllComplete": "Your profile is complete — you're ready to book a Welper.",
       "title": "Finish your setup",
       "description": "Complete these steps so customers can find you and you can get paid.",
       "progress": "{done} of {total} required steps done",
@@ -1240,8 +1244,10 @@
     },
     "nav": {
       "roleBadge": "Welper",
+      "customerRoleBadge": "Customer",
       "tabs": {
         "dashboard": "Dashboard",
+        "search": "Search Welper",
         "messages": "Messages",
         "bookings": "Bookings",
         "profile": "Profile",
@@ -1271,6 +1277,7 @@
         "bellAria": "Notifications",
         "bellUnreadAria": "Notifications ({count} unread)",
         "searchPlaceholder": "Search jobs…",
+        "customerSearchPlaceholder": "Find services or Welpers…",
         "userMenuAria": "User menu"
       }
     },

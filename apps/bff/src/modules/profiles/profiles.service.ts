@@ -31,6 +31,14 @@ export class ProfilesService {
     private readonly signupOrchestrator: SignupOrchestratorService,
   ) {}
 
+  async getSetupChecklist(userId: string, accountType: string) {
+    const role = this.getRole(accountType);
+    if (role === 'welper') {
+      return this.signupOrchestrator.getWelperSetupChecklist(userId);
+    }
+    return this.signupOrchestrator.getCustomerSetupChecklist(userId);
+  }
+
   async getWelperSetupChecklist(userId: string) {
     return this.signupOrchestrator.getWelperSetupChecklist(userId);
   }
@@ -58,7 +66,9 @@ export class ProfilesService {
     const role = this.getRole(accountType);
     const filteredData = this.filterProfileUpdateData(data, role);
     if (role === 'customer') {
-      return this.customerProfileService.update(userId, filteredData, userId);
+      const updated = await this.customerProfileService.update(userId, filteredData, userId);
+      await this.signupOrchestrator.getCustomerSetupChecklist(userId);
+      return updated;
     }
     const updated = await this.welperProfileService.update(userId, filteredData, userId);
     await this.signupOrchestrator.getWelperSetupChecklist(userId);

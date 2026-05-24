@@ -20,7 +20,7 @@ import {
   DEFAULT_WELPER_AVAILABILITY_LABELS,
   type WelperAvailabilityStepLabels,
 } from "./labels";
-import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
+import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite } from "./types";
 
 /**
  * Welper-only signup step: weekly availability slots (at least one required).
@@ -128,6 +128,8 @@ export function WelperAvailabilityStep({
     }
     await onSubmit({ weeklySlots: slots });
   };
+
+  const navButtonStyle = signupStepNavButtonStyle(Boolean(onBack));
 
   return (
     <Card
@@ -279,13 +281,14 @@ export function WelperAvailabilityStep({
             direction={{ initial: "column", sm: "row-reverse" }}
             gap="3"
             mt={FORM_SPACING.submitGap}
+            style={{ width: "100%" }}
           >
             <Button
               type="submit"
               size="3"
               color={SEMANTIC_COLOR.primary}
               disabled={loading}
-              style={{ width: "100%" }}
+              style={navButtonStyle}
             >
               {loading ? labels.saving : labels.continue}
             </Button>
@@ -297,7 +300,7 @@ export function WelperAvailabilityStep({
                 color="gray"
                 disabled={loading}
                 onClick={onBack}
-                style={{ width: "100%" }}
+                style={navButtonStyle}
               >
                 {labels.back}
               </Button>

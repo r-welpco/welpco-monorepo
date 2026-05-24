@@ -11,7 +11,7 @@ import { Switch } from "@welpco/ui/switch";
 import { Separator } from "@welpco/ui/separator";
 import { Text } from "@welpco/ui/text";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
+import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch B. Both-roles step 8.
@@ -117,6 +117,8 @@ export function NotificationPrefsStep({
     await onSubmit({ preferences: prefs });
   };
 
+  const navButtonStyle = signupStepNavButtonStyle(Boolean(onBack));
+
   return (
     <Card
       size="4"
@@ -203,13 +205,14 @@ export function NotificationPrefsStep({
             direction={{ initial: "column", sm: "row-reverse" }}
             gap="3"
             mt={FORM_SPACING.submitGap}
+            style={{ width: "100%" }}
           >
             <Button
               type="submit"
               size="3"
               color={SEMANTIC_COLOR.primary}
               disabled={loading}
-              style={{ width: "100%" }}
+              style={navButtonStyle}
             >
               {loading ? "Saving..." : "Continue"}
             </Button>
@@ -221,7 +224,7 @@ export function NotificationPrefsStep({
                 color="gray"
                 disabled={loading}
                 onClick={onBack}
-                style={{ width: "100%" }}
+                style={navButtonStyle}
               >
                 Back
               </Button>

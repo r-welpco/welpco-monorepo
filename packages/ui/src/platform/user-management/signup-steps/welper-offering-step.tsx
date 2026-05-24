@@ -25,7 +25,7 @@ import {
   DEFAULT_WELPER_OFFERING_LABELS,
   type WelperOfferingStepLabels,
 } from "./labels";
-import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
+import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite } from "./types";
 
 export interface WelperOfferingCategoryOption {
   id: string;
@@ -203,6 +203,8 @@ export function WelperOfferingStep({
     }
     await onSubmit({ offerings: savedOfferings });
   };
+
+  const navButtonStyle = signupStepNavButtonStyle(Boolean(onBack));
 
   return (
     <Card
@@ -519,6 +521,7 @@ export function WelperOfferingStep({
         <Flex
           direction={{ initial: "column", sm: "row-reverse" }}
           gap="3"
+          style={{ width: "100%" }}
         >
           <Button
             type="button"
@@ -526,7 +529,7 @@ export function WelperOfferingStep({
             color={SEMANTIC_COLOR.primary}
             disabled={loading || savedOfferings.length === 0}
             onClick={() => void handleContinue()}
-            style={{ width: "100%" }}
+            style={navButtonStyle}
           >
             {loading ? labels.saving : labels.continue}
           </Button>
@@ -538,7 +541,7 @@ export function WelperOfferingStep({
               color="gray"
               disabled={loading}
               onClick={onBack}
-              style={{ width: "100%" }}
+              style={navButtonStyle}
             >
               {labels.back}
             </Button>

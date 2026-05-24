@@ -5,6 +5,7 @@ import "./globals.css";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { AuthSessionSync } from "@/components/providers/session-provider";
 import { SessionProvider } from "next-auth/react";
+import { ThemeInitScript } from "@/components/providers/theme-init-script";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
 /** Required with `cacheComponents`: client providers + pages must not block prerender without a boundary. */
@@ -45,6 +46,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeInitScript />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

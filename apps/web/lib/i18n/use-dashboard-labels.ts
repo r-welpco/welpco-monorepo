@@ -44,6 +44,77 @@ export type WelperNavLabels = {
   chrome: WelperNavChromeLabels;
 };
 
+export type CustomerNavLabels = {
+  roleBadge: string;
+  tabs: {
+    dashboard: string;
+    search: string;
+    bookings: string;
+    messages: string;
+    profile: string;
+    settings: string;
+  };
+  userMenu: {
+    profile: string;
+    accountSettings: string;
+    signOut: string;
+  };
+  themeMenu: string;
+  theme: {
+    system: string;
+    light: string;
+    dark: string;
+  };
+  languageMenu: string;
+  language: {
+    english: string;
+    french: string;
+  };
+  chrome: WelperNavChromeLabels;
+};
+
+export function useCustomerNavLabels(): CustomerNavLabels {
+  const t = useTranslations("dashboard.nav");
+  const chrome = useTranslations("dashboard.nav.chrome");
+  return {
+    roleBadge: t("customerRoleBadge"),
+    tabs: {
+      dashboard: t("tabs.dashboard"),
+      search: t("tabs.search"),
+      bookings: t("tabs.bookings"),
+      messages: t("tabs.messages"),
+      profile: t("tabs.profile"),
+      settings: t("tabs.settings"),
+    },
+    userMenu: {
+      profile: t("userMenu.profile"),
+      accountSettings: t("userMenu.accountSettings"),
+      signOut: t("userMenu.signOut"),
+    },
+    themeMenu: t("themeMenu"),
+    theme: {
+      system: t("theme.system"),
+      light: t("theme.light"),
+      dark: t("theme.dark"),
+    },
+    languageMenu: t("languageMenu"),
+    language: {
+      english: t("language.english"),
+      french: t("language.french"),
+    },
+    chrome: {
+      mobileNavMenu: chrome("mobileNavMenu"),
+      feedback: chrome("feedback"),
+      documentation: chrome("documentation"),
+      openNavAria: chrome("openNavAria"),
+      bellAria: chrome("bellAria"),
+      bellUnreadAria: (count: number) => chrome("bellUnreadAria", { count }),
+      searchPlaceholder: chrome("customerSearchPlaceholder"),
+      userMenuAria: chrome("userMenuAria"),
+    },
+  };
+}
+
 export function useWelperNavLabels(): WelperNavLabels {
   const t = useTranslations("dashboard.nav");
   const chrome = useTranslations("dashboard.nav.chrome");

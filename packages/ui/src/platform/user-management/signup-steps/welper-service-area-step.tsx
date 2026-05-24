@@ -20,7 +20,7 @@ import {
   DEFAULT_WELPER_SERVICE_AREA_LABELS,
   type WelperServiceAreaStepLabels,
 } from "./labels";
-import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
+import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite } from "./types";
 
 /**
  * Welper-only signup step: center address + service radius (matches dashboard ServiceAreaCard).
@@ -138,6 +138,8 @@ export function WelperServiceAreaStep({
     await onSubmit({ serviceArea });
   };
 
+  const navButtonStyle = signupStepNavButtonStyle(Boolean(onBack));
+
   return (
     <Card
       size="4"
@@ -190,13 +192,14 @@ export function WelperServiceAreaStep({
             direction={{ initial: "column", sm: "row-reverse" }}
             gap="3"
             mt={FORM_SPACING.submitGap}
+            style={{ width: "100%" }}
           >
             <Button
               type="submit"
               size="3"
               color={SEMANTIC_COLOR.primary}
               disabled={loading}
-              style={{ width: "100%" }}
+              style={navButtonStyle}
             >
               {loading ? labels.saving : labels.continue}
             </Button>
@@ -208,7 +211,7 @@ export function WelperServiceAreaStep({
                 color="gray"
                 disabled={loading}
                 onClick={onBack}
-                style={{ width: "100%" }}
+                style={navButtonStyle}
               >
                 {labels.back}
               </Button>

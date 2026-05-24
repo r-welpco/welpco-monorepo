@@ -28,7 +28,8 @@ export type SignupStepName =
   | 'welperAvailability'
   | 'welperBackgroundCheck'
   | 'welperPayout'
-  | 'optionalProfile';
+  | 'optionalProfile'
+  | 'customerPayment';
 
 /** Post-signup dashboard checklist task ids (includes non-wizard items). */
 export type WelperSetupTaskId =
@@ -39,6 +40,12 @@ export type WelperSetupTaskId =
   | 'welperBackgroundCheck'
   | 'welperPayout'
   | 'optionalProfile';
+
+/** Post-signup customer dashboard checklist task ids. */
+export type CustomerSetupTaskId =
+  | 'emailVerification'
+  | 'optionalProfile'
+  | 'customerPayment';
 
 /**
  * Server-driven snapshot of a user's progress through the wizard. Returned
@@ -82,9 +89,9 @@ export interface SignupStateDto {
    * has explicitly provided — never inferred or auto-filled.
    */
   filledData: SignupFilledData;
-  /** Welper-only: post-signup setup tasks (dashboard checklist). */
-  setupTasks?: WelperSetupTaskDto[];
-  /** Welper-only: all required setup tasks complete. */
+  /** Post-signup setup tasks (dashboard checklist). Welper or customer shape. */
+  setupTasks?: WelperSetupTaskDto[] | CustomerSetupTaskDto[];
+  /** All required setup tasks complete. */
   setupComplete?: boolean;
   /** Welper-only: visible in customer search (profile complete + BG passed when required). */
   discoverable?: boolean;
@@ -97,6 +104,16 @@ export interface WelperSetupTaskDto {
   completed: boolean;
   required: boolean;
   /** Deep-link path segment or route hint for the web app. */
+  href: string;
+  blockingReason?: string;
+}
+
+/** Post-signup customer task shown on the dashboard setup checklist. */
+export interface CustomerSetupTaskDto {
+  id: CustomerSetupTaskId;
+  label: string;
+  completed: boolean;
+  required: boolean;
   href: string;
   blockingReason?: string;
 }

@@ -21,7 +21,7 @@ import { roleFromSelectedRole } from "@/lib/auth/session-role";
 import { clearTokenCache } from "@/lib/api/get-token";
 import { safeNextPath } from "@/lib/auth/safe-next";
 import {
-  getWelperRegisterEscapeTarget,
+  getRegisterEscapeTarget,
   isOnlyDeferredSetupMissing,
   stepNameToSlug,
 } from "../step-name-utils";
@@ -89,7 +89,7 @@ export default function FinishPageClient() {
       return;
     }
     const welperEscape =
-      getWelperRegisterEscapeTarget(signupState, null) === "dashboard";
+      getRegisterEscapeTarget(signupState, null) === "dashboard";
     if (!welperEscape && signupState.nextStep) {
       router.replace(
         `/register/step/${stepNameToSlug(signupState.nextStep)}`,

@@ -2,12 +2,24 @@
 
 import { Box } from "@welpco/ui/box";
 import { getBackgroundById } from "@/lib/personalization/backgrounds";
+import { useAppearanceTunerStore } from "@/stores/appearanceTunerStore";
+import { useResolvedThemeAppearance } from "@/lib/hooks/use-resolved-theme-appearance";
 
 interface AuthBackgroundSVGProps {
   backgroundId: string;
+  /** Fallback when tuner store is not used (e.g. auth pages). */
+  opacity?: number;
 }
 
-export function AuthBackgroundSVG({ backgroundId }: AuthBackgroundSVGProps) {
+export function AuthBackgroundSVG({ backgroundId, opacity }: AuthBackgroundSVGProps) {
+  const appearance = useResolvedThemeAppearance();
+  const backdropOpacityLight = useAppearanceTunerStore((s) => s.backdropOpacityLight);
+  const backdropOpacityDark = useAppearanceTunerStore((s) => s.backdropOpacityDark);
+
+  const resolvedOpacity =
+    opacity ??
+    (appearance === "dark" ? backdropOpacityDark : backdropOpacityLight);
+
   const background = getBackgroundById(backgroundId);
   const uniqueId = backgroundId.replace(/-/g, "_");
 
@@ -19,7 +31,7 @@ export function AuthBackgroundSVG({ backgroundId }: AuthBackgroundSVGProps) {
         inset: 0,
         zIndex: 0,
         pointerEvents: "none",
-        opacity: 0.5,
+        opacity: resolvedOpacity,
         ...Object.fromEntries(
           Object.entries(background.cssVariables).map(([key, value]) => [key, value])
         ),

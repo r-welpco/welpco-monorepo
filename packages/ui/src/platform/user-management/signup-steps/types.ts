@@ -33,6 +33,13 @@ export const SIGNUP_STEP_CARD_STYLE = {
   minWidth: 0,
 } as const;
 
+/** Continue / Back row: full width when alone; equal columns when paired on sm+. */
+export function signupStepNavButtonStyle(dual: boolean) {
+  return dual
+    ? ({ flex: "1 1 0", minWidth: 0 } as const)
+    : ({ width: "100%" } as const);
+}
+
 export interface SignupStateLite {
   userId: string;
   email: string;

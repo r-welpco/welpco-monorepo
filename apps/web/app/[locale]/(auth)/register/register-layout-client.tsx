@@ -20,8 +20,9 @@ function stripRegisterPath(pathname: string): string {
 }
 import { useSignupState } from "@/lib/hooks/use-signup";
 
-/** Matches BFF `WELPER_SIGNUP_REQUIRED_STEPS` length — used for progress chrome before role is picked. */
+/** Matches BFF signup wizard length before role is picked. */
 const WELPER_SIGNUP_STEP_TOTAL = 3;
+const CUSTOMER_SIGNUP_STEP_TOTAL = 2;
 
 function signupProgressTotals(state: {
   selectedRole: string | null;

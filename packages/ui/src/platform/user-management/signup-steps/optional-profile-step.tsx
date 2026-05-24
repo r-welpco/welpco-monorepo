@@ -18,7 +18,7 @@ import {
   DEFAULT_OPTIONAL_PROFILE_LABELS,
   type OptionalProfileStepLabels,
 } from "./labels";
-import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite, type SelectedRole } from "./types";
+import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite, type SelectedRole } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch B. Both-roles final step.
@@ -93,7 +93,6 @@ export function OptionalProfileStep({
     zipPostalCode: filled?.address?.zipCode ?? "",
     country: "CA",
   });
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const payload: OptionalProfileStepValues = {};
@@ -116,6 +115,8 @@ export function OptionalProfileStep({
     }
     await onSubmit(payload);
   };
+
+  const navButtonStyle = signupStepNavButtonStyle(Boolean(onBack));
 
   return (
     <Card
@@ -179,13 +180,14 @@ export function OptionalProfileStep({
             direction={{ initial: "column", sm: "row-reverse" }}
             gap="3"
             mt={FORM_SPACING.submitGap}
+            style={{ width: "100%" }}
           >
             <Button
               type="submit"
               size="3"
               color={SEMANTIC_COLOR.primary}
               disabled={loading}
-              style={{ width: "100%" }}
+              style={navButtonStyle}
             >
               {loading ? labels.saving : labels.finishSignup}
             </Button>
@@ -197,7 +199,7 @@ export function OptionalProfileStep({
                 color="gray"
                 disabled={loading}
                 onClick={onBack}
-                style={{ width: "100%" }}
+                style={navButtonStyle}
               >
                 {labels.back}
               </Button>

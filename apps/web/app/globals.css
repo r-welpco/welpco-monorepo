@@ -66,6 +66,18 @@ body {
   }
 }
 
+/* Chromium applies backdrop-filter on Radix card ::before one frame late when
+   ancestors animate opacity. Keep blur compositing stable on translucent panels. */
+.radix-themes[data-panel-background="translucent"] {
+  isolation: isolate;
+}
+
+.radix-themes[data-panel-background="translucent"] :where(.rt-Card, .rt-BaseCard)::before {
+  -webkit-backdrop-filter: var(--backdrop-filter-panel);
+  backdrop-filter: var(--backdrop-filter-panel);
+  transform: translateZ(0);
+}
+
 /* Liquid glass utility (used by headers across the app) */
 @supports (backdrop-filter: blur(20px)) {
   .liquid-glass {

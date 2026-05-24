@@ -14,7 +14,7 @@ import { FORM_SPACING } from "@welpco/ui/tokens";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { EmailPasswordStep } from "@welpco/ui/platform/user-management";
-import { getWelperRegisterEscapeTarget, stepNameToSlug } from "./step-name-utils";
+import { getRegisterEscapeTarget, stepNameToSlug } from "./step-name-utils";
 import { WelperRegisterEscape } from "./welper-register-escape";
 import { RegisterResumeShell } from "./register-resume-shell";
 import { useBeginSignup, useSignupState } from "@/lib/hooks/use-signup";
@@ -53,7 +53,7 @@ export default function RegisterPageClient() {
       return;
     }
 
-    if (getWelperRegisterEscapeTarget(state, null) === "dashboard") {
+    if (getRegisterEscapeTarget(state, null) === "dashboard") {
       return;
     }
 
@@ -124,7 +124,7 @@ export default function RegisterPageClient() {
       );
     }
 
-    if (state && getWelperRegisterEscapeTarget(state, null) === "dashboard") {
+    if (state && getRegisterEscapeTarget(state, null) === "dashboard") {
       return <WelperRegisterEscape state={state} nextRaw={nextRaw} />;
     }
 

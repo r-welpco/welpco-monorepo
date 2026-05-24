@@ -1205,8 +1205,12 @@
         "welperAvailability": "Disponibilités",
         "welperBackgroundCheck": "Vérification des antécédents",
         "welperPayout": "Configuration des paiements",
-        "optionalProfile": "Photo de profil"
+        "optionalProfile": "Photo de profil",
+        "customerHomeAddress": "Adresse domicile",
+        "customerPayment": "Mode de paiement"
       },
+      "customerProgressTitle": "Complétez votre profil pour commencer à réserver",
+      "customerAllComplete": "Votre profil est complet — vous pouvez réserver un Welper.",
       "title": "Terminez votre configuration",
       "description": "Complétez ces étapes pour que les clients vous trouvent et que vous soyez payé.",
       "progress": "{done} sur {total} étapes requises terminées",
@@ -1239,8 +1243,10 @@
     },
     "nav": {
       "roleBadge": "Welper",
+      "customerRoleBadge": "Client",
       "tabs": {
         "dashboard": "Tableau de bord",
+        "search": "Trouver un Welper",
         "messages": "Messages",
         "bookings": "Réservations",
         "profile": "Profil",
@@ -1270,6 +1276,7 @@
         "bellAria": "Notifications",
         "bellUnreadAria": "Notifications ({count} non lues)",
         "searchPlaceholder": "Rechercher des mandats…",
+        "customerSearchPlaceholder": "Trouver des services ou des Welpers…",
         "userMenuAria": "Menu utilisateur"
       }
     },

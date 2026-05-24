@@ -5,10 +5,8 @@ import { SelectedRole } from '../../../domains/user-management/entities/user-acc
 /**
  * Day 15 — Phase 1 of the signup ↔ onboarding merge.
  *
- * Step 2 of the wizard. Locks the role choice. Once a row has a non-null
- * `selectedRole`, the orchestrator rejects re-selection — the wizard is a
- * one-way state machine. To switch role, abandon the partial signup and
- * begin again with a different email (rare; product accepts the friction).
+ * Step 2 of the wizard. Role is locked once identity is submitted; before
+ * that the user may go back from the identity step and choose again.
  */
 export class SelectRoleStepDto {
   @ApiProperty({

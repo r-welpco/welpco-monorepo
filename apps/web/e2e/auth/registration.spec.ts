@@ -75,7 +75,9 @@ async function completePayoutStep(page: Page) {
 }
 
 test.describe('@auth Signup wizard — customer happy path', () => {
-  test('completes the 5 customer steps and lands on dashboard', async ({ page }) => {
+  test('completes the 2-step customer signup and lands on dashboard with setup checklist', async ({
+    page,
+  }) => {
     const email = generateTestEmail('customer');
     const password = generateTestPassword();
 
@@ -86,10 +88,11 @@ test.describe('@auth Signup wizard — customer happy path', () => {
     await selectRole(page, 'customer');
     await fillIdentityStep(page, { first: 'Avery', last: 'Tester' });
 
-    await page.getByRole('button', { name: /skip|finish|complete/i }).first().click();
-
-    await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+    await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
     expect(page.url()).toContain('/dashboard');
+    await expect(page.getByText(/required steps done|Finish your profile/i).first()).toBeVisible({
+      timeout: 15_000,
+    });
   });
 });
 
@@ -138,8 +141,7 @@ test.describe('@auth Post-signup routing', () => {
     await fillEmailPasswordStep(page, email, password);
     await selectRole(page, 'customer');
     await fillIdentityStep(page, { first: 'Gated', last: 'User' });
-    await page.getByRole('button', { name: /skip|finish|complete/i }).first().click();
-    await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+    await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
 
     await page.goto('/register/complete');
     await page.waitForURL(/\/dashboard/, { timeout: 10_000 });
@@ -167,8 +169,11 @@ test.describe('@auth Signup wizard — drop and resume', () => {
     await page.getByLabel(/password/i).fill(password);
     await page.getByRole('button', { name: /sign in|log in/i }).click();
 
-    await page.waitForURL(/\/register\/step\/optional-profile/, { timeout: 15_000 });
-    expect(page.url()).toContain('/register/step/optional-profile');
+    await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
+    expect(page.url()).toContain('/dashboard');
+    await expect(page.getByText(/required steps done|Finish your profile/i).first()).toBeVisible({
+      timeout: 15_000,
+    });
 
     void context;
   });

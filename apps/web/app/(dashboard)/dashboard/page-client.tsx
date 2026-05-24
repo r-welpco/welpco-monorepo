@@ -2,28 +2,22 @@
 
 import { useMemo } from "react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
 import { Container } from "@welpco/ui/container";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Box } from "@welpco/ui/box";
-import { Callout } from "@welpco/ui/callout";
-import { Button } from "@welpco/ui/button";
-import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { ArrowRight } from "lucide-react";
 
 import { DashboardStats } from "@/components/features/dashboard/dashboard-stats";
 import { RecentActivity } from "@/components/features/dashboard/recent-activity";
 import { QuickActions } from "@/components/features/dashboard/quick-actions";
+import { CustomerSetupChecklist } from "@/components/features/dashboard/customer-setup-checklist";
 import { WelperSetupChecklist } from "@/components/features/dashboard/welper-setup-checklist";
+import { normalizeCustomerSetupChecklist } from "@/lib/dashboard/normalize-customer-setup-checklist";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
-import { useWelperSetupChecklist } from "@/lib/hooks/use-signup";
+import { useCustomerSetupChecklist, useWelperSetupChecklist } from "@/lib/hooks/use-signup";
 import { useDashboardUser } from "@/lib/hooks/use-dashboard-user";
-import {
-  useCustomerProfile,
-  useFavoriteWelpers,
-} from "@/lib/hooks/use-profile";
+import { useFavoriteWelpers } from "@/lib/hooks/use-profile";
 import { useBookings } from "@/lib/hooks/use-bookings";
 import {
   buildDashboardActivities,
@@ -87,6 +81,27 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     [welperSetup, session?.user?.emailVerified],
   );
 
+  const { data: customerSetup, isLoading: customerSetupLoading } = useCustomerSetupChecklist(
+    userRole === "customer",
+  );
+
+  const normalizedCustomerSetup = useMemo(
+    () =>
+      customerSetup
+        ? normalizeCustomerSetupChecklist(
+            customerSetup,
+            session?.user?.emailVerified === true,
+          )
+        : undefined,
+    [customerSetup, session?.user?.emailVerified],
+  );
+
+  const customerSetupIncomplete =
+    userRole === "customer" &&
+    (customerSetupLoading ||
+      !normalizedCustomerSetup ||
+      !normalizedCustomerSetup.setupComplete);
+
   const welperSetupIncomplete =
     userRole === "welper" &&
     (welperSetupLoading ||
@@ -98,13 +113,9 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     isLoading: bookingsLoading,
   } = useBookings(
     { page: 1, limit: BOOKINGS_DASHBOARD_LIMIT, role: bookingsRole ?? "customer" },
-    { enabled: !!bookingsRole && !welperSetupIncomplete },
+    { enabled: !!bookingsRole && !welperSetupIncomplete && !customerSetupIncomplete },
   );
 
-  const { data: customerProfile, isSuccess: customerProfileLoaded } = useCustomerProfile(
-    user.id,
-    userRole === "customer",
-  );
   const { data: favoriteWelpers = [] } = useFavoriteWelpers(user.id);
 
   const bookings = useMemo(() => bookingsResponse?.data ?? [], [bookingsResponse?.data]);
@@ -149,31 +160,9 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     return `Counts use your ${bookings.length} most recent bookings — open Bookings for the full list.`;
   }, [bookingsResponse, bookings.length, userRole, welperHome]);
 
-  const completion = useMemo(() => {
-    const steps = [
-      { id: "name", completed: !!(customerProfile?.firstName && customerProfile?.lastName), required: true },
-      { id: "phone", completed: !!customerProfile?.phone, required: true },
-      { id: "address", completed: !!customerProfile?.address?.streetAddress, required: true },
-      { id: "payment", completed: !!customerProfile?.hasDefaultPaymentMethod, required: true },
-      { id: "favorites", completed: favoriteWelpers.length > 0, required: false },
-    ];
-    const required = steps.filter((s) => s.required && s.completed).length;
-    const totalRequired = steps.filter((s) => s.required).length;
-    return { required, totalRequired };
-  }, [customerProfile, favoriteWelpers]);
-
-  const isProfileIncomplete =
-    userRole === "customer"
-      ? !!(
-          customerProfileLoaded &&
-          customerProfile &&
-          customerProfile.profileCompletionStatusLabel !== "Complete"
-        )
-      : welperSetupIncomplete;
-
   const welperShowSetupChecklist = userRole === "welper" && welperSetupIncomplete;
-
-  const welperHideDashboardExtras = welperSetupIncomplete;
+  const customerShowSetupChecklist = userRole === "customer" && customerSetupIncomplete;
+  const hideDashboardExtras = welperSetupIncomplete || customerSetupIncomplete;
 
   // The single concrete state line below the greeting. Avoids generic
   // "here's what's happening" copy — names a number when there is one.
@@ -199,6 +188,9 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
       }
       return welperHome.noJobsNotDiscoverable;
     }
+    if (customerSetupIncomplete && !customerShowSetupChecklist) {
+      return "Finish setting up your account to start booking.";
+    }
     if (upcomingCount > 0) {
       return `You have ${upcomingCount} upcoming ${upcomingCount === 1 ? "booking" : "bookings"}.`;
     }
@@ -210,16 +202,12 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     pendingForWelper,
     bookings,
     welperSetupIncomplete,
+    customerSetupIncomplete,
+    customerShowSetupChecklist,
     welperShowSetupChecklist,
     normalizedWelperSetup,
     welperHome,
   ]);
-
-  const customerPaymentMissing =
-    userRole === "customer" && !customerProfile?.hasDefaultPaymentMethod;
-  const profileIncompleteCopy = customerPaymentMissing
-    ? "Add a payment method so you can book a Welper."
-    : `Finish your profile — ${completion.required} of ${completion.totalRequired} steps done.`;
 
   const statsLoading = !!bookingsRole && bookingsLoading;
   const greetingName = firstNameOf(user?.name ?? null, user?.email);
@@ -243,27 +231,11 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
           <WelperSetupChecklist variant="full" />
         ) : null}
 
-        {isProfileIncomplete && userRole === "customer" ? (
-          <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="status">
-            <Flex
-              align={{ initial: "stretch", sm: "center" }}
-              justify="between"
-              gap="4"
-              wrap="wrap"
-              direction={{ initial: "column", sm: "row" }}
-            >
-              <Callout.Text>{profileIncompleteCopy}</Callout.Text>
-              <Button size="2" color={SEMANTIC_COLOR.warning} variant="soft" asChild>
-                <Link href="/dashboard/profile">
-                  Complete profile
-                  <ArrowRight size={16} aria-hidden="true" />
-                </Link>
-              </Button>
-            </Flex>
-          </Callout.Root>
+        {customerShowSetupChecklist ? (
+          <CustomerSetupChecklist variant="full" />
         ) : null}
 
-        {!welperHideDashboardExtras ? (
+        {!hideDashboardExtras ? (
           <>
             <QuickActions
               role={userRole === "welper" ? "welper" : "customer"}

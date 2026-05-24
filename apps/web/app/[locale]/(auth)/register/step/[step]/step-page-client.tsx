@@ -41,7 +41,9 @@ import {
 } from "@/lib/hooks/use-signup";
 import { getSignupState } from "@/lib/services/signup-service";
 import {
-  getWelperRegisterEscapeTarget,
+  getRegisterEscapeTarget,
+  getSignupBackStep,
+  isAllowedSignupStep,
   stepNameToSlug,
   stepSlugToName,
 } from "../../step-name-utils";
@@ -55,9 +57,9 @@ import type { SelectedRole, SignupStepName } from "@welpco/types";
  * components wired (10 if you count the email-password step that owns
  * `/register` itself).
  *
- * The slug→step map covers every BFF step. The router still validates that
- * the URL slug matches the server's `nextStep` and redirects forward if a
- * user pastes a future step's URL.
+ * The slug→step map covers every BFF step. The router allows the current
+ * `nextStep`, earlier completed steps (Back / browser back), and redirects
+ * forward if a user pastes a future step's URL.
  */
 export default function StepPageClient({ slug }: { slug: string }) {
   const router = useAppRouter();
@@ -127,13 +129,14 @@ export default function StepPageClient({ slug }: { slug: string }) {
     }
   }, [state, router, nextRaw]);
 
-  // Guard: URL slug must match the server's nextStep (signup steps only).
+  // Guard: allow current or earlier signup steps; redirect future/skipped URLs.
   useEffect(() => {
     if (!state || !stepName) return;
-    if (getWelperRegisterEscapeTarget(state, stepName)) return;
-    if (state.nextStep && state.nextStep !== stepName) {
+    if (getRegisterEscapeTarget(state, stepName)) return;
+    if (isAllowedSignupStep(stepName, state)) return;
+    if (state.nextStep) {
       router.replace(`/register/step/${stepNameToSlug(state.nextStep)}`);
-    } else if (!state.nextStep) {
+    } else {
       router.replace("/register/finish");
     }
   }, [state, stepName, router]);
@@ -180,8 +183,8 @@ export default function StepPageClient({ slug }: { slug: string }) {
     );
   }
 
-  const welperEscape = getWelperRegisterEscapeTarget(state, stepName);
-  if (welperEscape === "dashboard") {
+  const registerEscape = getRegisterEscapeTarget(state, stepName);
+  if (registerEscape === "dashboard") {
     return <WelperRegisterEscape state={state} nextRaw={nextRaw} />;
   }
 
@@ -222,7 +225,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
       <SelectRoleStep
         labels={selectRoleLabels}
         state={liteState}
-        customerRegistrationEnabled={false}
+        customerRegistrationEnabled={true}
         loading={completeSelectRole.isPending}
         error={submitError ?? completeSelectRole.error?.message ?? null}
         onSubmit={(values: { role: SelectedRole }) =>
@@ -238,6 +241,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
   }
 
   if (stepName === "identity") {
+    const backStep = getSignupBackStep("identity", state.requiredSteps);
     return (
       <IdentityStep
         labels={identityLabels}
@@ -246,6 +250,11 @@ export default function StepPageClient({ slug }: { slug: string }) {
         state={liteState}
         loading={completeIdentity.isPending}
         error={submitError ?? completeIdentity.error?.message ?? null}
+        onBack={
+          backStep
+            ? () => router.replace(`/register/step/${stepNameToSlug(backStep)}`)
+            : undefined
+        }
         onSubmit={(values: IdentityStepSubmitValues) =>
           guard(async () => {
             const next = await completeIdentity.mutateAsync({
@@ -264,12 +273,18 @@ export default function StepPageClient({ slug }: { slug: string }) {
   }
 
   if (stepName === "welperBio") {
+    const backStep = getSignupBackStep("welperBio", state.requiredSteps);
     return (
       <WelperBioStep
         labels={welperBioLabels}
         state={liteState}
         loading={completeWelperBio.isPending}
         error={submitError ?? completeWelperBio.error?.message ?? null}
+        onBack={
+          backStep
+            ? () => router.replace(`/register/step/${stepNameToSlug(backStep)}`)
+            : undefined
+        }
         onSubmit={(values: WelperBioStepValues) =>
           guard(async () => {
             const next = await completeWelperBio.mutateAsync({ bio: values.bio });

@@ -21,7 +21,7 @@ import {
   WELPER_BIO_MAX_LENGTH,
   WELPER_BIO_MIN_LENGTH,
 } from "../../profile-management/bio-limits";
-import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
+import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch B. Welper-only step 3 of the unified signup wizard.
@@ -90,6 +90,7 @@ export function WelperBioStep({
   const charCount = bioValue.trim().length;
   const remaining = MAX_BIO - bioValue.length;
   const meetsMin = charCount >= MIN_BIO;
+  const navButtonStyle = signupStepNavButtonStyle(Boolean(onBack));
 
   const handleSubmit = form.handleSubmit(async (values) => {
     await onSubmit({ bio: values.bio.trim() });
@@ -177,13 +178,14 @@ export function WelperBioStep({
             direction={{ initial: "column", sm: "row-reverse" }}
             gap="3"
             mt={FORM_SPACING.submitGap}
+            style={{ width: "100%" }}
           >
             <Button
               type="submit"
               size="3"
               color={SEMANTIC_COLOR.primary}
               disabled={loading}
-              style={{ width: "100%" }}
+              style={navButtonStyle}
             >
               {loading ? labels.saving : labels.continue}
             </Button>
@@ -195,7 +197,7 @@ export function WelperBioStep({
                 color="gray"
                 disabled={loading}
                 onClick={onBack}
-                style={{ width: "100%" }}
+                style={navButtonStyle}
               >
                 {labels.back}
               </Button>

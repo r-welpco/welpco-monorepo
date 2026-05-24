@@ -26,7 +26,7 @@ import {
   DEFAULT_IDENTITY_LABELS,
   type IdentityStepLabels,
 } from "./labels";
-import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
+import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch A. Step 3 of the unified signup wizard.
@@ -157,6 +157,7 @@ export function IdentityStep({
   });
 
   const countryCode = form.watch("countryCode");
+  const navButtonStyle = signupStepNavButtonStyle(Boolean(onBack));
 
   const handleSubmit = form.handleSubmit(async (values) => {
     const phoneInput = `${values.phoneNational}`;
@@ -463,13 +464,14 @@ export function IdentityStep({
             direction={{ initial: "column", sm: "row-reverse" }}
             gap="3"
             mt={FORM_SPACING.submitGap}
+            style={{ width: "100%" }}
           >
             <Button
               type="submit"
               size="3"
               color={SEMANTIC_COLOR.primary}
               disabled={loading}
-              style={{ width: "100%" }}
+              style={navButtonStyle}
             >
               {loading ? labels.saving : labels.continue}
             </Button>
@@ -481,7 +483,7 @@ export function IdentityStep({
                 color="gray"
                 disabled={loading}
                 onClick={onBack}
-                style={{ width: "100%" }}
+                style={navButtonStyle}
               >
                 {labels.back}
               </Button>

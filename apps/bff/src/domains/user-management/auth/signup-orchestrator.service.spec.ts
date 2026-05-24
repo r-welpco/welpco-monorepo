@@ -261,7 +261,6 @@ describe('SignupOrchestratorService', () => {
       expect(steps).toEqual<SignupStepName[]>([
         'selectRole',
         'identity',
-        'optionalProfile',
       ]);
     });
 
@@ -344,7 +343,6 @@ describe('SignupOrchestratorService', () => {
       expect(body.code).toBe('INCOMPLETE_SIGNUP');
       expect(body.missingFields).toEqual<SignupStepName[]>([
         'identity',
-        'optionalProfile',
       ]);
       expect(body.nextStep).toBe('identity');
     });
@@ -517,8 +515,8 @@ describe('SignupOrchestratorService', () => {
       prefRepo.find.mockResolvedValue([] as never);
       const state = await service.getState('user-1');
       expect(state.completedSteps).toContain('identity');
-      expect(state.completedSteps).toContain('optionalProfile');
       expect(state.nextStep).toBeNull();
+      expect(state.setupTasks?.some((t) => t.id === 'optionalProfile')).toBe(true);
     });
   });
 
@@ -545,15 +543,52 @@ describe('SignupOrchestratorService', () => {
       expect(u.accountType).toBe(AccountType.CUSTOMER);
     });
 
-    it('throws ROLE_LOCKED when re-submitting with a different role', async () => {
+    it('throws ROLE_LOCKED when re-submitting with a different role after identity', async () => {
       userRepo.findOne.mockResolvedValue(
-        mockUser({ selectedRole: SelectedRole.CUSTOMER }),
+        mockUser({
+          selectedRole: SelectedRole.CUSTOMER,
+          accountType: AccountType.CUSTOMER,
+        }),
       );
+      customerRepo.findOne.mockResolvedValue(
+        mockCustomer({
+          firstName: 'Jane',
+          lastName: 'Lee',
+          phoneNumber: {
+            formatted: '+14165551234',
+            number: '4165551234',
+            countryCode: '+1',
+          },
+        }),
+      );
+      prefRepo.find.mockResolvedValue([] as never);
       await expect(
         service.submitSelectRoleStep('user-1', {
           role: SelectedRole.WELPER,
         }),
       ).rejects.toThrow(ConflictException);
+    });
+
+    it('allows role switch before identity is submitted', async () => {
+      const u = mockUser({
+        selectedRole: SelectedRole.CUSTOMER,
+        accountType: AccountType.CUSTOMER,
+      });
+      userRepo.findOne.mockResolvedValue(u);
+      customerRepo.findOne.mockResolvedValue(mockCustomer());
+      welperRepo.findOne.mockResolvedValue(mockWelper());
+      profileCreationService.createProfileForUser.mockResolvedValue(
+        mockWelper() as never,
+      );
+      prefRepo.find.mockResolvedValue([] as never);
+
+      await service.submitSelectRoleStep('user-1', {
+        role: SelectedRole.WELPER,
+      });
+
+      expect(u.selectedRole).toBe(SelectedRole.WELPER);
+      expect(u.accountType).toBe(AccountType.WELPER);
+      expect(profileCreationService.createProfileForUser).toHaveBeenCalled();
     });
   });
 

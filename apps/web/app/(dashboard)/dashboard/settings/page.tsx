@@ -22,22 +22,12 @@ import {
   useUpdateEmail,
   useDeleteAccount,
 } from "@/lib/hooks/use-settings";
-import {
-  useNotificationPreferences,
-  useUpdateNotificationPreferences,
-} from "@/lib/hooks/use-notifications";
-import { useWelperProfile, useUpdateWelperProfile } from "@/lib/hooks/use-profile";
 import { useQueryClient } from "@tanstack/react-query";
 import { performClientSignOut } from "@/lib/auth/client-sign-out";
 import { Dialog, DialogContentRaw } from "@welpco/ui/dialog";
 import { EmailUpdateForm } from "@welpco/ui/platform/user-management/email-update-form";
 import { PasswordChangeForm } from "@welpco/ui/platform/user-management/password-change-form";
 import { AccountDeletionForm } from "@welpco/ui/platform/user-management/account-deletion-form";
-import { PrivacySettings } from "@welpco/ui/platform/profile-management";
-import {
-  NotificationPreferences,
-  type NotificationPreference,
-} from "@welpco/ui/platform/notification";
 import { Trash2 } from "lucide-react";
 import { CustomerPaymentSettings } from "@/components/features/payments/customer-payment-settings";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
@@ -57,20 +47,11 @@ const PersonalizationSettings = dynamic(
   { ssr: false }
 );
 
-const ALL_SETTINGS_TABS = [
-  "appearance",
-  "account",
-  "privacy",
-  "notifications",
-  "payment",
-] as const;
+const ALL_SETTINGS_TABS = ["appearance", "account", "payment"] as const;
 type SettingsTab = (typeof ALL_SETTINGS_TABS)[number];
 
-function visibleSettingsTabs(isCustomer: boolean, isWelper: boolean): SettingsTab[] {
+function visibleSettingsTabs(isCustomer: boolean): SettingsTab[] {
   const tabs: SettingsTab[] = ["account", "appearance"];
-  if (!isWelper) {
-    tabs.splice(1, 0, "privacy", "notifications");
-  }
   if (isCustomer) {
     tabs.push("payment");
   }
@@ -124,8 +105,8 @@ function SettingsPageContent() {
     submitting: settingsFormLabels.passwordSubmitting,
   };
   const allowedTabs = useMemo(
-    () => visibleSettingsTabs(!!isCustomer, !!isWelper),
-    [isCustomer, isWelper],
+    () => visibleSettingsTabs(!!isCustomer),
+    [isCustomer],
   );
 
   // Resolve tab from URL params synchronously — no setState-in-effect cascade.
@@ -133,85 +114,6 @@ function SettingsPageContent() {
   const initialTab: SettingsTab =
     isSettingsTab(tabFromQuery, allowedTabs) ? tabFromQuery : "account";
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
-
-  // Welper profile (privacy fields)
-  const { data: welperProfile } = useWelperProfile(user?.id ?? "", isWelper);
-  const updateWelperProfileMutation = useUpdateWelperProfile();
-
-  // Notification preferences (BFF returns one row per category with email + in-app flags)
-  const { data: prefRows = [], isLoading: prefsLoading } = useNotificationPreferences();
-  const updatePreferencesMutation = useUpdateNotificationPreferences();
-
-  // Friendly category copy — the BFF stores raw names, we name them in the user's voice (bible §22).
-  const CATEGORY_LABELS: Record<string, { label: string; description: string }> = {
-    booking: {
-      label: "Bookings",
-      description: "When a booking is confirmed, rescheduled, or cancelled.",
-    },
-    payment: {
-      label: "Payments",
-      description: "Receipts, payouts, and any payment that needs your attention.",
-    },
-    message: {
-      label: "Messages",
-      description: "When someone sends you a message about a booking.",
-    },
-    review: {
-      label: "Reviews",
-      description: "When a review is posted or you have a review to leave.",
-    },
-    dispute: {
-      label: "Problem reports",
-      description: "When a problem report is filed, withdrawn, or resolved.",
-    },
-    security: {
-      label: "Account & security",
-      description: "Sign-in alerts and changes to your account.",
-    },
-    system: {
-      label: "Welpco updates",
-      description: "Occasional product news and important platform changes.",
-    },
-  };
-
-  // Map BFF prefs into the platform component's flat shape (one row per channel × category).
-  const flattenedPrefs = useMemo<NotificationPreference[]>(() => {
-    return prefRows.flatMap((row) => {
-      const meta = CATEGORY_LABELS[row.category] ?? {
-        label: row.category,
-        description: "",
-      };
-      return [
-        {
-          id: `${row.category}__email`,
-          label: meta.label,
-          description: meta.description,
-          enabled: row.emailEnabled,
-          category: "email" as const,
-        },
-        {
-          id: `${row.category}__push`,
-          label: meta.label,
-          description: meta.description,
-          enabled: row.inAppEnabled,
-          category: "push" as const,
-        },
-      ];
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prefRows]);
-
-  const handlePrefChange = (id: string, enabled: boolean) => {
-    const [category, channel] = id.split("__");
-    if (!category || !channel) return;
-    updatePreferencesMutation.mutate([
-      {
-        category,
-        ...(channel === "email" ? { emailEnabled: enabled } : {}),
-        ...(channel === "push" ? { inAppEnabled: enabled } : {}),
-      },
-    ]);
-  };
 
   // Day 15 Dispatch C — email-change is `EmailVerifiedGuard`-gated BFF-side
   // (PUT /users/me). Wrap the mutation through `useBookableAction` so an
@@ -249,14 +151,6 @@ function SettingsPageContent() {
   const handleDeleteAccount = async () => {
     await deleteAccountMutation.mutateAsync();
     void performClientSignOut({ callbackUrl: "/", queryClient });
-  };
-
-  const handleProfileVisibilityChange = async (visible: boolean) => {
-    if (!isWelper || !user?.id) return;
-    await updateWelperProfileMutation.mutateAsync({
-      userId: user.id,
-      data: { profileVisibility: visible ? "Public" : "Private" },
-    });
   };
 
   if (!user) {
@@ -303,14 +197,6 @@ function SettingsPageContent() {
         >
           <TabsList>
             <TabsTrigger value="account">{settingsLabels.tabs.account}</TabsTrigger>
-            {!isWelper ? (
-              <TabsTrigger value="privacy">{settingsLabels.tabs.privacy}</TabsTrigger>
-            ) : null}
-            {!isWelper ? (
-              <TabsTrigger value="notifications">
-                {settingsLabels.tabs.notifications}
-              </TabsTrigger>
-            ) : null}
             <TabsTrigger value="appearance">{settingsLabels.tabs.appearance}</TabsTrigger>
             {isCustomer ? (
               <TabsTrigger value="payment">{settingsLabels.tabs.payment}</TabsTrigger>
@@ -382,47 +268,6 @@ function SettingsPageContent() {
                   </Flex>
                 </Card>
               </Flex>
-            </Box>
-          </TabsContent>
-
-          <TabsContent value="privacy">
-            <Box pt="5">
-              <Flex direction="column" gap="4">
-                <PrivacySettings
-                  isWelper={isWelper}
-                  profileVisible={welperProfile?.profileVisibility === "Public"}
-                  loading={updateWelperProfileMutation.isPending}
-                  onProfileVisibilityChange={
-                    isWelper ? handleProfileVisibilityChange : undefined
-                  }
-                />
-                {!isWelper && (
-                  <Text size="2" color="gray" highContrast as="p">
-                    {settingsLabels.privacyCustomerNote}
-                  </Text>
-                )}
-              </Flex>
-            </Box>
-          </TabsContent>
-
-          <TabsContent value="notifications">
-            <Box pt="5">
-              {prefsLoading ? (
-                <Card size="3" variant="surface">
-                  <Flex direction="column" gap="3" aria-busy="true" aria-live="polite">
-                    <Skeleton height="20px" width="40%" />
-                    <Skeleton height="48px" />
-                    <Skeleton height="48px" />
-                    <Skeleton height="48px" />
-                  </Flex>
-                </Card>
-              ) : (
-                <NotificationPreferences
-                  preferences={flattenedPrefs}
-                  loading={updatePreferencesMutation.isPending}
-                  onPreferenceChange={handlePrefChange}
-                />
-              )}
             </Box>
           </TabsContent>
 

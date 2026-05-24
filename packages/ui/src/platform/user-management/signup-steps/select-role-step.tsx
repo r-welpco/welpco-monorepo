@@ -13,13 +13,13 @@ import {
   DEFAULT_SELECT_ROLE_LABELS,
   type SelectRoleStepLabels,
 } from "./labels";
-import { SIGNUP_STEP_CARD_STYLE, type SelectedRole, type SignupStateLite } from "./types";
+import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SelectedRole, type SignupStateLite } from "./types";
 
 /**
  * Day 15 — Phase 2 Dispatch A. Step 2 of the unified signup wizard.
  *
- * Locks the role choice (customer or welper) — once submitted, the
- * orchestrator rejects re-selection (the wizard is a one-way state machine).
+ * Locks the role choice after identity is submitted. Before that, the user
+ * may return from the identity step and pick a different role.
  *
  * UI: two large pill-cards as a `role="radiogroup"` with arrow-key
  * navigation per WAI-ARIA APG. Mobile-first: cards stack vertically on
@@ -116,6 +116,7 @@ export function SelectRoleStep({
   };
 
   const showRequired = submitted && !selected;
+  const navButtonStyle = signupStepNavButtonStyle(Boolean(onBack));
 
   return (
     <Card
@@ -224,13 +225,14 @@ export function SelectRoleStep({
             direction={{ initial: "column", sm: "row-reverse" }}
             gap="3"
             mt={FORM_SPACING.submitGap}
+            style={{ width: "100%" }}
           >
             <Button
               type="submit"
               size="3"
               color={SEMANTIC_COLOR.primary}
               disabled={loading}
-              style={{ width: "100%" }}
+              style={navButtonStyle}
             >
               {loading ? labels.continueLoading : labels.continue}
             </Button>
@@ -242,7 +244,7 @@ export function SelectRoleStep({
                 color="gray"
                 disabled={loading}
                 onClick={onBack}
-                style={{ width: "100%" }}
+                style={navButtonStyle}
               >
                 {labels.back}
               </Button>

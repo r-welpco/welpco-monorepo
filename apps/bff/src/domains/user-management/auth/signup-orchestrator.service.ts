@@ -90,7 +90,8 @@ export type SignupStepName =
   | 'welperAvailability'
   | 'welperBackgroundCheck'
   | 'welperPayout'
-  | 'optionalProfile';
+  | 'optionalProfile'
+  | 'customerPayment';
 
 export interface SignupFilledData {
   identity?: {
@@ -157,11 +158,17 @@ export interface BeginSignupResult {
   signupState: SignupState;
 }
 
-const CUSTOMER_REQUIRED_STEPS: SignupStepName[] = [
+/** Wizard steps required before `finishSignup` and dashboard access. */
+export const CUSTOMER_SIGNUP_REQUIRED_STEPS: SignupStepName[] = [
   'selectRole',
   'identity',
-  'optionalProfile',
 ];
+
+/** Completed on the platform after signup (dashboard checklist). */
+export const CUSTOMER_SETUP_TASKS = [
+  'optionalProfile',
+  'customerPayment',
+] as const satisfies readonly SignupStepName[];
 
 /** Wizard steps required before `finishSignup` and dashboard access. */
 export const WELPER_SIGNUP_REQUIRED_STEPS: SignupStepName[] = [
@@ -193,6 +200,19 @@ export interface WelperSetupTask {
   blockingReason?: string;
 }
 
+export type CustomerSetupTaskId =
+  | 'emailVerification'
+  | (typeof CUSTOMER_SETUP_TASKS)[number];
+
+export interface CustomerSetupTask {
+  id: CustomerSetupTaskId;
+  label: string;
+  completed: boolean;
+  required: boolean;
+  href: string;
+  blockingReason?: string;
+}
+
 export interface SignupState {
   userId: string;
   email: string;
@@ -204,7 +224,7 @@ export interface SignupState {
   nextStep: SignupStepName | null;
   requiredSteps: SignupStepName[];
   filledData: SignupFilledData;
-  setupTasks?: WelperSetupTask[];
+  setupTasks?: WelperSetupTask[] | CustomerSetupTask[];
   setupComplete?: boolean;
   discoverable?: boolean;
 }
@@ -241,6 +261,22 @@ const SETUP_TASK_META: Record<
   optionalProfile: {
     label: 'Profile photo',
     href: '/dashboard/profile?tab=profile',
+    required: true,
+  },
+};
+
+const CUSTOMER_SETUP_TASK_META: Record<
+  (typeof CUSTOMER_SETUP_TASKS)[number],
+  { label: string; href: string; required: boolean }
+> = {
+  optionalProfile: {
+    label: 'Home address',
+    href: '/dashboard/profile?tab=profile',
+    required: true,
+  },
+  customerPayment: {
+    label: 'Payment method',
+    href: '/dashboard/settings?tab=payment',
     required: true,
   },
 };
@@ -319,9 +355,25 @@ export class SignupOrchestratorService {
    */
   getRequiredStepsForRole(role: SelectedRole | null): SignupStepName[] {
     if (role === SelectedRole.WELPER) return [...WELPER_SIGNUP_REQUIRED_STEPS];
-    if (role === SelectedRole.CUSTOMER) return [...CUSTOMER_REQUIRED_STEPS];
+    if (role === SelectedRole.CUSTOMER) return [...CUSTOMER_SIGNUP_REQUIRED_STEPS];
     // Role not yet selected — only the role-pick step matters next.
     return ['selectRole'];
+  }
+
+  /**
+   * Customer dashboard setup checklist (same rules as `getState` setupTasks).
+   */
+  async getCustomerSetupChecklist(userId: string): Promise<{
+    setupTasks: CustomerSetupTask[];
+    setupComplete: boolean;
+  }> {
+    await this.assertCustomer(userId);
+    const state = await this.getState(userId);
+    const setupTasks = (state.setupTasks ?? []) as CustomerSetupTask[];
+    const setupComplete = setupTasks
+      .filter((t) => t.required)
+      .every((t) => t.completed);
+    return { setupTasks, setupComplete };
   }
 
   /**
@@ -506,21 +558,20 @@ export class SignupOrchestratorService {
           privacyAcceptedAt: customer.privacyAcceptedAt?.toISOString() ?? '',
         };
       }
-      if (
-        customer?.profilePhotoUrl ||
-        customer?.address ||
-        customer?.optionalProfileStepCompletedAt
-      ) {
+      if (this.isCustomerOptionalProfileComplete(customer)) {
         completed.add('optionalProfile');
         filledData.optionalProfile = {
-          photoUrl: customer.profilePhotoUrl ?? undefined,
-          address: customer.address
-            ? ({ ...customer.address } as unknown as Record<
+          photoUrl: customer!.profilePhotoUrl ?? undefined,
+          address: customer!.address
+            ? ({ ...customer!.address } as unknown as Record<
                 string,
                 string | undefined
               >)
             : undefined,
         };
+      }
+      if (user.stripeDefaultPaymentMethodId) {
+        completed.add('customerPayment');
       }
     } else if (role === SelectedRole.WELPER) {
       welper = await this.welperProfileRepo.findOne({
@@ -653,11 +704,23 @@ export class SignupOrchestratorService {
       }
     }
 
-    let setupTasks: WelperSetupTask[] | undefined;
+    let setupTasks: WelperSetupTask[] | CustomerSetupTask[] | undefined;
     let setupComplete: boolean | undefined;
     let discoverable: boolean | undefined;
 
-    if (role === SelectedRole.WELPER) {
+    if (role === SelectedRole.CUSTOMER) {
+      if (user.signupCompleted) {
+        await this.maybeRefreshCustomerProfileCompletion(userId, customer, completed);
+        customer =
+          (await this.customerProfileRepo.findOne({
+            where: { customerId: userId },
+          })) ?? customer;
+      }
+      setupTasks = this.buildCustomerSetupTasks(completed, user.emailVerified);
+      setupComplete = setupTasks
+        .filter((t) => t.required)
+        .every((t) => t.completed);
+    } else if (role === SelectedRole.WELPER) {
       if (user.signupCompleted) {
         await this.maybeRefreshWelperDiscoverability(userId, welper, completed);
         welper =
@@ -700,9 +763,8 @@ export class SignupOrchestratorService {
   // ---------------------------------------------------------------------
 
   /**
-   * Step: selectRole. Locks the role; mirrors into legacy `accountType` so
-   * the rest of the domain keeps working. Cannot be called twice with a
-   * different role — ConflictException.
+   * Step: selectRole. Locks the role after identity is submitted; before that
+   * the user may return from the identity step and pick a different role.
    */
   async submitSelectRoleStep(
     userId: string,
@@ -711,11 +773,29 @@ export class SignupOrchestratorService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
     if (user.selectedRole && user.selectedRole !== dto.role) {
-      throw new ConflictException({
-        code: 'ROLE_LOCKED',
-        message:
-          'Role is already set for this account and cannot be changed mid-signup.',
+      const signupState = await this.getState(userId);
+      if (signupState.completedSteps.includes('identity')) {
+        throw new ConflictException({
+          code: 'ROLE_LOCKED',
+          message:
+            'Role is already set for this account and cannot be changed mid-signup.',
+        });
+      }
+      await this.dataSource.transaction(async (manager) => {
+        user.selectedRole = dto.role;
+        user.accountType =
+          dto.role === SelectedRole.WELPER
+            ? AccountType.WELPER
+            : AccountType.CUSTOMER;
+        await manager.getRepository(UserAccount).save(user);
+        await this.profileCreationService.createProfileForUser(
+          user.id,
+          user.email,
+          user.accountType,
+          manager,
+        );
       });
+      return this.getState(userId);
     }
     if (!user.selectedRole) {
       await this.dataSource.transaction(async (manager) => {
@@ -1014,6 +1094,7 @@ export class SignupOrchestratorService {
         };
       }
       await this.customerProfileRepo.save(profile);
+      await this.afterCustomerSetupStepWrite(userId);
     } else {
       const profile = await this.welperProfileRepo.findOne({
         where: { welperId: userId },
@@ -1058,15 +1139,19 @@ export class SignupOrchestratorService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    // Welper: only the 3-step wizard gates finish — dashboard setup tasks never block.
+    // Welper/customer: only signup wizard steps gate finish — dashboard setup tasks never block.
     const missingSignup =
       user.selectedRole === SelectedRole.WELPER
         ? WELPER_SIGNUP_REQUIRED_STEPS.filter(
             (s) => !state.completedSteps.includes(s),
           )
-        : this.getRequiredStepsForRole(user.selectedRole).filter(
-            (s) => !state.completedSteps.includes(s),
-          );
+        : user.selectedRole === SelectedRole.CUSTOMER
+          ? CUSTOMER_SIGNUP_REQUIRED_STEPS.filter(
+              (s) => !state.completedSteps.includes(s),
+            )
+          : this.getRequiredStepsForRole(user.selectedRole).filter(
+              (s) => !state.completedSteps.includes(s),
+            );
     if (missingSignup.length > 0) {
       throw new UnprocessableEntityException({
         code: 'INCOMPLETE_SIGNUP',
@@ -1096,7 +1181,8 @@ export class SignupOrchestratorService {
           .findOne({ where: { customerId: userId } });
         if (cp) {
           cp.onboardingCompleted = true;
-          cp.profileCompletionStatus = ProfileCompletionStatus.COMPLETE;
+          cp.profileCompletionStatus =
+            await this.computeCustomerProfileCompletionStatus(userId, cp);
           await manager.getRepository(CustomerProfile).save(cp);
         }
       } else if (u.selectedRole === SelectedRole.WELPER) {
@@ -1131,6 +1217,47 @@ export class SignupOrchestratorService {
       );
     }
     return user;
+  }
+
+  private async assertCustomer(userId: string): Promise<UserAccount> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (user.selectedRole !== SelectedRole.CUSTOMER) {
+      throw new BadRequestException(
+        'This step is only available to customers.',
+      );
+    }
+    return user;
+  }
+
+  private isCustomerOptionalProfileComplete(
+    customer: CustomerProfile | null,
+  ): boolean {
+    return Boolean(customer?.address?.streetAddress?.trim());
+  }
+
+  private buildCustomerSetupTasks(
+    completed: Set<SignupStepName>,
+    emailVerified: boolean,
+  ): CustomerSetupTask[] {
+    const emailTask: CustomerSetupTask = {
+      id: 'emailVerification',
+      label: 'Verify your email',
+      href: '/verification',
+      required: true,
+      completed: emailVerified,
+    };
+    const profileTasks = CUSTOMER_SETUP_TASKS.map((id) => {
+      const meta = CUSTOMER_SETUP_TASK_META[id];
+      return {
+        id,
+        label: meta.label,
+        href: meta.href,
+        required: meta.required,
+        completed: completed.has(id),
+      };
+    });
+    return [emailTask, ...profileTasks];
   }
 
   private buildSetupTasks(
@@ -1180,6 +1307,68 @@ export class SignupOrchestratorService {
       return ProfileCompletionStatus.COMPLETE;
     }
     return ProfileCompletionStatus.INCOMPLETE;
+  }
+
+  /** Mirrors `CustomerProfileService.computeCompletionStatus` without circular imports. */
+  private async computeCustomerProfileCompletionStatus(
+    userId: string,
+    profile: CustomerProfile,
+  ): Promise<ProfileCompletionStatus> {
+    if (
+      !profile.firstName ||
+      !profile.lastName ||
+      !profile.phoneNumber ||
+      !profile.address?.streetAddress?.trim()
+    ) {
+      return ProfileCompletionStatus.INCOMPLETE;
+    }
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user?.stripeDefaultPaymentMethodId) {
+      return ProfileCompletionStatus.INCOMPLETE;
+    }
+    return ProfileCompletionStatus.COMPLETE;
+  }
+
+  private async afterCustomerSetupStepWrite(userId: string): Promise<void> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user?.signupCompleted) return;
+    const profile = await this.customerProfileRepo.findOne({
+      where: { customerId: userId },
+    });
+    if (!profile) return;
+    const state = await this.getState(userId);
+    const completed = new Set<SignupStepName>([
+      ...state.completedSteps,
+      ...(state.setupTasks
+        ?.filter((t) => t.completed && t.id !== 'emailVerification')
+        .map((t) => t.id as SignupStepName) ?? []),
+    ]);
+    await this.maybeRefreshCustomerProfileCompletion(userId, profile, completed);
+  }
+
+  private async maybeRefreshCustomerProfileCompletion(
+    userId: string,
+    profile: CustomerProfile | null,
+    completed: Set<SignupStepName>,
+  ): Promise<void> {
+    if (!profile) return;
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const setupTasks = this.buildCustomerSetupTasks(
+      completed,
+      user?.emailVerified ?? false,
+    );
+    const setupComplete = setupTasks
+      .filter((t) => t.required)
+      .every((t) => t.completed);
+
+    profile.profileCompletionStatus =
+      await this.computeCustomerProfileCompletionStatus(userId, profile);
+
+    if (!setupComplete) {
+      profile.profileCompletionStatus = ProfileCompletionStatus.INCOMPLETE;
+    }
+
+    await this.customerProfileRepo.save(profile);
   }
 
   private async afterWelperSetupStepWrite(userId: string): Promise<void> {

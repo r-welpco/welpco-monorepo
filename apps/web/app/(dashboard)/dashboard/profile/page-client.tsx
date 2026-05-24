@@ -21,8 +21,6 @@ import {
   useUpdateWelperProfile,
   useFavoriteWelpers,
   useRemoveFavoriteWelper,
-  useServicePreferences,
-  useUpdateServicePreferences,
   useServiceOfferings,
   useCreateServiceOffering,
   useUpdateServiceOffering,
@@ -47,7 +45,6 @@ import {
   AvailabilityScheduleStats,
   AvailabilityExceptions,
   FavoriteWelperList,
-  ServicePreferences,
   ServiceAreaCard,
 } from "./profile-forms-lazy";
 import { Dialog, DialogContent } from "@welpco/ui/dialog";
@@ -64,7 +61,6 @@ import {
 import type {
   CustomerProfileValues,
   WelperProfileValues,
-  ServicePreferencesValues,
   ServiceOfferingValues,
 } from "@welpco/ui/platform/profile-management";
 import type { ServiceArea as AppServiceArea } from "@/types";
@@ -112,6 +108,8 @@ const WELPER_PROFILE_TABS = new Set([
   "payout",
 ]);
 
+const CUSTOMER_PROFILE_TABS = new Set(["personal", "favorites"]);
+
 export default function ProfilePageClient({ user: serverUser }: ProfilePageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -122,16 +120,28 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   const sessionReady = sessionStatus === "authenticated";
 
   const tabFromUrl = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState(() =>
-    user.role === "welper" && tabFromUrl && WELPER_PROFILE_TABS.has(tabFromUrl)
-      ? tabFromUrl
-      : user.role === "welper"
-        ? "profile"
-        : "personal",
-  );
+  const [activeTab, setActiveTab] = useState(() => {
+    if (user.role === "welper" && tabFromUrl && WELPER_PROFILE_TABS.has(tabFromUrl)) {
+      return tabFromUrl;
+    }
+    if (user.role === "welper") return "profile";
+    if (tabFromUrl && CUSTOMER_PROFILE_TABS.has(tabFromUrl)) return tabFromUrl;
+    return "personal";
+  });
 
   useEffect(() => {
-    if (user.role !== "welper") return;
+    if (user.role === "customer") {
+      const tab = searchParams.get("tab");
+      if (tab === "preferences" || (tab && !CUSTOMER_PROFILE_TABS.has(tab))) {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("tab", "personal");
+        router.replace(`/dashboard/profile?${params.toString()}`);
+        setActiveTab("personal");
+      } else if (tab && CUSTOMER_PROFILE_TABS.has(tab)) {
+        setActiveTab(tab);
+      }
+      return;
+    }
     const tab = searchParams.get("tab");
     if (tab === "overview") {
       const params = new URLSearchParams(searchParams.toString());
@@ -219,7 +229,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   // Role-specific data hooks (gated on session so API client has token)
   const { data: favoriteWelpersRaw } = useFavoriteWelpers(isCustomer && sessionReady ? user.id : "");
   const favoriteWelpers = Array.isArray(favoriteWelpersRaw) ? favoriteWelpersRaw : [];
-  const { data: servicePreferences } = useServicePreferences(isCustomer && sessionReady ? user.id : "");
   const { data: serviceOfferings = [] } = useServiceOfferings(isWelper && sessionReady ? user.id : "");
   const { data: availabilitySchedule } = useAvailability(isWelper && sessionReady ? user.id : "");
   const { data: availabilityExceptions = [] } = useAvailabilityExceptions(
@@ -227,7 +236,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   );
 
   const updateCustomerProfileMutation = useUpdateCustomerProfile();
-  const updateServicePreferencesMutation = useUpdateServicePreferences();
   const updateWelperProfileMutation = useUpdateWelperProfile();
   const removeFavoriteMutation = useRemoveFavoriteWelper();
   const createServiceOfferingMutation = useCreateServiceOffering();
@@ -513,16 +521,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
       });
     };
 
-    const handleServicePreferencesSubmit = async (values: ServicePreferencesValues) => {
-      if (!user) return;
-      await updateServicePreferencesMutation.mutateAsync({
-        userId: user.id,
-        preferences: {
-          preferredCategories: values.preferredCategories,
-        },
-      });
-    };
-
     return (
       <Container size="3" px={{ initial: "4", sm: "6" }}>
         <Flex direction="column" gap="6">
@@ -535,18 +533,14 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
             </Text>
           </Box>
 
-        {(error ||
-          updateCustomerProfileMutation.error ||
-          updateServicePreferencesMutation.error) && (
+        {(error || updateCustomerProfileMutation.error) && (
           <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
             <Callout.Text>
               {error instanceof Error
                 ? error.message
                 : updateCustomerProfileMutation.error instanceof Error
                   ? updateCustomerProfileMutation.error.message
-                  : updateServicePreferencesMutation.error instanceof Error
-                    ? updateServicePreferencesMutation.error.message
-                    : "We couldn't load your profile. Try again in a moment."}
+                  : "We couldn't load your profile. Try again in a moment."}
             </Callout.Text>
           </Callout.Root>
         )}
@@ -554,7 +548,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="personal">Personal info</TabsTrigger>
-            <TabsTrigger value="preferences">Service preferences</TabsTrigger>
             <TabsTrigger value="favorites">Favorites</TabsTrigger>
           </TabsList>
 
@@ -590,29 +583,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                   onSubmit={handleCustomerProfileSubmit}
                 />
               </Flex>
-            </Box>
-          </TabsContent>
-
-          <TabsContent value="preferences">
-            <Box pt="5">
-              <ServicePreferences
-                defaultValues={
-                  servicePreferences
-                    ? { preferredCategories: servicePreferences.preferredCategories }
-                    : undefined
-                }
-                loading={isLoading || updateServicePreferencesMutation.isPending}
-                error={
-                  error instanceof Error
-                    ? error.message
-                    : typeof error === "string"
-                      ? error
-                      : updateServicePreferencesMutation.error instanceof Error
-                        ? updateServicePreferencesMutation.error.message
-                        : undefined
-                }
-                onSubmit={handleServicePreferencesSubmit}
-              />
             </Box>
           </TabsContent>
 

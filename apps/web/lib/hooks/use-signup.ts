@@ -8,6 +8,7 @@ import { signIn, useSession } from "next-auth/react";
 import { clearTokenCache } from "@/lib/api/get-token";
 import { hasApiSession } from "@/lib/auth/has-api-session";
 import { getWelperSetupChecklist } from "@/lib/services/welper-setup-service";
+import { getCustomerSetupChecklist } from "@/lib/services/customer-setup-service";
 import {
   beginSignup,
   finishSignup,
@@ -282,6 +283,17 @@ export function useWelperSetupChecklist(enabled = true) {
   return useQuery({
     queryKey: WELPER_SETUP_CHECKLIST_KEY,
     queryFn: getWelperSetupChecklist,
+    enabled: canCallApi && enabled,
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+}
+
+export function useCustomerSetupChecklist(enabled = true) {
+  const canCallApi = useHasApiSession();
+  return useQuery({
+    queryKey: WELPER_SETUP_CHECKLIST_KEY,
+    queryFn: getCustomerSetupChecklist,
     enabled: canCallApi && enabled,
     staleTime: 0,
     refetchOnMount: "always",

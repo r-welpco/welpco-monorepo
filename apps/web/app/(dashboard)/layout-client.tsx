@@ -14,11 +14,16 @@ import { AuthBackgroundSVG } from "@/components/features/personalization/auth-ba
 import { useUnreadCount } from "@/lib/hooks/use-notifications";
 import { NotificationBellPopover } from "@/components/layout/notification-bell-popover";
 import {
-  useDashboardUserMenuLabels,
+  useCustomerNavLabels,
   useWelperNavLabels,
 } from "@/lib/i18n/use-dashboard-labels";
 import { useDashboardLocale } from "@/lib/i18n/dashboard-locale";
 import { getDashboardTabStripStyle } from "@/lib/personalization/dashboard-tab-strip-style";
+import { AppearanceTunerEffects } from "@/components/features/personalization/appearance-tuner-effects";
+import { DashboardAppearanceTuner } from "@/components/features/personalization/dashboard-appearance-tuner";
+import { useAppearanceTunerStore } from "@/stores/appearanceTunerStore";
+
+const showAppearanceTuner = process.env.NODE_ENV === "development";
 interface DashboardLayoutClientProps {
   children: React.ReactNode;
   user: {
@@ -47,6 +52,7 @@ export default function DashboardLayoutClient({
   const { data: customerProfile } = useCustomerProfile(user.id, userRole === "customer");
   const { data: welperProfile } = useWelperProfile(user.id, userRole === "welper");
   const backgroundId = usePersonalizationStore((s) => s.backgroundId);
+  const tabStripAccentMix = useAppearanceTunerStore((s) => s.tabStripAccentMix);
   const themeMode = usePersonalizationStore((s) => s.themeMode);
   const setThemeMode = usePersonalizationStore((s) => s.setThemeMode);
   const { data: unreadData } = useUnreadCount();
@@ -86,15 +92,6 @@ export default function DashboardLayoutClient({
     router.push(tabMap[tab] || "/dashboard");
   }, [router]);
 
-  const handleSearch = useCallback((query: string) => {
-    const q = (query || "").trim();
-    if (q) {
-      router.push(`/dashboard/search?q=${encodeURIComponent(q)}`);
-    } else {
-      router.push("/dashboard/search");
-    }
-  }, [router]);
-
   const handleThemeChange = useCallback(
     (mode: "light" | "dark" | "system") => {
       setThemeMode(mode);
@@ -119,13 +116,16 @@ export default function DashboardLayoutClient({
     [userRole]
   );
 
-  const welperTabStripStyle = useMemo(
-    () => getDashboardTabStripStyle(backgroundId),
-    [backgroundId],
+  const tabStripStyle = useMemo(
+    () =>
+      getDashboardTabStripStyle(backgroundId, {
+        accentMixPercent: showAppearanceTuner ? tabStripAccentMix : undefined,
+      }),
+    [backgroundId, tabStripAccentMix],
   );
 
+  const customerNavLabels = useCustomerNavLabels();
   const welperNavLabels = useWelperNavLabels();
-  const userMenuLabels = useDashboardUserMenuLabels();
   const { locale, setLocale } = useDashboardLocale();
 
   if (!mounted) {
@@ -133,7 +133,17 @@ export default function DashboardLayoutClient({
     return (
       <Flex direction="column" style={{ minHeight: "100vh" }}>
         <Box style={{ height: "64px", backgroundColor: "var(--gray-2)" }} />
-        <Box py="7" px="6" style={{ flex: 1, backgroundColor: "var(--gray-1)" }}>
+        <Box
+          py="7"
+          px="6"
+          style={{
+            flex: 1,
+            backgroundColor: "var(--gray-1)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <AuthBackgroundSVG backgroundId={backgroundId} />
           {children}
         </Box>
       </Flex>
@@ -164,12 +174,7 @@ export default function DashboardLayoutClient({
     onTabChange: handleTabChange,
     ...(userRole === "customer"
       ? {
-          onSearch: handleSearch,
           onRoleSwitch: () => router.push("/dashboard"),
-          onFeedbackClick: () => {
-            // TODO: Open feedback modal
-          },
-          onDocsClick: () => window.open("https://docs.welpco.com", "_blank"),
         }
       : {}),
     onThemeChange: handleThemeChange,
@@ -183,12 +188,16 @@ export default function DashboardLayoutClient({
   return (
     <Flex direction="column" style={{ minHeight: "100vh", position: "relative" }}>
       {userRole === "customer" ? (
-        <CustomerHeader {...headerProps} labels={userMenuLabels} />
+        <CustomerHeader
+          {...headerProps}
+          labels={customerNavLabels}
+          tabStripStyle={tabStripStyle}
+        />
       ) : (
         <WelperHeader
           {...headerProps}
           labels={welperNavLabels}
-          tabStripStyle={welperTabStripStyle}
+          tabStripStyle={tabStripStyle}
         />
       )}
       <Box
@@ -207,18 +216,22 @@ export default function DashboardLayoutClient({
         <AuthBackgroundSVG backgroundId={backgroundId} />
         <Box
           key={contentAnimationKey}
-          className="animate-fade-in-up"
           style={{
             width: "100%",
             maxWidth: "1200px",
             minWidth: 0,
             position: "relative",
-            animationFillMode: "both",
           }}
         >
           {children}
         </Box>
       </Box>
+      {showAppearanceTuner ? (
+        <>
+          <AppearanceTunerEffects />
+          <DashboardAppearanceTuner />
+        </>
+      ) : null}
     </Flex>
   );
 }
