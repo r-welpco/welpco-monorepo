@@ -183,7 +183,7 @@ export async function validateSeed(dataSource: DataSource): Promise<void> {
     where: { name: In([...SEARCH_DEMO_SUBCATEGORY_NAMES]), isActive: true },
   });
   const found = new Set(categories.map((c) => c.name));
-  const requiredForSearch = ['Babysitter', 'Dog Walks', 'Tutoring', 'Housekeeping'];
+  const requiredForSearch = ['Babysitter', 'Dog Walks', 'Math Tutoring', 'Housekeeping'];
   for (const name of requiredForSearch) {
     if (!found.has(name)) {
       issues.push({

@@ -309,6 +309,8 @@ export interface SearchServicesResponse {
 export interface PublicServiceOffering {
   id: string;
   serviceCategoryId: string;
+  subcategoryIds?: string[];
+  subcategories?: Array<{ id: string; name: string }>;
   categoryName: string;
   parentCategoryName?: string;
   serviceDescription: string;

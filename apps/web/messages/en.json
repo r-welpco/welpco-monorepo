@@ -75,7 +75,6 @@
             "name": "Care",
             "services": [
               "Babysitter",
-              "Child care",
               "Elderly care",
               "Special needs"
             ]
@@ -93,7 +92,9 @@
           "learning": {
             "name": "Learning & Lessons",
             "services": [
-              "Tutoring",
+              "Math tutoring",
+              "French tutoring",
+              "English tutoring",
               "Music lessons",
               "Cooking lessons",
               "Swimming lessons"
@@ -106,12 +107,10 @@
               "Tree-planting",
               "Gardening",
               "Car washing",
-              "Gutter cleaning",
               "Window cleaning",
               "Exterior property cleaning",
               "Snow removal",
               "Pool opening/closing",
-              "Leaf cleanup",
               "Summer/winter preparation"
             ]
           },
@@ -138,10 +137,7 @@
             "name": "Home Cleaning",
             "services": [
               "Housekeeping",
-              "Deep cleaning",
-              "Organizing",
-              "Laundry",
-              "Move-in/move-out cleaning"
+              "Organizing"
             ]
           },
           "homeHelp": {
@@ -154,7 +150,6 @@
               "Appliance installation",
               "Moving help",
               "Heavy lifting",
-              "Home organization",
               "Painting touch-ups",
               "Picture hanging"
             ]
@@ -789,7 +784,6 @@
         "Home Cleaning": "Home Cleaning",
         "Home Help": "Home Help",
         "Babysitter": "Babysitter",
-        "Child Care": "Child Care",
         "Elderly Care": "Elderly Care",
         "Special Needs": "Special Needs",
         "Dog Walks": "Dog Walks",
@@ -797,7 +791,9 @@
         "Pet Sitting": "Pet Sitting",
         "Aquarium and Terrarium Cleaning/Maintenance": "Aquarium and Terrarium Cleaning/Maintenance",
         "Dog Training": "Dog Training",
-        "Tutoring": "Tutoring",
+        "Math Tutoring": "Math Tutoring",
+        "French Tutoring": "French Tutoring",
+        "English Tutoring": "English Tutoring",
         "Music Lessons": "Music Lessons",
         "Cooking Lessons": "Cooking Lessons",
         "Swimming Lessons": "Swimming Lessons",
@@ -805,12 +801,10 @@
         "Tree Planting": "Tree Planting",
         "Gardening": "Gardening",
         "Car Washing": "Car Washing",
-        "Gutter Cleaning": "Gutter Cleaning",
         "Window Cleaning": "Window Cleaning",
         "Exterior Property Cleaning": "Exterior Property Cleaning",
         "Snow Removal": "Snow Removal",
         "Pool Opening/Closing": "Pool Opening/Closing",
-        "Leaf Cleanup": "Leaf Cleanup",
         "Summer/Winter Preparation": "Summer/Winter Preparation",
         "Meal Preparation": "Meal Preparation",
         "Personal Trainer": "Personal Trainer",
@@ -822,10 +816,7 @@
         "Party Assistance": "Party Assistance",
         "Entertainer": "Entertainer",
         "Housekeeping": "Housekeeping",
-        "Deep Cleaning": "Deep Cleaning",
         "Organizing": "Organizing",
-        "Laundry": "Laundry",
-        "Move-In/Move-Out Cleaning": "Move-In/Move-Out Cleaning",
         "Furniture Assembly": "Furniture Assembly",
         "TV & Shelf Mounting": "TV & Shelf Mounting",
         "Smart Home Setup": "Smart Home Setup",
@@ -833,7 +824,6 @@
         "Appliance Installation": "Appliance Installation",
         "Moving Help": "Moving Help",
         "Heavy Lifting": "Heavy Lifting",
-        "Home Organization": "Home Organization",
         "Painting Touch-Ups": "Painting Touch-Ups",
         "Picture Hanging": "Picture Hanging",
         "Pet care": "Pet care",
@@ -852,21 +842,20 @@
         "Lawn-mowing": "Lawn-mowing",
         "Tree-planting": "Tree-planting",
         "Car washing": "Car washing",
-        "Gutter cleaning": "Gutter cleaning",
         "Window cleaning": "Window cleaning",
         "Exterior property cleaning": "Exterior property cleaning",
         "Snow removal": "Snow removal",
         "Pool opening/closing": "Pool opening/closing",
-        "Leaf cleanup": "Leaf cleanup",
         "Summer/winter preparation": "Summer/winter preparation",
+        "Math tutoring": "Math tutoring",
+        "French tutoring": "French tutoring",
+        "English tutoring": "English tutoring",
         "Health and wellness": "Health and wellness",
         "Meal preparation": "Meal preparation",
         "Personal trainer": "Personal trainer",
         "Wellness support": "Wellness support",
         "Catering help": "Catering help",
         "Party assistance": "Party assistance",
-        "Deep cleaning": "Deep cleaning",
-        "Move-in/move-out cleaning": "Move-in/move-out cleaning",
         "Furniture assembly": "Furniture assembly",
         "TV & shelf mounting": "TV & shelf mounting",
         "Smart home setup": "Smart home setup",
@@ -874,7 +863,6 @@
         "Appliance installation": "Appliance installation",
         "Moving help": "Moving help",
         "Heavy lifting": "Heavy lifting",
-        "Home organization": "Home organization",
         "Painting touch-ups": "Painting touch-ups",
         "Picture hanging": "Picture hanging"
       },

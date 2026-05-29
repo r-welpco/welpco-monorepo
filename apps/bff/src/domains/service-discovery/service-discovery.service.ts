@@ -366,9 +366,17 @@ export class ServiceDiscoveryService {
 
     const serviceOfferings: PublicServiceOfferingDto[] = offerings.map((o) => {
       const category = categoryById.get(o.serviceCategoryId);
+      const subcategories = (Array.isArray(o.subcategoryIds) ? o.subcategoryIds : [])
+        .map((id) => {
+          const subcategory = categoryById.get(id);
+          return subcategory ? { id: subcategory.id, name: subcategory.name } : null;
+        })
+        .filter((subcategory): subcategory is { id: string; name: string } => subcategory !== null);
       return {
         id: o.id,
         serviceCategoryId: o.serviceCategoryId,
+        subcategoryIds: subcategories.map((subcategory) => subcategory.id),
+        subcategories,
         categoryName: category?.name ?? '',
         ...(category?.parent?.name && { parentCategoryName: category.parent.name }),
         serviceDescription: o.serviceDescription,

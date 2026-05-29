@@ -21,6 +21,7 @@ import { ServiceReceiptDto, ReceiptEvidenceFileDto } from './dto/service-receipt
 import { S3UrlPresignerService } from '../../clients/s3';
 import { ServiceOfferingService } from '../profile-management/service-offering/service-offering.service';
 import { ServiceQuestionsService } from '../content-management/service-questions/service-questions.service';
+import { Question, QuestionType } from '../content-management/entities/question.entity';
 import { AvailabilityService } from '../profile-management/availability/availability.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
@@ -39,6 +40,11 @@ const MAX_RECEIPT_BILLING_MINUTES = 720;
 const RECEIPT_SCHEDULE_GRACE_BEFORE_MINUTES = 60;
 const RECEIPT_SCHEDULE_GRACE_AFTER_MINUTES = 120;
 const RECEIPT_FUTURE_GRACE_MINUTES = 5;
+const MAX_BOOKING_ANSWER_KEYS = 100;
+const MAX_BOOKING_ANSWER_STRING_LENGTH = 2000;
+const MAX_BOOKING_ANSWERS_JSON_LENGTH = 20000;
+
+type BookingAnswerValue = string | number | boolean;
 
 @Injectable()
 export class BookingService {
@@ -67,17 +73,148 @@ export class BookingService {
 
   private isServiceQuestionVisible(
     sq: ServiceQuestion,
-    answers: Record<string, string | number | boolean>,
+    answers: Record<string, BookingAnswerValue>,
   ): boolean {
     const cl = sq.conditionalLogic;
     if (!cl?.showIf) return true;
     return answers[cl.showIf.questionId] === cl.showIf.value;
   }
 
-  private isAnswerValid(value: string | number | boolean | undefined): boolean {
-    if (value === undefined || value === null) return false;
-    if (typeof value === 'string') return value.trim() !== '';
-    return true;
+  private isEmptyAnswer(value: BookingAnswerValue | undefined): boolean {
+    if (value === undefined || value === null) return true;
+    if (typeof value === 'string') return value.trim() === '';
+    return false;
+  }
+
+  private assertAnswersPayloadReasonable(
+    answers: Record<string, BookingAnswerValue>,
+  ): void {
+    if (Object.keys(answers).length > MAX_BOOKING_ANSWER_KEYS) {
+      throw new BadRequestException('Too many booking question answers');
+    }
+
+    let serializedLength = 0;
+    try {
+      serializedLength = JSON.stringify(answers).length;
+    } catch {
+      throw new BadRequestException('Invalid booking question answers');
+    }
+    if (serializedLength > MAX_BOOKING_ANSWERS_JSON_LENGTH) {
+      throw new BadRequestException('Booking question answers are too large');
+    }
+  }
+
+  private normalizeAnswerValue(
+    value: BookingAnswerValue | undefined,
+    question?: Question | null,
+  ): BookingAnswerValue | undefined {
+    if (this.isEmptyAnswer(value)) return undefined;
+    if (!question) return value;
+
+    if (question.type === QuestionType.NUMBER) {
+      if (typeof value !== 'number' || !Number.isFinite(value)) {
+        throw new BadRequestException(`Invalid answer for: ${question.label}`);
+      }
+      const rules = question.validationRules;
+      if (rules?.min !== undefined && value < rules.min) {
+        throw new BadRequestException(`Invalid answer for: ${question.label}`);
+      }
+      if (rules?.max !== undefined && value > rules.max) {
+        throw new BadRequestException(`Invalid answer for: ${question.label}`);
+      }
+      return value;
+    }
+
+    if (question.type === QuestionType.BOOLEAN) {
+      if (typeof value !== 'boolean') {
+        throw new BadRequestException(`Invalid answer for: ${question.label}`);
+      }
+      return value;
+    }
+
+    if (typeof value !== 'string') {
+      throw new BadRequestException(`Invalid answer for: ${question.label}`);
+    }
+
+    const stringValue = value.trim();
+    if (stringValue.length > MAX_BOOKING_ANSWER_STRING_LENGTH) {
+      throw new BadRequestException(`Answer is too long for: ${question.label}`);
+    }
+
+    if (question.type === QuestionType.CHOICE) {
+      const allowed = question.options?.some((opt) => opt.value === stringValue);
+      if (!allowed) {
+        throw new BadRequestException(`Invalid answer for: ${question.label}`);
+      }
+      return stringValue;
+    }
+
+    if (question.type === QuestionType.DATE) {
+      const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(stringValue);
+      if (!match) {
+        throw new BadRequestException(`Invalid date answer for: ${question.label}`);
+      }
+      const year = Number(match[1]);
+      const month = Number(match[2]);
+      const day = Number(match[3]);
+      const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+      if (month < 1 || month > 12 || day < 1 || day > daysInMonth) {
+        throw new BadRequestException(`Invalid date answer for: ${question.label}`);
+      }
+      return stringValue;
+    }
+
+    if (question.type === QuestionType.TIME) {
+      if (!/^\d{2}:\d{2}$/.test(stringValue)) {
+        throw new BadRequestException(`Invalid time answer for: ${question.label}`);
+      }
+      const [hoursRaw, minutesRaw] = stringValue.split(':');
+      const hours = Number(hoursRaw);
+      const minutes = Number(minutesRaw);
+      if (hours > 23 || minutes > 59) {
+        throw new BadRequestException(`Invalid time answer for: ${question.label}`);
+      }
+      return stringValue;
+    }
+
+    if (question.validationRules?.pattern) {
+      try {
+        if (!new RegExp(question.validationRules.pattern).test(stringValue)) {
+          throw new BadRequestException(`Invalid answer for: ${question.label}`);
+        }
+      } catch (error) {
+        if (error instanceof BadRequestException) throw error;
+        // Ignore admin-configured invalid regexes instead of blocking bookings.
+      }
+    }
+
+    return stringValue;
+  }
+
+  private buildValidatedBookingAnswers(
+    serviceQuestions: ServiceQuestion[],
+    answers: Record<string, BookingAnswerValue>,
+  ): Record<string, BookingAnswerValue> {
+    this.assertAnswersPayloadReasonable(answers);
+    const sanitized: Record<string, BookingAnswerValue> = {};
+
+    for (const sq of serviceQuestions) {
+      if (!this.isServiceQuestionVisible(sq, answers)) continue;
+
+      const label = sq.question?.label ?? sq.questionId;
+      const normalized = this.normalizeAnswerValue(answers[sq.questionId], sq.question);
+
+      if (normalized === undefined) {
+        if (sq.isRequired) {
+          throw new BadRequestException(`Missing required answer for: ${label}`);
+        }
+        continue;
+      }
+
+      sanitized[sq.questionId] = normalized;
+    }
+
+    return sanitized;
   }
 
   /** Normalize time to HH:mm for consistent API contract */
@@ -301,15 +438,19 @@ export class BookingService {
 
     // Validate service question answers
     const answers = dto.answers ?? {};
-    const serviceQuestions = await this.serviceQuestionsService.findByServiceCategory(offering.serviceCategoryId);
-    const requiredVisible = serviceQuestions.filter(
-      (sq) => sq.isRequired && this.isServiceQuestionVisible(sq, answers),
-    );
-    const firstMissing = requiredVisible.find((sq) => !this.isAnswerValid(answers[sq.questionId]));
-    if (firstMissing) {
-      const label = firstMissing.question?.label ?? firstMissing.questionId;
-      throw new BadRequestException(`Missing required answer for: ${label}`);
+    const allowedQuestionCategoryIds = new Set([
+      offering.serviceCategoryId,
+      ...(Array.isArray(offering.subcategoryIds) ? offering.subcategoryIds : []),
+    ]);
+    const serviceQuestionCategoryId =
+      dto.serviceQuestionCategoryId ?? offering.serviceCategoryId;
+    if (!allowedQuestionCategoryIds.has(serviceQuestionCategoryId)) {
+      throw new BadRequestException('Question category does not belong to this offering');
     }
+    const serviceQuestions = await this.serviceQuestionsService.findByServiceCategory(
+      serviceQuestionCategoryId,
+    );
+    const validatedAnswers = this.buildValidatedBookingAnswers(serviceQuestions, answers);
 
     // Calculate pricing
     let hourlyRate: number | null = null;
@@ -349,7 +490,7 @@ export class BookingService {
         customerId,
         welperId: dto.welperId,
         serviceOfferingId: dto.offeringId,
-        answers,
+        answers: validatedAnswers,
         status: BookingRequestStatus.PENDING,
         scheduledDate: dto.scheduledDate,
         scheduledStartTime: dto.scheduledStartTime,

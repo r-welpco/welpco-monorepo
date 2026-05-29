@@ -5,8 +5,10 @@ import {
   ServiceCategory,
   ServiceQuestion,
 } from '../../domains/content-management/entities';
+import { ServiceOffering } from '../../domains/profile-management/entities/service-offering.entity';
 import {
   getTaxonomyNameSet,
+  REMOVED_SUBCATEGORY_OFFERING_TARGET,
   SERVICE_CATEGORY_TAXONOMY,
 } from './service-category-taxonomy';
 
@@ -72,12 +74,15 @@ export async function syncServiceCategoryTaxonomy(
   }
 
   const allCategories = await categoryRepo.find();
+  const categoryByName = new Map(allCategories.map((c) => [c.name, c]));
   for (const cat of allCategories) {
     if (!allowedNames.has(cat.name)) {
       cat.isActive = false;
       await categoryRepo.save(cat);
     }
   }
+
+  await migrateOfferingsFromRemovedSubcategories(dataSource, categoryByName);
 
   const existingQuestions = await questionRepo.find({ take: 1 });
   if (existingQuestions.length === 0) {
@@ -119,5 +124,29 @@ export async function syncServiceCategoryTaxonomy(
       });
       await serviceQuestionRepo.save(row);
     }
+  }
+}
+
+async function migrateOfferingsFromRemovedSubcategories(
+  dataSource: DataSource,
+  categoryByName: Map<string, ServiceCategory>,
+): Promise<void> {
+  const offeringRepo = dataSource.getRepository(ServiceOffering);
+  let migrated = 0;
+
+  for (const [fromName, toName] of Object.entries(REMOVED_SUBCATEGORY_OFFERING_TARGET)) {
+    const from = categoryByName.get(fromName);
+    const to = categoryByName.get(toName);
+    if (!from || !to || from.id === to.id) continue;
+
+    const result = await offeringRepo.update(
+      { serviceCategoryId: from.id },
+      { serviceCategoryId: to.id },
+    );
+    migrated += result.affected ?? 0;
+  }
+
+  if (migrated > 0) {
+    console.log(`   ↪ Migrated ${migrated} service offering(s) from removed subcategories.`);
   }
 }

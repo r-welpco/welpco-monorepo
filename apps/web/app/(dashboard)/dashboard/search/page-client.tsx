@@ -71,6 +71,8 @@ function mapToWelperProfileDialogProfile(
     serviceOfferings?: Array<{
       id: string;
       serviceCategoryId: string;
+      subcategoryIds?: string[];
+      subcategories?: Array<{ id: string; name: string }>;
       categoryName: string;
       parentCategoryName?: string | null;
       serviceDescription: string | null;
@@ -89,6 +91,8 @@ function mapToWelperProfileDialogProfile(
     serviceOfferings: (data.serviceOfferings ?? []).map((o) => ({
       id: o.id,
       serviceCategoryId: o.serviceCategoryId,
+      subcategoryIds: o.subcategoryIds,
+      subcategories: o.subcategories,
       categoryName: o.categoryName,
       parentCategoryName: o.parentCategoryName ?? undefined,
       serviceDescription: o.serviceDescription ?? "",

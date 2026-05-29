@@ -8,6 +8,12 @@ export class PublicServiceOfferingDto {
   @ApiProperty()
   serviceCategoryId!: string;
 
+  @ApiPropertyOptional({ type: [String], description: 'Selected subcategory IDs for this offering' })
+  subcategoryIds?: string[];
+
+  @ApiPropertyOptional({ description: 'Selected subcategories for this offering' })
+  subcategories?: Array<{ id: string; name: string }>;
+
   @ApiProperty({ description: 'Category display name (subcategory)' })
   categoryName!: string;
 

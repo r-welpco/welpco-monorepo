@@ -4,11 +4,10 @@
  */
 export const SEARCH_DEMO_SUBCATEGORY_NAMES = [
   'Babysitter',
-  'Child Care',
   'Dog Walks',
   'Pet Sitting',
   'Pet-sitting',
-  'Tutoring',
+  'Math Tutoring',
   'Housekeeping',
 ] as const;
 

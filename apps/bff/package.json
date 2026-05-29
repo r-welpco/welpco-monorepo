@@ -26,6 +26,7 @@
     "test:all": "jest && jest --config ./test/jest-e2e.json",
     "test:search-welper-demo": "ts-node -r tsconfig-paths/register src/scripts/search-welper-demo-test.ts",
     "seed": "ts-node -r tsconfig-paths/register src/database/seeds/run-seed.ts",
+    "seed:service-questions": "ts-node -r tsconfig-paths/register src/database/seeds/run-seed-service-selection-questions.ts",
     "migration:run": "ts-node -r tsconfig-paths/register src/database/run-migrations.ts",
     "clean:non-admin-users": "ts-node -r tsconfig-paths/register src/scripts/clean-non-admin-users.ts",
     "create:admin": "ts-node -r tsconfig-paths/register src/scripts/create-admin-user.ts",

@@ -258,11 +258,27 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
   const displayName =
     [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Welper";
   const profileHref = `/welper/${profile.welperId}`;
+  const hasOfferings =
+    Array.isArray(profile.serviceOfferings) && profile.serviceOfferings.length > 0;
+  const singleOffering =
+    profile.serviceOfferings.length === 1 ? profile.serviceOfferings[0] : null;
+  const bookingPath = singleOffering
+    ? `/dashboard/booking/new?welperId=${encodeURIComponent(
+        profile.welperId
+      )}&offeringId=${encodeURIComponent(singleOffering.id)}`
+    : `/dashboard/booking/new?welperId=${encodeURIComponent(profile.welperId)}`;
   const bookHref = isAuthenticated
-    ? `/dashboard/booking/new?welperId=${encodeURIComponent(profile.welperId)}`
+    ? singleOffering
+      ? bookingPath
+      : "#services"
     : `/login?next=${encodeURIComponent(
-        `/dashboard/booking/new?welperId=${profile.welperId}`
+        singleOffering ? bookingPath : profileHref
       )}`;
+  const bookLabel = isAuthenticated
+    ? singleOffering
+      ? "Book"
+      : "Choose a service"
+    : "Sign in to book";
   const messageHref = isAuthenticated
     ? `/dashboard/messages?welperId=${encodeURIComponent(profile.welperId)}`
     : `/login?next=${encodeURIComponent(
@@ -281,9 +297,6 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
       router.push(`/login?next=${encodeURIComponent(next)}`);
     }
   };
-
-  const hasOfferings =
-    Array.isArray(profile.serviceOfferings) && profile.serviceOfferings.length > 0;
 
   return (
     <Flex direction="column" gap="6">
@@ -327,11 +340,11 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
             )}
 
             <Flex gap="3" wrap="wrap" mt="3">
-              <Button asChild size="3" color={SEMANTIC_COLOR.primary}>
-                <Link href={bookHref}>
-                  {isAuthenticated ? "Book" : "Sign in to book"}
-                </Link>
-              </Button>
+              {hasOfferings && (
+                <Button asChild size="3" color={SEMANTIC_COLOR.primary}>
+                  <Link href={bookHref}>{bookLabel}</Link>
+                </Button>
+              )}
               <Button asChild variant="soft" color="gray" size="3">
                 <Link href={messageHref}>Message</Link>
               </Button>
@@ -341,7 +354,7 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
       </Card>
 
       {/* Services — bible §25.6 nested cards under a sub-heading. */}
-      <Box>
+      <Box id="services">
         <Flex justify="between" align="center" mb="3" gap="3" wrap="wrap">
           <Heading as="h2" size="5" trim="start">
             Services

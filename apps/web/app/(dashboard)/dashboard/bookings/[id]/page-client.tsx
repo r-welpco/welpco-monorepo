@@ -36,7 +36,9 @@ import {
   useCheckInBooking,
   useServiceReceiptDraft,
   useSubmitServiceReceipt,
+  useServiceQuestions,
 } from "@/lib/hooks/use-bookings";
+import { buildAnswerLabelMap } from "@/lib/services/service-questions-utils";
 import {
   useBookingReview,
   useCreateBookingReview,
@@ -485,17 +487,39 @@ export default function BookingDetailClient({
   }, [welperProfile]);
 
   // Derive service offering name from welper profile
-  const serviceOfferingName = useMemo(() => {
-    if (!welperProfile?.serviceOfferings || !booking?.serviceOfferingId)
+  const bookingOffering = useMemo(() => {
+    if (!welperProfile?.serviceOfferings || !booking?.serviceOfferingId) {
       return null;
-    const offering = welperProfile.serviceOfferings.find(
-      (o) => o.id === booking.serviceOfferingId,
+    }
+    return (
+      welperProfile.serviceOfferings.find((o) => o.id === booking.serviceOfferingId) ??
+      null
     );
-    if (!offering) return null;
-    return offering.parentCategoryName
-      ? `${offering.categoryName} · ${offering.parentCategoryName}`
-      : offering.categoryName;
   }, [welperProfile, booking?.serviceOfferingId]);
+
+  const serviceOfferingName = useMemo(() => {
+    if (!bookingOffering) return null;
+    return bookingOffering.parentCategoryName
+      ? `${bookingOffering.categoryName} · ${bookingOffering.parentCategoryName}`
+      : bookingOffering.categoryName;
+  }, [bookingOffering]);
+
+  const { data: serviceQuestionsForAnswers } = useServiceQuestions(
+    bookingOffering?.serviceCategoryId,
+  );
+
+  const bookingAnswerRows = useMemo(() => {
+    if (!booking?.answers) return [];
+    const labelMap = buildAnswerLabelMap(serviceQuestionsForAnswers ?? []);
+    return Object.entries(booking.answers).map(([questionId, value]) => {
+      const meta = labelMap.get(questionId);
+      return {
+        key: questionId,
+        label: meta?.label ?? `Question ${questionId.slice(0, 8)}…`,
+        displayValue: meta ? meta.format(value) : String(value),
+      };
+    });
+  }, [booking?.answers, serviceQuestionsForAnswers]);
 
   const handleBack = useCallback(() => {
     router.push("/dashboard/bookings");
@@ -1531,19 +1555,19 @@ export default function BookingDetailClient({
                 </Flex>
               ) : null}
 
-              {booking.answers && Object.keys(booking.answers).length > 0 ? (
+              {bookingAnswerRows.length > 0 ? (
                 <Flex direction="column" gap="3">
                   <Heading as="h3" size="3" mb="0">
                     Service questions
                   </Heading>
                   <Card size="2" variant="surface">
                     <Flex direction="column" gap="4">
-                      {Object.entries(booking.answers).map(([key, value]) => (
-                        <Flex key={key} direction="column" gap="1">
+                      {bookingAnswerRows.map((row) => (
+                        <Flex key={row.key} direction="column" gap="1">
                           <Text size="1" color="gray" weight="medium">
-                            {startCase(key.replace(/_/g, " "))}
+                            {row.label}
                           </Text>
-                          <Text size="2">{String(value)}</Text>
+                          <Text size="2">{row.displayValue}</Text>
                         </Flex>
                       ))}
                     </Flex>

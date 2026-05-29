@@ -1,10 +1,6 @@
 import { apiClient } from "@/lib/api/client";
-import type {
-  ServiceCategory,
-  Question,
-  ServiceQuestion,
-  StaticContent,
-} from "@/types";
+import type { ServiceCategory, Question, StaticContent } from "@/types";
+import type { ServiceQuestion } from "./booking-service";
 
 // Categories
 export async function getCategories(includeInactive = false): Promise<ServiceCategory[]> {
@@ -38,12 +34,14 @@ export async function getQuestion(id: string): Promise<Question> {
   return response;
 }
 
-// Service Questions
-export async function getServiceQuestions(serviceCategoryId: string): Promise<ServiceQuestion[]> {
-  const response = await apiClient.get<ServiceQuestion[]>(
-    `/api/content/service-questions/${serviceCategoryId}`
+// Service Questions (canonical BFF route — same as booking flow)
+export async function getServiceQuestions(
+  serviceCategoryId: string,
+): Promise<ServiceQuestion[]> {
+  const { getServiceQuestions: fetchServiceQuestions } = await import(
+    "./booking-service"
   );
-  return response;
+  return fetchServiceQuestions(serviceCategoryId);
 }
 
 // Static Content

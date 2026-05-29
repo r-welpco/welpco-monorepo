@@ -16,6 +16,7 @@ import { WelperProfileService } from '../profile-management/welper-profile/welpe
 import { UsersService } from '../user-management/users/users.service';
 import { S3UrlPresignerService } from '../../clients/s3';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
+import { QuestionType } from '../content-management/entities/question.entity';
 
 describe('BookingService', () => {
   let service: BookingService;
@@ -283,6 +284,103 @@ describe('BookingService', () => {
         dto.scheduledDate,
         dto.scheduledStartTime,
         dto.scheduledEndTime,
+      );
+    });
+
+    it('should reject badly typed service question answers before saving', async () => {
+      mockServiceOfferingService.findById.mockResolvedValue({
+        id: offeringId,
+        welperId,
+        serviceCategoryId: 'cat-1',
+        active: true,
+        hourlyRate: 25,
+      });
+      mockServiceQuestionsService.findByServiceCategory.mockResolvedValue([
+        {
+          id: 'sq-count',
+          questionId: 'count-q',
+          isRequired: true,
+          conditionalLogic: null,
+          displayOrder: 0,
+          question: {
+            id: 'count-q',
+            type: QuestionType.NUMBER,
+            label: 'How many children',
+            validationRules: { min: 1 },
+          },
+        },
+      ]);
+
+      await expect(
+        service.create(customerId, {
+          ...dto,
+          answers: { 'count-q': 'two' as unknown as number },
+        }),
+      ).rejects.toThrow('Invalid answer for: How many children');
+      expect(mockAvailabilityService.isSlotAvailable).not.toHaveBeenCalled();
+      expect(txBookingRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('should save only visible configured service question answers', async () => {
+      mockServiceOfferingService.findById.mockResolvedValue({
+        id: offeringId,
+        welperId,
+        serviceCategoryId: 'cat-1',
+        active: true,
+        hourlyRate: 25,
+      });
+      mockServiceQuestionsService.findByServiceCategory.mockResolvedValue([
+        {
+          id: 'sq-frequency',
+          questionId: 'frequency-q',
+          isRequired: true,
+          conditionalLogic: null,
+          displayOrder: 0,
+          question: {
+            id: 'frequency-q',
+            type: QuestionType.CHOICE,
+            label: 'One-time or recurring?',
+            options: [
+              { value: 'one-time', label: 'One time' },
+              { value: 'recurring', label: 'Recurring' },
+            ],
+          },
+        },
+        {
+          id: 'sq-recurrence',
+          questionId: 'recurrence-q',
+          isRequired: true,
+          conditionalLogic: { showIf: { questionId: 'frequency-q', value: 'recurring' } },
+          displayOrder: 1,
+          question: {
+            id: 'recurrence-q',
+            type: QuestionType.TEXT,
+            label: 'Recurrence',
+          },
+        },
+      ]);
+      mockAvailabilityService.isSlotAvailable.mockResolvedValue(true);
+      txBookingRepo.create.mockImplementation((booking) => ({
+        ...booking,
+        id: 'booking-1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+      txBookingRepo.save.mockImplementation((booking) => Promise.resolve(booking));
+
+      await service.create(customerId, {
+        ...dto,
+        answers: {
+          'frequency-q': 'one-time',
+          'recurrence-q': 'stale weekly answer',
+          'unknown-q': 'should not be saved',
+        },
+      });
+
+      expect(txBookingRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          answers: { 'frequency-q': 'one-time' },
+        }),
       );
     });
   });

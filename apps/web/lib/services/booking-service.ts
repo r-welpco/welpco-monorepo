@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/client";
+import { normalizeServiceQuestions } from "./service-questions-utils";
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -127,6 +128,7 @@ export interface BookingListParams {
 export interface CreateBookingParams {
   welperId: string;
   offeringId: string;
+  serviceQuestionCategoryId?: string;
   answers: Record<string, string | number | boolean>;
   scheduledDate?: string;
   scheduledStartTime?: string;
@@ -255,8 +257,9 @@ export async function submitServiceReceipt(
 export async function getServiceQuestions(
   serviceCategoryId: string,
 ): Promise<ServiceQuestion[]> {
-  return apiClient.get<ServiceQuestion[]>(
+  const raw = await apiClient.get<ServiceQuestion[]>(
     `/api/service-questions/service/${encodeURIComponent(serviceCategoryId)}`,
     { skipAuth: true },
   );
+  return normalizeServiceQuestions(raw);
 }

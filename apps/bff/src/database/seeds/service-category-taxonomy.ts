@@ -14,7 +14,6 @@ export const SERVICE_CATEGORY_TAXONOMY: ServiceCategoryTaxonomyParent[] = [
     description: 'Childcare, elderly care, and special needs services',
     subcategories: [
       { name: 'Babysitter' },
-      { name: 'Child Care' },
       { name: 'Elderly Care' },
       { name: 'Special Needs' },
     ],
@@ -37,7 +36,9 @@ export const SERVICE_CATEGORY_TAXONOMY: ServiceCategoryTaxonomyParent[] = [
     name: 'Learning & Lessons',
     description: 'Tutoring, music, cooking, and swimming lessons',
     subcategories: [
-      { name: 'Tutoring' },
+      { name: 'Math Tutoring' },
+      { name: 'French Tutoring' },
+      { name: 'English Tutoring' },
       { name: 'Music Lessons' },
       { name: 'Cooking Lessons' },
       { name: 'Swimming Lessons' },
@@ -51,12 +52,10 @@ export const SERVICE_CATEGORY_TAXONOMY: ServiceCategoryTaxonomyParent[] = [
       { name: 'Tree Planting' },
       { name: 'Gardening' },
       { name: 'Car Washing' },
-      { name: 'Gutter Cleaning' },
       { name: 'Window Cleaning' },
       { name: 'Exterior Property Cleaning' },
       { name: 'Snow Removal' },
       { name: 'Pool Opening/Closing' },
-      { name: 'Leaf Cleanup' },
       { name: 'Summer/Winter Preparation' },
     ],
   },
@@ -83,14 +82,8 @@ export const SERVICE_CATEGORY_TAXONOMY: ServiceCategoryTaxonomyParent[] = [
   },
   {
     name: 'Home Cleaning',
-    description: 'Housekeeping, deep cleaning, laundry, and move cleaning',
-    subcategories: [
-      { name: 'Housekeeping' },
-      { name: 'Deep Cleaning' },
-      { name: 'Organizing' },
-      { name: 'Laundry' },
-      { name: 'Move-In/Move-Out Cleaning' },
-    ],
+    description: 'Housekeeping and organizing',
+    subcategories: [{ name: 'Housekeeping' }, { name: 'Organizing' }],
   },
   {
     name: 'Home Help',
@@ -103,7 +96,6 @@ export const SERVICE_CATEGORY_TAXONOMY: ServiceCategoryTaxonomyParent[] = [
       { name: 'Appliance Installation' },
       { name: 'Moving Help' },
       { name: 'Heavy Lifting' },
-      { name: 'Home Organization' },
       { name: 'Painting Touch-Ups' },
       { name: 'Picture Hanging' },
     ],
@@ -121,3 +113,17 @@ export function getTaxonomyNameSet(): Set<string> {
   }
   return names;
 }
+
+/**
+ * When subcategories are removed from the taxonomy, existing offerings are moved here.
+ */
+export const REMOVED_SUBCATEGORY_OFFERING_TARGET: Record<string, string> = {
+  'Child Care': 'Babysitter',
+  Tutoring: 'Math Tutoring',
+  'Deep Cleaning': 'Housekeeping',
+  Laundry: 'Housekeeping',
+  'Move-In/Move-Out Cleaning': 'Housekeeping',
+  'Gutter Cleaning': 'Lawn Mowing',
+  'Leaf Cleanup': 'Lawn Mowing',
+  'Home Organization': 'Organizing',
+};

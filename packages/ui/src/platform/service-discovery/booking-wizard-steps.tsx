@@ -7,7 +7,6 @@ import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { TextField } from "@welpco/ui/text-field";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@welpco/ui/select";
-import { Checkbox } from "@welpco/ui/checkbox";
 import { Skeleton } from "@welpco/ui/skeleton";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import type { WelperProfileDialogOffering } from "./welper-profile-dialog";
@@ -30,7 +29,7 @@ export function QuestionInput({
   onChange: (value: string | number | boolean | undefined) => void;
   id: string;
 }) {
-  const type = question.type;
+  const type = question.type.toLowerCase();
   const strVal = value !== undefined && value !== null ? String(value) : "";
 
   if (type === "text" || type === "date" || type === "time") {
@@ -64,16 +63,18 @@ export function QuestionInput({
 
   if (type === "boolean") {
     return (
-      <Flex align="center" gap="3">
-        <Checkbox
-          id={id}
-          checked={value === true}
-          onCheckedChange={(checked) => onChange(checked === true)}
-        />
-        <Text as="label" size="2" htmlFor={id}>
-          Yes
-        </Text>
-      </Flex>
+      <Select
+        value={
+          value === true ? "true" : value === false ? "false" : undefined
+        }
+        onValueChange={(v) => onChange(v === "true")}
+      >
+        <SelectTrigger id={id} aria-label={question.label} placeholder="Select…" />
+        <SelectContent>
+          <SelectItem value="true">Yes</SelectItem>
+          <SelectItem value="false">No</SelectItem>
+        </SelectContent>
+      </Select>
     );
   }
 

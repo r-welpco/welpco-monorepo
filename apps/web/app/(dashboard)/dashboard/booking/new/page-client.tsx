@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
@@ -16,7 +16,6 @@ import { Callout } from "@welpco/ui/callout";
 import { Separator } from "@welpco/ui/separator";
 import { TextField } from "@welpco/ui/text-field";
 import { TextArea } from "@welpco/ui/text-area";
-import { Checkbox } from "@welpco/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -32,7 +31,12 @@ import { useAuthStore } from "@/stores/authStore";
 import { ApiClientError } from "@/lib/api/client";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
-import type { ServiceQuestion } from "@/lib/services/booking-service";
+import { QuestionField } from "@/components/features/booking/question-field";
+import {
+  areRequiredServiceQuestionsAnswered,
+  buildBookingAnswersPayload,
+  getVisibleServiceQuestions,
+} from "@/lib/services/service-questions-utils";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -98,6 +102,7 @@ export default function NewBookingPageClient({
   const [notes, setNotes] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, string | number | boolean>>({});
+  const [selectedQuestionCategoryId, setSelectedQuestionCategoryId] = useState("");
 
   // ── Queries & mutations ──────────────────────────────────────────────
   const {
@@ -122,32 +127,70 @@ export default function NewBookingPageClient({
     return profile.serviceOfferings.find((o) => o.id === id) ?? null;
   }, [profile?.serviceOfferings, selectedOfferingId, offeringId]);
 
-  // Fetch service questions for the selected offering's category
-  const { data: serviceQuestions } = useServiceQuestions(
-    selectedOffering?.serviceCategoryId,
-  );
+  useEffect(() => {
+    if (offeringId || selectedOfferingId || !profile?.serviceOfferings) return;
+    if (profile.serviceOfferings.length === 1) {
+      setSelectedOfferingId(profile.serviceOfferings[0]!.id);
+    }
+  }, [offeringId, profile?.serviceOfferings, selectedOfferingId]);
 
-  // Filter questions by conditional logic (showIf)
-  const visibleQuestions = useMemo(() => {
+  const questionCategoryOptions = useMemo(() => {
+    if (!selectedOffering) return [];
+    return selectedOffering.subcategories && selectedOffering.subcategories.length > 0
+      ? selectedOffering.subcategories
+      : [{ id: selectedOffering.serviceCategoryId, name: selectedOffering.categoryName }];
+  }, [selectedOffering]);
+
+  useEffect(() => {
+    if (!selectedOffering) {
+      setSelectedQuestionCategoryId("");
+      return;
+    }
+
+    const validIds = new Set(questionCategoryOptions.map((option) => option.id));
+    if (selectedQuestionCategoryId && validIds.has(selectedQuestionCategoryId)) return;
+
+    setSelectedQuestionCategoryId(
+      questionCategoryOptions.length === 1 ? questionCategoryOptions[0]!.id : "",
+    );
+    setAnswers({});
+  }, [questionCategoryOptions, selectedOffering, selectedQuestionCategoryId]);
+
+  const serviceCategoryId = selectedQuestionCategoryId || undefined;
+  const {
+    data: serviceQuestions,
+    isLoading: serviceQuestionsLoading,
+    isError: serviceQuestionsError,
+    refetch: refetchServiceQuestions,
+  } = useServiceQuestions(serviceCategoryId);
+
+  const displayQuestions = useMemo(() => {
     if (!serviceQuestions) return [];
-    return serviceQuestions
-      .sort((a, b) => a.displayOrder - b.displayOrder)
-      .filter((sq) => {
-        if (!sq.conditionalLogic?.showIf) return true;
-        const { questionId, value } = sq.conditionalLogic.showIf;
-        return answers[questionId] === value;
-      });
+    return getVisibleServiceQuestions(serviceQuestions, answers, {
+      hideScheduleDuplicates: true,
+    });
   }, [serviceQuestions, answers]);
 
-  // Check if all required questions are answered
+  const questionsReady =
+    !serviceCategoryId ||
+    (!serviceQuestionsLoading && !serviceQuestionsError && !!serviceQuestions);
+
   const requiredQuestionsAnswered = useMemo(() => {
-    return visibleQuestions.every((sq) => {
-      if (!sq.isRequired) return true;
-      const val = answers[sq.question.id];
-      if (val === undefined || val === "") return false;
-      return true;
+    if (!serviceQuestions || serviceQuestionsLoading || serviceQuestionsError) {
+      return false;
+    }
+    return areRequiredServiceQuestionsAnswered(serviceQuestions, answers, {
+      scheduledDate,
+      startTime,
     });
-  }, [visibleQuestions, answers]);
+  }, [
+    serviceQuestions,
+    serviceQuestionsLoading,
+    serviceQuestionsError,
+    answers,
+    scheduledDate,
+    startTime,
+  ]);
 
   // Booking duration is bounded by the BFF DTO at [15, 720] minutes (12h).
   // Mirror those bounds here so the user gets a clear inline error before
@@ -184,7 +227,8 @@ export default function NewBookingPageClient({
   const canSubmit = useMemo(
     () =>
       !!welperId &&
-      !!selectedOfferingId &&
+      !!selectedOffering &&
+      !!serviceCategoryId &&
       !!scheduledDate &&
       !!startTime &&
       !!endTime &&
@@ -192,38 +236,42 @@ export default function NewBookingPageClient({
       durationMinutes >= MIN_DURATION_MINUTES &&
       durationMinutes <= MAX_DURATION_MINUTES &&
       requiredQuestionsAnswered &&
+      questionsReady &&
       profileOkForBooking,
     [
       welperId,
       selectedOfferingId,
+      selectedOffering,
+      serviceCategoryId,
       scheduledDate,
       startTime,
       endTime,
       durationMinutes,
       requiredQuestionsAnswered,
+      questionsReady,
       profileOkForBooking,
     ],
   );
 
   // ── Handlers ─────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async () => {
-    if (!canSubmit || !welperId) return;
+    if (!canSubmit || !welperId || !selectedOffering) return;
     setSubmitError(null);
 
     try {
-      // Only send answers for visible questions that have values
-      const filteredAnswers: Record<string, string | number | boolean> = {};
-      for (const sq of visibleQuestions) {
-        const val = answers[sq.question.id];
-        if (val !== undefined && val !== "") {
-          filteredAnswers[sq.question.id] = val;
-        }
-      }
+      const filteredAnswers =
+        serviceQuestions && scheduledDate && startTime
+          ? buildBookingAnswersPayload(serviceQuestions, answers, {
+              scheduledDate,
+              startTime,
+            })
+          : {};
 
       const result = await bookable.run(() =>
         createBooking.mutateAsync({
           welperId,
-          offeringId: selectedOfferingId,
+          offeringId: selectedOffering.id,
+          serviceQuestionCategoryId: serviceCategoryId,
           answers: filteredAnswers,
           scheduledDate,
           scheduledStartTime: startTime,
@@ -251,14 +299,15 @@ export default function NewBookingPageClient({
   }, [
     canSubmit,
     welperId,
-    selectedOfferingId,
+    selectedOffering,
+    serviceCategoryId,
     scheduledDate,
     startTime,
     endTime,
     durationMinutes,
     notes,
     answers,
-    visibleQuestions,
+    serviceQuestions,
     createBooking,
     bookable,
     router,
@@ -515,6 +564,7 @@ export default function NewBookingPageClient({
                     value={selectedOfferingId || undefined}
                     onValueChange={(value) => {
                       setSelectedOfferingId(value);
+                      setSelectedQuestionCategoryId("");
                       setAnswers({});
                       setSubmitError(null);
                     }}
@@ -538,22 +588,106 @@ export default function NewBookingPageClient({
                 )}
               </Box>
 
+              {!selectedOffering && (
+                <Callout.Root color="gray" variant="surface">
+                  <Callout.Text>
+                    Choose a service first. The questions for that service will appear here.
+                  </Callout.Text>
+                </Callout.Root>
+              )}
+
+              {selectedOffering && (
+                <>
+              {questionCategoryOptions.length > 1 && (
+                <Box>
+                  <Text
+                    as="label"
+                    id="booking-service-type-label"
+                    size="2"
+                    weight="bold"
+                    mb={FORM_SPACING.labelGap}
+                    style={{ display: "block" }}
+                  >
+                    Service type
+                    <RequiredMarker />
+                  </Text>
+                  <Select
+                    value={selectedQuestionCategoryId || undefined}
+                    onValueChange={(value) => {
+                      setSelectedQuestionCategoryId(value);
+                      setAnswers({});
+                      setSubmitError(null);
+                    }}
+                  >
+                    <SelectTrigger
+                      aria-labelledby="booking-service-type-label"
+                      aria-required="true"
+                      placeholder="Select a service type…"
+                    />
+                    <SelectContent>
+                      {questionCategoryOptions.map((option) => (
+                        <SelectItem key={option.id} value={option.id}>
+                          {option.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Box>
+              )}
+
+              {questionCategoryOptions.length > 1 && !serviceCategoryId && (
+                <Callout.Root color="gray" variant="surface">
+                  <Callout.Text>
+                    Choose a service type to load the right questions.
+                  </Callout.Text>
+                </Callout.Root>
+              )}
+
+              {serviceCategoryId && (
+                <>
               {/* Service Questions */}
-              {visibleQuestions.length > 0 && (
+              {serviceCategoryId &&
+                (serviceQuestionsLoading ||
+                  serviceQuestionsError ||
+                  displayQuestions.length > 0) && (
                 <Flex direction="column" gap="4">
                   <Heading as="h3" size="5" trim="start">
                     Service questions
                   </Heading>
-                  {visibleQuestions.map((sq) => (
-                    <QuestionField
-                      key={sq.id}
-                      sq={sq}
-                      value={answers[sq.question.id]}
-                      onChange={(val) =>
-                        setAnswers((prev) => ({ ...prev, [sq.question.id]: val }))
-                      }
-                    />
-                  ))}
+                  {serviceQuestionsLoading && (
+                    <Flex direction="column" gap="3">
+                      <Skeleton width="100%" height="40px" />
+                      <Skeleton width="100%" height="40px" />
+                    </Flex>
+                  )}
+                  {serviceQuestionsError && (
+                    <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
+                      <Callout.Text>
+                        We couldn&rsquo;t load questions for this service. Check your connection
+                        and try again.
+                      </Callout.Text>
+                      <Button
+                        variant="soft"
+                        size="2"
+                        mt="2"
+                        onClick={() => void refetchServiceQuestions()}
+                      >
+                        Retry
+                      </Button>
+                    </Callout.Root>
+                  )}
+                  {!serviceQuestionsLoading &&
+                    !serviceQuestionsError &&
+                    displayQuestions.map((sq) => (
+                      <QuestionField
+                        key={sq.id}
+                        sq={sq}
+                        value={answers[sq.question.id]}
+                        onChange={(val) =>
+                          setAnswers((prev) => ({ ...prev, [sq.question.id]: val }))
+                        }
+                      />
+                    ))}
                 </Flex>
               )}
 
@@ -773,6 +907,10 @@ export default function NewBookingPageClient({
                   {submitLabel}
                 </Button>
               </Box>
+                </>
+              )}
+                </>
+              )}
             </Flex>
           </Card>
 
@@ -827,189 +965,5 @@ export default function NewBookingPageClient({
         </Flex>
       </Box>
     </Container>
-  );
-}
-
-// ─── Question Field Component ───────────────────────────────────────────
-
-function QuestionField({
-  sq,
-  value,
-  onChange,
-}: {
-  sq: ServiceQuestion;
-  value: string | number | boolean | undefined;
-  onChange: (val: string | number | boolean) => void;
-}) {
-  const { question, isRequired } = sq;
-  const fieldId = `q-${question.id}`;
-  const labelId = `${fieldId}-label`;
-  const helpId = question.helpText ? `${fieldId}-help` : undefined;
-  const strVal = value !== undefined && value !== null ? String(value) : "";
-
-  return (
-    <Box>
-      {question.type === "CHOICE" ? (
-        // Select uses a labelled span, not htmlFor (its trigger is a button).
-        <Text
-          as="label"
-          id={labelId}
-          size="2"
-          weight="medium"
-          mb={FORM_SPACING.labelGap}
-          style={{ display: "block" }}
-        >
-          {question.label}
-          {isRequired && <RequiredMarker />}
-        </Text>
-      ) : question.type === "BOOLEAN" ? (
-        // Boolean uses Checkbox + adjacent label; the Box-level label sits
-        // above it for grouping.
-        <Text
-          as="span"
-          size="2"
-          weight="medium"
-          mb={FORM_SPACING.labelGap}
-          style={{ display: "block" }}
-          id={labelId}
-        >
-          {question.label}
-          {isRequired && <RequiredMarker />}
-        </Text>
-      ) : (
-        <Text
-          as="label"
-          htmlFor={fieldId}
-          size="2"
-          weight="medium"
-          mb={FORM_SPACING.labelGap}
-          style={{ display: "block" }}
-        >
-          {question.label}
-          {isRequired && <RequiredMarker />}
-        </Text>
-      )}
-
-      {question.helpText && (
-        <Text as="p" id={helpId} size="1" color="gray" mb={FORM_SPACING.labelGap}>
-          {question.helpText}
-        </Text>
-      )}
-
-      {/* TEXT */}
-      {question.type === "TEXT" && (
-        <TextField.Root
-          id={fieldId}
-          type="text"
-          value={strVal}
-          placeholder={question.placeholder ?? undefined}
-          required={isRequired}
-          aria-required={isRequired || undefined}
-          aria-describedby={helpId}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
-
-      {/* NUMBER */}
-      {question.type === "NUMBER" && (
-        <TextField.Root
-          id={fieldId}
-          type="number"
-          value={strVal}
-          placeholder={question.placeholder ?? undefined}
-          min={question.validationRules?.min}
-          max={question.validationRules?.max}
-          required={isRequired}
-          aria-required={isRequired || undefined}
-          aria-describedby={helpId}
-          onChange={(e) => {
-            const v = e.target.value;
-            onChange(v === "" ? "" : Number(v));
-          }}
-        />
-      )}
-
-      {/* DATE */}
-      {question.type === "DATE" && (
-        <TextField.Root
-          id={fieldId}
-          type="date"
-          value={strVal}
-          required={isRequired}
-          aria-required={isRequired || undefined}
-          aria-describedby={helpId}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
-
-      {/* TIME */}
-      {question.type === "TIME" && (
-        <TextField.Root
-          id={fieldId}
-          type="time"
-          value={strVal}
-          required={isRequired}
-          aria-required={isRequired || undefined}
-          aria-describedby={helpId}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
-
-      {/* CHOICE */}
-      {question.type === "CHOICE" && (
-        <Select
-          value={strVal || undefined}
-          onValueChange={(v) => onChange(v)}
-        >
-          <SelectTrigger
-            id={fieldId}
-            aria-labelledby={labelId}
-            aria-required={isRequired || undefined}
-            aria-describedby={helpId}
-            placeholder="Select…"
-          />
-          <SelectContent>
-            {question.options?.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-
-      {/* BOOLEAN */}
-      {question.type === "BOOLEAN" && (
-        <Flex align="center" gap="2">
-          <Checkbox
-            id={fieldId}
-            checked={value === true}
-            aria-labelledby={labelId}
-            aria-describedby={helpId}
-            onCheckedChange={(checked) => onChange(checked === true)}
-          />
-          <Text as="label" htmlFor={fieldId} size="2">
-            Yes
-          </Text>
-        </Flex>
-      )}
-
-      {/* ENTITY_REFERENCE — fallback text input */}
-      {question.type === "ENTITY_REFERENCE" && (
-        <TextField.Root
-          id={fieldId}
-          type="text"
-          value={strVal}
-          placeholder={
-            question.placeholder ??
-            `Enter ${question.entityType?.toLowerCase() ?? "reference"}…`
-          }
-          required={isRequired}
-          aria-required={isRequired || undefined}
-          aria-describedby={helpId}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
-    </Box>
   );
 }

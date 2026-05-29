@@ -44,14 +44,17 @@ export async function seedSearchDemo(dataSource: DataSource): Promise<void> {
 
   const fallback = categories[0];
   const babysitterCategory = pickSeedSubcategory(categoryByName, ['Babysitter'], fallback);
-  const childCareCategory = pickSeedSubcategory(categoryByName, ['Child Care'], fallback);
   const dogWalksCategory = pickSeedSubcategory(categoryByName, ['Dog Walks'], fallback);
   const petSittingCategory = pickSeedSubcategory(
     categoryByName,
     ['Pet Sitting', 'Pet-sitting'],
     fallback,
   );
-  const tutoringCategory = pickSeedSubcategory(categoryByName, ['Tutoring'], fallback);
+  const mathTutoringCategory = pickSeedSubcategory(
+    categoryByName,
+    ['Math Tutoring', 'Tutoring'],
+    fallback,
+  );
   const housekeepingCategory = pickSeedSubcategory(categoryByName, ['Housekeeping'], fallback);
 
   const welperEmails = ['welper@welpco.com', 'e2e-welper@welpco.com'];
@@ -109,18 +112,7 @@ export async function seedSearchDemo(dataSource: DataSource): Promise<void> {
           active: true,
         }),
       );
-      await serviceOfferingRepo.save(
-        serviceOfferingRepo.create({
-          welperId: user.id,
-          serviceCategoryId: childCareCategory.id,
-          serviceDescription: 'Child care. Compassionate and patient. Help with homework, light housekeeping, and companionship.',
-          hourlyRate: 20,
-          experienceYears: 3,
-          subcategoryIds: [],
-          active: true,
-        }),
-      );
-      console.log('   ✅ Created 2 service offerings for', user.email);
+      console.log('   ✅ Created 1 service offering for', user.email);
     } else {
       await serviceOfferingRepo.save(
         serviceOfferingRepo.create({
@@ -184,8 +176,8 @@ export async function seedSearchDemo(dataSource: DataSource): Promise<void> {
     await serviceOfferingRepo.save(
       serviceOfferingRepo.create({
         welperId: demoUser.id,
-        serviceCategoryId: tutoringCategory.id,
-        serviceDescription: 'Tutoring in math, physics, and chemistry. Grades 6-12. Test prep for SAT/ACT. Flexible scheduling.',
+        serviceCategoryId: mathTutoringCategory.id,
+        serviceDescription: 'Math tutoring in algebra, physics, and chemistry. Grades 6-12. Test prep for SAT/ACT. Flexible scheduling.',
         hourlyRate: 35,
         experienceYears: 5,
         subcategoryIds: [],

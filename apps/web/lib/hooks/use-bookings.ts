@@ -163,5 +163,6 @@ export function useServiceQuestions(serviceCategoryId: string | undefined) {
     queryFn: () => getServiceQuestions(serviceCategoryId!),
     enabled: !!serviceCategoryId,
     staleTime: 5 * 60 * 1000,
+    retry: 2,
   });
 }

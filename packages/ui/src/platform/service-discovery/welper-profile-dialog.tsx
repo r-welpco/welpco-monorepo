@@ -16,6 +16,8 @@ import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 export interface WelperProfileDialogOffering {
   id: string;
   serviceCategoryId: string;
+  subcategoryIds?: string[];
+  subcategories?: Array<{ id: string; name: string }>;
   categoryName: string;
   parentCategoryName?: string;
   serviceDescription: string;

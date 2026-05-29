@@ -10,8 +10,8 @@ import { ServiceCategory } from '../../domains/content-management/entities/servi
 const LEVEL1_TO_DEFAULT_SUBCATEGORY_NAME: Record<string, string> = {
   Care: 'Babysitter',
   'Pet Care': 'Dog Walks',
-  'Learning & Lessons': 'Tutoring',
-  Education: 'Tutoring',
+  'Learning & Lessons': 'Math Tutoring',
+  Education: 'Math Tutoring',
   'Exterior Maintenance': 'Lawn Mowing',
   'Health & Wellness': 'Meal Preparation',
   'Events & Hospitality': 'Catering Help',

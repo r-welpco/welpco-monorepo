@@ -47,6 +47,14 @@ export class CreateBookingRequestDto {
   @IsUUID()
   offeringId!: string;
 
+  @ApiPropertyOptional({
+    description:
+      'Category ID whose service questions were answered. Must be the offering category or one of its subcategories.',
+  })
+  @IsOptional()
+  @IsUUID()
+  serviceQuestionCategoryId?: string;
+
   @ApiProperty({
     description: 'Answers to service questions (questionId -> value)',
     example: { 'question-uuid-1': 'Answer text', 'question-uuid-2': 2 },

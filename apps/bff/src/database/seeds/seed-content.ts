@@ -57,7 +57,6 @@ export async function seedContent(dataSource: DataSource): Promise<void> {
   await syncServiceCategoryTaxonomy(dataSource);
 
   const babysitterCategory = await loadActiveSubcategory(categoryRepository, 'Babysitter');
-  const childCareCategory = await loadActiveSubcategory(categoryRepository, 'Child Care');
   const elderlyCareCategory = await loadActiveSubcategory(categoryRepository, 'Elderly Care');
   const specialNeedsCategory = await loadActiveSubcategory(categoryRepository, 'Special Needs');
   const dogWalksCategory = await loadActiveSubcategory(categoryRepository, 'Dog Walks');
@@ -277,16 +276,14 @@ export async function seedContent(dataSource: DataSource): Promise<void> {
     showIf: { questionId: oneTimeOrRecurringQuestion.id, value: 'recurring' as const },
   };
 
-  // Babysitter + Child Care
-  for (const cat of [babysitterCategory, childCareCategory]) {
-    await link(cat.id, addChildQuestion.id, 1, true);
-    await link(cat.id, dateNeededQuestion.id, 2, true);
-    await link(cat.id, timeQuestion.id, 3, true);
-    await link(cat.id, oneTimeOrRecurringQuestion.id, 4, true);
-    await link(cat.id, recurringFrequencyQuestion.id, 5, false, recurringConditional);
-    await link(cat.id, payPerHourQuestion.id, 6, true);
-    await link(cat.id, notesQuestion.id, 7, false);
-  }
+  // Babysitter
+  await link(babysitterCategory.id, addChildQuestion.id, 1, true);
+  await link(babysitterCategory.id, dateNeededQuestion.id, 2, true);
+  await link(babysitterCategory.id, timeQuestion.id, 3, true);
+  await link(babysitterCategory.id, oneTimeOrRecurringQuestion.id, 4, true);
+  await link(babysitterCategory.id, recurringFrequencyQuestion.id, 5, false, recurringConditional);
+  await link(babysitterCategory.id, payPerHourQuestion.id, 6, true);
+  await link(babysitterCategory.id, notesQuestion.id, 7, false);
   // Elderly Care + Special Needs (person)
   for (const cat of [elderlyCareCategory, specialNeedsCategory]) {
     await link(cat.id, addPersonQuestion.id, 1, true);
