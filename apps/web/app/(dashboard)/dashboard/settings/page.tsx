@@ -280,7 +280,12 @@ function SettingsPageContent() {
           {isCustomer ? (
             <TabsContent value="payment">
               <Box pt="5">
-                <CustomerPaymentSettings />
+                <CustomerPaymentSettings
+                  labels={{
+                    title: settingsLabels.paymentTitle,
+                    description: settingsLabels.paymentDescription,
+                  }}
+                />
               </Box>
             </TabsContent>
           ) : null}

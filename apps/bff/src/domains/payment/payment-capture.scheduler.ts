@@ -15,5 +15,8 @@ export class PaymentCaptureScheduler {
     } catch (e) {
       this.logger.warn(`processDueCaptures: ${(e as Error).message}`);
     }
+    // NOTE: PaymentIntent reconciliation is intentionally disabled for now to
+    // keep the payment flow simple. If webhooks prove unreliable in production,
+    // we can re-enable a lightweight reconciliation pass here.
   }
 }

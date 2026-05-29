@@ -2,7 +2,9 @@
 
 import { useCallback } from "react";
 import { useTranslations } from "next-intl";
+import type { ProfilePhotoUploadLabels } from "@welpco/ui/platform/profile-management";
 import type { BookingStatus } from "@/lib/services/booking-service";
+import { useAuthRegisterStep } from "@/lib/i18n/auth-message-templates";
 import { useWelperServiceAreaStepLabels } from "@/lib/i18n/use-auth-labels";
 
 export type WelperNavChromeLabels = {
@@ -446,6 +448,8 @@ export function useDashboardSettingsLabels() {
     deleteAccount: t("deleteAccount"),
     deleteDescription: t("deleteDescription"),
     deleteButton: t("deleteButton"),
+    paymentTitle: t("paymentTitle"),
+    paymentDescription: t("paymentDescription"),
     privacyCustomerNote: t("privacyCustomerNote"),
   };
 }
@@ -494,6 +498,7 @@ export function useWelperProfileLabels() {
     },
     photo: {
       alt: t("photo.alt"),
+      customerDescription: t("photo.customerDescription"),
       requiredDescription: t("photo.requiredDescription"),
       optionalDescription: t("photo.optionalDescription"),
     },
@@ -505,6 +510,38 @@ export function useWelperProfileLabels() {
     serviceArea: {
       title: t("serviceArea.title"),
       description: t("serviceArea.description"),
+    },
+  };
+}
+
+/** Shared crop/upload labels for profile photo (signup + dashboard). */
+export function useProfilePhotoUploadLabels(): ProfilePhotoUploadLabels {
+  const t = useTranslations("auth.register.steps.optionalProfile");
+  const optional = useAuthRegisterStep("optionalProfile");
+  const photo = optional.photoUpload;
+  return {
+    title: t("photoUpload.title"),
+    description: t("photoUpload.description"),
+    photoAlt: t("photoUpload.photoAlt"),
+    uploadPhoto: t("photoUpload.uploadPhoto"),
+    changePhoto: t("photoUpload.changePhoto"),
+    removePhoto: t("photoUpload.removePhoto"),
+    acceptedHint: photo.acceptedHint,
+    crop: {
+      title: t("photoUpload.crop.title"),
+      description: t("photoUpload.crop.description"),
+      zoom: t("photoUpload.crop.zoom"),
+      cancel: t("photoUpload.crop.cancel"),
+      save: t("photoUpload.crop.save"),
+    },
+    errors: {
+      invalidFormat: photo.errors.invalidFormat,
+      fileTooLarge: photo.errors.fileTooLarge,
+      imageTooSmall: photo.errors.imageTooSmall,
+      imageTooLarge: photo.errors.imageTooLarge,
+      invalidImage: t("photoUpload.errors.invalidImage"),
+      uploadFailed: t("photoUpload.errors.uploadFailed"),
+      removeFailed: t("photoUpload.errors.removeFailed"),
     },
   };
 }

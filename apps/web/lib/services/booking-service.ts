@@ -31,6 +31,9 @@ export interface ServiceReceipt {
   billingCheckInAt: string;
   billingCheckOutAt: string;
   hourlyRate: number;
+  subtotalCents: number;
+  taxCents: number;
+  taxRateBps: number;
   totalCents: number;
   currency: string;
   notes: string | null;

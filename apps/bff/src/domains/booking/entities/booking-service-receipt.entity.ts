@@ -33,6 +33,18 @@ export class BookingServiceReceipt extends BaseEntity {
   @Column({ name: 'hourly_rate', type: 'decimal', precision: 10, scale: 2 })
   hourlyRate!: string;
 
+  /** Subtotal before tax (cents). */
+  @Column({ name: 'subtotal_cents', type: 'int', default: 0 })
+  subtotalCents!: number;
+
+  /** Tax amount (cents). */
+  @Column({ name: 'tax_cents', type: 'int', default: 0 })
+  taxCents!: number;
+
+  /** Tax rate applied to subtotal, in basis points (bps). Example: 1495 = 14.95% */
+  @Column({ name: 'tax_rate_bps', type: 'int', default: 0 })
+  taxRateBps!: number;
+
   @Column({ name: 'total_cents', type: 'int' })
   totalCents!: number;
 

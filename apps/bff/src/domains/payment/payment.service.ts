@@ -715,46 +715,27 @@ export class PaymentService {
 
     const authorizedCents = hold.amountCents;
     const captureFromHoldCents = Math.min(receiptTotalCents, authorizedCents);
-
-    await stripe.paymentIntents.capture(hold.stripePaymentIntentId, {
-      amount_to_capture: captureFromHoldCents,
-    });
-
-    hold.status = BookingPaymentRecordStatus.CAPTURED;
-    hold.capturedAt = new Date();
-    hold.capturedAmountCents = captureFromHoldCents;
-    hold.captureEligibleAt = null;
-    await this.bookingPaymentRepo.save(hold);
-
-    // NOTIFICATIONS-001: emit on the in-process capture path (the webhook
-    // sync may not run in dev / when Stripe webhooks aren't configured). The
-    // dedup window keeps this safe against the webhook also emitting.
-    await this.emitPaymentCaptured(hold);
-
     const deltaCents = receiptTotalCents - captureFromHoldCents;
-    if (deltaCents <= 0) {
-      await this.tryCompletePaymentReleasedForBooking(bookingId);
-      return { primaryCapturedCents: captureFromHoldCents };
-    }
+    let preparedDeltaPi: Stripe.PaymentIntent | null = null;
+    let deltaRow: BookingPayment | null = null;
 
-    const user = await this.ensureStripeCustomer(customerId);
-    if (!user.stripeDefaultPaymentMethodId) {
-      throw new BadRequestException({
-        message:
-          'The receipt total exceeds the authorized hold; the customer must add a default payment method to pay the balance.',
-        code: PAYMENT_METHOD_REQUIRED_CODE,
-      });
-    }
+    if (deltaCents > 0) {
+      const user = await this.ensureStripeCustomer(customerId);
+      const defaultPaymentMethodId = user.stripeDefaultPaymentMethodId;
+      if (!defaultPaymentMethodId) {
+        throw new BadRequestException({
+          message:
+            'The receipt total exceeds the authorized hold; the customer must add a default payment method to pay the balance.',
+          code: PAYMENT_METHOD_REQUIRED_CODE,
+        });
+      }
 
-    try {
-      const pi = await stripe.paymentIntents.create(
+      preparedDeltaPi = await stripe.paymentIntents.create(
         {
           amount: deltaCents,
           currency: 'cad',
           customer: user.stripeCustomerId!,
-          payment_method: user.stripeDefaultPaymentMethodId,
-          confirm: true,
-          off_session: true,
+          payment_method: defaultPaymentMethodId,
           metadata: {
             bookingId,
             customerId,
@@ -766,19 +747,68 @@ export class PaymentService {
         { idempotencyKey: BOOKING_PI_RECEIPT_DELTA_KEY(bookingId, receiptId) },
       );
 
-      const deltaRow = this.bookingPaymentRepo.create({
+      deltaRow = this.bookingPaymentRepo.create({
         bookingId,
         customerId,
         welperId,
-        stripePaymentIntentId: pi.id,
+        stripePaymentIntentId: preparedDeltaPi.id,
         amountCents: deltaCents,
         currency: 'cad',
-        status: this.mapStripePiStatusToRecord(pi.status),
+        status: this.mapStripePiStatusToRecord(preparedDeltaPi.status),
         paymentKind: BookingPaymentKind.DELTA_RECEIPT,
-        capturedAmountCents: pi.status === 'succeeded' ? deltaCents : null,
-        capturedAt: pi.status === 'succeeded' ? new Date() : null,
         captureEligibleAt: null,
       });
+      deltaRow = await this.bookingPaymentRepo.save(deltaRow);
+    }
+
+    try {
+      await stripe.paymentIntents.capture(hold.stripePaymentIntentId, {
+        amount_to_capture: captureFromHoldCents,
+      });
+    } catch (err) {
+      if (preparedDeltaPi && deltaRow) {
+        await this.tryCancelPaymentIntent(preparedDeltaPi.id);
+        deltaRow.status = BookingPaymentRecordStatus.CANCELED;
+        await this.bookingPaymentRepo.save(deltaRow);
+      }
+      throw err;
+    }
+
+    // Re-read the PaymentIntent after capture so DB reflects Stripe truth even
+    // if Stripe adjusted the final amounts/status.
+    const capturedPi = await stripe.paymentIntents.retrieve(hold.stripePaymentIntentId);
+
+    hold.status = BookingPaymentRecordStatus.CAPTURED;
+    hold.capturedAt = new Date();
+    hold.capturedAmountCents =
+      typeof capturedPi.amount_received === 'number' && capturedPi.amount_received > 0
+        ? capturedPi.amount_received
+        : captureFromHoldCents;
+    hold.captureEligibleAt = null;
+    await this.bookingPaymentRepo.save(hold);
+
+    // NOTIFICATIONS-001: emit on the in-process capture path (the webhook
+    // sync may not run in dev / when Stripe webhooks aren't configured). The
+    // dedup window keeps this safe against the webhook also emitting.
+    await this.emitPaymentCaptured(hold);
+
+    if (deltaCents <= 0) {
+      await this.tryCompletePaymentReleasedForBooking(bookingId);
+      return { primaryCapturedCents: captureFromHoldCents };
+    }
+
+    try {
+      if (!preparedDeltaPi || !deltaRow) {
+        throw new BadRequestException('Additional charge was not initialized');
+      }
+      const pi = await stripe.paymentIntents.confirm(
+        preparedDeltaPi.id,
+        { off_session: true } as Stripe.PaymentIntentConfirmParams,
+      );
+
+      deltaRow.status = this.mapStripePiStatusToRecord(pi.status);
+      deltaRow.capturedAmountCents = pi.status === 'succeeded' ? deltaCents : null;
+      deltaRow.capturedAt = pi.status === 'succeeded' ? new Date() : null;
       await this.bookingPaymentRepo.save(deltaRow);
 
       if (pi.status === 'requires_action') {
@@ -793,18 +823,32 @@ export class PaymentService {
       }
       if (pi.status !== 'succeeded') {
         this.logger.warn(`Delta PI unexpected status ${pi.status} booking=${bookingId}`);
+        return { primaryCapturedCents: captureFromHoldCents };
       }
+      await this.emitPaymentCaptured(deltaRow);
       await this.tryCompletePaymentReleasedForBooking(bookingId);
       return { primaryCapturedCents: captureFromHoldCents };
     } catch (err: unknown) {
       const e = err as Stripe.errors.StripeError;
       if (e?.code === 'authentication_required') {
+        if (preparedDeltaPi) {
+          await this.tryCancelPaymentIntent(preparedDeltaPi.id);
+        }
+        const user = await this.ensureStripeCustomer(customerId);
+        const defaultPaymentMethodId = user.stripeDefaultPaymentMethodId;
+        if (!defaultPaymentMethodId) {
+          throw new BadRequestException({
+            message:
+              'The receipt total exceeds the authorized hold; the customer must add a default payment method to pay the balance.',
+            code: PAYMENT_METHOD_REQUIRED_CODE,
+          });
+        }
         const pi = await stripe.paymentIntents.create(
           {
             amount: deltaCents,
             currency: 'cad',
             customer: user.stripeCustomerId!,
-            payment_method: user.stripeDefaultPaymentMethodId,
+            payment_method: defaultPaymentMethodId,
             metadata: {
               bookingId,
               customerId,
@@ -815,18 +859,13 @@ export class PaymentService {
           },
           { idempotencyKey: BOOKING_PI_RECEIPT_DELTA_SCA_KEY(bookingId, receiptId) },
         );
-        const deltaRow = this.bookingPaymentRepo.create({
-          bookingId,
-          customerId,
-          welperId,
-          stripePaymentIntentId: pi.id,
-          amountCents: deltaCents,
-          currency: 'cad',
-          status: this.mapStripePiStatusToRecord(pi.status),
-          paymentKind: BookingPaymentKind.DELTA_RECEIPT,
-          captureEligibleAt: null,
-        });
-        await this.bookingPaymentRepo.save(deltaRow);
+        if (deltaRow) {
+          deltaRow.stripePaymentIntentId = pi.id;
+          deltaRow.status = this.mapStripePiStatusToRecord(pi.status);
+          deltaRow.capturedAmountCents = null;
+          deltaRow.capturedAt = null;
+          await this.bookingPaymentRepo.save(deltaRow);
+        }
         return {
           primaryCapturedCents: captureFromHoldCents,
           deltaPayment: {
@@ -839,7 +878,13 @@ export class PaymentService {
       if (err instanceof BadRequestException) {
         throw err;
       }
-      throw new BadRequestException(e?.message || 'Additional charge failed');
+      if (deltaRow) {
+        deltaRow.status = BookingPaymentRecordStatus.FAILED;
+        await this.bookingPaymentRepo.save(deltaRow);
+        await this.emitPaymentFailed(deltaRow, e?.message ?? 'Additional charge failed');
+      }
+      this.logger.warn(`Additional receipt charge failed after hold capture for booking ${bookingId}: ${e?.message ?? String(err)}`);
+      return { primaryCapturedCents: captureFromHoldCents };
     }
   }
 
@@ -895,6 +940,60 @@ export class PaymentService {
         await this.tryCompletePaymentReleasedForBooking(outcome.bookingId);
       }
     }
+  }
+
+  /**
+   * Periodically reconcile Stripe PaymentIntent status → local booking_payments.
+   * This self-heals when webhooks are missing/delayed or the process crashes
+   * after Stripe changes state but before DB is updated.
+   */
+  async reconcileStalePaymentRows(params?: {
+    /** Only reconcile rows not updated in the last N minutes */
+    olderThanMinutes?: number;
+    /** Upper bound on rows to reconcile per run */
+    limit?: number;
+  }): Promise<{ scanned: number; updated: number }> {
+    if (!this.stripe) return { scanned: 0, updated: 0 };
+    const stripe = this.stripe;
+    const olderThanMinutes = Math.max(1, params?.olderThanMinutes ?? 10);
+    const limit = Math.min(Math.max(params?.limit ?? 50, 1), 200);
+
+    const cutoff = new Date(Date.now() - olderThanMinutes * 60 * 1000);
+
+    const rows = await this.bookingPaymentRepo
+      .createQueryBuilder('bp')
+      .where('bp.updated_at <= :cutoff', { cutoff })
+      .andWhere('bp.status IN (:...st)', {
+        st: [
+          BookingPaymentRecordStatus.PENDING,
+          BookingPaymentRecordStatus.REQUIRES_ACTION,
+          BookingPaymentRecordStatus.AUTHORIZED,
+        ],
+      })
+      .orderBy('bp.updated_at', 'ASC')
+      .take(limit)
+      .getMany();
+
+    let updated = 0;
+    for (const row of rows) {
+      try {
+        const pi = await stripe.paymentIntents.retrieve(row.stripePaymentIntentId);
+        const before = row.status;
+        await this.syncPaymentIntentFromWebhook(pi);
+        // If the PI status mapped to the same record status, count as scanned only.
+        const afterRow = await this.bookingPaymentRepo.findOne({
+          where: { stripePaymentIntentId: row.stripePaymentIntentId },
+        });
+        if (afterRow && afterRow.status !== before) {
+          updated += 1;
+        }
+      } catch (e) {
+        this.logger.warn(
+          `reconcileStalePaymentRows: PI ${row.stripePaymentIntentId} failed: ${(e as Error).message}`,
+        );
+      }
+    }
+    return { scanned: rows.length, updated };
   }
 
   /** Sum of captured payment rows for admin refund guidance (disputes). */
@@ -1183,55 +1282,87 @@ export class PaymentService {
   }
 
   async processWebhookEvent(event: Stripe.Event): Promise<void> {
-    // Idempotency: skip events we've already processed (Stripe may retry)
-    const existing = await this.webhookEventRepo.findOne({ where: { eventId: event.id } });
-    if (existing) {
-      this.logger.log(`Skipping already-processed webhook event ${event.id} (${event.type})`);
-      return;
+    // Idempotency: Stripe may retry and/or deliver the same event concurrently.
+    // We "claim" the event by inserting its ID first. If processing fails, we
+    // delete the claim so a retry can run again.
+    try {
+      await this.webhookEventRepo.insert({ eventId: event.id, eventType: event.type });
+    } catch (e: unknown) {
+      const msg = (e as { message?: string })?.message ?? '';
+      // Postgres duplicate key, or any unique constraint violation on event_id.
+      if (msg.includes('duplicate key') || msg.includes('already exists') || msg.includes('unique')) {
+        this.logger.log(`Skipping already-processed webhook event ${event.id} (${event.type})`);
+        return;
+      }
+      throw e;
     }
 
-    switch (event.type) {
-      case 'setup_intent.succeeded': {
-        const si = event.data.object as Stripe.SetupIntent;
-        if (si.id) await this.applySetupIntentSuccess(si.id);
-        break;
-      }
-      case 'payment_intent.succeeded':
-      case 'payment_intent.amount_capturable_updated':
-      case 'payment_intent.canceled': {
-        const pi = event.data.object as Stripe.PaymentIntent;
-        await this.syncPaymentIntentFromWebhook(pi);
-        break;
-      }
-      case 'payment_intent.payment_failed': {
-        const pi = event.data.object as Stripe.PaymentIntent;
-        await this.syncPaymentIntentFromWebhook(pi);
-        const row = await this.bookingPaymentRepo.findOne({
-          where: { stripePaymentIntentId: pi.id },
-        });
-        if (row) {
-          row.status = BookingPaymentRecordStatus.FAILED;
-          await this.bookingPaymentRepo.save(row);
-          // NOTIFICATIONS-001: surface the failure to the customer so they
-          // can fix the card before the welper accepts (auth phase) or the
-          // capture is retried.
-          await this.emitPaymentFailed(row, pi.last_payment_error?.message ?? null);
+    try {
+      switch (event.type) {
+        case 'payment_method.detached': {
+          const pm = event.data.object as Stripe.PaymentMethod;
+          const customerId =
+            typeof pm.customer === 'string' ? pm.customer : pm.customer?.id;
+          if (!customerId || !pm.id) break;
+
+          const user = await this.userRepo.findOne({ where: { stripeCustomerId: customerId } });
+          if (!user) break;
+
+          // If the detached method was the default we track locally, clear it.
+          if (user.stripeDefaultPaymentMethodId === pm.id) {
+            user.stripeDefaultPaymentMethodId = null;
+            await this.userRepo.save(user);
+            await this.customerProfileService.refreshProfileCompletionFromPayment(user.id);
+          }
+          break;
         }
-        break;
+        case 'setup_intent.succeeded': {
+          const si = event.data.object as Stripe.SetupIntent;
+          if (si.id) await this.applySetupIntentSuccess(si.id);
+          break;
+        }
+        case 'payment_intent.succeeded':
+        case 'payment_intent.amount_capturable_updated':
+        case 'payment_intent.canceled': {
+          const pi = event.data.object as Stripe.PaymentIntent;
+          await this.syncPaymentIntentFromWebhook(pi);
+          break;
+        }
+        case 'payment_intent.payment_failed': {
+          const pi = event.data.object as Stripe.PaymentIntent;
+          await this.syncPaymentIntentFromWebhook(pi);
+          const row = await this.bookingPaymentRepo.findOne({
+            where: { stripePaymentIntentId: pi.id },
+          });
+          if (row) {
+            row.status = BookingPaymentRecordStatus.FAILED;
+            await this.bookingPaymentRepo.save(row);
+            // NOTIFICATIONS-001: surface the failure to the customer so they
+            // can fix the card before the welper accepts (auth phase) or the
+            // capture is retried.
+            await this.emitPaymentFailed(row, pi.last_payment_error?.message ?? null);
+          }
+          break;
+        }
+        case 'charge.refunded': {
+          const charge = event.data.object as Stripe.Charge;
+          await this.syncBookingPaymentFromStripeCharge(charge);
+          break;
+        }
+        default:
+          break;
       }
-      case 'charge.refunded': {
-        const charge = event.data.object as Stripe.Charge;
-        await this.syncBookingPaymentFromStripeCharge(charge);
-        break;
+    } catch (err) {
+      // Allow Stripe retries if our handler fails.
+      try {
+        await this.webhookEventRepo.delete({ eventId: event.id });
+      } catch (cleanupErr) {
+        this.logger.warn(
+          `Failed to release webhook claim for ${event.id}: ${(cleanupErr as Error).message}`,
+        );
       }
-      default:
-        break;
+      throw err;
     }
-
-    // Mark event as processed after successful handling
-    await this.webhookEventRepo.save(
-      this.webhookEventRepo.create({ eventId: event.id, eventType: event.type }),
-    );
   }
 
   async getBookingPaymentSummary(bookingId: string): Promise<{

@@ -71,6 +71,7 @@ import {
   useWelperProfileLabels,
   useWelperProfileOfferingLabels,
   useWelperServiceOfferingFormLabels,
+  useProfilePhotoUploadLabels,
 } from "@/lib/i18n/use-dashboard-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import { useWelperServiceAreaStepLabels } from "@/lib/i18n/use-auth-labels";
@@ -199,6 +200,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   const isCustomer = user.role === "customer";
   const isWelper = user.role === "welper";
   const welperProfileLabels = useWelperProfileLabels();
+  const profilePhotoUploadLabels = useProfilePhotoUploadLabels();
   const welperProfileFormLabels = useWelperProfileFormLabels();
   const welperOfferingLabels = useWelperProfileOfferingLabels();
   const welperOfferingFormLabels = useWelperServiceOfferingFormLabels();
@@ -228,7 +230,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
 
   // Role-specific data hooks (gated on session so API client has token)
   const { data: favoriteWelpersRaw } = useFavoriteWelpers(isCustomer && sessionReady ? user.id : "");
-  const favoriteWelpers = Array.isArray(favoriteWelpersRaw) ? favoriteWelpersRaw : [];
+  const favoriteWelpers = favoriteWelpersRaw?.items ?? [];
   const { data: serviceOfferings = [] } = useServiceOfferings(isWelper && sessionReady ? user.id : "");
   const { data: availabilitySchedule } = useAvailability(isWelper && sessionReady ? user.id : "");
   const { data: availabilityExceptions = [] } = useAvailabilityExceptions(
@@ -556,13 +558,15 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
               <Flex direction="column" gap="4">
                 <ProfilePhotoUpload
                   maxWidth="640px"
+                  labels={profilePhotoUploadLabels}
+                  enableCrop
                   currentPhotoUrl={customerProfile?.photoUrl ?? null}
                   currentPhotoAlt={
                     customerProfile?.firstName
                       ? `${customerProfile.firstName} profile photo`
-                      : "Profile photo"
+                      : welperProfileLabels.photo.alt
                   }
-                  description="Upload a clear photo of yourself. It appears on your profile and helps Welpers recognize you."
+                  description={welperProfileLabels.photo.customerDescription}
                   loading={isLoading || updateCustomerProfileMutation.isPending}
                   onUpload={handleCustomerPhotoUpload}
                   onRemove={handleCustomerPhotoRemove}
@@ -661,6 +665,8 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
               <Flex direction="column" gap="4">
                 <ProfilePhotoUpload
                   maxWidth="640px"
+                  labels={profilePhotoUploadLabels}
+                  enableCrop
                   required
                   currentPhotoUrl={welperProfile?.photoUrl ?? null}
                   currentPhotoAlt={

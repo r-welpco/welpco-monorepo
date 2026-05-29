@@ -29,11 +29,16 @@ import { CustomerProfileService } from '../profile-management/customer-profile/c
 import { WelperProfileService } from '../profile-management/welper-profile/welper-profile.service';
 import { UsersService } from '../user-management/users/users.service';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
+import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { validateTransition, getValidTransitions } from './booking-state-machine';
 import type { ServiceQuestion } from '../content-management/entities/service-question.entity';
 
 /** Hours before scheduled time when free cancellation is no longer possible */
 const FREE_CANCELLATION_HOURS = 24;
+const MAX_RECEIPT_BILLING_MINUTES = 720;
+const RECEIPT_SCHEDULE_GRACE_BEFORE_MINUTES = 60;
+const RECEIPT_SCHEDULE_GRACE_AFTER_MINUTES = 120;
+const RECEIPT_FUTURE_GRACE_MINUTES = 5;
 
 @Injectable()
 export class BookingService {
@@ -50,6 +55,7 @@ export class BookingService {
     private readonly availabilityService: AvailabilityService,
     private readonly notificationService: NotificationService,
     private readonly paymentService: PaymentService,
+    private readonly applicationSettings: ApplicationSettingsService,
     private readonly customerProfileService: CustomerProfileService,
     private readonly welperProfileService: WelperProfileService,
     private readonly usersService: UsersService,
@@ -150,13 +156,65 @@ export class BookingService {
     return actions;
   }
 
-  private computeReceiptTotalCents(checkIn: Date, checkOut: Date, hourlyRate: number): number {
+  private computeReceiptSubtotalCents(checkIn: Date, checkOut: Date, hourlyRate: number): number {
     const ms = checkOut.getTime() - checkIn.getTime();
     if (ms <= 0) {
       throw new BadRequestException('Billing check-out must be after check-in');
     }
     const hours = ms / (1000 * 60 * 60);
     return Math.round(hours * hourlyRate * 100);
+  }
+
+  private computeTaxCents(subtotalCents: number, taxRateBps: number): number {
+    if (subtotalCents <= 0 || taxRateBps <= 0) return 0;
+    return Math.round((subtotalCents * taxRateBps) / 10000);
+  }
+
+  private assertReceiptBillingWindowReasonable(
+    booking: BookingRequest,
+    checkIn: Date,
+    checkOut: Date,
+  ): void {
+    const ms = checkOut.getTime() - checkIn.getTime();
+    if (ms <= 0) {
+      throw new BadRequestException('Billing check-out must be after check-in');
+    }
+
+    const durationMinutes = ms / (1000 * 60);
+    if (durationMinutes > MAX_RECEIPT_BILLING_MINUTES) {
+      throw new BadRequestException(
+        `Billing duration cannot exceed ${MAX_RECEIPT_BILLING_MINUTES / 60} hours`,
+      );
+    }
+
+    if (checkOut.getTime() > Date.now() + RECEIPT_FUTURE_GRACE_MINUTES * 60 * 1000) {
+      throw new BadRequestException('Billing check-out cannot be in the future');
+    }
+
+    if (booking.scheduledDate && booking.scheduledStartTime && booking.scheduledEndTime) {
+      const offset = booking.timezoneOffsetMinutes ?? null;
+      const scheduledStartMs = this.scheduledTimeToUtcMs(
+        booking.scheduledDate,
+        booking.scheduledStartTime,
+        offset,
+      );
+      const scheduledEndMs = this.scheduledTimeToUtcMs(
+        booking.scheduledDate,
+        booking.scheduledEndTime,
+        offset,
+      );
+      const earliestMs =
+        scheduledStartMs - RECEIPT_SCHEDULE_GRACE_BEFORE_MINUTES * 60 * 1000;
+      const latestMs =
+        scheduledEndMs + RECEIPT_SCHEDULE_GRACE_AFTER_MINUTES * 60 * 1000;
+
+      if (checkIn.getTime() < earliestMs) {
+        throw new BadRequestException('Billing check-in is too far before the scheduled start');
+      }
+      if (checkOut.getTime() > latestMs) {
+        throw new BadRequestException('Billing check-out is too far after the scheduled end');
+      }
+    }
   }
 
   /**
@@ -184,6 +242,9 @@ export class BookingService {
       billingCheckInAt: r.billingCheckInAt.toISOString(),
       billingCheckOutAt: r.billingCheckOutAt.toISOString(),
       hourlyRate: Number(r.hourlyRate),
+      subtotalCents: r.subtotalCents ?? Math.max(0, r.totalCents - (r.taxCents ?? 0)),
+      taxCents: r.taxCents ?? 0,
+      taxRateBps: r.taxRateBps ?? 0,
       totalCents: r.totalCents,
       currency: r.currency,
       notes: r.notes,
@@ -256,7 +317,10 @@ export class BookingService {
     if (offering.hourlyRate) {
       hourlyRate = Number(offering.hourlyRate);
       if (dto.durationMinutes) {
-        totalPrice = Math.round(hourlyRate * (dto.durationMinutes / 60) * 100) / 100;
+        const subtotal = Math.round(hourlyRate * (dto.durationMinutes / 60) * 100) / 100;
+        const taxRateBps = await this.applicationSettings.getBookingTaxRateBps();
+        const tax = Math.round(((subtotal * taxRateBps) / 10000) * 100) / 100;
+        totalPrice = Math.round((subtotal + tax) * 100) / 100;
       }
     }
 
@@ -629,7 +693,10 @@ export class BookingService {
       );
     }
 
-    const computedTotalCents = this.computeReceiptTotalCents(suggestedIn, suggestedOut, hourly);
+    const subtotalCents = this.computeReceiptSubtotalCents(suggestedIn, suggestedOut, hourly);
+    const taxRateBps = await this.applicationSettings.getBookingTaxRateBps();
+    const taxCents = this.computeTaxCents(subtotalCents, taxRateBps);
+    const computedTotalCents = subtotalCents + taxCents;
 
     return {
       bookingId,
@@ -660,6 +727,9 @@ export class BookingService {
       if (!bookingEntity) {
         throw new NotFoundException('Booking not found');
       }
+      if (bookingEntity.welperId !== welperId) {
+        throw new ForbiddenException('You are not authorized to manage this booking');
+      }
       const resDto = this.toResponse(bookingEntity, welperId, 'welper');
       await this.attachPaymentAndReceipt(resDto, bookingId);
       return {
@@ -683,7 +753,11 @@ export class BookingService {
       if (hourlyNum == null || hourlyNum <= 0) {
         throw new BadRequestException('This booking has no hourly rate for billing');
       }
-      const cents = this.computeReceiptTotalCents(billingCheckInAt, billingCheckOutAt, hourlyNum);
+      this.assertReceiptBillingWindowReasonable(booking, billingCheckInAt, billingCheckOutAt);
+      const taxRateBps = await this.applicationSettings.getBookingTaxRateBps();
+      const subtotalCents = this.computeReceiptSubtotalCents(billingCheckInAt, billingCheckOutAt, hourlyNum);
+      const taxCents = this.computeTaxCents(subtotalCents, taxRateBps);
+      const cents = subtotalCents + taxCents;
       validateTransition(booking.status, BookingRequestStatus.COMPLETED);
 
       const receiptRepo = queryRunner.manager.getRepository(BookingServiceReceipt);
@@ -692,6 +766,9 @@ export class BookingService {
         billingCheckInAt,
         billingCheckOutAt,
         hourlyRate: String(hourlyNum),
+        subtotalCents,
+        taxCents,
+        taxRateBps,
         totalCents: cents,
         currency: 'cad',
         notes: dto.notes?.trim() ? dto.notes.trim() : null,

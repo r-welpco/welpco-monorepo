@@ -156,10 +156,6 @@ function isImageEvidence(file: ReceiptEvidenceFile): boolean {
   return IMAGE_EXTENSIONS.has(ext);
 }
 
-const usdFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-});
 const cadFormatter = new Intl.NumberFormat("en-CA", {
   style: "currency",
   currency: "CAD",
@@ -806,9 +802,9 @@ export default function BookingDetailClient({
   const activeConfirm = confirmKind ? confirmConfig[confirmKind] : null;
 
   const formattedTotal =
-    booking.totalPrice != null ? usdFormatter.format(booking.totalPrice) : null;
+    booking.totalPrice != null ? cadFormatter.format(booking.totalPrice) : null;
   const formattedRate =
-    booking.hourlyRate != null ? usdFormatter.format(booking.hourlyRate) : null;
+    booking.hourlyRate != null ? cadFormatter.format(booking.hourlyRate) : null;
 
   // ── Main content ───────────────────────────────────────────────────────
 
@@ -1316,7 +1312,7 @@ export default function BookingDetailClient({
                         {isWelper ? welperDetail.rateOnReceipt : "Rate on receipt"}
                       </Text>
                       <Text size="2" weight="medium">
-                        {usdFormatter.format(booking.serviceReceipt.hourlyRate)}/hr
+                        {cadFormatter.format(booking.serviceReceipt.hourlyRate)}/hr
                       </Text>
                     </Flex>
                   </Flex>
@@ -1338,6 +1334,36 @@ export default function BookingDetailClient({
                       )}
                     </Text>
                   </Box>
+
+                  {/* Price transparency (subtotal + tax), when provided by BFF */}
+                  {typeof booking.serviceReceipt.subtotalCents === "number" ? (
+                    <Flex direction="column" gap="2">
+                      <Flex justify="between">
+                        <Text size="2" color="gray">
+                          Subtotal
+                        </Text>
+                        <Text size="2">
+                          {(booking.serviceReceipt.subtotalCents / 100).toLocaleString("en-US", {
+                            style: "currency",
+                            currency: booking.serviceReceipt.currency.toUpperCase(),
+                            currencyDisplay: "code",
+                          })}
+                        </Text>
+                      </Flex>
+                      <Flex justify="between">
+                        <Text size="2" color="gray">
+                          Tax
+                        </Text>
+                        <Text size="2">
+                          {(booking.serviceReceipt.taxCents / 100).toLocaleString("en-US", {
+                            style: "currency",
+                            currency: booking.serviceReceipt.currency.toUpperCase(),
+                            currencyDisplay: "code",
+                          })}
+                        </Text>
+                      </Flex>
+                    </Flex>
+                  ) : null}
 
                   {booking.serviceReceipt.notes ? (
                     <Flex direction="column" gap="1">

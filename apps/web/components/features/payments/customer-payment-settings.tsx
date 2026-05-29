@@ -4,7 +4,9 @@ import { useCallback, useState } from "react";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { Box } from "@welpco/ui/box";
+import { Card } from "@welpco/ui/card";
 import { Flex } from "@welpco/ui/flex";
+import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Button } from "@welpco/ui/button";
 import { Callout } from "@welpco/ui/callout";
@@ -85,7 +87,16 @@ function SetupCardForm({
   );
 }
 
-export function CustomerPaymentSettings() {
+export type CustomerPaymentSettingsLabels = {
+  title: string;
+  description: string;
+};
+
+export function CustomerPaymentSettings({
+  labels,
+}: {
+  labels?: CustomerPaymentSettingsLabels;
+}) {
   const queryClient = useQueryClient();
   const { data: methods, isLoading, refetch } = usePaymentMethods(true);
   const createSi = useCreateSetupIntent();
@@ -148,30 +159,36 @@ export function CustomerPaymentSettings() {
 
   if (!publishableKey || !stripePromise) {
     return (
-      <Callout.Root color="amber" variant="surface">
-        <Callout.Text>
-          Card payments are not configured (missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY). Contact support if this persists.
-        </Callout.Text>
-      </Callout.Root>
+      <Card size="4" variant="surface" style={{ width: "100%", maxWidth: "560px" }}>
+        <Callout.Root color="amber" variant="surface">
+          <Callout.Text>
+            Card payments are not configured (missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY). Contact support if this persists.
+          </Callout.Text>
+        </Callout.Root>
+      </Card>
     );
   }
 
   return (
-    <Flex direction="column" gap="5" style={{ maxWidth: 520 }}>
-      <EmailVerificationRequiredDialog
-        open={bookable.dialogOpen}
-        onOpenChange={bookable.setDialogOpen}
-        email={bookable.email}
-        pending={bookable.resendPending}
-        onResend={bookable.resend}
-      />
-      <Box>
-        <Text size="2" weight="medium" mb="2">
-          Saved cards
-        </Text>
-        <Text size="2" color="gray" mb="3">
-          Add a default card to complete your profile and authorize payment after a welper accepts your booking.
-        </Text>
+    <Card size="4" variant="surface" style={{ width: "100%", maxWidth: "560px" }}>
+      <Flex direction="column" gap="5">
+        <EmailVerificationRequiredDialog
+          open={bookable.dialogOpen}
+          onOpenChange={bookable.setDialogOpen}
+          email={bookable.email}
+          pending={bookable.resendPending}
+          onResend={bookable.resend}
+        />
+        <Box>
+          <Heading size="7" trim="start" mb="2">
+            {labels?.title ?? "Payment methods"}
+          </Heading>
+          <Text size="2" color="gray">
+            {labels?.description ??
+              "Add a default card to complete your profile and authorize payment after a welper accepts your booking."}
+          </Text>
+        </Box>
+
         {isLoading ? (
           <Skeleton height="80px" style={{ borderRadius: "var(--radius-3)" }} />
         ) : methods && methods.length > 0 ? (
@@ -225,12 +242,7 @@ export function CustomerPaymentSettings() {
               </Flex>
             ))}
           </Flex>
-        ) : (
-          <Text size="2" color="gray">
-            No cards on file yet.
-          </Text>
-        )}
-      </Box>
+        ) : null}
 
       {!clientSecret ? (
         <Button
@@ -267,6 +279,7 @@ export function CustomerPaymentSettings() {
           <Callout.Text>{(createSi.error as Error)?.message ?? "Could not start card setup"}</Callout.Text>
         </Callout.Root>
       ) : null}
-    </Flex>
+      </Flex>
+    </Card>
   );
 }

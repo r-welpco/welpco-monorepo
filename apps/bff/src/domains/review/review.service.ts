@@ -190,6 +190,8 @@ export class ReviewService {
     page = 1,
     limit = 20,
   ): Promise<{ data: ReviewResponseDto[]; total: number; page: number; limit: number; totalPages: number }> {
+    page = Math.max(1, page);
+    limit = Math.min(Math.max(1, limit), 100);
     const [reviews, total] = await this.reviewRepo.findAndCount({
       where: { revieweeId: welperId },
       order: { createdAt: 'DESC' },

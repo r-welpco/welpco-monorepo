@@ -70,8 +70,7 @@ export interface DashboardStatsProps {
 
 const FALLBACK_CUSTOMER: DashboardStatItem[] = [
   { title: "Active bookings", value: 0 },
-  { title: "Total spent", value: "$0.00" },
-  { title: "Services completed", value: 0 },
+  { title: "Bookings completed", value: 0 },
   { title: "Favorite Welpers", value: 0 },
 ];
 
@@ -106,7 +105,7 @@ export function DashboardStats({
         ) : null}
       </Box>
 
-      <Grid columns={{ initial: "2", sm: stats.length === 4 ? "4" : "3" }} gap="3">
+      <Grid columns={{ initial: "2", sm: "3" }} gap="3">
         {stats.map((stat) => (
           <StatCard
             key={stat.title}

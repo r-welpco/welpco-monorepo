@@ -1414,7 +1414,9 @@
       "genericError": "Une erreur s'est produite. Réessayez.",
       "deleteAccount": "Supprimer le compte",
       "deleteDescription": "Nous désactiverons votre compte et vous déconnecterons. Les réservations et avis actifs restent liés à ces dossiers. Si quelque chose ne va pas, dites-le-nous avant de partir.",
-      "deleteButton": "Supprimer mon compte…"
+      "deleteButton": "Supprimer mon compte…",
+      "paymentTitle": "Modes de paiement",
+      "paymentDescription": "Ajoutez une carte par défaut pour compléter votre profil et autoriser le paiement après qu'un Welper accepte votre réservation."
     },
     "profile": {
       "title": "Profil",
@@ -1436,6 +1438,7 @@
       },
       "photo": {
         "alt": "Photo de profil",
+        "customerDescription": "Téléversez une photo claire. Elle apparaît sur votre profil et aide les Welpers à vous reconnaître.",
         "requiredDescription": "Une photo de profil est requise pour terminer la configuration et apparaître dans la recherche.",
         "optionalDescription": "Téléversez une photo claire. Elle apparaît sur votre profil public et aide les clients à vous reconnaître."
       },

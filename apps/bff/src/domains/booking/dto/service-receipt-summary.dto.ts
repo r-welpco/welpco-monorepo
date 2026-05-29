@@ -27,6 +27,12 @@ export class ServiceReceiptDto {
   @ApiProperty() billingCheckInAt!: string;
   @ApiProperty() billingCheckOutAt!: string;
   @ApiProperty() hourlyRate!: number;
+  @ApiProperty({ description: 'Subtotal before tax (cents)' })
+  subtotalCents!: number;
+  @ApiProperty({ description: 'Tax amount (cents)' })
+  taxCents!: number;
+  @ApiProperty({ description: 'Tax rate applied to subtotal, in basis points (bps)' })
+  taxRateBps!: number;
   @ApiProperty() totalCents!: number;
   @ApiProperty() currency!: string;
   @ApiPropertyOptional() notes!: string | null;

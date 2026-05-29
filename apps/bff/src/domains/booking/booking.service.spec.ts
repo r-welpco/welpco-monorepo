@@ -10,10 +10,12 @@ import { ServiceQuestionsService } from '../content-management/service-questions
 import { AvailabilityService } from '../profile-management/availability/availability.service';
 import { NotificationService } from '../notification/notification.service';
 import { PaymentService } from '../payment/payment.service';
+import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { CustomerProfileService } from '../profile-management/customer-profile/customer-profile.service';
 import { WelperProfileService } from '../profile-management/welper-profile/welper-profile.service';
 import { UsersService } from '../user-management/users/users.service';
 import { S3UrlPresignerService } from '../../clients/s3';
+import { BackgroundCheckService } from '../safety-verification/background-check.service';
 
 describe('BookingService', () => {
   let service: BookingService;
@@ -63,6 +65,10 @@ describe('BookingService', () => {
     authorizeHoldBeforeWelperAccept: jest.fn().mockResolvedValue(undefined),
   };
 
+  const mockApplicationSettingsService = {
+    getBookingTaxRateBps: jest.fn().mockResolvedValue(0),
+  };
+
   const mockCustomerProfileService = {
     findByCustomerId: jest.fn().mockResolvedValue({ firstName: 'Test', lastName: 'Customer' }),
   };
@@ -73,6 +79,10 @@ describe('BookingService', () => {
 
   const mockUsersService = {
     findById: jest.fn().mockResolvedValue({ email: 'user@example.com' }),
+  };
+
+  const mockBackgroundCheckService = {
+    assertCanAcceptBookings: jest.fn().mockResolvedValue(undefined),
   };
 
   const mockQueryRunner = {
@@ -128,9 +138,11 @@ describe('BookingService', () => {
         { provide: AvailabilityService, useValue: mockAvailabilityService },
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: PaymentService, useValue: mockPaymentService },
+        { provide: ApplicationSettingsService, useValue: mockApplicationSettingsService },
         { provide: CustomerProfileService, useValue: mockCustomerProfileService },
         { provide: WelperProfileService, useValue: mockWelperProfileService },
         { provide: UsersService, useValue: mockUsersService },
+        { provide: BackgroundCheckService, useValue: mockBackgroundCheckService },
         {
           provide: S3UrlPresignerService,
           useValue: {

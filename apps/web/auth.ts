@@ -2,6 +2,10 @@ import NextAuth, { type NextAuthResult } from "next-auth";
 import { authConfig } from "@/lib/auth/config";
 import { authProviders } from "@/lib/auth/providers";
 
+if (process.env.NODE_ENV === "production" && !process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET must be set in production");
+}
+
 const result: NextAuthResult = NextAuth({
   ...authConfig,
   providers: authProviders,

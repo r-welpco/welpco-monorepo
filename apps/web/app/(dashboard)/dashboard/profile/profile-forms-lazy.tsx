@@ -22,7 +22,7 @@ export const WelperProfileForm = dynamic(
 export const ProfilePhotoUpload = dynamic(
   () =>
     import("@welpco/ui/platform/profile-management").then((m) => ({ default: m.ProfilePhotoUpload })),
-  { loading: () => <BlockSkeleton height={120} /> }
+  { loading: () => <BlockSkeleton height={120} />, ssr: false },
 );
 
 export const ServiceOfferingList = dynamic(

@@ -53,9 +53,9 @@ function formatDuration(minutes: number): string {
   return `${h}h ${m}m`;
 }
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
+const currencyFormatter = new Intl.NumberFormat("en-CA", {
   style: "currency",
-  currency: "USD",
+  currency: "CAD",
 });
 
 function formatCurrency(amount: number): string {
@@ -366,7 +366,7 @@ export default function NewBookingPageClient({
   const submitLabel = createBooking.isPending
     ? "Confirming…"
     : totalPrice !== null
-      ? `Confirm and pay ${formatCurrency(totalPrice)}`
+      ? "Request booking"
       : "Continue";
 
   // Summary panel — rendered inline on desktop (right column) and in the
@@ -380,7 +380,7 @@ export default function NewBookingPageClient({
           size="3"
           trim="start"
         >
-          Estimated total
+          Estimated subtotal
         </Heading>
         {durationMinutes !== null && selectedOffering ? (
           <Flex direction="column" gap="2">
@@ -401,16 +401,16 @@ export default function NewBookingPageClient({
             <Separator size="4" my="1" />
             <Flex justify="between" align="center">
               <Text size="2" weight="bold">
-                Total
+                Subtotal
               </Text>
               <Text size="4" weight="bold" color={SEMANTIC_COLOR.primary}>
-                {totalPrice !== null ? formatCurrency(totalPrice) : "—"}
+                {totalPrice !== null ? `${formatCurrency(totalPrice)} before tax` : "—"}
               </Text>
             </Flex>
           </Flex>
         ) : (
           <Text size="2" color="gray">
-            Pick a service and time to see your total.
+            Pick a service and time to see your subtotal.
           </Text>
         )}
 
@@ -808,10 +808,10 @@ export default function NewBookingPageClient({
         <Flex direction="column" gap="2">
           <Flex justify="between" align="center">
             <Text size="1" color="gray">
-              Estimated total
+              Estimated subtotal
             </Text>
             <Text size="3" weight="bold" color={SEMANTIC_COLOR.primary}>
-              {totalPrice !== null ? formatCurrency(totalPrice) : "—"}
+              {totalPrice !== null ? `${formatCurrency(totalPrice)} before tax` : "—"}
             </Text>
           </Flex>
           <Button

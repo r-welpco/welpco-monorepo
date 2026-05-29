@@ -95,12 +95,9 @@ export function computeCustomerStatsFromBookings(
   const active = bookings.filter((b) => ACTIVE_STATUSES.has(b.status)).length;
   const completed = bookings.filter((b) => COMPLETED_STATUSES.has(b.status));
   const servicesUsed = completed.length;
-  const totalSpent = completed.reduce((sum, b) => sum + (typeof b.totalPrice === "number" ? b.totalPrice : 0), 0);
-  const spentLabel = totalSpent > 0 ? `$${totalSpent.toFixed(2)}` : "$0.00";
 
   return [
     { title: "Active bookings", value: active },
-    { title: "Total spent", value: spentLabel },
     { title: "Bookings completed", value: servicesUsed },
     { title: "Favorite Welpers", value: favoriteWelperCount },
   ];

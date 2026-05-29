@@ -2,14 +2,13 @@
 
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
-import { Avatar } from "@welpco/ui/avatar";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useId } from "react";
 import type { Area } from "react-easy-crop";
 import { Upload, X } from "lucide-react";
 import {
@@ -18,6 +17,7 @@ import {
   DEFAULT_OUTPUT_SIZE_PX,
 } from "./crop-profile-photo";
 import { ProfilePhotoCropDialog } from "./profile-photo-crop-dialog";
+import { ProfilePhotoAvatar } from "./profile-photo-avatar";
 
 export interface ProfilePhotoCropLabels {
   title: string;
@@ -136,6 +136,7 @@ export function ProfilePhotoUpload({
   const labels = labelsProp ?? DEFAULT_PROFILE_PHOTO_UPLOAD_LABELS;
   const photoAlt = currentPhotoAlt ?? labels.photoAlt;
   const helperText = description ?? labels.description;
+  const inputId = useId();
 
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -364,13 +365,10 @@ export function ProfilePhotoUpload({
           direction={{ initial: "column", sm: "row" }}
         >
           <Box>
-            <Avatar
-              src={displayPhoto || undefined}
+            <ProfilePhotoAvatar
+              src={displayPhoto}
               alt={photoAlt}
               fallback={photoAlt[0] || "U"}
-              size="8"
-              width="120px"
-              height="120px"
             />
           </Box>
 
@@ -382,9 +380,9 @@ export function ProfilePhotoUpload({
               onChange={handleFileSelect}
               disabled={loading || uploading}
               style={{ display: "none" }}
-              id="profile-photo-upload"
+              id={inputId}
             />
-            <Text as="label" htmlFor="profile-photo-upload">
+            <Text as="label" htmlFor={inputId}>
               <Button
                 type="button"
                 variant="outline"

@@ -143,7 +143,6 @@ export default function DashboardLayoutClient({
             overflow: "hidden",
           }}
         >
-          <AuthBackgroundSVG backgroundId={backgroundId} />
           {children}
         </Box>
       </Flex>

@@ -7,6 +7,7 @@ import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Box } from "@welpco/ui/box";
+import { ProfilePhotoAvatar } from "@welpco/ui/platform/profile-management";
 
 import { DashboardStats } from "@/components/features/dashboard/dashboard-stats";
 import { RecentActivity } from "@/components/features/dashboard/recent-activity";
@@ -17,7 +18,7 @@ import { normalizeCustomerSetupChecklist } from "@/lib/dashboard/normalize-custo
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
 import { useCustomerSetupChecklist, useWelperSetupChecklist } from "@/lib/hooks/use-signup";
 import { useDashboardUser } from "@/lib/hooks/use-dashboard-user";
-import { useFavoriteWelpers } from "@/lib/hooks/use-profile";
+import { useCustomerProfile, useFavoriteWelpers, useWelperProfile } from "@/lib/hooks/use-profile";
 import { useBookings } from "@/lib/hooks/use-bookings";
 import {
   buildDashboardActivities,
@@ -116,19 +117,26 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     { enabled: !!bookingsRole && !welperSetupIncomplete && !customerSetupIncomplete },
   );
 
-  const { data: favoriteWelpers = [] } = useFavoriteWelpers(user.id);
+  const { data: customerProfile } = useCustomerProfile(user.id, userRole === "customer");
+  const { data: welperProfile } = useWelperProfile(user.id, userRole === "welper");
+  const { data: favoriteWelpersList } = useFavoriteWelpers(
+    userRole === "customer" ? user.id : "",
+  );
 
   const bookings = useMemo(() => bookingsResponse?.data ?? [], [bookingsResponse?.data]);
 
   const dashboardStats = useMemo(() => {
     if (userRole === "customer") {
-      return computeCustomerStatsFromBookings(bookings, favoriteWelpers.length);
+      return computeCustomerStatsFromBookings(
+        bookings,
+        favoriteWelpersList?.total ?? 0,
+      );
     }
     if (userRole === "welper") {
       return computeWelperStatsFromBookings(bookings, welperHome.stats);
     }
     return null;
-  }, [userRole, bookings, favoriteWelpers.length, welperHome.stats]);
+  }, [userRole, bookings, favoriteWelpersList?.total, welperHome.stats]);
 
   const activities = useMemo(() => {
     if (!bookingsRole) return [];
@@ -210,22 +218,55 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
   ]);
 
   const statsLoading = !!bookingsRole && bookingsLoading;
-  const greetingName = firstNameOf(user?.name ?? null, user?.email);
+  const greetingName = useMemo(() => {
+    if (userRole === "customer") {
+      const first = customerProfile?.firstName?.trim();
+      if (first) return first;
+    }
+    if (userRole === "welper") {
+      const fromProfile =
+        welperProfile?.firstName?.trim() || welperProfile?.displayName?.trim();
+      if (fromProfile) return firstNameOf(fromProfile, user?.email);
+    }
+    return firstNameOf(user?.name ?? null, user?.email);
+  }, [
+    userRole,
+    customerProfile?.firstName,
+    welperProfile?.firstName,
+    welperProfile?.displayName,
+    user?.name,
+    user?.email,
+  ]);
+
+  const profilePhotoUrl =
+    userRole === "customer"
+      ? customerProfile?.photoUrl
+      : userRole === "welper"
+        ? welperProfile?.photoUrl
+        : undefined;
+  const avatarSrc = profilePhotoUrl || user?.image || undefined;
+  const avatarFallback = greetingName.charAt(0).toUpperCase() || "U";
 
   return (
     <Container size="3" px={{ initial: "4", sm: "6" }}>
       <Flex direction="column" gap="6" minWidth="0">
         {/* 1. Orient — greeting + concrete state line. */}
-        <Box>
-          <Heading as="h1" size="7" mb="2" trim="start">
-            {userRole === "welper"
-              ? welperHome.greeting(greetingName)
-              : `Welcome back, ${greetingName}.`}
-          </Heading>
-          <Text as="p" size="3" color="gray" highContrast>
-            {stateLine}
-          </Text>
-        </Box>
+        <Flex gap="4" align="start" wrap="wrap">
+          <ProfilePhotoAvatar
+            src={avatarSrc}
+            alt={greetingName}
+            fallback={avatarFallback}
+            size="3"
+          />
+          <Box flexGrow="1" style={{ minWidth: "min(100%, 12rem)" }}>
+            <Heading as="h1" size="7" mb="2" trim="start">
+              {welperHome.greeting(greetingName)}
+            </Heading>
+            <Text as="p" size="3" color="gray" highContrast>
+              {stateLine}
+            </Text>
+          </Box>
+        </Flex>
 
         {welperShowSetupChecklist ? (
           <WelperSetupChecklist variant="full" />

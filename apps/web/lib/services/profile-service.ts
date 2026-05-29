@@ -408,15 +408,30 @@ export async function getHolidays(params: GetHolidaysParams): Promise<Holiday[]>
   return Array.isArray(response) ? response : [];
 }
 
-// Favorite Welpers - TODO: Implement when favorites endpoints are available
-// Using React.cache() for per-request deduplication when called from server components
-export const getFavoriteWelpers = async (customerId: string): Promise<FavoriteWelper[]> => {
+// Favorite Welpers
+export type FavoriteWelpersList = {
+  items: FavoriteWelper[];
+  total: number;
+};
+
+export const getFavoriteWelpers = async (_customerId: string): Promise<FavoriteWelpersList> => {
   try {
-    const response = await apiClient.get<FavoriteWelper[]>("/api/profiles/me/favorites");
-    return response;
-  } catch (error: any) {
-    if (error.statusCode === 401 || error.statusCode === 404) {
-      return [];
+    const response = await apiClient.get<
+      FavoriteWelper[] | { data?: FavoriteWelper[]; total?: number }
+    >("/api/profiles/me/favorites");
+    if (Array.isArray(response)) {
+      return { items: response, total: response.length };
+    }
+    const items = Array.isArray(response?.data) ? response.data : [];
+    const total = typeof response?.total === "number" ? response.total : items.length;
+    return { items, total };
+  } catch (error: unknown) {
+    const statusCode =
+      error && typeof error === "object" && "statusCode" in error
+        ? (error as { statusCode?: number }).statusCode
+        : undefined;
+    if (statusCode === 401 || statusCode === 404) {
+      return { items: [], total: 0 };
     }
     throw error;
   }

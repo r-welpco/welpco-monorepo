@@ -1415,7 +1415,9 @@
       "genericError": "Something went wrong. Try again in a moment.",
       "deleteAccount": "Delete account",
       "deleteDescription": "We'll deactivate your account and sign you out. Active bookings and reviews stay attached to those records. If something's wrong, we'd rather hear it — let us know before you go.",
-      "deleteButton": "Delete my account…"
+      "deleteButton": "Delete my account…",
+      "paymentTitle": "Payment methods",
+      "paymentDescription": "Add a default card to complete your profile and authorize payment after a welper accepts your booking."
     },
     "profile": {
       "title": "Profile",
@@ -1437,6 +1439,7 @@
       },
       "photo": {
         "alt": "Profile photo",
+        "customerDescription": "Upload a clear photo of yourself. It appears on your profile and helps Welpers recognize you.",
         "requiredDescription": "A profile photo is required to finish setup and appear in customer search.",
         "optionalDescription": "Upload a clear photo of yourself. It appears on your public profile and helps customers recognize you."
       },

@@ -36,6 +36,8 @@ import { NotificationCategory } from '../notification/entities';
 
 const OPEN_STATUSES: string[] = ['open', 'in_review', 'escalated'];
 const RESOLVABLE_STATUSES: string[] = ['open', 'in_review'];
+const EVIDENCE_KEY_PREFIX = 'disputes/';
+const EVIDENCE_ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'heic', 'pdf']);
 /**
  * Wave 2 (BFF): a dispute can be withdrawn by its filer only while it sits in
  * one of these statuses. Once admin starts work (`escalated`) or finalises
@@ -145,7 +147,12 @@ export class DisputeService {
         };
         if (item.key !== undefined) base.key = item.key;
         if (item.id !== undefined) base.id = item.id;
-        if (item.type === 'file' && typeof item.key === 'string' && item.key.length > 0) {
+        if (
+          item.type === 'file' &&
+          typeof item.key === 'string' &&
+          item.key.startsWith(EVIDENCE_KEY_PREFIX) &&
+          item.key.length > 0
+        ) {
           base.signedUrl = await this.s3Presigner.presignGet(item.key);
         }
         return base;
@@ -222,6 +229,34 @@ export class DisputeService {
     return summary;
   }
 
+  private assertEvidenceBelongsToFiler(
+    userId: string,
+    evidence: CreateDisputeDto['evidence'],
+  ): void {
+    if (!evidence) return;
+    const ownedPrefix = `${EVIDENCE_KEY_PREFIX}${userId}/`;
+
+    for (const item of evidence) {
+      if (item.type === 'file') {
+        if (!item.key?.trim()) {
+          throw new BadRequestException('File evidence must include an uploaded evidence key');
+        }
+        const key = item.key.trim();
+        if (!key.startsWith(ownedPrefix) || key.includes('..')) {
+          throw new BadRequestException('Evidence file key does not belong to the current user');
+        }
+        const ext = key.split('.').pop()?.toLowerCase();
+        if (!ext || !EVIDENCE_ALLOWED_EXTENSIONS.has(ext)) {
+          throw new BadRequestException('Evidence file type is not allowed');
+        }
+      }
+
+      if (item.type === 'message' && !item.id?.trim()) {
+        throw new BadRequestException('Message evidence must include a message id');
+      }
+    }
+  }
+
   private resolutionToSummary(r: Resolution): DisputeResolutionSummaryDto {
     return {
       id: r.id,
@@ -268,6 +303,7 @@ export class DisputeService {
       if (existingOpen) {
         throw new ConflictException('This booking already has an open dispute');
       }
+      this.assertEvidenceBelongsToFiler(userId, dto.evidence);
 
       const dispute = disputeRepo.create({
         bookingId,
@@ -331,6 +367,8 @@ export class DisputeService {
     /** DB dispute status (e.g. in_review). Only applied for admin list when provided. */
     statusDb?: string,
   ): Promise<{ data: DisputeResponseDto[]; total: number; page: number; limit: number; totalPages: number }> {
+    page = Math.max(1, page);
+    limit = Math.min(Math.max(1, limit), 100);
     const qb = this.disputeRepo
       .createQueryBuilder('d')
       .orderBy('d.created_at', 'DESC')
