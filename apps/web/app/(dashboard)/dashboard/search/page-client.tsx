@@ -125,7 +125,8 @@ export default function DashboardSearchPageClient() {
   const searchMinPrice = validMinPrice ? minPrice : undefined;
   const searchMaxPrice = validMaxPrice ? maxPrice : undefined;
   const searchMinRating = validMinRating ? minRating : undefined;
-  const page = Math.max(1, parseInt(searchParams.get("page") ?? String(DEFAULT_PAGE), 10));
+  const parsedPage = parseInt(searchParams.get("page") ?? String(DEFAULT_PAGE), 10);
+  const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : DEFAULT_PAGE;
   const sortParam = searchParams.get("sort");
   const sort = (sortParam === "price" ? "price" : sortParam === "distance" ? "distance" : "relevance") as "relevance" | "price" | "distance";
 
@@ -443,6 +444,12 @@ export default function DashboardSearchPageClient() {
   const totalPages = Math.ceil(total / DEFAULT_LIMIT) || 1;
   const hasNext = page < totalPages;
   const hasPrev = page > 1;
+
+  useEffect(() => {
+    if (hasSearchCenter && data && total > 0 && page > totalPages) {
+      updateParams({ page: totalPages });
+    }
+  }, [hasSearchCenter, data, total, page, totalPages, updateParams]);
 
   const showEmpty =
     hasSearchCenter &&

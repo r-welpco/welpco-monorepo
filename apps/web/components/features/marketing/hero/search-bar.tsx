@@ -8,7 +8,7 @@ import { useState, type FormEvent } from "react";
  *
  * Faithful port of `.design-reference/project/components/hero.jsx` `SearchBar`.
  *
- * Day 9 wiring: submitting the form now navigates to `/search?q=&zip=` —
+ * Day 9 wiring: submitting the form now navigates to `/search?q=&postalCode=` —
  * `/search` is a thin client redirect that forwards to `/dashboard/search`
  * preserving the query string. This makes the hero functional without
  * coupling the marketing shell to the dashboard route directly.
@@ -21,14 +21,14 @@ interface SearchBarProps {
 export function SearchBar({ tone = "light" }: SearchBarProps) {
   const router = useRouter();
   const [q, setQ] = useState("");
-  const [zip, setZip] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const dark = tone === "dark";
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const params = new URLSearchParams();
     if (q.trim()) params.set("q", q.trim());
-    if (zip.trim()) params.set("zip", zip.trim());
+    if (postalCode.trim()) params.set("postalCode", postalCode.trim());
     const qs = params.toString();
     router.push(qs ? `/search?${qs}` : "/search");
   }
@@ -92,14 +92,13 @@ export function SearchBar({ tone = "light" }: SearchBarProps) {
           <circle cx="8" cy="6" r="1.6" stroke="var(--evergreen)" strokeWidth="1.6" />
         </svg>
         <input
-          name="zip"
-          value={zip}
-          onChange={(e) => setZip(e.target.value)}
-          placeholder="Your zip code"
-          aria-label="Your zip code"
-          inputMode="numeric"
+          name="postalCode"
+          value={postalCode}
+          onChange={(e) => setPostalCode(e.target.value)}
+          placeholder="Your postal code"
+          aria-label="Your postal code"
+          inputMode="text"
           autoComplete="postal-code"
-          pattern="[0-9]*"
           maxLength={10}
           style={{
             border: "none",

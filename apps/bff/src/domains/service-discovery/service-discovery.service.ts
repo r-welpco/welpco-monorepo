@@ -171,16 +171,27 @@ export class ServiceDiscoveryService {
     }
 
     const qPattern = q ? `%${q}%` : null;
+    const minRateSubquery =
+      categoryIds.length > 0
+        ? '(SELECT so.welper_id, MIN(so.hourly_rate) as min_rate FROM service_offerings so WHERE so.active = true AND so.service_category_id IN (:...categoryIds) GROUP BY so.welper_id)'
+        : '(SELECT so.welper_id, MIN(so.hourly_rate) as min_rate FROM service_offerings so WHERE so.active = true GROUP BY so.welper_id)';
 
     const qb = this.welperProfileRepo
       .createQueryBuilder('p')
       .leftJoin(
-        '(SELECT so.welper_id, MIN(so.hourly_rate) as min_rate FROM service_offerings so WHERE so.active = true GROUP BY so.welper_id)',
+        minRateSubquery,
         'min_so',
         'min_so.welper_id = p.welper_id',
       )
       .where('p.profile_completion_status = :status', { status: ProfileCompletionStatus.COMPLETE })
       .andWhere('p.profile_visibility = :visibility', { visibility: ProfileVisibility.PUBLIC })
+      .andWhere(
+        `EXISTS (
+          SELECT 1 FROM service_offerings so_active
+          WHERE so_active.welper_id = p.welper_id
+          AND so_active.active = true
+        )`,
+      )
       .andWhere(
         `EXISTS (
           SELECT 1 FROM verification_statuses vs
