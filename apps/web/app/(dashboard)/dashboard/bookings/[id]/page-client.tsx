@@ -60,6 +60,7 @@ import { uploadDisputeEvidence } from "@/lib/services/dispute-evidence-upload-se
 import { useCreateBookingPaymentIntent } from "@/lib/hooks/use-payments";
 import { loadStripe } from "@stripe/stripe-js";
 import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
+import { publicWelperDisplayName } from "@/lib/display-name";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
 import { EmailVerificationRequiredError } from "@/lib/api/client";
@@ -558,15 +559,10 @@ export default function BookingDetailClient({
     }
   }, [bookingId, booking?.paymentClientSecret, queryClient]);
 
-  // Derive welper display name
-  const welperDisplayName = useMemo(() => {
-    if (!welperProfile) return null;
-    return (
-      [welperProfile.firstName, welperProfile.lastName]
-        .filter(Boolean)
-        .join(" ") || null
-    );
-  }, [welperProfile]);
+  const welperDisplayName = useMemo(
+    () => publicWelperDisplayName(welperProfile),
+    [welperProfile],
+  );
 
   // Derive service offering name from welper profile
   const bookingOffering = useMemo(() => {

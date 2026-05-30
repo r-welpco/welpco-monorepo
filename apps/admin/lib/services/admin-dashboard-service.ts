@@ -1,5 +1,20 @@
 import { apiClient } from "@/lib/api/client";
 
+export interface WelpersPerSubcategoryRow {
+  subcategoryId: string;
+  subcategoryName: string;
+  welperCount: number;
+  displayOrder: number;
+}
+
+export interface WelpersPerCategoryRow {
+  categoryId: string;
+  categoryName: string;
+  welperCount: number;
+  displayOrder: number;
+  subcategories: WelpersPerSubcategoryRow[];
+}
+
 export interface AdminDashboardSnapshot {
   generatedAt: string;
   users: {
@@ -16,6 +31,7 @@ export interface AdminDashboardSnapshot {
     welpersBgInProgress: number;
     welpersBgFailed: number;
   };
+  welpersPerCategory: WelpersPerCategoryRow[];
   disputes: {
     open: number;
     inReview: number;

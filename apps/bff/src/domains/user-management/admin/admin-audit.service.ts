@@ -42,10 +42,11 @@ export class AdminAuditService {
     limit: number;
     totalPages: number;
   }> {
+    const safePage = Number.isFinite(page) && page > 0 ? page : 1;
     const take = Math.min(Math.max(limit, 1), 100);
     const [rows, total] = await this.repo.findAndCount({
       order: { createdAt: 'DESC' },
-      skip: (page - 1) * take,
+      skip: (safePage - 1) * take,
       take,
     });
     const totalPages = Math.ceil(total / take) || 1;
@@ -58,7 +59,7 @@ export class AdminAuditService {
         createdAt: r.createdAt.toISOString(),
       })),
       total,
-      page,
+      page: safePage,
       limit: take,
       totalPages,
     };

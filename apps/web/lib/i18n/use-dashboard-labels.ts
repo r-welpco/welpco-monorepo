@@ -22,6 +22,7 @@ export type WelperNavLabels = {
   roleBadge: string;
   tabs: {
     dashboard: string;
+    marketplace: string;
     messages: string;
     bookings: string;
     profile: string;
@@ -51,6 +52,7 @@ export type CustomerNavLabels = {
   tabs: {
     dashboard: string;
     search: string;
+    marketplace: string;
     bookings: string;
     messages: string;
     profile: string;
@@ -83,6 +85,7 @@ export function useCustomerNavLabels(): CustomerNavLabels {
     tabs: {
       dashboard: t("tabs.dashboard"),
       search: t("tabs.search"),
+      marketplace: t("tabs.marketplace"),
       bookings: t("tabs.bookings"),
       messages: t("tabs.messages"),
       profile: t("tabs.profile"),
@@ -124,6 +127,7 @@ export function useWelperNavLabels(): WelperNavLabels {
     roleBadge: t("roleBadge"),
     tabs: {
       dashboard: t("tabs.dashboard"),
+      marketplace: t("tabs.marketplace"),
       messages: t("tabs.messages"),
       bookings: t("tabs.bookings"),
       profile: t("tabs.profile"),

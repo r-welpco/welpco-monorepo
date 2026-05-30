@@ -21,6 +21,7 @@ import { ServiceOfferingCard, ReviewList, VerifiedTrustBadge } from "@welpco/ui/
 import { Star, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
+import { publicWelperDisplayName } from "@/lib/display-name";
 import { useWelperReviews } from "@/lib/hooks/use-booking-review";
 import { useIsAuthenticated } from "@/stores/authStore";
 import type { PublicWelperProfile } from "@/types";
@@ -245,8 +246,7 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
     return <ProfileError error={error} />;
   }
 
-  const displayName =
-    [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Welper";
+  const displayName = publicWelperDisplayName(profile);
   const profileHref = `/welper/${profile.welperId}`;
   const hasOfferings =
     Array.isArray(profile.serviceOfferings) && profile.serviceOfferings.length > 0;

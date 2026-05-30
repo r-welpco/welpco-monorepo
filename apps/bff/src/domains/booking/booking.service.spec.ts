@@ -48,6 +48,7 @@ describe('BookingService', () => {
 
   const mockNotificationService = {
     send: jest.fn().mockResolvedValue(undefined),
+    resolveLocaleForUser: jest.fn().mockResolvedValue('en'),
   };
 
   const mockServiceReceiptRepo = {

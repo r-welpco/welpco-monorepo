@@ -35,6 +35,17 @@ import type { PhoneNumber } from '../../common/types';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
 import { isDisputeReportWindowOpen } from '../booking/dispute-report-window';
+import {
+  getBookingNotificationCopy,
+  getDisputeResolutionSummary,
+  type BookingEmailType,
+  type DisputeEmailType,
+  type DisputeEmailVariables,
+} from '@welpco/email';
+import {
+  buildBookingActionUrl,
+  getFrontendBaseUrl,
+} from '../notification/notification-locale.helper';
 import { Message } from '../communication/entities';
 
 const OPEN_STATUSES: string[] = ['open', 'in_review', 'escalated'];
@@ -85,42 +96,87 @@ export class DisputeService {
   ) {}
 
   /**
-   * NOTIFICATIONS-001 (Day 16 dispatch 2): build the dispute deep-link the
-   * `<NotificationCard>` will route to on click. Booking-domain template
-   * shape: `${FRONTEND_URL}/dashboard/<surface>/<id>`.
-   */
-  private disputeLink(disputeId: string): string {
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-    return `${baseUrl}/dashboard/disputes/${disputeId}`;
-  }
-
-  /**
-   * Emit a notification per recipient. Failures are caught — a notification
-   * miss must not roll back a finalised dispute write. Unknown recipients
-   * (defensive: empty array, dup ids) are filtered first.
+   * Emit a localized dispute notification per recipient.
    */
   private async emitDisputeNotifications(
     recipientIds: ReadonlyArray<string | null | undefined>,
-    title: string,
-    body: string,
-    metadata: { disputeId: string; bookingId: string; status: string },
+    emailType: DisputeEmailType,
+    variables: DisputeEmailVariables,
+    metadata: { disputeId: string; bookingId: string; status: string; kind?: string },
   ): Promise<void> {
     const seen = new Set<string>();
-    const link = this.disputeLink(metadata.disputeId);
     for (const id of recipientIds) {
       if (!id || seen.has(id)) continue;
       seen.add(id);
       try {
         await this.notificationService.emitForUser(id, {
           category: NotificationCategory.DISPUTE,
-          title,
-          body,
-          link,
-          metadata,
+          disputeEmailType: emailType,
+          disputeEmailVariables: variables,
+          metadata: {
+            ...metadata,
+            kind: metadata.kind ?? emailType,
+          },
         });
       } catch (err) {
         this.logger.warn(
           `Failed to emit dispute notification for ${id} (${metadata.status}): ${(err as Error).message}`,
+        );
+      }
+    }
+  }
+
+  private async emitDisputeResolvedNotifications(
+    recipientIds: ReadonlyArray<string | null | undefined>,
+    resolutionType: string,
+    refundStatus: string,
+    metadata: { disputeId: string; bookingId: string; status: string },
+  ): Promise<void> {
+    const seen = new Set<string>();
+    for (const id of recipientIds) {
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      try {
+        const locale = await this.notificationService.resolveLocaleForUser(id);
+        await this.notificationService.emitForUser(id, {
+          category: NotificationCategory.DISPUTE,
+          disputeEmailType: 'dispute_resolved',
+          disputeEmailVariables: {
+            resolutionSummary: getDisputeResolutionSummary(locale, resolutionType, refundStatus),
+          },
+          metadata: { ...metadata, kind: 'dispute_resolved' },
+        });
+      } catch (err) {
+        this.logger.warn(
+          `Failed to emit dispute resolved notification for ${id}: ${(err as Error).message}`,
+        );
+      }
+    }
+  }
+
+  private async emitBookingLifecycleNotifications(
+    booking: BookingRequest,
+    emailType: BookingEmailType,
+    kind: string,
+  ): Promise<void> {
+    for (const userId of [booking.customerId, booking.welperId]) {
+      try {
+        const locale = await this.notificationService.resolveLocaleForUser(userId);
+        const actionUrl = buildBookingActionUrl(getFrontendBaseUrl(), booking.id, locale);
+        const variables = { serviceName: 'Service', bookingUrl: actionUrl };
+        const copy = getBookingNotificationCopy(emailType, locale, variables);
+        await this.notificationService.send({
+          userId,
+          category: NotificationCategory.BOOKING,
+          title: copy.title,
+          body: copy.body,
+          metadata: { bookingId: booking.id, actionUrl, kind },
+          bookingEmailType: emailType,
+          bookingEmailVariables: variables,
+        });
+      } catch (err) {
+        this.logger.warn(
+          `Failed to emit booking ${emailType} after dispute for ${userId}: ${(err as Error).message}`,
         );
       }
     }
@@ -372,8 +428,8 @@ export class DisputeService {
         booking.customerId === userId ? booking.welperId : booking.customerId;
       await this.emitDisputeNotifications(
         [counterpartyId],
-        'New problem report',
-        `A problem report was filed about a recent booking: "${dto.subject}". Open it to see details and respond.`,
+        'dispute_filed',
+        { subject: dto.subject },
         { disputeId: savedDispute.id, bookingId: savedDispute.bookingId, status: 'open' },
       );
 
@@ -667,12 +723,13 @@ export class DisputeService {
         // NOTIFICATIONS-001: resolution lands on BOTH parties. Bible §22 voice
         // — concrete, action-oriented. If a refund is in flight, surface that
         // fact so the customer doesn't refresh the page wondering.
-        await this.emitDisputeNotifications(
+        await this.emitDisputeResolvedNotifications(
           [booking.customerId, booking.welperId],
-          'Dispute resolved',
-          this.buildResolutionBody(dto, stripeRefund.status),
+          dto.resolutionType,
+          stripeRefund.status,
           { disputeId, bookingId: booking.id, status: 'resolved' },
         );
+        await this.emitBookingLifecycleNotifications(booking, 'booking_cancelled', 'dispute_cancelled');
 
         return {
           id: saved.id,
@@ -720,12 +777,17 @@ export class DisputeService {
       // NOTIFICATIONS-001: notify both parties about the resolution outcome.
       // The body adapts to whether a refund is involved so the customer
       // immediately understands their card situation.
-      await this.emitDisputeNotifications(
+      await this.emitDisputeResolvedNotifications(
         [booking.customerId, booking.welperId],
-        'Dispute resolved',
-        this.buildResolutionBody(dto, stripeRefund.status),
+        dto.resolutionType,
+        stripeRefund.status,
         { disputeId, bookingId: booking.id, status: 'resolved' },
       );
+      if (nextStatus === BookingRequestStatus.COMPLETED) {
+        await this.emitBookingLifecycleNotifications(booking, 'booking_completed', 'dispute_completed');
+      } else {
+        await this.emitBookingLifecycleNotifications(booking, 'booking_cancelled', 'dispute_cancelled');
+      }
 
       return {
         id: saved.id,
@@ -842,10 +904,13 @@ export class DisputeService {
           booking.customerId === userId ? booking.welperId : booking.customerId;
         await this.emitDisputeNotifications(
           [counterpartyId],
-          'Problem report withdrawn',
-          'The other party withdrew the problem report. The booking is back to its normal state.',
+          'dispute_withdrawn',
+          { subject: dispute.subject ?? undefined },
           { disputeId, bookingId: dispute.bookingId, status: 'withdrawn' },
         );
+        if (booking.status === BookingRequestStatus.COMPLETED) {
+          await this.emitBookingLifecycleNotifications(booking, 'booking_completed', 'dispute_withdrawn_completed');
+        }
       }
 
       return await this.toDto(savedDispute);
@@ -855,29 +920,6 @@ export class DisputeService {
     } finally {
       await queryRunner.release();
     }
-  }
-
-  /**
-   * NOTIFICATIONS-001: pick a body that's honest about the refund outcome.
-   * If Stripe failed or skipped, we don't claim "refund issued" — we point
-   * the user to the dispute page where the admin notes will explain.
-   */
-  private buildResolutionBody(
-    dto: CreateResolutionDto,
-    refundStatus: StripeRefundOutcome['status'],
-  ): string {
-    if (dto.resolutionType === 'refund' || dto.resolutionType === 'partial_refund') {
-      if (refundStatus === 'succeeded') {
-        return dto.resolutionType === 'partial_refund'
-          ? 'A partial refund has been issued for your booking. It can take a few business days to appear on your statement.'
-          : 'A refund has been issued for your booking. It can take a few business days to appear on your statement.';
-      }
-      if (refundStatus === 'failed') {
-        return 'The dispute was resolved, but the refund could not be processed automatically. Open the dispute for details and next steps.';
-      }
-      return 'The dispute has been resolved. Open it to review the outcome.';
-    }
-    return 'The dispute has been resolved. Open it to review the outcome.';
   }
 
   private async runStripeRefundForResolution(

@@ -25,6 +25,11 @@ import {
 import { ProcessedWebhookEvent } from './entities/processed-webhook-event.entity';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
+import { getBookingNotificationCopy } from '@welpco/email';
+import {
+  buildBookingActionUrl,
+  getFrontendBaseUrl,
+} from '../notification/notification-locale.helper';
 
 export const PAYMENT_METHOD_REQUIRED_CODE = 'PAYMENT_METHOD_REQUIRED';
 /** Saved card cannot be charged off-session (e.g. SCA). Welper cannot complete accept until customer fixes card or pays another way. */
@@ -558,6 +563,7 @@ export class PaymentService {
     validateTransition(booking.status, BookingRequestStatus.PAYMENT_RELEASED);
     booking.status = BookingRequestStatus.PAYMENT_RELEASED;
     await this.bookingRepo.save(booking);
+    await this.emitBookingPaymentReleased(booking);
   }
 
   async syncPaymentIntentFromWebhook(pi: Stripe.PaymentIntent): Promise<void> {
@@ -599,19 +605,42 @@ export class PaymentService {
    * whichever lands first emits, the second is a no-op. Bible §22 voice:
    * concrete amount + booking link, no jargon.
    */
+  private async emitBookingPaymentReleased(booking: BookingRequest): Promise<void> {
+    for (const userId of [booking.customerId, booking.welperId]) {
+      try {
+        const locale = await this.notificationService.resolveLocaleForUser(userId);
+        const actionUrl = buildBookingActionUrl(getFrontendBaseUrl(), booking.id, locale);
+        const variables = { serviceName: 'Service', bookingUrl: actionUrl };
+        const copy = getBookingNotificationCopy('booking_payment_released', locale, variables);
+        await this.notificationService.send({
+          userId,
+          category: NotificationCategory.BOOKING,
+          title: copy.title,
+          body: copy.body,
+          metadata: { bookingId: booking.id, actionUrl, kind: 'booking_payment_released' },
+          bookingEmailType: 'booking_payment_released',
+          bookingEmailVariables: variables,
+        });
+      } catch (err) {
+        this.logger.warn(`Failed to emit payment_released notification for ${userId}: ${(err as Error).message}`);
+      }
+    }
+  }
+
   private async emitPaymentCaptured(row: BookingPayment): Promise<void> {
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-    const link = `${baseUrl}/dashboard/bookings/${row.bookingId}`;
     const amountCents = row.capturedAmountCents ?? row.amountCents;
     const amount = (amountCents / 100).toFixed(2);
     const currency = (row.currency ?? 'cad').toUpperCase();
     try {
       await this.notificationService.emitForUser(row.customerId, {
         category: NotificationCategory.PAYMENT,
-        title: 'Payment received',
-        body: `${amount} ${currency} was charged for your booking. The receipt is in your booking details.`,
-        link,
-        metadata: { bookingId: row.bookingId, paymentIntentId: row.stripePaymentIntentId, kind: 'captured-customer' },
+        paymentEmailType: 'payment_captured_customer',
+        paymentEmailVariables: { amount, currency },
+        metadata: {
+          bookingId: row.bookingId,
+          paymentIntentId: row.stripePaymentIntentId,
+          kind: 'captured-customer',
+        },
       });
     } catch (err) {
       this.logger.warn(`Failed to emit captured notification (customer): ${(err as Error).message}`);
@@ -619,47 +648,49 @@ export class PaymentService {
     try {
       await this.notificationService.emitForUser(row.welperId, {
         category: NotificationCategory.PAYMENT,
-        title: 'Payout queued',
-        body: `${amount} ${currency} from a recent booking is on its way to your payout account.`,
-        link,
-        metadata: { bookingId: row.bookingId, paymentIntentId: row.stripePaymentIntentId, kind: 'captured-welper' },
+        paymentEmailType: 'payment_captured_welper',
+        paymentEmailVariables: { amount, currency },
+        metadata: {
+          bookingId: row.bookingId,
+          paymentIntentId: row.stripePaymentIntentId,
+          kind: 'captured-welper',
+        },
       });
     } catch (err) {
       this.logger.warn(`Failed to emit captured notification (welper): ${(err as Error).message}`);
     }
   }
 
-  /** NOTIFICATIONS-001: emit when a Stripe payment fails (capture or auth). Only the customer is notified — the welper has no actionable signal here. */
   private async emitPaymentFailed(row: BookingPayment, message: string | null): Promise<void> {
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-    const link = `${baseUrl}/dashboard/bookings/${row.bookingId}`;
-    const detail = message?.trim().length ? ` Reason: ${message.trim()}.` : '';
     try {
       await this.notificationService.emitForUser(row.customerId, {
         category: NotificationCategory.PAYMENT,
-        title: 'Payment problem',
-        body: `We couldn't process the payment for your booking.${detail} Please update your payment method in Settings.`,
-        link,
-        metadata: { bookingId: row.bookingId, paymentIntentId: row.stripePaymentIntentId, kind: 'failed' },
+        paymentEmailType: 'payment_failed',
+        paymentEmailVariables: { failureReason: message?.trim() || undefined },
+        metadata: {
+          bookingId: row.bookingId,
+          paymentIntentId: row.stripePaymentIntentId,
+          kind: 'failed',
+        },
       });
     } catch (err) {
       this.logger.warn(`Failed to emit payment-failed notification: ${(err as Error).message}`);
     }
   }
 
-  /** NOTIFICATIONS-001: emit when a refund (full or partial) lands. */
   private async emitRefundIssued(row: BookingPayment, refundedAmountCents: number): Promise<void> {
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-    const link = `${baseUrl}/dashboard/bookings/${row.bookingId}`;
     const amount = (refundedAmountCents / 100).toFixed(2);
     const currency = (row.currency ?? 'cad').toUpperCase();
     try {
       await this.notificationService.emitForUser(row.customerId, {
         category: NotificationCategory.PAYMENT,
-        title: 'Refund issued',
-        body: `A refund of ${amount} ${currency} was issued for your booking. It can take a few business days to appear on your statement.`,
-        link,
-        metadata: { bookingId: row.bookingId, paymentIntentId: row.stripePaymentIntentId, kind: 'refund' },
+        paymentEmailType: 'payment_refund',
+        paymentEmailVariables: { amount, currency },
+        metadata: {
+          bookingId: row.bookingId,
+          paymentIntentId: row.stripePaymentIntentId,
+          kind: 'refund',
+        },
       });
     } catch (err) {
       this.logger.warn(`Failed to emit refund notification: ${(err as Error).message}`);

@@ -142,6 +142,8 @@ export interface CreateBookingParams {
   notes?: string;
   /** Timezone offset in minutes (e.g. -300 for EST) for cancellation policy */
   timezoneOffsetMinutes?: number;
+  jobPostingId?: string;
+  jobApplicationId?: string;
 }
 
 // ─── Service Question Types ──────────────────────────────────────────────

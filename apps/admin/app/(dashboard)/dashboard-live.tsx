@@ -18,9 +18,9 @@ import {
 } from "@welpco/ui";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, Fragment } from "react";
 import { AdminErrorCallout } from "@/components/admin-callout";
-import { getAdminDashboardSnapshot } from "@/lib/services/admin-dashboard-service";
+import { getAdminDashboardSnapshot, type AdminDashboardSnapshot } from "@/lib/services/admin-dashboard-service";
 import { listAdminAuditLogs, type AdminAuditEntry } from "@/lib/services/admin-audit-service";
 
 const LIVE_STORAGE_KEY = "welpco-admin-dashboard-live";
@@ -87,6 +87,110 @@ function AuditTable({ rows }: { rows: AdminAuditEntry[] }) {
             </TableCell>
           </TableRow>
         ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+function WelpersPerCategoryTable({
+  rows,
+  totalWelpers,
+}: {
+  rows: AdminDashboardSnapshot["welpersPerCategory"];
+  totalWelpers: number;
+}) {
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleRow = useCallback((categoryId: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) next.delete(categoryId);
+      else next.add(categoryId);
+      return next;
+    });
+  }, []);
+
+  if (rows.length === 0) {
+    return (
+      <Text size="2" color="gray">
+        No service categories configured yet.
+      </Text>
+    );
+  }
+
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableColumnHeaderCell>Category</TableColumnHeaderCell>
+          <TableColumnHeaderCell style={{ width: 120 }}>Welpers</TableColumnHeaderCell>
+          <TableColumnHeaderCell style={{ width: 100 }}>Share</TableColumnHeaderCell>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {rows.map((row) => {
+          const share =
+            totalWelpers > 0 ? `${Math.round((row.welperCount / totalWelpers) * 100)}%` : "—";
+          const isExpanded = expandedIds.has(row.categoryId);
+          const hasSubcategories = (row.subcategories ?? []).length > 0;
+
+          return (
+            <Fragment key={row.categoryId}>
+              <TableRow
+                onClick={hasSubcategories ? () => toggleRow(row.categoryId) : undefined}
+                style={{ cursor: hasSubcategories ? "pointer" : undefined }}
+              >
+                <TableCell>
+                  <Flex align="center" gap="2">
+                    {hasSubcategories ? (
+                      <Text size="1" color="gray" aria-hidden="true">
+                        {isExpanded ? "▼" : "▶"}
+                      </Text>
+                    ) : null}
+                    <Text size="2" weight="medium">
+                      {row.categoryName}
+                    </Text>
+                  </Flex>
+                </TableCell>
+                <TableCell>
+                  <Text size="2" weight="medium">
+                    {row.welperCount}
+                  </Text>
+                </TableCell>
+                <TableCell>
+                  <Text size="1" color="gray">
+                    {share}
+                  </Text>
+                </TableCell>
+              </TableRow>
+              {isExpanded
+                ? (row.subcategories ?? []).map((sub) => {
+                    const subShare =
+                      totalWelpers > 0
+                        ? `${Math.round((sub.welperCount / totalWelpers) * 100)}%`
+                        : "—";
+                    return (
+                      <TableRow key={`${row.categoryId}-${sub.subcategoryId}`}>
+                        <TableCell style={{ paddingLeft: "1.75rem" }}>
+                          <Text size="1" color="gray">
+                            {sub.subcategoryName}
+                          </Text>
+                        </TableCell>
+                        <TableCell>
+                          <Text size="1">{sub.welperCount}</Text>
+                        </TableCell>
+                        <TableCell>
+                          <Text size="1" color="gray">
+                            {subShare}
+                          </Text>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                : null}
+            </Fragment>
+          );
+        })}
       </TableBody>
     </Table>
   );
@@ -187,29 +291,57 @@ export function DashboardLive() {
       ) : null}
 
       {snap ? (
-        <Grid columns={{ initial: "1", sm: "2", md: "4" }} gap="3">
-          <Link href="/users?accountType=Welper&status=Pending" style={{ textDecoration: "none", color: "inherit" }}>
-            <StatCard label="Welpers pending" value={snap.users.welpersPending} />
-          </Link>
-          <Link
-            href="/users?accountType=Welper&signupCompleted=false"
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <StatCard label="Signup incomplete" value={snap.users.welpersSignupIncomplete} />
-          </Link>
-          <Link
-            href="/users?accountType=Welper&backgroundCheckStatus=In+Progress"
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <StatCard label="BG in progress" value={snap.users.welpersBgInProgress} />
-          </Link>
-          <Link
-            href="/users?accountType=Welper&backgroundCheckStatus=Failed"
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <StatCard label="BG failed" value={snap.users.welpersBgFailed} />
-          </Link>
-        </Grid>
+        <>
+          <SectionTitle>Platform overview</SectionTitle>
+          <Grid columns={{ initial: "1", sm: "2" }} gap="3">
+            <Link href="/users?accountType=Customer" style={{ textDecoration: "none", color: "inherit" }}>
+              <StatCard label="Total customers" value={snap.users.customers} />
+            </Link>
+            <Link href="/users?accountType=Welper" style={{ textDecoration: "none", color: "inherit" }}>
+              <StatCard label="Total welpers" value={snap.users.welpers} />
+            </Link>
+          </Grid>
+
+          <SectionTitle>Welper launch pipeline</SectionTitle>
+          <Grid columns={{ initial: "1", sm: "2", md: "4" }} gap="3">
+            <Link href="/users?accountType=Welper&status=Pending" style={{ textDecoration: "none", color: "inherit" }}>
+              <StatCard label="Welpers pending" value={snap.users.welpersPending} />
+            </Link>
+            <Link
+              href="/users?accountType=Welper&signupCompleted=false"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <StatCard label="Signup incomplete" value={snap.users.welpersSignupIncomplete} />
+            </Link>
+            <Link
+              href="/users?accountType=Welper&backgroundCheckStatus=In+Progress"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <StatCard label="BG in progress" value={snap.users.welpersBgInProgress} />
+            </Link>
+            <Link
+              href="/users?accountType=Welper&backgroundCheckStatus=Failed"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <StatCard label="BG failed" value={snap.users.welpersBgFailed} />
+            </Link>
+          </Grid>
+
+          <SectionTitle>Welpers by service category</SectionTitle>
+          <Card size="2">
+            <Flex direction="column" gap="3">
+              <Text size="2" color="gray">
+                Distinct welpers with at least one active offering in each top-level category.
+                Click a category row to see subcategory breakdown. Welpers in multiple categories
+                appear in each relevant row.
+              </Text>
+              <WelpersPerCategoryTable
+                rows={snap.welpersPerCategory}
+                totalWelpers={snap.users.welpers}
+              />
+            </Flex>
+          </Card>
+        </>
       ) : null}
 
       <SectionTitle>Recent admin actions</SectionTitle>

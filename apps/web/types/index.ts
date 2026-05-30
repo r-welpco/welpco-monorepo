@@ -335,6 +335,8 @@ export interface PublicServiceAreaInfo {
 export interface PublicWelperProfile {
   id: string;
   welperId: string;
+  /** Privacy-safe name for customer-facing UI (first name + last initial). */
+  displayName?: string;
   firstName: string | null;
   lastName: string | null;
   bio: string | null;

@@ -99,6 +99,7 @@ export interface WelperHeaderLabels {
   roleBadge?: string;
   tabs: {
     dashboard: string;
+    marketplace: string;
     messages: string;
     bookings: string;
     profile: string;
@@ -167,6 +168,7 @@ export interface WelperHeaderProps {
 
 const DEFAULT_WELPER_TABS = [
   { value: "dashboard", label: "Dashboard", href: "/dashboard" },
+  { value: "marketplace", label: "Marketplace", href: "/dashboard/marketplace" },
   { value: "messages", label: "Messages", href: "/dashboard/messages" },
   { value: "bookings", label: "Bookings", href: "/dashboard/bookings" },
   { value: "profile", label: "Profile", href: "/dashboard/profile" },
@@ -198,6 +200,7 @@ export function WelperHeader({
   const welperTabs = labels
     ? [
         { value: "dashboard" as const, label: labels.tabs.dashboard, href: "/dashboard" },
+        { value: "marketplace" as const, label: labels.tabs.marketplace, href: "/dashboard/marketplace" },
         { value: "messages" as const, label: labels.tabs.messages, href: "/dashboard/messages" },
         { value: "bookings" as const, label: labels.tabs.bookings, href: "/dashboard/bookings" },
         { value: "profile" as const, label: labels.tabs.profile, href: "/dashboard/profile" },

@@ -4,6 +4,8 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
@@ -28,6 +30,7 @@ import { NotificationCategory } from '../notification/entities';
 import { PaymentService } from '../payment/payment.service';
 import { CustomerProfileService } from '../profile-management/customer-profile/customer-profile.service';
 import { WelperProfileService } from '../profile-management/welper-profile/welper-profile.service';
+import { formatWelperDisplayNameForCustomer } from '../../common/display-name.util';
 import { UsersService } from '../user-management/users/users.service';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
 import { ApplicationSettingsService } from '../payment/application-settings.service';
@@ -44,6 +47,12 @@ import { getDisputeReportDeadlineAt } from './dispute-report-window';
 import { customerProfileAddressToBookingRecord } from './booking-address.util';
 import { resolveServiceTaxAddress } from '../payment/booking-tax-address.util';
 import type { Address } from '../../common/types';
+import { getBookingNotificationCopy, type BookingEmailType } from '@welpco/email';
+import {
+  buildBookingActionUrl,
+  getFrontendBaseUrl,
+} from '../notification/notification-locale.helper';
+import { JobPostingService } from '../job-posting/job-posting.service';
 
 /** Hours before scheduled time when free cancellation is no longer possible */
 const FREE_CANCELLATION_HOURS = 24;
@@ -78,6 +87,8 @@ export class BookingService {
     private readonly usersService: UsersService,
     private readonly s3Presigner: S3UrlPresignerService,
     private readonly backgroundCheckService: BackgroundCheckService,
+    @Inject(forwardRef(() => JobPostingService))
+    private readonly jobPostingService: JobPostingService,
   ) {}
 
   // ─── Helpers ──────────────────────────────────────────────────────────
@@ -246,6 +257,17 @@ export class BookingService {
     }
 
     return sanitized;
+  }
+
+  /** Public wrapper for marketplace job posting question validation. */
+  async validateServiceQuestionAnswers(
+    serviceQuestionCategoryId: string,
+    answers: Record<string, BookingAnswerValue>,
+  ): Promise<Record<string, BookingAnswerValue>> {
+    const serviceQuestions = await this.serviceQuestionsService.findByServiceCategory(
+      serviceQuestionCategoryId,
+    );
+    return this.buildValidatedBookingAnswers(serviceQuestions, answers);
   }
 
   /** Normalize time to HH:mm for consistent API contract */
@@ -494,6 +516,11 @@ export class BookingService {
       throw new BadRequestException('Cannot book your own service');
     }
 
+    const hasJobLinkage = !!(dto.jobPostingId && dto.jobApplicationId);
+    if ((dto.jobPostingId && !dto.jobApplicationId) || (!dto.jobPostingId && dto.jobApplicationId)) {
+      throw new BadRequestException('jobPostingId and jobApplicationId must both be provided');
+    }
+
     await this.paymentService.assertCustomerHasDefaultPaymentMethod(customerId);
 
     const serviceAddress = await this.resolveCustomerServiceAddress(customerId);
@@ -572,8 +599,31 @@ export class BookingService {
         notes: dto.notes ?? null,
       });
 
-      return bookingRepo.save(request);
+      const savedBooking = await bookingRepo.save(request);
+
+      if (hasJobLinkage && dto.jobPostingId && dto.jobApplicationId) {
+        await this.jobPostingService.linkBookingFromMarketplace(queryRunner.manager, {
+          customerId,
+          jobPostingId: dto.jobPostingId,
+          jobApplicationId: dto.jobApplicationId,
+          bookingId: savedBooking.id,
+          welperId: dto.welperId,
+          offeringId: dto.offeringId,
+        });
+      }
+
+      return savedBooking;
     });
+
+    if (hasJobLinkage && dto.jobPostingId && dto.jobApplicationId) {
+      await this.jobPostingService.notifyAfterBookingLinked({
+        jobPostingId: dto.jobPostingId,
+        jobApplicationId: dto.jobApplicationId,
+        bookingId: saved.id,
+        customerId,
+        welperId: dto.welperId,
+      });
+    }
 
     this.logger.log(`Booking ${saved.id} created by customer ${customerId} for welper ${dto.welperId}`);
     const customerName = await this.resolvePersonDisplayName('customer', customerId, 'A customer');
@@ -581,10 +631,9 @@ export class BookingService {
       saved,
       dto.welperId,
       'booking_created',
-      'New booking request',
-      'You have a new booking request.',
       { customerName },
       offering,
+      'booking_created',
     );
     return this.toResponse(saved, customerId, 'customer');
   }
@@ -692,8 +741,11 @@ export class BookingService {
     dateFrom?: string;
     dateTo?: string;
   }): Promise<{ data: BookingResponseDto[]; total: number; page: number; limit: number; totalPages: number }> {
-    const page = query.page ?? 1;
-    const limit = Math.min(query.limit ?? 20, 100);
+    const page = Number.isFinite(query.page) && (query.page ?? 0) > 0 ? query.page! : 1;
+    const limit =
+      Number.isFinite(query.limit) && (query.limit ?? 0) > 0
+        ? Math.min(query.limit!, 100)
+        : 20;
     const skip = (page - 1) * limit;
 
     const qb = this.bookingRepo.createQueryBuilder('b');
@@ -730,6 +782,63 @@ export class BookingService {
       limit,
       totalPages: Math.ceil(total / limit) || 1,
     };
+  }
+
+  async cancelByAdmin(
+    bookingId: string,
+    adminUserId: string,
+    reason?: string,
+  ): Promise<BookingResponseDto> {
+    const saved = await this.withTransaction(async (queryRunner) => {
+      const bookingRepo = queryRunner.manager.getRepository(BookingRequest);
+      const booking = await bookingRepo
+        .createQueryBuilder('b')
+        .setLock('pessimistic_write')
+        .where('b.id = :id', { id: bookingId })
+        .getOne();
+      if (!booking) {
+        throw new NotFoundException('Booking not found');
+      }
+      if (booking.status === BookingRequestStatus.DISPUTED) {
+        throw new BadRequestException(
+          'Resolve the dispute instead of cancelling the booking directly.',
+        );
+      }
+      if (
+        ![
+          BookingRequestStatus.PENDING,
+          BookingRequestStatus.ACCEPTED,
+          BookingRequestStatus.IN_PROGRESS,
+        ].includes(booking.status)
+      ) {
+        throw new BadRequestException(
+          `Cannot admin-cancel a booking in "${booking.status}" status`,
+        );
+      }
+
+      booking.status = BookingRequestStatus.CANCELLED;
+      booking.cancelledBy = adminUserId;
+      booking.cancelledAt = new Date();
+      booking.cancellationReason = reason?.trim() || 'Cancelled by support';
+
+      return bookingRepo.save(booking);
+    });
+
+    await this.paymentService.onBookingCanceled(saved.id);
+    await Promise.all([
+      this.notifyBookingEvent(saved, saved.customerId, 'booking_cancelled', {
+        cancellationReason: saved.cancellationReason ?? undefined,
+      }, undefined, 'booking_cancelled'),
+      this.notifyBookingEvent(saved, saved.welperId, 'booking_cancelled', {
+        cancellationReason: saved.cancellationReason ?? undefined,
+      }, undefined, 'booking_cancelled'),
+    ]);
+
+    const dto = this.toResponse(saved, saved.customerId, 'customer');
+    dto.availableActions = [];
+    await this.attachPaymentAndReceipt(dto, saved.id);
+    await this.attachDisputeReportWindow(dto, saved);
+    return dto;
   }
 
   // ─── Welper Actions ───────────────────────────────────────────────────
@@ -810,7 +919,7 @@ export class BookingService {
 
     this.logger.log(`Booking ${bookingId} accepted by welper ${welperId}`);
     const welperName = await this.resolvePersonDisplayName('welper', saved.welperId, 'Your welper');
-    await this.notifyBookingEvent(saved, saved.customerId, 'booking_accepted', 'Booking accepted', 'Your booking was accepted.', { welperName });
+    await this.notifyBookingEvent(saved, saved.customerId, 'booking_accepted', { welperName }, undefined, 'booking_accepted');
     return this.toResponse(saved, welperId, 'welper');
   }
 
@@ -827,7 +936,7 @@ export class BookingService {
     });
     this.logger.log(`Booking ${bookingId} declined by welper ${welperId}`);
     await this.paymentService.onBookingCanceled(saved.id);
-    await this.notifyBookingEvent(saved, saved.customerId, 'booking_declined', 'Booking declined', 'Your booking request was declined.', { declineReason: reason ?? undefined });
+    await this.notifyBookingEvent(saved, saved.customerId, 'booking_declined', { declineReason: reason ?? undefined }, undefined, 'booking_declined');
     return this.toResponse(saved, welperId, 'welper');
   }
 
@@ -843,7 +952,7 @@ export class BookingService {
     });
     this.logger.log(`Booking ${bookingId} checked in by welper ${welperId}`);
     const welperNameIn = await this.resolvePersonDisplayName('welper', saved.welperId, 'Your welper');
-    await this.notifyBookingEvent(saved, saved.customerId, 'booking_checked_in', 'Welper checked in', 'Your welper has checked in.', { welperName: welperNameIn });
+    await this.notifyBookingEvent(saved, saved.customerId, 'booking_checked_in', { welperName: welperNameIn }, undefined, 'booking_checked_in');
     return this.toResponse(saved, welperId, 'welper');
   }
 
@@ -1074,6 +1183,17 @@ export class BookingService {
         }
         await receiptRepo.delete({ bookingId });
       });
+      await this.notificationService.emitForUser(bookingForTax.customerId, {
+        category: NotificationCategory.PAYMENT,
+        paymentEmailType: 'payment_failed',
+        paymentEmailVariables: {
+          failureReason: err instanceof Error ? err.message : String(err),
+        },
+        metadata: {
+          bookingId,
+          kind: 'receipt_capture_failed',
+        },
+      });
       throw err;
     }
 
@@ -1086,12 +1206,20 @@ export class BookingService {
       savedBooking,
       savedBooking.customerId,
       'booking_service_receipt',
-      'Service receipt',
-      `Your welper sent a service receipt. Amount: $${totalDollars} CAD. Open your booking to review or dispute if something looks wrong.`,
       {
         totalPrice: totalDollars,
         receiptTotalCents: String(totalCents),
       },
+      undefined,
+      'booking_service_receipt',
+    );
+    await this.notifyBookingEvent(
+      savedBooking,
+      savedBooking.welperId,
+      'booking_service_submitted',
+      { totalPrice: totalDollars },
+      undefined,
+      'booking_service_submitted',
     );
 
     const resDto = this.toResponse(savedBooking, welperId, 'welper');
@@ -1178,7 +1306,14 @@ export class BookingService {
       );
     }
     const notifyUserId = userId === savedBooking.customerId ? savedBooking.welperId : savedBooking.customerId;
-    await this.notifyBookingEvent(savedBooking, notifyUserId, 'booking_cancelled', 'Booking cancelled', 'A booking was cancelled.', { cancellationReason: reason ?? undefined });
+    await this.notifyBookingEvent(
+      savedBooking,
+      notifyUserId,
+      'booking_cancelled',
+      { cancellationReason: reason ?? undefined },
+      undefined,
+      'booking_cancelled',
+    );
     return this.toResponse(savedBooking, userId, role);
   }
 
@@ -1187,21 +1322,14 @@ export class BookingService {
   private async notifyBookingEvent(
     booking: BookingRequest,
     userId: string,
-    emailType:
-      | 'booking_created'
-      | 'booking_accepted'
-      | 'booking_declined'
-      | 'booking_cancelled'
-      | 'booking_checked_in'
-      | 'booking_completed'
-      | 'booking_service_receipt',
-    title: string,
-    body: string,
+    emailType: BookingEmailType,
     extraVars: Record<string, string | undefined> = {},
     offering?: { serviceDescription?: string; hourlyRate?: number | null },
+    kind?: string,
   ): Promise<void> {
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-    const actionUrl = `${baseUrl}/dashboard/bookings/${booking.id}`;
+    const locale = await this.notificationService.resolveLocaleForUser(userId);
+    const baseUrl = getFrontendBaseUrl();
+    const actionUrl = buildBookingActionUrl(baseUrl, booking.id, locale);
     let serviceName = offering?.serviceDescription?.slice(0, 80) || 'Service';
     if (!offering && booking.serviceOfferingId) {
       try {
@@ -1224,13 +1352,14 @@ export class BookingService {
       address: addressStr,
       ...extraVars,
     };
+    const copy = getBookingNotificationCopy(emailType, locale, variables);
     try {
       await this.notificationService.send({
         userId,
         category: NotificationCategory.BOOKING,
-        title,
-        body,
-        metadata: { bookingId: booking.id, actionUrl },
+        title: copy.title,
+        body: copy.body,
+        metadata: { bookingId: booking.id, actionUrl, kind: kind ?? emailType },
         bookingEmailType: emailType,
         bookingEmailVariables: variables,
       });
@@ -1238,7 +1367,6 @@ export class BookingService {
       this.logger.warn(`Failed to send booking notification: ${(err as Error).message}`);
     }
   }
-
   // ─── Conflict Detection ───────────────────────────────────────────────
 
   /**
@@ -1354,8 +1482,7 @@ export class BookingService {
         if (n) return n;
       } else {
         const p = await this.welperProfileService.findByWelperId(id);
-        const n = [p.firstName, p.lastName].filter(Boolean).join(' ').trim();
-        if (n) return n;
+        return formatWelperDisplayNameForCustomer(p.firstName, p.lastName, fallback);
       }
     } catch {
       /* use fallback chain */

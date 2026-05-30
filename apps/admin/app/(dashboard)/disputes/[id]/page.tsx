@@ -1,9 +1,73 @@
+import {
+  Badge,
+  Button,
+  Card,
+  Flex,
+  Grid,
+  Heading,
+  Text,
+} from "@welpco/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDisputeById, type DisputeItem, type DisputeParticipantSummary } from "@/lib/services/dispute-service";
+import {
+  AdminInfoCallout,
+  AdminSuccessCallout,
+  AdminWarningCallout,
+} from "@/components/admin-callout";
+import { AdminTimeline } from "@/components/admin-timeline";
+import { DetailRow, DetailTable } from "@/components/detail-rows";
+import {
+  formatAdminDateTime,
+  formatAdminMoneyCents,
+  formatAdminStatusLabel,
+} from "@/lib/admin-format";
+import { buildDisputeTimeline } from "@/lib/dispute-detail-utils";
+import {
+  getDisputeById,
+  type DisputeItem,
+  type DisputeParticipantSummary,
+} from "@/lib/services/dispute-service";
 import { ResolutionForm } from "./resolution-form";
 
 export const dynamic = "force-dynamic";
+
+function participantName(p: DisputeParticipantSummary): string {
+  return [p.firstName, p.lastName].filter(Boolean).join(" ") || "—";
+}
+
+function ParticipantCard({
+  title,
+  participant,
+}: {
+  title: string;
+  participant: DisputeParticipantSummary;
+}) {
+  return (
+    <Card size="2" title={title}>
+      <DetailTable>
+        <DetailRow label="Name">{participantName(participant)}</DetailRow>
+        <DetailRow label="User ID">
+          <Link href={`/users/${participant.userId}`}>
+            <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+              {participant.userId}
+            </Text>
+          </Link>
+        </DetailRow>
+        <DetailRow label="Email">
+          {participant.email ? (
+            <a href={`mailto:${participant.email}`}>{participant.email}</a>
+          ) : (
+            <Text size="2" color="gray">
+              Not on account
+            </Text>
+          )}
+        </DetailRow>
+        <DetailRow label="Phone">{participant.phoneDisplay ?? "—"}</DetailRow>
+        <DetailRow label="Role">{participant.role}</DetailRow>
+      </DetailTable>
+    </Card>
+  );
+}
 
 export default async function DisputeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -14,146 +78,180 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
     notFound();
   }
 
-  const canResolve = dispute.status !== "resolved";
-
-  function partyBlock(title: string, p: DisputeParticipantSummary | undefined, userLinkPrefix: string) {
-    if (!p) return null;
-    const name = [p.firstName, p.lastName].filter(Boolean).join(" ") || "—";
-    return (
-      <div className="admin-card" style={{ marginTop: "1rem" }}>
-        <h2 style={{ marginTop: 0, fontSize: "1rem" }}>{title}</h2>
-        <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.9rem" }}>
-          <li>
-            <strong>Name:</strong> {name}
-          </li>
-          <li>
-            <strong>User ID:</strong>{" "}
-            <Link href={`${userLinkPrefix}/${p.userId}`} style={{ fontFamily: "ui-monospace, monospace" }}>
-              {p.userId}
-            </Link>
-          </li>
-          {p.email ? (
-            <li>
-              <strong>Email:</strong>{" "}
-              <a href={`mailto:${p.email}`}>{p.email}</a>
-            </li>
-          ) : (
-            <li>
-              <strong>Email:</strong> — (not on account)
-            </li>
-          )}
-          <li>
-            <strong>Phone:</strong> {p.phoneDisplay ?? "—"}
-          </li>
-        </ul>
-      </div>
-    );
-  }
+  const canResolve = dispute.status === "open" || dispute.status === "in-review";
+  const timelineEvents = buildDisputeTimeline(dispute);
+  const evidence = dispute.evidence ?? [];
 
   return (
-    <div>
-      <p style={{ marginTop: 0 }}>
+    <Flex direction="column" gap="4">
+      <Text size="2">
         <Link href="/disputes">← Disputes</Link>
-      </p>
-      <h1 style={{ marginBottom: "0.25rem" }}>{dispute.subject}</h1>
-      <p style={{ color: "var(--admin-muted)" }}>
-        <span className="badge">{dispute.status}</span> · Booking{" "}
-        <Link href={`/bookings/${dispute.bookingId}`} style={{ fontFamily: "ui-monospace, monospace" }}>
-          {dispute.bookingId}
-        </Link>
-        {dispute.bookingStatus ? (
-          <>
-            {" "}
-            · booking <span className="badge">{dispute.bookingStatus}</span>
-          </>
-        ) : null}
-      </p>
+      </Text>
+
+      <Flex direction="column" gap="2">
+        <Heading size="6">{dispute.subject}</Heading>
+        <Flex gap="2" wrap="wrap" align="center">
+          <Badge variant="soft">{dispute.status}</Badge>
+          <Badge variant="soft" color="gray">
+            {dispute.category}
+          </Badge>
+          {dispute.bookingStatus ? (
+            <Badge variant="soft" color="gray">
+              Booking: {formatAdminStatusLabel(dispute.bookingStatus)}
+            </Badge>
+          ) : null}
+        </Flex>
+        <Flex gap="2" wrap="wrap">
+          <Button asChild size="1" variant="soft">
+            <Link href={`/bookings/${dispute.bookingId}`}>Open booking</Link>
+          </Button>
+          <Button asChild size="1" variant="soft">
+            <Link href={`/users/${dispute.filerId}`}>View filer</Link>
+          </Button>
+        </Flex>
+      </Flex>
+
       {dispute.bookingCancelledWithOpenDispute ? (
-        <div className="admin-callout" role="status">
-          <strong>Cancelled while disputed.</strong> This booking was cancelled before the dispute was closed
-          (legacy or edge case). The booking stays <code>cancelled</code>; record a resolution to close the dispute.
-          Participants can no longer cancel while a dispute is open.
-        </div>
+        <AdminWarningCallout
+          message={
+            <>
+              <Text weight="bold">Cancelled while disputed.</Text> This booking was cancelled before
+              the dispute was closed. Record a resolution to close the dispute.
+            </>
+          }
+        />
       ) : null}
+
       {dispute.capturedPayment ? (
-        <div className="admin-callout" role="status" style={{ marginTop: "1rem" }}>
-          <strong>Captured payments.</strong> Total charged on file:{" "}
-          <code>
-            {(dispute.capturedPayment.totalCents / 100).toFixed(2)} {dispute.capturedPayment.currency.toUpperCase()}
-          </code>
-          . Partial refunds apply to the latest capture first, then earlier captures, up to this total.
-        </div>
+        <AdminInfoCallout
+          message={
+            <>
+              <Text weight="bold">Captured payments on file:</Text>{" "}
+              {formatAdminMoneyCents(
+                dispute.capturedPayment.totalCents,
+                dispute.capturedPayment.currency,
+              )}
+              . Partial refunds apply to the latest capture first.
+            </>
+          }
+        />
       ) : null}
 
-      {partyBlock("Customer", dispute.customer, "/users")}
-      {partyBlock("Welper", dispute.welper, "/users")}
+      <Card size="2" title="Timeline">
+        <AdminTimeline events={timelineEvents} />
+      </Card>
 
-      <div className="admin-card" style={{ marginTop: "1.25rem" }}>
-        <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Dispute details</h2>
-        <p>
-          <strong>Category:</strong> {dispute.category}
-        </p>
-        <p>
-          <strong>Filer:</strong> {dispute.filerType} ·{" "}
-          <Link href={`/users/${dispute.filerId}`} style={{ fontFamily: "ui-monospace, monospace" }}>
-            {dispute.filerId}
-          </Link>
-        </p>
-        {dispute.description ? (
-          <p style={{ whiteSpace: "pre-wrap" }}>
-            <strong>Description</strong>
-            <br />
-            {dispute.description}
-          </p>
+      <Card size="2" title="Dispute details">
+        <DetailTable>
+          <DetailRow label="Dispute ID">
+            <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+              {dispute.id}
+            </Text>
+          </DetailRow>
+          <DetailRow label="Booking">
+            <Link href={`/bookings/${dispute.bookingId}`}>
+              <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                {dispute.bookingId}
+              </Text>
+            </Link>
+          </DetailRow>
+          <DetailRow label="Category">{dispute.category}</DetailRow>
+          <DetailRow label="Filer">
+            {dispute.filerType} ·{" "}
+            <Link href={`/users/${dispute.filerId}`}>
+              <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                {dispute.filerId}
+              </Text>
+            </Link>
+          </DetailRow>
+          <DetailRow label="Filed">{formatAdminDateTime(dispute.createdAt)}</DetailRow>
+          <DetailRow label="Last updated">{formatAdminDateTime(dispute.updatedAt)}</DetailRow>
+          <DetailRow label="Description">
+            <Text size="2" style={{ whiteSpace: "pre-wrap" }}>
+              {dispute.description?.trim() || "—"}
+            </Text>
+          </DetailRow>
+        </DetailTable>
+      </Card>
+
+      <Grid columns={{ initial: "1", md: "2" }} gap="4">
+        {dispute.customer ? (
+          <ParticipantCard title="Customer" participant={dispute.customer} />
         ) : null}
-        <p style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}>
-          Created {new Date(dispute.createdAt).toLocaleString()} · Updated{" "}
-          {new Date(dispute.updatedAt).toLocaleString()}
-        </p>
-      </div>
+        {dispute.welper ? <ParticipantCard title="Welper" participant={dispute.welper} /> : null}
+      </Grid>
+
+      {evidence.length > 0 ? (
+        <Card size="2" title={`Evidence (${evidence.length})`}>
+          <DetailTable>
+            {evidence.map((item, index) => (
+              <DetailRow key={item.id ?? item.key ?? item.messageId ?? index} label={item.type}>
+                {item.type === "file" && item.key ? (
+                  item.signedUrl ? (
+                    <Link href={item.signedUrl} target="_blank" rel="noopener noreferrer">
+                      <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                        {item.key}
+                      </Text>
+                    </Link>
+                  ) : (
+                    <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                      {item.key}
+                    </Text>
+                  )
+                ) : item.messageId || item.id ? (
+                  <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                    Message {item.messageId ?? item.id}
+                  </Text>
+                ) : (
+                  <Text size="2" color="gray">
+                    —
+                  </Text>
+                )}
+              </DetailRow>
+            ))}
+          </DetailTable>
+        </Card>
+      ) : null}
 
       {dispute.resolution ? (
-        <div className="admin-card" style={{ marginTop: "1.25rem" }}>
-          <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Resolution on file</h2>
-          <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.9rem" }}>
-            <li>
-              <strong>Type:</strong> {dispute.resolution.resolutionType.replace(/_/g, " ")}
-            </li>
-            <li>
-              <strong>Resolved at:</strong> {new Date(dispute.resolution.resolvedAt).toLocaleString()}
-            </li>
+        <Card size="2" title="Resolution on file">
+          <DetailTable>
+            <DetailRow label="Type">
+              {formatAdminStatusLabel(dispute.resolution.resolutionType)}
+            </DetailRow>
+            <DetailRow label="Resolved at">
+              {formatAdminDateTime(dispute.resolution.resolvedAt)}
+            </DetailRow>
             {dispute.resolution.resolvedById ? (
-              <li>
-                <strong>Resolved by:</strong>{" "}
-                <Link
-                  href={`/users/${dispute.resolution.resolvedById}`}
-                  style={{ fontFamily: "ui-monospace, monospace" }}
-                >
-                  {dispute.resolution.resolvedById}
+              <DetailRow label="Resolved by">
+                <Link href={`/users/${dispute.resolution.resolvedById}`}>
+                  <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                    {dispute.resolution.resolvedById}
+                  </Text>
                 </Link>
-              </li>
+              </DetailRow>
             ) : null}
             {dispute.resolution.refundAmount != null ? (
-              <li>
-                <strong>Refund amount (recorded):</strong> {dispute.resolution.refundAmount}
-              </li>
+              <DetailRow label="Refund amount (recorded)">
+                {dispute.resolution.refundAmount}
+              </DetailRow>
             ) : null}
             {dispute.resolution.notes ? (
-              <li style={{ whiteSpace: "pre-wrap" }}>
-                <strong>Notes:</strong> {dispute.resolution.notes}
-              </li>
+              <DetailRow label="Notes">
+                <Text size="2" style={{ whiteSpace: "pre-wrap" }}>
+                  {dispute.resolution.notes}
+                </Text>
+              </DetailRow>
             ) : null}
-          </ul>
-        </div>
+          </DetailTable>
+        </Card>
       ) : null}
 
       {canResolve ? (
         <ResolutionForm disputeId={dispute.id} dispute={dispute} />
       ) : (
-        <p className="ok" style={{ marginTop: "1rem" }}>
-          This dispute is already resolved.
-        </p>
+        <AdminSuccessCallout message="This dispute is already resolved." />
       )}
-    </div>
+    </Flex>
   );
 }

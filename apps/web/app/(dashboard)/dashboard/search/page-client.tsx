@@ -34,6 +34,7 @@ import { reverseGeocode } from "@/lib/services/geocode.service";
 import { ApiClientError } from "@/lib/api/client";
 import { transformCategoriesToOptions, validateCategoryId } from "@/lib/utils/category-utils";
 import type { SearchResultItem } from "@/types";
+import { maskCustomerWelperName, publicWelperDisplayName } from "@/lib/display-name";
 import { Button } from "@welpco/ui/button";
 import { IconButton } from "@welpco/ui/icon-button";
 import { Text } from "@welpco/ui/text";
@@ -41,14 +42,9 @@ import { Heading } from "@welpco/ui/heading";
 import { Callout } from "@welpco/ui/callout";
 import { Card } from "@welpco/ui/card";
 import { Link as UiLink } from "@welpco/ui/link";
+import { Badge } from "@welpco/ui/badge";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogClose,
-} from "@welpco/ui/dialog";
-import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, SlidersHorizontal, ChevronDown, ChevronUp } from "lucide-react";
 import { ErrorBoundary } from "@/components/error-boundary";
 import styles from "./search.module.css";
 
@@ -64,6 +60,7 @@ const DEFAULT_SEARCH_COUNTRY_CODE =
 function mapToWelperProfileDialogProfile(
   data: {
     welperId: string;
+    displayName?: string;
     firstName: string | null;
     lastName: string | null;
     bio: string | null;
@@ -84,6 +81,7 @@ function mapToWelperProfileDialogProfile(
   if (!data) return null;
   return {
     welperId: data.welperId,
+    displayName: publicWelperDisplayName(data),
     firstName: data.firstName,
     lastName: data.lastName,
     bio: data.bio,
@@ -138,7 +136,7 @@ export default function DashboardSearchPageClient() {
   const [viewMode, setViewMode] = useState<SearchResultsViewMode>("list");
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   // Local state for postal code input so we don't push to URL on every keystroke (avoids focus loss)
   const [localPostalCode, setLocalPostalCode] = useState(postalCode ?? "");
 
@@ -431,7 +429,7 @@ export default function DashboardSearchPageClient() {
     if (!data?.items) return [];
     return data.items.map((item: SearchResultItem) => ({
       welperId: item.welperId,
-      name: item.name,
+      name: maskCustomerWelperName(item.name),
       title: item.title,
       location: item.location,
       hourlyRate: item.hourlyRate,
@@ -465,6 +463,12 @@ export default function DashboardSearchPageClient() {
     hasSearchCenter && !isLoading && !isError && cardItems.length > 0;
   const showLocationPrompt = !hasSearchCenter;
 
+  const hasActiveFilters =
+    priceRangeFromUrl !== "any" ||
+    ratingFromUrl !== "any" ||
+    !!validCategoryId ||
+    !!q?.trim();
+
   const filtersSidebar = (
     <SearchFiltersSidebar
       value={filterStateFromUrl}
@@ -479,7 +483,7 @@ export default function DashboardSearchPageClient() {
       keyword={q ?? undefined}
       onKeywordChange={handleKeywordChange}
       showRadius={false}
-      compact
+      layout="panel"
     />
   );
 
@@ -512,68 +516,60 @@ export default function DashboardSearchPageClient() {
             </Text>
           </Box>
 
-          {/* Hero is full-width on every breakpoint. The filter sidebar
-              renders inline on md+ in the row below; on mobile it lives
-              inside a Dialog opened by a toolbar button. Decision 5. */}
-          <Flex
-            gap="6"
-            wrap="wrap"
-            align="stretch"
-            direction={{ initial: "column", md: "row" }}
-            style={{ width: "100%", minWidth: 0 }}
-          >
-            <Box style={{ flex: "2 1 400px", minWidth: 0 }}>
-              <SearchHero
-                fillWidth
-                mode="location"
-                value={localPostalCode}
-                onChange={handlePostalChange}
-                onSearch={handlePostalSubmit}
-                onCategorySelect={(id) => handleCategoryChange(id)}
-                title="Find your Welper"
-                categories={heroCategories}
-                loading={isLoading}
-                onUseMyLocation={handleUseMyLocation}
-                locationError={
-                  postalError
-                    ? isGeocodingUnavailable
-                      ? "Location lookup isn't available right now. Please try again later."
-                      : "We couldn't find that postal code. Try another or use your location."
-                    : locationError
-                }
-                locationLoading={locationLoading}
-              />
-            </Box>
-            {/* Desktop sidebar — visible on md+ only. */}
-            <Box
-              display={{ initial: "none", md: "block" }}
-              style={{ flex: "1 1 280px", minWidth: 0 }}
-            >
-              {filtersSidebar}
-            </Box>
-          </Flex>
+          <Flex direction="column" gap="4" style={{ width: "100%", minWidth: 0 }}>
+            <SearchHero
+              fillWidth
+              mode="location"
+              value={localPostalCode}
+              onChange={handlePostalChange}
+              onSearch={handlePostalSubmit}
+              onCategorySelect={(id) => handleCategoryChange(id)}
+              title="Find your Welper"
+              categories={heroCategories}
+              loading={isLoading}
+              onUseMyLocation={handleUseMyLocation}
+              locationError={
+                postalError
+                  ? isGeocodingUnavailable
+                    ? "Location lookup isn't available right now. Please try again later."
+                    : "We couldn't find that postal code. Try another or use your location."
+                  : locationError
+              }
+              locationLoading={locationLoading}
+            />
 
-          {/* Mobile filter trigger — opens the sheet. Hidden on md+. */}
-          <Box display={{ initial: "block", md: "none" }}>
-            <Dialog open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-              <DialogTrigger>
-                <Button variant="soft" color="gray" size="2">
+            <Flex justify="end" style={{ width: "100%" }}>
+              <Button
+                variant="soft"
+                color="gray"
+                size="2"
+                onClick={() => setFiltersOpen((open) => !open)}
+                aria-expanded={filtersOpen}
+                aria-controls="search-filters-panel"
+              >
+                <Flex align="center" gap="2">
                   <SlidersHorizontal size={16} aria-hidden="true" />
-                  Filters
-                </Button>
-              </DialogTrigger>
-              <DialogContent title="Filters" description="Narrow your results.">
-                <Box>{filtersSidebar}</Box>
-                <Flex justify="end" gap="3" wrap="wrap" mt="4">
-                  <DialogClose>
-                    <Button variant="soft" color="gray" size="2">
-                      Done
-                    </Button>
-                  </DialogClose>
+                  <span>{filtersOpen ? "Hide filters" : "Show filters"}</span>
+                  {hasActiveFilters && (
+                    <Badge variant="soft" color={SEMANTIC_COLOR.primary} size="1">
+                      Active
+                    </Badge>
+                  )}
+                  {filtersOpen ? (
+                    <ChevronUp size={16} aria-hidden="true" />
+                  ) : (
+                    <ChevronDown size={16} aria-hidden="true" />
+                  )}
                 </Flex>
-              </DialogContent>
-            </Dialog>
-          </Box>
+              </Button>
+            </Flex>
+
+            {filtersOpen && (
+              <Box id="search-filters-panel" style={{ width: "100%", minWidth: 0 }}>
+                {filtersSidebar}
+              </Box>
+            )}
+          </Flex>
 
           {showLocationPrompt && (
             <Card size="4" variant="surface" style={{ width: "100%", maxWidth: "560px", minWidth: 0 }}>
@@ -693,10 +689,10 @@ export default function DashboardSearchPageClient() {
             {showEmpty && (
               <SearchEmptyState
                 title="No Welpers found"
-                description="Try adjusting your search or filters, or browse by category above."
+                description="Try adjusting your search or filters, or post a job and let welpers apply."
                 primaryAction={{
-                  label: "Browse categories",
-                  onClick: handleClearSearchAndFilters,
+                  label: "Post a job",
+                  onClick: () => router.push("/dashboard/marketplace/new"),
                 }}
                 secondaryAction={
                   q ||
@@ -710,7 +706,10 @@ export default function DashboardSearchPageClient() {
                         label: "Clear search & filters",
                         onClick: handleClearSearchAndFilters,
                       }
-                    : undefined
+                    : {
+                        label: "Browse categories",
+                        onClick: handleClearSearchAndFilters,
+                      }
                 }
               />
             )}

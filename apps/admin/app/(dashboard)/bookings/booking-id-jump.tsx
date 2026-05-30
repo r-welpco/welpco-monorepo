@@ -1,7 +1,9 @@
 "use client";
 
+import { Button, Flex, Text } from "@welpco/ui";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { NativeFormField, nativeInputProps } from "@/components/native-form-field";
 
 export function BookingIdJump() {
   const router = useRouter();
@@ -20,29 +22,26 @@ export function BookingIdJump() {
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="admin-card"
-      style={{ maxWidth: 480, display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "flex-end" }}
-    >
-      <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem", flex: "1 1 200px" }}>
-        Open by booking ID
-        <input
-          className="admin-input"
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-          placeholder="UUID"
-          style={{ padding: "0.5rem", borderRadius: 6, border: "1px solid var(--admin-border)" }}
-        />
-      </label>
-      <button type="submit" className="btn">
-        Go
-      </button>
-      {err ? (
-        <p className="err" style={{ flexBasis: "100%", margin: 0 }}>
-          {err}
-        </p>
-      ) : null}
+    <form onSubmit={onSubmit}>
+      <Flex gap="4" wrap="wrap" align="end">
+        <NativeFormField label="Open by booking ID">
+          <input
+            value={id}
+            onChange={(e) => setId(e.target.value)}
+            placeholder="UUID"
+            autoComplete="off"
+            {...nativeInputProps()}
+          />
+        </NativeFormField>
+        <Button type="submit" size="1" variant="soft">
+          Go
+        </Button>
+        {err ? (
+          <Text size="1" color="red" style={{ flexBasis: "100%" }}>
+            {err}
+          </Text>
+        ) : null}
+      </Flex>
     </form>
   );
 }

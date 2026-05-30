@@ -25,12 +25,15 @@ import {
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import styles from "./booking-wizard.module.css";
 import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
+import { publicWelperDisplayName } from "@/lib/display-name";
 import { useCreateBooking, useServiceQuestions } from "@/lib/hooks/use-bookings";
+import { useBookingHandoff } from "@/lib/hooks/use-job-posting";
 import { useCustomerProfile } from "@/lib/hooks/use-profile";
 import { useAuthStore } from "@/stores/authStore";
 import { ApiClientError } from "@/lib/api/client";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
+import { JobPostingReviewSummary } from "@/components/features/marketplace/job-posting-review-summary";
 import { QuestionField } from "@/components/features/booking/question-field";
 import {
   areRequiredServiceQuestionsAnswered,
@@ -86,14 +89,23 @@ function RequiredMarker() {
 interface NewBookingPageClientProps {
   welperId?: string;
   offeringId?: string;
+  jobId?: string;
+  applicationId?: string;
 }
 
 export default function NewBookingPageClient({
-  welperId,
-  offeringId,
+  welperId: welperIdProp,
+  offeringId: offeringIdProp,
+  jobId,
+  applicationId,
 }: NewBookingPageClientProps) {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { data: handoff, isLoading: handoffLoading } = useBookingHandoff(jobId, applicationId);
+  const welperId = welperIdProp ?? handoff?.welperId;
+  const offeringId = offeringIdProp ?? handoff?.offeringId;
+  const isMarketplaceHandoff = !!(jobId && applicationId);
+
   const { data: myCustomerProfile, isSuccess: myProfileLoaded } = useCustomerProfile(
     user?.id ?? "",
     user?.role === "customer",
@@ -122,10 +134,10 @@ export default function NewBookingPageClient({
   const bookable = useBookableAction();
 
   // ── Derived values ───────────────────────────────────────────────────
-  const displayName = useMemo(() => {
-    if (!profile) return "Welper";
-    return [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Welper";
-  }, [profile]);
+  const displayName = useMemo(
+    () => publicWelperDisplayName(profile),
+    [profile],
+  );
 
   const selectedOffering = useMemo(() => {
     if (!profile?.serviceOfferings) return null;
@@ -141,6 +153,21 @@ export default function NewBookingPageClient({
     }
   }, [offeringId, profile?.serviceOfferings, selectedOfferingId]);
 
+  useEffect(() => {
+    if (!handoff) return;
+    setScheduledDate(handoff.scheduledDate);
+    setStartTime(handoff.scheduledStartTime);
+    setEndTime(handoff.scheduledEndTime);
+    setAnswers(handoff.answers ?? {});
+    setSelectedQuestionCategoryId(handoff.serviceQuestionCategoryId);
+    if (handoff.offeringId) {
+      setSelectedOfferingId(handoff.offeringId);
+    }
+    if (handoff.notes) {
+      setNotes(handoff.notes);
+    }
+  }, [handoff]);
+
   const questionCategoryOptions = useMemo(() => {
     if (!selectedOffering) return [];
     return selectedOffering.subcategories && selectedOffering.subcategories.length > 0
@@ -153,6 +180,7 @@ export default function NewBookingPageClient({
   const serviceTypeIsReadOnly = offeringSubcategoryCount === 1;
 
   useEffect(() => {
+    if (isMarketplaceHandoff) return;
     if (!selectedOffering) {
       setSelectedQuestionCategoryId((prev) => (prev === "" ? prev : ""));
       return;
@@ -168,15 +196,37 @@ export default function NewBookingPageClient({
       setSelectedQuestionCategoryId(nextCategoryId);
       setAnswers({});
     }
-  }, [questionCategoryOptions, selectedOffering, selectedQuestionCategoryId]);
+  }, [
+    isMarketplaceHandoff,
+    questionCategoryOptions,
+    selectedOffering,
+    selectedQuestionCategoryId,
+  ]);
 
-  const serviceCategoryId = selectedQuestionCategoryId || undefined;
+  const serviceCategoryId =
+    isMarketplaceHandoff && handoff?.serviceQuestionCategoryId
+      ? handoff.serviceQuestionCategoryId
+      : selectedQuestionCategoryId || undefined;
   const {
     data: serviceQuestions,
     isLoading: serviceQuestionsLoading,
     isError: serviceQuestionsError,
     refetch: refetchServiceQuestions,
   } = useServiceQuestions(serviceCategoryId);
+
+  useEffect(() => {
+    if (!isMarketplaceHandoff || !handoff || !serviceQuestions?.length) return;
+    setAnswers((prev) => {
+      const next = { ...prev };
+      for (const sq of serviceQuestions) {
+        const val = handoff.answers[sq.question.id] ?? handoff.answers[sq.questionId];
+        if (val !== undefined) {
+          next[sq.question.id] = val;
+        }
+      }
+      return next;
+    });
+  }, [handoff, isMarketplaceHandoff, serviceQuestions]);
 
   const displayQuestions = useMemo(() => {
     if (!serviceQuestions) return [];
@@ -294,6 +344,9 @@ export default function NewBookingPageClient({
           durationMinutes: durationMinutes ?? undefined,
           notes: notes.trim() || undefined,
           timezoneOffsetMinutes: -(new Date().getTimezoneOffset()),
+          ...(jobId && applicationId
+            ? { jobPostingId: jobId, jobApplicationId: applicationId }
+            : {}),
         }),
       );
       // bookable.run swallows EmailVerificationRequiredError and surfaces the
@@ -323,6 +376,8 @@ export default function NewBookingPageClient({
     notes,
     answers,
     serviceQuestions,
+    jobId,
+    applicationId,
     createBooking,
     bookable,
     router,
@@ -340,6 +395,13 @@ export default function NewBookingPageClient({
 
   // No welper selected
   if (!welperId) {
+    if (isMarketplaceHandoff && handoffLoading) {
+      return pageChrome(
+        <Box py="8">
+          <Text>Loading booking details…</Text>
+        </Box>,
+      );
+    }
     return pageChrome(
       <Flex direction="column" gap="6">
         <Heading as="h1" size="7">
@@ -529,9 +591,35 @@ export default function NewBookingPageClient({
             New booking
           </Heading>
           <Text as="p" size="2" color="gray">
-            Schedule a booking with {displayName}
+            {isMarketplaceHandoff && handoff?.jobTitle
+              ? `Review and send booking request for "${handoff.jobTitle}"`
+              : `Schedule a booking with ${displayName}`}
           </Text>
         </Box>
+
+        {isMarketplaceHandoff && handoff?.jobTitle && (
+          <Callout.Root color="blue" variant="surface">
+            <Callout.Text>
+              This booking is linked to your marketplace job. Confirm the details below, then send the request.
+            </Callout.Text>
+          </Callout.Root>
+        )}
+
+        {isMarketplaceHandoff && handoff && (
+          <JobPostingReviewSummary
+            title={handoff.jobTitle}
+            scheduledDate={handoff.scheduledDate}
+            scheduledStartTime={handoff.scheduledStartTime}
+            scheduledEndTime={handoff.scheduledEndTime}
+            durationMinutes={handoff.durationMinutes}
+            locationAddress={handoff.locationAddress}
+            locationCity={handoff.locationCity}
+            locationRegion={handoff.locationRegion}
+            showFullAddress
+            answers={handoff.answers ?? {}}
+            serviceQuestionCategoryId={handoff.serviceQuestionCategoryId}
+          />
+        )}
 
         {/* Welper info card */}
         <Card size="3" variant="surface">

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../../common/auth';
 import { BookingRequest } from './entities/booking-request.entity';
@@ -15,6 +15,7 @@ import { WelperProfileModule } from '../profile-management/welper-profile/welper
 import { UsersModule } from '../user-management/users/users.module';
 import { EmailVerifiedGuardModule } from '../../common/guards/email-verified.guard.module';
 import { SafetyVerificationModule } from '../safety-verification/safety-verification.module';
+import { JobPostingModule } from '../job-posting/job-posting.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SafetyVerificationModule } from '../safety-verification/safety-verifica
     UsersModule,
     EmailVerifiedGuardModule,
     SafetyVerificationModule,
+    forwardRef(() => JobPostingModule),
   ],
   controllers: [BookingController],
   providers: [BookingService],

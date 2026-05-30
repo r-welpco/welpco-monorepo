@@ -4,7 +4,7 @@ export class SearchResultItemDto {
   @ApiProperty({ description: 'Welper user/profile ID' })
   welperId!: string;
 
-  @ApiProperty({ description: 'Display name (first + last)' })
+  @ApiProperty({ description: 'Display name (first name + last initial for privacy)' })
   name!: string;
 
   @ApiProperty({ description: 'Short title (e.g. first category or "Welper")' })

@@ -11,6 +11,7 @@ import { Skeleton } from "@welpco/ui/skeleton";
 import { Card } from "@welpco/ui/card";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import type { WelperProfileDialogOffering, WelperProfileDialogProfile } from "./welper-profile-dialog";
+import { customerWelperDisplayName } from "./customer-welper-display-name";
 
 export interface ServiceSelectionDialogProps {
   open: boolean;
@@ -28,10 +29,7 @@ export function ServiceSelectionDialog({
   loading = false,
   onSelect,
 }: ServiceSelectionDialogProps) {
-  const displayName =
-    profile && [profile.firstName, profile.lastName].filter(Boolean).length > 0
-      ? [profile.firstName, profile.lastName].filter(Boolean).join(" ")
-      : "Welper";
+  const displayName = customerWelperDisplayName(profile);
 
   const offerings = profile?.serviceOfferings ?? [];
 

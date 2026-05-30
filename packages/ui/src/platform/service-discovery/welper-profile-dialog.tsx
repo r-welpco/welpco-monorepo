@@ -11,6 +11,7 @@ import { Heading } from "@welpco/ui/heading";
 import { Skeleton } from "@welpco/ui/skeleton";
 import { Separator } from "@welpco/ui/separator";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { customerWelperDisplayName } from "./customer-welper-display-name";
 
 /** Minimal offering shape for the dialog (no dependency on app types). */
 export interface WelperProfileDialogOffering {
@@ -28,6 +29,7 @@ export interface WelperProfileDialogOffering {
 /** Minimal profile shape for the dialog. */
 export interface WelperProfileDialogProfile {
   welperId: string;
+  displayName?: string | null;
   firstName: string | null;
   lastName: string | null;
   bio: string | null;
@@ -56,10 +58,7 @@ export function WelperProfileDialog({
   loading = false,
   onBook,
 }: WelperProfileDialogProps) {
-  const displayName =
-    profile && [profile.firstName, profile.lastName].filter(Boolean).length > 0
-      ? [profile.firstName, profile.lastName].filter(Boolean).join(" ")
-      : "Welper";
+  const displayName = customerWelperDisplayName(profile);
 
   const hasOfferings =
     !!profile?.serviceOfferings && profile.serviceOfferings.length > 0;

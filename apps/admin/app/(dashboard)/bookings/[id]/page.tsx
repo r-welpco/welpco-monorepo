@@ -1,5 +1,26 @@
+import {
+  Badge,
+  Button,
+  Card,
+  Flex,
+  Grid,
+  Heading,
+  Text,
+} from "@welpco/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminTimeline } from "@/components/admin-timeline";
+import { DetailRow, DetailTable } from "@/components/detail-rows";
+import {
+  formatAdminAddress,
+  formatAdminDateTime,
+  formatAdminMoneyCents,
+  formatAdminMoneyMajor,
+  formatAdminStatusLabel,
+} from "@/lib/admin-format";
+import { buildBookingAnswerRows } from "@/lib/booking-answers-utils";
+import { buildBookingTimeline, formatScheduleWindow } from "@/lib/booking-detail-utils";
+import { listQuestions } from "@/lib/services/admin-questions-service";
 import { getAdminBooking } from "@/lib/services/admin-booking-service";
 import { BookingActions } from "./booking-actions";
 
@@ -7,73 +28,259 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminBookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  let booking: Record<string, unknown>;
+  let booking;
   try {
     booking = await getAdminBooking(id);
   } catch {
     notFound();
   }
 
+  const timelineEvents = buildBookingTimeline(booking);
+  let answerRows;
+  try {
+    const questions = await listQuestions();
+    answerRows = buildBookingAnswerRows(booking.answers ?? {}, questions);
+  } catch {
+    answerRows = Object.entries(booking.answers ?? {}).map(([questionId, value]) => ({
+      key: questionId,
+      label: questionId,
+      displayValue: typeof value === "boolean" ? (value ? "Yes" : "No") : String(value),
+    }));
+  }
+  const receipt = booking.serviceReceipt ?? null;
+  const receiptCurrency = receipt?.currency ?? "CAD";
+
   return (
-    <div>
-      <p style={{ marginTop: 0 }}>
-        <Link href="/bookings">← Booking lookup</Link>
-      </p>
-      <h1 style={{ marginBottom: "0.25rem" }}>Booking</h1>
-      <p style={{ color: "var(--admin-muted)", fontFamily: "ui-monospace, monospace", fontSize: "0.9rem" }}>
-        {String(booking.id ?? id)}
-      </p>
-      <div className="admin-card" style={{ marginTop: "1rem" }}>
-        <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Summary</h2>
-        <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.9rem" }}>
-          {typeof booking.status === "string" ? (
-            <li>
-              <strong>Status:</strong> {booking.status}
-            </li>
+    <Flex direction="column" gap="4">
+      <Text size="2">
+        <Link href="/bookings">← Bookings</Link>
+      </Text>
+
+      <Flex direction="column" gap="2">
+        <Flex gap="2" wrap="wrap" align="center">
+          <Heading size="6">Booking</Heading>
+          <Badge variant="soft">{formatAdminStatusLabel(booking.status)}</Badge>
+          {booking.paymentPhase ? (
+            <Badge variant="soft" color="gray">
+              Payment: {booking.paymentPhase.replace(/_/g, " ")}
+            </Badge>
           ) : null}
-          {typeof booking.customerId === "string" ? (
-            <li>
-              <strong>Customer:</strong>{" "}
-              <Link href={`/users/${booking.customerId}`}>{booking.customerId}</Link>
-            </li>
-          ) : null}
-          {typeof booking.welperId === "string" ? (
-            <li>
-              <strong>Welper:</strong> <Link href={`/users/${booking.welperId}`}>{booking.welperId}</Link>
-            </li>
-          ) : null}
-          {booking.scheduledDate != null ? (
-            <li>
-              <strong>Scheduled:</strong> {String(booking.scheduledDate)}
-            </li>
-          ) : null}
-          {booking.totalPrice != null ? (
-            <li>
-              <strong>Total price:</strong> {String(booking.totalPrice)}
-            </li>
-          ) : null}
-          {booking.paymentPhase != null ? (
-            <li>
-              <strong>Payment phase:</strong> {String(booking.paymentPhase)}
-            </li>
-          ) : null}
-        </ul>
-      </div>
-      <BookingActions bookingId={String(booking.id ?? id)} status={String(booking.status ?? "")} />
-      <details className="admin-card" style={{ marginTop: "1rem" }}>
-        <summary style={{ cursor: "pointer", fontWeight: 600 }}>Raw JSON</summary>
-        <pre
-          style={{
-            marginTop: "0.75rem",
-            fontSize: "0.75rem",
-            overflow: "auto",
-            maxHeight: "50vh",
-            color: "var(--admin-muted)",
-          }}
-        >
-          {JSON.stringify(booking, null, 2)}
-        </pre>
+        </Flex>
+        <Text size="2" color="gray" style={{ fontFamily: "ui-monospace, monospace" }}>
+          {booking.id}
+        </Text>
+        <Flex gap="2" wrap="wrap">
+          <Button asChild size="1" variant="soft">
+            <Link href={`/users/${booking.customerId}`}>Customer profile</Link>
+          </Button>
+          <Button asChild size="1" variant="soft">
+            <Link href={`/users/${booking.welperId}`}>Welper profile</Link>
+          </Button>
+          <Button asChild size="1" variant="soft">
+            <Link href="/disputes">View disputes</Link>
+          </Button>
+        </Flex>
+      </Flex>
+
+      <Card size="2" title="Timeline">
+        <AdminTimeline events={timelineEvents} />
+      </Card>
+
+      <Grid columns={{ initial: "1", md: "2" }} gap="4">
+        <Card size="2" title="Schedule & pricing">
+          <DetailTable>
+            <DetailRow label="Scheduled">{formatScheduleWindow(booking)}</DetailRow>
+            <DetailRow label="Duration">
+              {booking.durationMinutes != null ? `${booking.durationMinutes} min` : "—"}
+            </DetailRow>
+            <DetailRow label="Hourly rate">
+              {formatAdminMoneyMajor(booking.hourlyRate, receiptCurrency)}
+            </DetailRow>
+            <DetailRow label="Quoted total">
+              {formatAdminMoneyMajor(booking.totalPrice, receiptCurrency)}
+            </DetailRow>
+            <DetailRow label="Service offering">
+              <Link href={`/users/${booking.welperId}`}>
+                <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                  {booking.serviceOfferingId}
+                </Text>
+              </Link>
+            </DetailRow>
+          </DetailTable>
+        </Card>
+
+        <Card size="2" title="Participants">
+          <DetailTable>
+            <DetailRow label="Customer">
+              <Flex direction="column" gap="1">
+                {booking.customerFirstName ? (
+                  <Text size="2">{booking.customerFirstName}</Text>
+                ) : null}
+                <Link href={`/users/${booking.customerId}`}>
+                  <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                    {booking.customerId}
+                  </Text>
+                </Link>
+              </Flex>
+            </DetailRow>
+            <DetailRow label="Welper">
+              <Link href={`/users/${booking.welperId}`}>
+                <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                  {booking.welperId}
+                </Text>
+              </Link>
+            </DetailRow>
+            <DetailRow label="Created">{formatAdminDateTime(booking.createdAt)}</DetailRow>
+            <DetailRow label="Last updated">{formatAdminDateTime(booking.updatedAt)}</DetailRow>
+          </DetailTable>
+        </Card>
+      </Grid>
+
+      <Grid columns={{ initial: "1", md: "2" }} gap="4">
+        <Card size="2" title="Location & notes">
+          <DetailTable>
+            <DetailRow label="Address">
+              <Text size="1" style={{ whiteSpace: "pre-wrap" }}>
+                {formatAdminAddress(booking.address)}
+              </Text>
+            </DetailRow>
+            <DetailRow label="Booking notes">
+              <Text size="2" style={{ whiteSpace: "pre-wrap" }}>
+                {booking.notes?.trim() || "—"}
+              </Text>
+            </DetailRow>
+          </DetailTable>
+        </Card>
+
+        <Card size="2" title="Payment">
+          <DetailTable>
+            <DetailRow label="Payment phase">
+              {booking.paymentPhase ? formatAdminStatusLabel(booking.paymentPhase) : "—"}
+            </DetailRow>
+            <DetailRow label="Capture eligible at">
+              {formatAdminDateTime(booking.captureEligibleAt)}
+            </DetailRow>
+            <DetailRow label="Dispute report deadline">
+              {formatAdminDateTime(booking.disputeReportDeadlineAt)}
+            </DetailRow>
+          </DetailTable>
+        </Card>
+      </Grid>
+
+      {booking.cancellationReason || booking.declineReason ? (
+        <Card size="2" title="Outcome notes">
+          <DetailTable>
+            {booking.cancellationReason ? (
+              <DetailRow label="Cancellation reason">
+                <Text size="2" style={{ whiteSpace: "pre-wrap" }}>
+                  {booking.cancellationReason}
+                </Text>
+              </DetailRow>
+            ) : null}
+            {booking.declineReason ? (
+              <DetailRow label="Decline reason">
+                <Text size="2" style={{ whiteSpace: "pre-wrap" }}>
+                  {booking.declineReason}
+                </Text>
+              </DetailRow>
+            ) : null}
+          </DetailTable>
+        </Card>
+      ) : null}
+
+      {receipt ? (
+        <Card size="2" title="Service receipt">
+          <DetailTable>
+            <DetailRow label="Receipt ID">
+              <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                {receipt.id}
+              </Text>
+            </DetailRow>
+            <DetailRow label="Billing window">
+              {formatAdminDateTime(receipt.billingCheckInAt)} –{" "}
+              {formatAdminDateTime(receipt.billingCheckOutAt)}
+            </DetailRow>
+            <DetailRow label="Hourly rate">
+              {formatAdminMoneyMajor(receipt.hourlyRate, receipt.currency)}
+            </DetailRow>
+            <DetailRow label="Subtotal">
+              {formatAdminMoneyCents(receipt.subtotalCents, receipt.currency)}
+            </DetailRow>
+            <DetailRow label="Tax">
+              {formatAdminMoneyCents(receipt.taxCents, receipt.currency)} ({receipt.taxRateBps} bps)
+            </DetailRow>
+            <DetailRow label="Total charged">
+              {formatAdminMoneyCents(receipt.totalCents, receipt.currency)}
+            </DetailRow>
+            <DetailRow label="Confirmed">{formatAdminDateTime(receipt.confirmedAt)}</DetailRow>
+            <DetailRow label="Sent to customer">
+              {formatAdminDateTime(receipt.sentToCustomerAt)}
+            </DetailRow>
+            {receipt.notes ? (
+              <DetailRow label="Receipt notes">
+                <Text size="2" style={{ whiteSpace: "pre-wrap" }}>
+                  {receipt.notes}
+                </Text>
+              </DetailRow>
+            ) : null}
+            {receipt.evidenceFiles && receipt.evidenceFiles.length > 0 ? (
+              <DetailRow label="Evidence files">
+                <Flex direction="column" gap="1">
+                  {receipt.evidenceFiles.map((file, i) => (
+                    <Text key={file.id ?? file.key ?? i} size="1">
+                      {file.signedUrl ? (
+                        <Link href={file.signedUrl} target="_blank" rel="noopener noreferrer">
+                          {file.key}
+                        </Link>
+                      ) : (
+                        <Text style={{ fontFamily: "ui-monospace, monospace" }}>{file.key}</Text>
+                      )}
+                    </Text>
+                  ))}
+                </Flex>
+              </DetailRow>
+            ) : null}
+          </DetailTable>
+        </Card>
+      ) : null}
+
+      {answerRows.length > 0 ? (
+        <Card size="2" title={`Booking answers (${answerRows.length})`}>
+          <DetailTable>
+            {answerRows.map((row) => (
+              <DetailRow key={row.key} label={row.label}>
+                <Text size="2" style={{ whiteSpace: "pre-wrap" }}>
+                  {row.displayValue}
+                </Text>
+              </DetailRow>
+            ))}
+          </DetailTable>
+        </Card>
+      ) : null}
+
+      <BookingActions bookingId={booking.id} status={booking.status} />
+
+      <details>
+        <summary>
+          <Text size="2" weight="medium" style={{ cursor: "pointer" }}>
+            Raw JSON
+          </Text>
+        </summary>
+        <Card size="2" style={{ marginTop: "var(--space-3)" }}>
+          <pre
+            style={{
+              margin: 0,
+              fontSize: "0.75rem",
+              overflow: "auto",
+              maxHeight: "50vh",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}
+          >
+            {JSON.stringify(booking, null, 2)}
+          </pre>
+        </Card>
       </details>
-    </div>
+    </Flex>
   );
 }

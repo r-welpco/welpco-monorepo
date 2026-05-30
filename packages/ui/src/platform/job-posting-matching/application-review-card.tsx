@@ -14,21 +14,21 @@ export interface ApplicationReviewCardProps {
   role: string;
   hourlyRate: string;
   submittedAt?: string;
-  coverLetter?: string;
-  status?: "new" | "shortlist" | "reject" | "hired";
-  onShortlist?: () => void;
-  onReject?: () => void;
-  onHire?: () => void;
+  proposalMessage?: string;
+  status?: "pending" | "accepted" | "rejected" | "withdrawn";
+  welperVerified?: boolean;
+  onSendBookingRequest?: () => void;
+  sendBookingRequestDisabled?: boolean;
 }
 
 const statusLabel: Record<
   NonNullable<ApplicationReviewCardProps["status"]>,
   { label: string; color: "gray" | "blue" | "red" | "green" }
 > = {
-  new: { label: "New", color: "blue" },
-  shortlist: { label: "Shortlisted", color: "blue" },
-  reject: { label: "Rejected", color: "red" },
-  hired: { label: "Hired", color: "green" },
+  pending: { label: "Pending", color: "blue" },
+  accepted: { label: "Selected", color: "green" },
+  rejected: { label: "Rejected", color: "red" },
+  withdrawn: { label: "Withdrawn", color: "gray" },
 };
 
 export function ApplicationReviewCard({
@@ -36,13 +36,13 @@ export function ApplicationReviewCard({
   role,
   hourlyRate,
   submittedAt,
-  coverLetter,
-  status = "new",
-  onShortlist,
-  onReject,
-  onHire,
+  proposalMessage,
+  status = "pending",
+  welperVerified,
+  onSendBookingRequest,
+  sendBookingRequestDisabled,
 }: ApplicationReviewCardProps) {
-  const statusToken = statusLabel[status] || statusLabel["new"];
+  const statusToken = statusLabel[status] || statusLabel.pending;
 
   return (
     <Card size="3" variant="surface" style={{ width: "100%" }}>
@@ -56,42 +56,40 @@ export function ApplicationReviewCard({
               <Badge color={statusToken.color} variant="soft" size="1">
                 {statusToken.label}
               </Badge>
+              {welperVerified && (
+                <Badge color="green" variant="soft" size="1">
+                  Verified
+                </Badge>
+              )}
             </Flex>
             <Text size="2" color="gray" highContrast>
-              {`${role} \u00B7 Rate ${hourlyRate}${submittedAt ? ` \u00B7 Submitted ${submittedAt}` : ""}`}
+              {`${role} · Rate ${hourlyRate}${submittedAt ? ` · Submitted ${submittedAt}` : ""}`}
             </Text>
           </Box>
         </Flex>
 
-        {coverLetter && (
+        {proposalMessage && (
           <Box p="3" style={{ backgroundColor: "var(--gray-2)", borderRadius: "var(--radius-3)" }}>
             <Text size="2" color="gray" highContrast>
-              {coverLetter}
+              {proposalMessage}
             </Text>
           </Box>
         )}
 
-        {(onShortlist || onHire || onReject) && (
+        {onSendBookingRequest && status === "pending" && (
           <Flex gap="2" justify="end" wrap="wrap">
-            {onShortlist && (
-              <Button onClick={onShortlist} variant="soft" color={SEMANTIC_COLOR.info} size="2">
-                Shortlist
-              </Button>
-            )}
-            {onReject && (
-              <Button onClick={onReject} variant="ghost" color={SEMANTIC_COLOR.danger} size="2">
-                Reject
-              </Button>
-            )}
-            {onHire && (
-              <Button onClick={onHire} variant="solid" color={SEMANTIC_COLOR.primary} size="2">
-                Hire
-              </Button>
-            )}
+            <Button
+              onClick={onSendBookingRequest}
+              variant="solid"
+              color={SEMANTIC_COLOR.primary}
+              size="2"
+              disabled={sendBookingRequestDisabled}
+            >
+              Send booking request
+            </Button>
           </Flex>
         )}
       </Flex>
     </Card>
   );
 }
-

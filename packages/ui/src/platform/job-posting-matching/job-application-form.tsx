@@ -3,47 +3,59 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
-import { TextField } from "@welpco/ui/text-field";
 import { TextArea } from "@welpco/ui/text-area";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@welpco/ui/select";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 
+export interface MatchingOfferingOption {
+  id: string;
+  hourlyRate: number;
+  serviceDescription: string;
+}
+
 export interface JobApplicationFormProps {
-  defaultValues?: Partial<JobApplicationValues>;
+  matchingOfferings: MatchingOfferingOption[];
   loading?: boolean;
   error?: string;
   onSubmit?: (values: JobApplicationValues) => void | Promise<void>;
 }
 
 const schema = z.object({
-  hourlyRate: z.coerce.number().min(0, "Rate must be positive"),
-  availability: z.string().min(1, "Availability is required"),
-  coverLetter: z.string().min(20, "Provide a short cover letter"),
+  offeringId: z.string().min(1, "Select an offering"),
+  proposalMessage: z.string().min(10, "Provide at least 10 characters").max(2000),
 });
 
 export type JobApplicationValues = z.infer<typeof schema>;
 
 export function JobApplicationForm({
-  defaultValues,
+  matchingOfferings,
   loading,
   error,
   onSubmit,
 }: JobApplicationFormProps) {
+  const defaultOfferingId = matchingOfferings.length === 1 ? matchingOfferings[0]!.id : "";
   const form = useForm<JobApplicationValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      hourlyRate: 60,
-      availability: "",
-      coverLetter: "",
-      ...defaultValues,
+      offeringId: defaultOfferingId,
+      proposalMessage: "",
     },
   });
+
+  const selectedOfferingId = form.watch("offeringId");
+  const selectedOffering = matchingOfferings.find((o) => o.id === selectedOfferingId);
 
   const handleSubmit = form.handleSubmit(async (values) => {
     await onSubmit?.(values);
@@ -57,7 +69,7 @@ export function JobApplicationForm({
             Submit application
           </Heading>
           <Text size="2" color="gray" highContrast>
-            Share your rate and a brief cover letter.
+            Share a brief proposal. Your hourly rate comes from the selected offering.
           </Text>
         </Box>
 
@@ -69,88 +81,71 @@ export function JobApplicationForm({
 
         <Flex asChild direction="column" gap="5">
           <form onSubmit={handleSubmit}>
-          <Box>
-            <Text as="label" size="2" weight="bold" htmlFor="application-rate" mb={FORM_SPACING.labelGap}>
-              Hourly rate ($)
-              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
-            </Text>
-            <TextField.Root
-              id="application-rate"
-              type="number"
-              min={0}
-              step="5"
-              size="3"
-              disabled={loading}
-              aria-required="true"
-              {...form.register("hourlyRate", { valueAsNumber: true })}
-            />
-            {form.formState.errors.hourlyRate && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
-                {form.formState.errors.hourlyRate.message}
-              </Text>
+            {matchingOfferings.length > 1 && (
+              <Box>
+                <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+                  Service offering
+                  <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
+                </Text>
+                <Controller
+                  control={form.control}
+                  name="offeringId"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange} disabled={loading}>
+                      <SelectTrigger placeholder="Select offering" />
+                      <SelectContent>
+                        {matchingOfferings.map((o) => (
+                          <SelectItem key={o.id} value={o.id}>
+                            {`${o.serviceDescription.slice(0, 60)} — $${o.hourlyRate}/hr`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {form.formState.errors.offeringId && (
+                  <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+                    {form.formState.errors.offeringId.message}
+                  </Text>
+                )}
+              </Box>
             )}
-          </Box>
 
-          <Box>
-            <Text
-              as="label"
-              size="2"
-              weight="bold"
-              htmlFor="application-availability"
-              mb={FORM_SPACING.labelGap}
-            >
-              Availability
-              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
-            </Text>
-            <TextField.Root
-              id="application-availability"
-              placeholder="e.g., Weekdays after 4pm, weekends flexible"
-              size="3"
-              disabled={loading}
-              aria-required="true"
-              {...form.register("availability")}
-            />
-            {form.formState.errors.availability && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
-                {form.formState.errors.availability.message}
-              </Text>
+            {selectedOffering && (
+              <Callout.Root color="blue" variant="surface">
+                <Callout.Text>
+                  {`Your rate: $${selectedOffering.hourlyRate}/hr`}
+                </Callout.Text>
+              </Callout.Root>
             )}
-          </Box>
 
-          <Box>
-            <Text
-              as="label"
-              size="2"
-              weight="bold"
-              htmlFor="application-letter"
-              mb={FORM_SPACING.labelGap}
-            >
-              Cover letter
-              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
-            </Text>
-            <TextArea
-              id="application-letter"
-              rows={5}
-              placeholder="Explain your fit, relevant experience, and approach."
-              size="3"
-              disabled={loading}
-              aria-required="true"
-              {...form.register("coverLetter")}
-            />
-            {form.formState.errors.coverLetter && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
-                {form.formState.errors.coverLetter.message}
+            <Box>
+              <Text as="label" size="2" weight="bold" htmlFor="application-proposal" mb={FORM_SPACING.labelGap}>
+                Proposal message
+                <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
-            )}
-          </Box>
+              <TextArea
+                id="application-proposal"
+                rows={5}
+                placeholder="Explain your fit, relevant experience, and approach."
+                size="3"
+                disabled={loading}
+                aria-required="true"
+                {...form.register("proposalMessage")}
+              />
+              {form.formState.errors.proposalMessage && (
+                <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+                  {form.formState.errors.proposalMessage.message}
+                </Text>
+              )}
+            </Box>
 
-          <Button type="submit" size="3" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
-            {loading ? "Submitting…" : "Submit application"}
-          </Button>
+            <Button type="submit" size="3" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
+              {loading ? "Submitting…" : "Submit application"}
+            </Button>
           </form>
         </Flex>
       </Flex>
     </Card>
   );
 }
-

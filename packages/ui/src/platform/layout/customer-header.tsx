@@ -101,6 +101,7 @@ export interface CustomerHeaderLabels {
   tabs: {
     dashboard: string;
     search: string;
+    marketplace: string;
     bookings: string;
     messages: string;
     profile: string;
@@ -180,6 +181,7 @@ export interface CustomerHeaderProps {
 const DEFAULT_CUSTOMER_TABS = [
   { value: "dashboard", label: "Dashboard", href: "/dashboard" },
   { value: "search", label: "Search Welper", href: "/dashboard/search" },
+  { value: "marketplace", label: "Marketplace", href: "/dashboard/marketplace" },
   { value: "bookings", label: "Bookings", href: "/dashboard/bookings" },
   { value: "messages", label: "Messages", href: "/dashboard/messages" },
   { value: "profile", label: "Profile", href: "/dashboard/profile" },
@@ -214,6 +216,7 @@ export function CustomerHeader({
     ? [
         { value: "dashboard" as const, label: labels.tabs.dashboard, href: "/dashboard" },
         { value: "search" as const, label: labels.tabs.search, href: "/dashboard/search" },
+        { value: "marketplace" as const, label: labels.tabs.marketplace, href: "/dashboard/marketplace" },
         { value: "bookings" as const, label: labels.tabs.bookings, href: "/dashboard/bookings" },
         { value: "messages" as const, label: labels.tabs.messages, href: "/dashboard/messages" },
         { value: "profile" as const, label: labels.tabs.profile, href: "/dashboard/profile" },

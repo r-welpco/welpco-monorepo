@@ -73,6 +73,8 @@ describe('PaymentService', () => {
   // refunds emit notifications to customer and welper.
   const mockNotificationService = {
     emitForUser: jest.fn().mockResolvedValue(null),
+    send: jest.fn().mockResolvedValue(null),
+    resolveLocaleForUser: jest.fn().mockResolvedValue('en'),
   };
 
   beforeEach(async () => {
@@ -177,11 +179,12 @@ describe('PaymentService', () => {
       expect(recipients).toEqual(expect.arrayContaining(['cust-emit', 'welp-emit']));
       const customerCall = calls.find((c) => c[0] === 'cust-emit')!;
       expect(customerCall[1].category).toBe(NotificationCategory.PAYMENT);
-      expect(customerCall[1].title).toBe('Payment received');
-      expect(customerCall[1].body).toContain('50.00');
-      expect(customerCall[1].body).toContain('CAD');
+      expect(customerCall[1].paymentEmailType).toBe('payment_captured_customer');
+      expect(customerCall[1].paymentEmailVariables).toEqual(
+        expect.objectContaining({ amount: '50.00', currency: 'CAD' }),
+      );
       const welperCall = calls.find((c) => c[0] === 'welp-emit')!;
-      expect(welperCall[1].title).toBe('Payout queued');
+      expect(welperCall[1].paymentEmailType).toBe('payment_captured_welper');
     });
 
     it('NOTIFICATIONS-001: emit failure does not block payment release write', async () => {

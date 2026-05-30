@@ -113,4 +113,14 @@ export class CreateBookingRequestDto {
   @Type(() => Number)
   @IsNumber()
   timezoneOffsetMinutes?: number;
+
+  @ApiPropertyOptional({ description: 'Marketplace job posting ID when booking originates from a job' })
+  @IsOptional()
+  @IsUUID()
+  jobPostingId?: string;
+
+  @ApiPropertyOptional({ description: 'Selected job application ID when booking originates from a job' })
+  @IsOptional()
+  @IsUUID()
+  jobApplicationId?: string;
 }

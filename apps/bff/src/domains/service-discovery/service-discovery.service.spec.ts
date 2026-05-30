@@ -212,7 +212,7 @@ describe('ServiceDiscoveryService', () => {
       expect(result.items).toHaveLength(2);
       expect(result.items[0]).toMatchObject({
         welperId: 'w1',
-        name: 'Jane Doe',
+        name: 'Jane D.',
         title: 'Care',
         hourlyRate: 25,
         categories: ['Care'],
@@ -355,8 +355,9 @@ describe('ServiceDiscoveryService', () => {
 
       expect(result).toMatchObject({
         welperId: 'w1',
+        displayName: 'Jane D.',
         firstName: 'Jane',
-        lastName: 'Doe',
+        lastName: null,
         bio: 'Bio',
         // Wave 1 trust-signal zero-state — bible §22.6 honesty contract.
         verified: false,

@@ -66,6 +66,7 @@ export default function DashboardLayoutClient({
   // Determine active tab from pathname
   const activeTab = useMemo(() => {
     if (pathname.startsWith("/dashboard/search")) return "search";
+    if (pathname.startsWith("/dashboard/marketplace")) return "marketplace";
     if (pathname.startsWith("/dashboard/bookings")) return "bookings";
     if (pathname.startsWith("/dashboard/messages")) return "messages";
     if (pathname.startsWith("/dashboard/profile")) return "profile";
@@ -84,6 +85,7 @@ export default function DashboardLayoutClient({
     const tabMap: Record<string, string> = {
       dashboard: "/dashboard",
       search: "/dashboard/search",
+      marketplace: "/dashboard/marketplace",
       bookings: "/dashboard/bookings",
       messages: "/dashboard/messages",
       profile: "/dashboard/profile",
@@ -171,11 +173,6 @@ export default function DashboardLayoutClient({
     notificationCount,
     notificationSlot,
     onTabChange: handleTabChange,
-    ...(userRole === "customer"
-      ? {
-          onRoleSwitch: () => router.push("/dashboard"),
-        }
-      : {}),
     onThemeChange: handleThemeChange,
     locale,
     onLocaleChange: setLocale,

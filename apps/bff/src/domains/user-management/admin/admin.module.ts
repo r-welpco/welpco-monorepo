@@ -14,6 +14,7 @@ import { Referral } from '../entities/referral.entity';
 import { SupportTicket } from '../../dispute/entities/support-ticket.entity';
 import { BookingRequest } from '../../booking/entities/booking-request.entity';
 import { BookingPayment } from '../../payment/entities/booking-payment.entity';
+import { ServiceCategory } from '../../content-management/entities/service-category.entity';
 import { UsersModule } from '../users/users.module';
 import { EventsModule } from '../events/events.module';
 import { AuthModule } from '../auth/auth.module';
@@ -24,6 +25,7 @@ import { AdminAuditModule } from './admin-audit.module';
 import { AdminDashboardService } from './admin-dashboard.service';
 import { BackgroundCheckOrder } from '../../safety-verification/entities/background-check-order.entity';
 import { SafetyVerificationModule } from '../../safety-verification/safety-verification.module';
+import { JobPostingModule } from '../../job-posting/job-posting.module';
 
 @Module({
   imports: [
@@ -42,6 +44,7 @@ import { SafetyVerificationModule } from '../../safety-verification/safety-verif
       SupportTicket,
       BookingRequest,
       BookingPayment,
+      ServiceCategory,
     ]),
     UsersModule,
     EventsModule,
@@ -51,6 +54,7 @@ import { SafetyVerificationModule } from '../../safety-verification/safety-verif
     BookingModule,
     AdminAuditModule,
     SafetyVerificationModule,
+    JobPostingModule,
   ],
   controllers: [AdminController],
   providers: [AdminService, AdminDashboardService],

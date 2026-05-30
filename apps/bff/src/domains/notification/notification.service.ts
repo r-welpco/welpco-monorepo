@@ -2,23 +2,33 @@ import { Injectable, Logger, Optional, Inject, NotFoundException } from '@nestjs
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
+  getDisputeNotificationCopy,
+  getPaymentNotificationCopy,
+} from '@welpco/email';
+import type {
+  DisputeEmailType,
+  DisputeEmailVariables,
+  EmailLocale,
+  PaymentEmailType,
+  PaymentEmailVariables,
+} from '@welpco/email';
+import {
   Notification,
   NotificationPreference,
   NotificationChannel,
   NotificationCategory,
 } from './entities';
+import { UserAccount } from '../user-management/entities/user-account.entity';
+import type { UserPreferredLocale } from '../../common/preferred-locale';
+import {
+  resolveUserLocale,
+  buildBookingActionUrl,
+  buildDisputeActionUrl,
+  getFrontendBaseUrl,
+} from './notification-locale.helper';
 
 const DEDUP_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
 
-/** Minimal HTML escape — we never inject user-controlled content into emails today, but keep the contract honest. */
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
@@ -35,6 +45,10 @@ export interface SendNotificationParams {
   /** When set, sends the booking email template (respects email preference). */
   bookingEmailType?: string;
   bookingEmailVariables?: Record<string, string | undefined>;
+  paymentEmailType?: PaymentEmailType;
+  paymentEmailVariables?: PaymentEmailVariables;
+  disputeEmailType?: DisputeEmailType;
+  disputeEmailVariables?: DisputeEmailVariables;
   metadata?: Record<string, unknown>;
 }
 
@@ -57,9 +71,29 @@ export interface PreferenceUpdate {
   inAppEnabled?: boolean;
 }
 
+export interface EmitForUserParams {
+  category: NotificationCategory;
+  link?: string;
+  metadata?: Record<string, unknown>;
+  /** Legacy plain copy — prefer paymentEmailType / disputeEmailType. */
+  title?: string;
+  body?: string;
+  paymentEmailType?: PaymentEmailType;
+  paymentEmailVariables?: PaymentEmailVariables;
+  disputeEmailType?: DisputeEmailType;
+  disputeEmailVariables?: DisputeEmailVariables;
+}
+
 export interface IEmailNotificationService {
   sendNotificationEmail(userId: string, subject: string, html: string): Promise<void>;
+  sendGenericNotificationEmail?(
+    userId: string,
+    params: { title: string; body: string; actionUrl?: string; locale?: EmailLocale },
+  ): Promise<void>;
   sendBookingEmailForUser?(userId: string, type: string, variables: Record<string, string | undefined>): Promise<void>;
+  sendPaymentEmailForUser?(userId: string, type: PaymentEmailType, variables: PaymentEmailVariables): Promise<void>;
+  sendDisputeEmailForUser?(userId: string, type: DisputeEmailType, variables: DisputeEmailVariables): Promise<void>;
+  resolveLocaleForUser?(userId: string): Promise<EmailLocale>;
 }
 
 @Injectable()
@@ -71,55 +105,72 @@ export class NotificationService {
     private readonly notificationRepo: Repository<Notification>,
     @InjectRepository(NotificationPreference)
     private readonly preferenceRepo: Repository<NotificationPreference>,
+    @InjectRepository(UserAccount)
+    private readonly userRepo: Repository<UserAccount>,
     @Optional()
     @Inject(EMAIL_NOTIFICATION_SERVICE)
     private readonly emailNotificationService?: IEmailNotificationService,
   ) {}
 
-  /**
-   * NOTIFICATIONS-001 (Day 16 dispatch 2): single shared emit helper for
-   * non-booking domains. Mirrors the booking-domain emit shape but skips the
-   * booking-email template machinery — most domain events ship as a plain
-   * subject + html email built from the same `title`/`body` strings.
-   *
-   * Preference enforcement contract (bible §22.6):
-   *   1. Look up the recipient's `notificationPreferences` row for `category`.
-   *   2. Always create the in-app row IF `inAppEnabled` is true (so the bell
-   *      and the center surface it).
-   *   3. Send email IF `emailEnabled` is true AND an email service is wired.
-   *   4. If both off, skip entirely — the user has explicitly opted out.
-   *   5. Defaults are TRUE-on-both per the Wave 3 default-true policy; rows
-   *      get auto-upserted on first `getPreferences` call.
-   *
-   * Each emit site provides:
-   *   - `category` for filtering
-   *   - short, action-oriented `title` (bible §22 voice)
-   *   - 1-2 sentence `body` with concrete context
-   *   - `link` deep-link rendered as the `<NotificationCard>` click-through
-   *     (stored under `metadata.actionUrl` to match the booking template)
-   *
-   * Errors caught + logged, never propagated — a notification failure must
-   * not roll back a domain write that already succeeded.
-   */
-  async emitForUser(
-    userId: string,
-    params: { category: NotificationCategory; title: string; body: string; link?: string; metadata?: Record<string, unknown> },
-  ): Promise<Notification | null> {
-    const { category, title, body, link, metadata } = params;
+  async resolveLocaleForUser(userId: string): Promise<UserPreferredLocale> {
+    return resolveUserLocale(this.userRepo, userId);
+  }
+
+  async emitForUser(userId: string, params: EmitForUserParams): Promise<Notification | null> {
+    const {
+      category,
+      metadata,
+      paymentEmailType,
+      paymentEmailVariables,
+      disputeEmailType,
+      disputeEmailVariables,
+    } = params;
+
+    const locale = await resolveUserLocale(this.userRepo, userId);
+    let title = params.title ?? '';
+    let body = params.body ?? '';
+
+    let paymentVars = paymentEmailVariables ? { ...paymentEmailVariables } : undefined;
+    let disputeVars = disputeEmailVariables ? { ...disputeEmailVariables } : undefined;
+
+    const bookingId = metadata?.bookingId as string | undefined;
+    const disputeId = metadata?.disputeId as string | undefined;
+    let actionLink = params.link;
+    if (!actionLink && bookingId) {
+      actionLink = buildBookingActionUrl(getFrontendBaseUrl(), bookingId, locale);
+    } else if (!actionLink && disputeId) {
+      actionLink = buildDisputeActionUrl(getFrontendBaseUrl(), disputeId, locale);
+    }
+
+    if (paymentEmailType && paymentVars) {
+      const copy = getPaymentNotificationCopy(paymentEmailType, locale, paymentVars);
+      title = copy.title;
+      body = copy.body;
+      if (actionLink) paymentVars.bookingUrl = actionLink;
+    } else if (disputeEmailType && disputeVars) {
+      const copy = getDisputeNotificationCopy(disputeEmailType, locale, disputeVars);
+      title = copy.title;
+      body = copy.body;
+      if (actionLink) disputeVars.disputeUrl = actionLink;
+    }
+
     const mergedMeta: Record<string, unknown> = {
       ...(metadata ?? {}),
     };
-    if (link && mergedMeta.actionUrl == null) {
-      mergedMeta.actionUrl = link;
+    if (actionLink && mergedMeta.actionUrl == null) {
+      mergedMeta.actionUrl = actionLink;
     }
+
     try {
       return await this.send({
         userId,
         category,
         title,
         body,
-        emailSubject: title,
-        emailHtml: this.buildSimpleEmailHtml(title, body, link),
+        paymentEmailType,
+        paymentEmailVariables: paymentVars,
+        disputeEmailType,
+        disputeEmailVariables: disputeVars,
         metadata: mergedMeta,
       });
     } catch (err) {
@@ -130,22 +181,29 @@ export class NotificationService {
     }
   }
 
-  /** Minimal plain-text-friendly HTML body for non-booking emails. */
-  private buildSimpleEmailHtml(title: string, body: string, link?: string): string {
-    const safeTitle = escapeHtml(title);
-    const safeBody = escapeHtml(body);
-    const cta = link
-      ? `<p style="margin-top:16px"><a href="${escapeHtml(link)}" style="color:#2563eb">Open in Welpco</a></p>`
-      : '';
-    return `<div><h2 style="margin:0 0 12px">${safeTitle}</h2><p style="margin:0">${safeBody}</p>${cta}</div>`;
-  }
-
   async send(params: SendNotificationParams): Promise<Notification | null> {
-    const { userId, category, title, body, emailSubject, emailHtml, bookingEmailType, bookingEmailVariables, metadata } = params;
+    const {
+      userId,
+      category,
+      title,
+      body,
+      emailSubject,
+      emailHtml,
+      bookingEmailType,
+      bookingEmailVariables,
+      paymentEmailType,
+      paymentEmailVariables,
+      disputeEmailType,
+      disputeEmailVariables,
+      metadata,
+    } = params;
 
     const bookingId = metadata?.bookingId as string | undefined;
-    if (bookingId && (await this.isDuplicate(userId, category, bookingId))) {
-      this.logger.debug(`Skipping duplicate notification userId=${userId} category=${category} bookingId=${bookingId}`);
+    const kind = metadata?.kind as string | undefined;
+    if (bookingId && (await this.isDuplicate(userId, category, bookingId, kind))) {
+      this.logger.debug(
+        `Skipping duplicate notification userId=${userId} category=${category} bookingId=${bookingId} kind=${kind ?? ''}`,
+      );
       return null;
     }
 
@@ -170,6 +228,23 @@ export class NotificationService {
       try {
         if (bookingEmailType && bookingEmailVariables && this.emailNotificationService.sendBookingEmailForUser) {
           await this.emailNotificationService.sendBookingEmailForUser(userId, bookingEmailType, bookingEmailVariables);
+        } else if (paymentEmailType && paymentEmailVariables && this.emailNotificationService.sendPaymentEmailForUser) {
+          await this.emailNotificationService.sendPaymentEmailForUser(userId, paymentEmailType, paymentEmailVariables);
+        } else if (disputeEmailType && disputeEmailVariables && this.emailNotificationService.sendDisputeEmailForUser) {
+          await this.emailNotificationService.sendDisputeEmailForUser(userId, disputeEmailType, disputeEmailVariables);
+        } else if (
+          title &&
+          body &&
+          this.emailNotificationService.sendGenericNotificationEmail
+        ) {
+          const locale = await resolveUserLocale(this.userRepo, userId);
+          const actionUrl = metadata?.actionUrl as string | undefined;
+          await this.emailNotificationService.sendGenericNotificationEmail(userId, {
+            title,
+            body,
+            actionUrl,
+            locale: locale as EmailLocale,
+          });
         } else if (emailSubject && emailHtml) {
           await this.emailNotificationService.sendNotificationEmail(userId, emailSubject, emailHtml);
         }
@@ -181,15 +256,27 @@ export class NotificationService {
     return notification;
   }
 
-  private async isDuplicate(userId: string, category: string, bookingId: string): Promise<boolean> {
+  private async isDuplicate(
+    userId: string,
+    category: string,
+    bookingId: string,
+    kind?: string,
+  ): Promise<boolean> {
     const since = new Date(Date.now() - DEDUP_WINDOW_MS);
-    const count = await this.notificationRepo
+    const qb = this.notificationRepo
       .createQueryBuilder('n')
       .where('n.user_id = :userId', { userId })
       .andWhere('n.category = :category', { category })
       .andWhere('n.created_at > :since', { since })
-      .andWhere("n.metadata->>'bookingId' = :bookingId", { bookingId })
-      .getCount();
+      .andWhere("n.metadata->>'bookingId' = :bookingId", { bookingId });
+
+    if (kind) {
+      qb.andWhere("COALESCE(n.metadata->>'kind', '') = :kind", { kind });
+    } else {
+      qb.andWhere("(n.metadata->>'kind' IS NULL OR n.metadata->>'kind' = '')");
+    }
+
+    const count = await qb.getCount();
     return count > 0;
   }
 
@@ -241,8 +328,6 @@ export class NotificationService {
   async getPreferences(userId: string): Promise<NotificationPreference[]> {
     const categories = Object.values(NotificationCategory);
 
-    // Upsert all missing preferences in one batch to avoid race conditions
-    // when two concurrent requests try to create the same preference row.
     const toUpsert = categories.map((category) => ({
       userId,
       category,

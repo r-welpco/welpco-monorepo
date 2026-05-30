@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Card } from "@welpco/ui/card";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@welpco/ui/select";
 import { Input } from "@welpco/ui/input";
 import { Flex } from "@welpco/ui/flex";
+import { Grid } from "@welpco/ui/grid";
 import { Box } from "@welpco/ui/box";
 import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
@@ -35,6 +36,8 @@ export interface SearchFiltersSidebarProps {
   showRadius?: boolean;
   /** Compact layout for narrow sidebar */
   compact?: boolean;
+  /** When "panel", filter fields use a responsive grid for full-width layouts. */
+  layout?: "stack" | "panel";
   /** When true, card fills container height (e.g. when paired with Search hero in a row). */
   fullHeight?: boolean;
 }
@@ -70,6 +73,7 @@ export function SearchFiltersSidebar({
   radiusOptions = [],
   showRadius = false,
   compact = false,
+  layout = "stack",
   fullHeight = false,
 }: SearchFiltersSidebarProps) {
   const update = (patch: Partial<SearchFiltersSidebarState>) => {
@@ -107,6 +111,159 @@ export function SearchFiltersSidebar({
 
   const cardSize = "4";
   const sectionGap = "5";
+  const isPanel = layout === "panel";
+  const fieldDirection = isPanel ? "column" : "row";
+  const fieldAlign = isPanel ? { alignItems: "stretch" as const } : undefined;
+  const controlWidth = isPanel ? "100%" : undefined;
+
+  const fieldNodes: ReactNode[] = [];
+
+  if (categoryOptions.length > 0 && onCategoryChange) {
+    fieldNodes.push(
+      <Flex
+        key="category"
+        align="center"
+        justify="between"
+        gap="3"
+        wrap="wrap"
+        direction={fieldDirection}
+        style={fieldAlign}
+      >
+        <Text as="label" size="2" weight="bold" htmlFor="sidebar-category">
+          Service category
+        </Text>
+        <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
+          <Select
+            value={categoryId ?? FILTER_ANY}
+            onValueChange={(v) => onCategoryChange(v === FILTER_ANY ? undefined : v)}
+          >
+            <SelectTrigger id="sidebar-category" aria-label="Service category" />
+            <SelectContent>
+              <SelectItem value={FILTER_ANY}>Any category</SelectItem>
+              {categoryOptions.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Box>
+      </Flex>,
+    );
+  }
+
+  if (onKeywordChange) {
+    fieldNodes.push(
+      <Flex key="keyword" direction="column" gap="1">
+        <Text as="label" size="2" weight="bold" htmlFor="sidebar-keyword">
+          Keyword (optional)
+        </Text>
+        <Input
+          id="sidebar-keyword"
+          type="text"
+          placeholder="e.g. pet care, tutoring"
+          value={localKeyword}
+          onChange={(e) => setLocalKeyword(e.target.value)}
+        />
+      </Flex>,
+    );
+  }
+
+  if (showRadius && radiusOptions.length > 0 && onRadiusChange) {
+    fieldNodes.push(
+      <Flex
+        key="radius"
+        align="center"
+        justify="between"
+        gap="3"
+        wrap="wrap"
+        direction={fieldDirection}
+        style={fieldAlign}
+      >
+        <Text as="label" size="2" weight="bold" htmlFor="sidebar-radius">
+          Within (km)
+        </Text>
+        <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
+          <Select
+            value={radiusKm !== undefined ? String(radiusKm) : "__any__"}
+            onValueChange={(v) => onRadiusChange(v === "__any__" ? undefined : parseInt(v, 10))}
+          >
+            <SelectTrigger id="sidebar-radius" aria-label="Radius in km" />
+            <SelectContent>
+              <SelectItem value="__any__">Any distance</SelectItem>
+              {radiusOptions.map((opt) => (
+                <SelectItem key={opt.value} value={String(opt.value)}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Box>
+      </Flex>,
+    );
+  }
+
+  fieldNodes.push(
+    <Flex
+      key="price"
+      align="center"
+      justify="between"
+      gap="3"
+      wrap="wrap"
+      direction={fieldDirection}
+      style={fieldAlign}
+    >
+      <Text as="label" size="2" weight="bold" htmlFor="sidebar-price">
+        Price range
+      </Text>
+      <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
+        <Select
+          value={value.priceRange}
+          onValueChange={(v) => update({ priceRange: v as SearchFiltersSidebarState["priceRange"] })}
+        >
+          <SelectTrigger id="sidebar-price" aria-label="Price range" />
+          <SelectContent>
+            {priceOptions.map((opt) => (
+              <SelectItem key={opt} value={opt}>
+                {opt === "any" ? "Any price" : `$${opt}/hr`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Box>
+    </Flex>,
+  );
+
+  fieldNodes.push(
+    <Flex
+      key="rating"
+      align="center"
+      justify="between"
+      gap="3"
+      wrap="wrap"
+      direction={fieldDirection}
+      style={fieldAlign}
+    >
+      <Text as="label" size="2" weight="bold" htmlFor="sidebar-rating">
+        Min. rating
+      </Text>
+      <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
+        <Select
+          value={value.rating}
+          onValueChange={(v) => update({ rating: v as SearchFiltersSidebarState["rating"] })}
+        >
+          <SelectTrigger id="sidebar-rating" aria-label="Minimum rating" />
+          <SelectContent>
+            {ratingOptions.map((opt) => (
+              <SelectItem key={opt} value={opt}>
+                {opt === "any" ? "Any rating" : `${opt}+ stars`}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Box>
+    </Flex>,
+  );
 
   return (
     <Card
@@ -151,110 +308,13 @@ export function SearchFiltersSidebar({
           )}
         </Box>
 
-        {categoryOptions.length > 0 && onCategoryChange && (
-          <Flex align="center" justify="between" gap="3" wrap="wrap">
-            <Text as="label" size="2" weight="bold" htmlFor="sidebar-category">
-              Service category
-            </Text>
-            <Box style={{ flex: 1, minWidth: 0 }}>
-              <Select
-                value={categoryId ?? FILTER_ANY}
-                onValueChange={(v) => onCategoryChange(v === FILTER_ANY ? undefined : v)}
-              >
-                <SelectTrigger id="sidebar-category" aria-label="Service category" />
-                <SelectContent>
-                  <SelectItem value={FILTER_ANY}>Any category</SelectItem>
-                  {categoryOptions.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Box>
-          </Flex>
+        {isPanel ? (
+          <Grid columns={{ initial: "1", sm: "2", lg: "4" }} gap="4" style={{ width: "100%" }}>
+            {fieldNodes}
+          </Grid>
+        ) : (
+          fieldNodes
         )}
-
-        {onKeywordChange && (
-          <Flex direction="column" gap="1">
-            <Text as="label" size="2" weight="bold" htmlFor="sidebar-keyword">
-              Keyword (optional)
-            </Text>
-            <Input
-              id="sidebar-keyword"
-              type="text"
-              placeholder="e.g. pet care, tutoring"
-              value={localKeyword}
-              onChange={(e) => setLocalKeyword(e.target.value)}
-            />
-          </Flex>
-        )}
-
-        {showRadius && radiusOptions.length > 0 && onRadiusChange && (
-          <Flex align="center" justify="between" gap="3" wrap="wrap">
-            <Text as="label" size="2" weight="bold" htmlFor="sidebar-radius">
-              Within (km)
-            </Text>
-            <Box style={{ flex: 1, minWidth: 0 }}>
-              <Select
-                value={radiusKm !== undefined ? String(radiusKm) : "__any__"}
-                onValueChange={(v) => onRadiusChange(v === "__any__" ? undefined : parseInt(v, 10))}
-              >
-                <SelectTrigger id="sidebar-radius" aria-label="Radius in km" />
-                <SelectContent>
-                  <SelectItem value="__any__">Any distance</SelectItem>
-                  {radiusOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={String(opt.value)}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Box>
-          </Flex>
-        )}
-
-        <Flex align="center" justify="between" gap="3" wrap="wrap">
-          <Text as="label" size="2" weight="bold" htmlFor="sidebar-price">
-            Price range
-          </Text>
-          <Box style={{ flex: 1, minWidth: 0 }}>
-            <Select
-              value={value.priceRange}
-              onValueChange={(v) => update({ priceRange: v as SearchFiltersSidebarState["priceRange"] })}
-            >
-              <SelectTrigger id="sidebar-price" aria-label="Price range" />
-              <SelectContent>
-                {priceOptions.map((opt) => (
-                  <SelectItem key={opt} value={opt}>
-                    {opt === "any" ? "Any price" : `$${opt}/hr`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Box>
-        </Flex>
-
-        <Flex align="center" justify="between" gap="3" wrap="wrap">
-          <Text as="label" size="2" weight="bold" htmlFor="sidebar-rating">
-            Min. rating
-          </Text>
-          <Box style={{ flex: 1, minWidth: 0 }}>
-            <Select
-              value={value.rating}
-              onValueChange={(v) => update({ rating: v as SearchFiltersSidebarState["rating"] })}
-            >
-              <SelectTrigger id="sidebar-rating" aria-label="Minimum rating" />
-              <SelectContent>
-                {ratingOptions.map((opt) => (
-                  <SelectItem key={opt} value={opt}>
-                    {opt === "any" ? "Any rating" : `${opt}+ stars`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Box>
-        </Flex>
       </Flex>
     </Card>
   );

@@ -18,6 +18,7 @@ import type { PublicWelperProfileDto, PublicServiceOfferingDto } from './dto/pub
 import { DiscoveryCategoriesCacheService } from '../../common/discovery-categories-cache/discovery-categories-cache.service';
 import { BackgroundCheckStatus } from '../user-management/entities/verification-status.entity';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
+import { formatWelperDisplayNameForCustomer } from '../../common/display-name.util';
 
 const BIO_SNIPPET_LENGTH = 120;
 
@@ -78,7 +79,7 @@ export class ServiceDiscoveryService {
       const profile = profileByWelperId.get(welperId);
       const offerings = offeringsByWelperId.get(welperId) ?? [];
       const name = profile
-        ? [profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'Welper'
+        ? formatWelperDisplayNameForCustomer(profile.firstName, profile.lastName)
         : 'Welper';
       const categoryNames = [...new Set(offerings.map((o) => categoryMap.get(o.serviceCategoryId) ?? '').filter(Boolean))].sort();
       const title = categoryNames[0] ?? 'Welper';
@@ -405,8 +406,9 @@ export class ServiceDiscoveryService {
     return {
       id: profile.id,
       welperId: profile.welperId,
+      displayName: formatWelperDisplayNameForCustomer(profile.firstName, profile.lastName),
       firstName: profile.firstName,
-      lastName: profile.lastName,
+      lastName: null,
       bio: profile.bio,
       profilePhotoUrl: profile.profilePhotoUrl,
       serviceArea: profile.serviceArea,

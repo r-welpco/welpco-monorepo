@@ -287,8 +287,14 @@ export class AdminService {
         const bc = b.signupStepsCompleted ?? -1;
         return sortDir === 'ASC' ? ac - bc : bc - ac;
       });
-      const offset = filters?.offset ?? 0;
-      const limit = filters?.limit ?? enriched.length;
+      const offset =
+        Number.isFinite(filters?.offset) && (filters?.offset ?? 0) > 0
+          ? filters!.offset!
+          : 0;
+      const limit =
+        Number.isFinite(filters?.limit) && (filters?.limit ?? 0) > 0
+          ? Math.min(filters!.limit!, 100)
+          : enriched.length;
       return {
         users: enriched.slice(offset, offset + limit),
         total,
@@ -303,12 +309,16 @@ export class AdminService {
     };
     queryBuilder.orderBy(sortColumn[sortBy], sortDir);
 
-    if (filters?.limit) {
-      queryBuilder.limit(filters.limit);
-    }
-    if (filters?.offset) {
-      queryBuilder.offset(filters.offset);
-    }
+    const limit =
+      Number.isFinite(filters?.limit) && (filters?.limit ?? 0) > 0
+        ? Math.min(filters!.limit!, 100)
+        : 25;
+    const offset =
+      Number.isFinite(filters?.offset) && (filters?.offset ?? 0) > 0
+        ? filters!.offset!
+        : 0;
+    queryBuilder.limit(limit);
+    queryBuilder.offset(offset);
 
     const users = await queryBuilder.getMany();
     const enriched = await this.enrichUsersForList(users);
@@ -705,4 +715,3 @@ export class AdminService {
     return this.userRepository.save(user);
   }
 }
-

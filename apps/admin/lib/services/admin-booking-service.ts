@@ -1,11 +1,58 @@
 import { apiClient } from "@/lib/api/client";
 
-/** Admin booking payload mirrors BFF BookingResponseDto (subset used in UI). */
-export type AdminBookingDetail = Record<string, unknown>;
+export interface ServiceReceiptSummary {
+  id: string;
+  bookingId: string;
+  billingCheckInAt: string;
+  billingCheckOutAt: string;
+  hourlyRate: number;
+  subtotalCents: number;
+  taxCents: number;
+  taxRateBps: number;
+  totalCents: number;
+  currency: string;
+  notes?: string | null;
+  confirmedAt: string;
+  sentToCustomerAt?: string | null;
+  evidenceFiles?: Array<{ id?: string; key: string; signedUrl?: string | null }>;
+}
+
+export interface AdminBookingDetail {
+  id: string;
+  customerId: string;
+  welperId: string;
+  serviceOfferingId: string;
+  status: string;
+  answers: Record<string, string | number | boolean>;
+  scheduledDate: string | null;
+  scheduledStartTime: string | null;
+  scheduledEndTime: string | null;
+  durationMinutes: number | null;
+  hourlyRate: number | null;
+  totalPrice: number | null;
+  address: Record<string, string> | null;
+  notes: string | null;
+  cancellationReason: string | null;
+  declineReason: string | null;
+  acceptedAt: string | null;
+  declinedAt: string | null;
+  cancelledAt: string | null;
+  checkedInAt: string | null;
+  checkedOutAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  paymentPhase?: string | null;
+  captureEligibleAt?: string | null;
+  disputeReportDeadlineAt?: string | null;
+  serviceReceipt?: ServiceReceiptSummary | null;
+  customerFirstName?: string | null;
+  customerPhotoUrl?: string | null;
+}
 
 export async function getAdminBooking(bookingId: string): Promise<AdminBookingDetail> {
   return apiClient.get<AdminBookingDetail>(
-    `/api/admin/bookings/${encodeURIComponent(bookingId)}`
+    `/api/admin/bookings/${encodeURIComponent(bookingId)}`,
   );
 }
 
@@ -41,10 +88,10 @@ export async function searchAdminBookings(params: {
 
 export async function adminCancelBooking(
   bookingId: string,
-  reason: string
+  reason: string,
 ): Promise<AdminBookingDetail> {
   return apiClient.post<AdminBookingDetail>(
     `/api/admin/bookings/${encodeURIComponent(bookingId)}/cancel`,
-    { reason }
+    { reason },
   );
 }

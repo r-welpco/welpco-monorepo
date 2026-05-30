@@ -15,6 +15,7 @@ export enum NotificationCategory {
    * can opt into dispute pings without being spammed by general updates.
    */
   DISPUTE = 'dispute',
+  JOB = 'job',
   SECURITY = 'security',
   SYSTEM = 'system',
 }

@@ -1,6 +1,12 @@
 import { apiClient } from "@/lib/api/client";
 
-export type DisputeStatusApi = "open" | "in-review" | "escalated" | "resolved";
+export type DisputeStatusApi =
+  | "open"
+  | "in-review"
+  | "escalated"
+  | "resolved"
+  | "closed"
+  | "withdrawn";
 
 export interface DisputeParticipantSummary {
   userId: string;
@@ -25,6 +31,14 @@ export interface CapturedPaymentHint {
   currency: string;
 }
 
+export interface DisputeEvidenceItem {
+  type: string;
+  key?: string;
+  id?: string;
+  signedUrl?: string | null;
+  messageId?: string;
+}
+
 export interface DisputeItem {
   id: string;
   bookingId: string;
@@ -34,7 +48,7 @@ export interface DisputeItem {
   subject: string;
   description?: string;
   status: DisputeStatusApi;
-  evidence?: string;
+  evidence?: DisputeEvidenceItem[] | null;
   createdAt: string;
   updatedAt: string;
   /** Admin API: current booking status */

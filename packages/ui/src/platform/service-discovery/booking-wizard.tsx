@@ -8,6 +8,7 @@ import { Text } from "@welpco/ui/text";
 import { Skeleton } from "@welpco/ui/skeleton";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import type { WelperProfileDialogOffering, WelperProfileDialogProfile } from "./welper-profile-dialog";
+import { customerWelperDisplayName } from "./customer-welper-display-name";
 import {
   SelectOfferingStep,
   ScheduleStep,
@@ -229,10 +230,7 @@ export function BookingWizard({
 
   // --- Render ---
 
-  const displayName =
-    profile && [profile.firstName, profile.lastName].filter(Boolean).length > 0
-      ? [profile.firstName, profile.lastName].filter(Boolean).join(" ")
-      : "Welper";
+  const displayName = customerWelperDisplayName(profile);
 
   const title =
     step === "success"

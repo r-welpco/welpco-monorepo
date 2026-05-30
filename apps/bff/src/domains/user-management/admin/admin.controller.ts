@@ -43,6 +43,8 @@ import { AdminAuditService } from './admin-audit.service';
 import { BookingRequestStatus } from '../../booking/entities/booking-request.entity';
 import { UpdateSupportTicketAdminDto } from '../../dispute/dto/update-support-ticket-admin.dto';
 import { BookingPaymentRecordStatus } from '../../payment/entities/booking-payment.entity';
+import { JobPostingService } from '../../job-posting/job-posting.service';
+import { AdminJobPostingListQueryDto } from '../../job-posting/dto/job-posting-query.dto';
 
 function parseBookingPaymentStatus(s?: string): BookingPaymentRecordStatus | undefined {
   if (!s?.trim()) return undefined;
@@ -70,6 +72,7 @@ export class AdminController {
     private readonly bookingService: BookingService,
     private readonly supportTicketService: SupportTicketService,
     private readonly adminAuditService: AdminAuditService,
+    private readonly jobPostingService: JobPostingService,
   ) {}
 
   @Get('users')
@@ -365,7 +368,7 @@ export class AdminController {
     @Param('id') id: string,
     @Body() body: { reason: string },
   ) {
-    const result = await this.bookingService.cancel(id, actor.userId, 'Admin' as any, body.reason);
+    const result = await this.bookingService.cancelByAdmin(id, actor.userId, body.reason);
     await this.adminAuditService.record(actor.userId, 'admin.booking.cancel', {
       bookingId: id, reason: body.reason,
     });
@@ -439,6 +442,27 @@ export class AdminController {
   @ApiResponse({ status: 404, description: 'Booking not found' })
   async getBooking(@Param('id') id: string) {
     return this.bookingService.findByIdForAdmin(id);
+  }
+
+  @Get('jobs')
+  @ApiOperation({ summary: 'List job postings (admin read-only)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'customerId', required: false })
+  @ApiQuery({ name: 'categoryId', required: false })
+  @ApiQuery({ name: 'subcategoryId', required: false })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'dateFrom', required: false })
+  @ApiQuery({ name: 'dateTo', required: false })
+  async listJobs(@Query() query: AdminJobPostingListQueryDto) {
+    return this.jobPostingService.adminList(query);
+  }
+
+  @Get('jobs/:id')
+  @ApiOperation({ summary: 'Get job posting by ID (admin read-only)' })
+  @ApiParam({ name: 'id', description: 'Job posting ID' })
+  async getJob(@Param('id') id: string) {
+    return this.jobPostingService.adminFindById(id);
   }
 
   @Get('support-tickets')
@@ -586,4 +610,3 @@ export class AdminController {
     return { ok: true, key: PAYMENT_CAPTURE_DELAY_KEY, value: String(value) };
   }
 }
-

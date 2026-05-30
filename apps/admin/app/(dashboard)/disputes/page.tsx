@@ -1,4 +1,20 @@
+import {
+  Badge,
+  Button,
+  Card,
+  Flex,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumnHeaderCell,
+  TableHeader,
+  TableRow,
+  Text,
+} from "@welpco/ui";
 import Link from "next/link";
+import { AdminErrorCallout } from "@/components/admin-callout";
+import { AdminPageHeader } from "@/components/admin-page-header";
+import { NativeFormField, nativeSelectProps } from "@/components/native-form-field";
 import { listDisputes } from "@/lib/services/dispute-service";
 
 export const dynamic = "force-dynamic";
@@ -38,106 +54,119 @@ export default async function DisputesPage({
   };
 
   return (
-    <div>
-      <h1 style={{ marginTop: 0 }}>Disputes</h1>
-      <form
-        method="get"
-        className="admin-card"
-        style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "flex-end", marginBottom: "1rem" }}
-      >
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
-          Status (admin filter)
-          <select name="status" defaultValue={status ?? ""} className="admin-input">
-            <option value="">All</option>
-            {STATUS_OPTIONS.filter(Boolean).map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button type="submit" className="btn">
-          Apply
-        </button>
-      </form>
-      <p style={{ color: "var(--admin-muted)" }}>
+    <Flex direction="column" gap="4">
+      <AdminPageHeader
+        title="Disputes"
+        description="Review and resolve booking disputes. Filter by status or open a row for full details and resolution actions."
+      />
+
+      <Card size="2">
+        <form method="get">
+          <Flex gap="4" wrap="wrap" align="end">
+            <NativeFormField label="Status">
+              <select name="status" defaultValue={status ?? ""} {...nativeSelectProps()}>
+                <option value="">All</option>
+                {STATUS_OPTIONS.filter(Boolean).map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </NativeFormField>
+            <Button type="submit" variant="soft">
+              Apply filters
+            </Button>
+          </Flex>
+        </form>
+      </Card>
+
+      <Text size="2" color="gray">
         {list.total} total · page {list.page} of {list.totalPages}
-      </p>
-      {err ? <p className="err">{err}</p> : null}
-      <div className="admin-card" style={{ padding: 0, overflow: "hidden" }}>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th>Subject</th>
-              <th>Booking</th>
-              <th>Alerts</th>
-              <th>Category</th>
-              <th>Updated</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
+      </Text>
+      {err ? <AdminErrorCallout message={err} /> : null}
+
+      <Card size="2" style={{ overflow: "auto" }}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableColumnHeaderCell>Status</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Subject</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Booking</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Alerts</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Category</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Updated</TableColumnHeaderCell>
+              <TableColumnHeaderCell />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {list.data.length === 0 ? (
-              <tr>
-                <td colSpan={7} style={{ color: "var(--admin-muted)", padding: "1.5rem" }}>
-                  No disputes found.
-                </td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={7}>
+                  <Text color="gray">No disputes found.</Text>
+                </TableCell>
+              </TableRow>
             ) : (
               list.data.map((d) => (
-                <tr key={d.id}>
-                  <td>
-                    <span className="badge">{d.status}</span>
-                  </td>
-                  <td>{d.subject}</td>
-                  <td style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.8rem" }}>
-                    <Link href={`/bookings/${d.bookingId}`}>{d.bookingId.slice(0, 8)}…</Link>
+                <TableRow key={d.id}>
+                  <TableCell>
+                    <Badge variant="soft">{d.status}</Badge>
+                  </TableCell>
+                  <TableCell>{d.subject}</TableCell>
+                  <TableCell>
+                    <Link href={`/bookings/${d.bookingId}`}>
+                      <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                        {d.bookingId.slice(0, 8)}…
+                      </Text>
+                    </Link>
                     {d.bookingStatus ? (
-                      <span
-                        style={{ display: "block", color: "var(--admin-muted)", marginTop: "0.2rem" }}
-                      >
+                      <Text size="1" color="gray" as="div" mt="1">
                         {d.bookingStatus}
-                      </span>
+                      </Text>
                     ) : null}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     {d.bookingCancelledWithOpenDispute ? (
-                      <span
-                        className="admin-flag"
+                      <Badge
+                        variant="soft"
+                        color="red"
                         title="Participant cancelled the booking while this dispute was still open"
                       >
                         Cancelled + open dispute
-                      </span>
+                      </Badge>
                     ) : (
-                      <span style={{ color: "var(--admin-muted)" }}>—</span>
+                      <Text size="1" color="gray">
+                        —
+                      </Text>
                     )}
-                  </td>
-                  <td>{d.category}</td>
-                  <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}>
-                    {new Date(d.updatedAt).toLocaleString()}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>{d.category}</TableCell>
+                  <TableCell>
+                    <Text size="1" color="gray">
+                      {new Date(d.updatedAt).toLocaleString()}
+                    </Text>
+                  </TableCell>
+                  <TableCell>
                     <Link href={`/disputes/${d.id}`}>Open</Link>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
-      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+          </TableBody>
+        </Table>
+      </Card>
+
+      <Flex gap="3">
         {list.page > 1 ? (
-          <Link href={buildHref(list.page - 1, status)} className="btn">
-            Previous
-          </Link>
+          <Button asChild variant="soft">
+            <Link href={buildHref(list.page - 1, status)}>Previous</Link>
+          </Button>
         ) : null}
         {list.page < list.totalPages ? (
-          <Link href={buildHref(list.page + 1, status)} className="btn">
-            Next
-          </Link>
+          <Button asChild variant="soft">
+            <Link href={buildHref(list.page + 1, status)}>Next</Link>
+          </Button>
         ) : null}
-      </div>
-    </div>
+      </Flex>
+    </Flex>
   );
 }

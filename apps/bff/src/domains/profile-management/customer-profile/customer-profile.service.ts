@@ -4,13 +4,19 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CustomerProfile } from '../entities/customer-profile.entity';
 import { UserAccount } from '../../user-management/entities/user-account.entity';
 import { ProfileCompletionStatus } from '../entities/profile-completion-status.enum';
 import { CreateCustomerProfileDto } from './dto/create-customer-profile.dto';
 import { UpdateCustomerProfileDto } from './dto/update-customer-profile.dto';
 import { EventPublisherService } from '../events/event-publisher.service';
+import { formatCustomerDisplayNameForWelper } from '../../../common/display-name.util';
+
+export interface CustomerDisplayInfo {
+  displayName: string;
+  photoUrl: string | null;
+}
 
 @Injectable()
 export class CustomerProfileService {
@@ -32,6 +38,32 @@ export class CustomerProfileService {
     }
 
     return profile;
+  }
+
+  async findDisplayInfoByCustomerIds(
+    customerIds: string[],
+  ): Promise<Map<string, CustomerDisplayInfo>> {
+    const uniqueIds = [...new Set(customerIds.filter(Boolean))];
+    if (uniqueIds.length === 0) return new Map();
+
+    const profiles = await this.customerProfileRepository.find({
+      where: { customerId: In(uniqueIds) },
+    });
+
+    return new Map(
+      profiles.map((profile) => [
+        profile.customerId,
+        {
+          displayName: formatCustomerDisplayNameForWelper(profile.firstName, profile.lastName),
+          photoUrl: profile.profilePhotoUrl ?? null,
+        },
+      ]),
+    );
+  }
+
+  async findDisplayInfoByCustomerId(customerId: string): Promise<CustomerDisplayInfo | null> {
+    const map = await this.findDisplayInfoByCustomerIds([customerId]);
+    return map.get(customerId) ?? null;
   }
 
   async create(

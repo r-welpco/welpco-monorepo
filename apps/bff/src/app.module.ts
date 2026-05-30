@@ -15,6 +15,7 @@ import { ReviewModule } from './domains/review/review.module';
 import { DisputeModule } from './domains/dispute/dispute.module';
 import { NotificationModule } from './domains/notification/notification.module';
 import { GeocodeModule } from './domains/geocode/geocode.module';
+import { JobPostingModule } from './domains/job-posting/job-posting.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
@@ -58,6 +59,7 @@ import { SafetyVerificationModule } from './domains/safety-verification/safety-v
     HealthModule,
     PaymentModule,
     SafetyVerificationModule,
+    JobPostingModule,
   ],
 })
 export class AppModule {}

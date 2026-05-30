@@ -23,7 +23,9 @@ export type BookingEmailType =
   | "booking_cancelled"
   | "booking_checked_in"
   | "booking_completed"
-  | "booking_service_receipt";
+  | "booking_service_receipt"
+  | "booking_service_submitted"
+  | "booking_payment_released";
 
 export interface BookingEmailTemplateParams {
   type: BookingEmailType;
@@ -32,29 +34,131 @@ export interface BookingEmailTemplateParams {
   publicAppUrl?: string;
 }
 
+export type BookingNotificationCopy = {
+  title: string;
+  body: string;
+};
+
+function isFr(locale?: EmailLocale): boolean {
+  return locale === "fr";
+}
+
 function timeRange(v: BookingEmailVariables): string {
   if (v.startTime && v.endTime) return `${v.startTime} – ${v.endTime}`;
   return "";
 }
 
-export function getBookingEmailSubject(type: BookingEmailType): string {
+export function getBookingEmailSubject(type: BookingEmailType, locale: EmailLocale = "en"): string {
+  const fr = isFr(locale);
   switch (type) {
     case "booking_created":
-      return "New booking request – Welpco";
+      return fr ? "Nouvelle demande de réservation – Welpco" : "New booking request – Welpco";
     case "booking_accepted":
-      return "Your booking was accepted – Welpco";
+      return fr ? "Votre réservation a été acceptée – Welpco" : "Your booking was accepted – Welpco";
     case "booking_declined":
-      return "Booking request declined – Welpco";
+      return fr ? "Demande de réservation refusée – Welpco" : "Booking request declined – Welpco";
     case "booking_cancelled":
-      return "Booking cancelled – Welpco";
+      return fr ? "Réservation annulée – Welpco" : "Booking cancelled – Welpco";
     case "booking_checked_in":
-      return "Welper has checked in – Welpco";
+      return fr ? "Le Welper s\u2019est enregistré – Welpco" : "Welper has checked in – Welpco";
     case "booking_completed":
-      return "Service completed – Welpco";
+      return fr ? "Service terminé – Welpco" : "Service completed – Welpco";
     case "booking_service_receipt":
-      return "Service receipt & payment – Welpco";
+      return fr ? "Reçu de service et paiement – Welpco" : "Service receipt & payment – Welpco";
+    case "booking_service_submitted":
+      return fr ? "Reçu de service soumis – Welpco" : "Service receipt submitted – Welpco";
+    case "booking_payment_released":
+      return fr ? "Réservation finalisée – Welpco" : "Booking finalized – Welpco";
     default:
-      return "Welpco booking update";
+      return fr ? "Mise à jour de réservation Welpco" : "Welpco booking update";
+  }
+}
+
+/** Short in-app notification copy (same strings as email intros). */
+export function getBookingNotificationCopy(
+  type: BookingEmailType,
+  locale: EmailLocale = "en",
+  variables: BookingEmailVariables = {},
+): BookingNotificationCopy {
+  const fr = isFr(locale);
+  const serviceName = variables.serviceName || (fr ? "Service" : "Service");
+  const welperName = variables.welperName || (fr ? "Votre Welper" : "Your welper");
+  const customerName = variables.customerName || (fr ? "Un client" : "A customer");
+  const amount = variables.totalPrice ? `$${variables.totalPrice} CAD` : "";
+
+  switch (type) {
+    case "booking_created":
+      return {
+        title: fr ? "Nouvelle demande de réservation" : "New booking request",
+        body: fr
+          ? `${customerName} a demandé une réservation pour ${serviceName}.`
+          : `${customerName} has requested a booking for ${serviceName}.`,
+      };
+    case "booking_accepted":
+      return {
+        title: fr ? "Réservation acceptée" : "Booking accepted",
+        body: fr
+          ? `${welperName} a accepté votre demande pour ${serviceName}.`
+          : `${welperName} has accepted your request for ${serviceName}.`,
+      };
+    case "booking_declined":
+      return {
+        title: fr ? "Réservation refusée" : "Booking declined",
+        body: fr
+          ? `Votre demande pour ${serviceName} a été refusée.`
+          : `Your booking request for ${serviceName} was declined.`,
+      };
+    case "booking_cancelled":
+      return {
+        title: fr ? "Réservation annulée" : "Booking cancelled",
+        body: fr
+          ? `La réservation pour ${serviceName} a été annulée.`
+          : `The booking for ${serviceName} was cancelled.`,
+      };
+    case "booking_checked_in":
+      return {
+        title: fr ? "Welper enregistré" : "Welper checked in",
+        body: fr
+          ? `${welperName} s\u2019est enregistré pour ${serviceName}.`
+          : `${welperName} has checked in for ${serviceName}.`,
+      };
+    case "booking_completed":
+      return {
+        title: fr ? "Service terminé" : "Service completed",
+        body: fr
+          ? `Votre réservation pour ${serviceName} est terminée. Merci d\u2019utiliser Welpco\u00a0!`
+          : `Your booking for ${serviceName} is complete. Thank you for using Welpco!`,
+      };
+    case "booking_service_receipt":
+      return {
+        title: fr ? "Reçu de service" : "Service receipt",
+        body: amount
+          ? fr
+            ? `Votre Welper a soumis un reçu pour ${serviceName}. Montant\u00a0: ${amount}.`
+            : `Your welper submitted a receipt for ${serviceName}. Amount: ${amount}.`
+          : fr
+            ? `Votre Welper a soumis un reçu pour ${serviceName}.`
+            : `Your welper submitted a receipt for ${serviceName}.`,
+      };
+    case "booking_service_submitted":
+      return {
+        title: fr ? "Reçu soumis" : "Receipt submitted",
+        body: fr
+          ? `Vous avez soumis un reçu pour ${serviceName}. Le client en sera avisé.`
+          : `You submitted a receipt for ${serviceName}. The customer will be notified.`,
+      };
+    case "booking_payment_released":
+      return {
+        title: fr ? "Réservation finalisée" : "Booking finalized",
+        body: fr
+          ? `Le paiement pour ${serviceName} est finalisé. La réservation est maintenant close.`
+          : `Payment for ${serviceName} is complete. This booking is now closed.`,
+      };
+    default:
+      return {
+        title: fr ? "Mise à jour de réservation" : "Booking update",
+        body: fr ? "Vous avez une mise à jour de réservation." : "You have a booking update.",
+      };
   }
 }
 
@@ -68,22 +172,22 @@ export function getWelcomeEmailHtml(
   locale: EmailLocale = "en",
   publicAppUrl?: string,
 ): string {
-  const isFr = locale === "fr";
+  const isFrLocale = locale === "fr";
   const safeName = firstName?.trim() ? escapeHtml(firstName.trim()) : null;
   const title = getWelcomeEmailSubject(locale);
-  const greeting = isFr
+  const greeting = isFrLocale
     ? safeName
       ? `Bonjour ${safeName},`
       : "Bonjour,"
     : `Hi ${safeName ?? "there"},`;
-  const intro = isFr
+  const intro = isFrLocale
     ? "Merci de vous être inscrit. Vous pouvez dès maintenant trouver de l\u2019aide de confiance pour votre famille ou offrir vos services en tant que Welper."
     : "Thanks for signing up. You're all set to find trusted help for your family or to offer your services as a welper.";
-  const cta = isFr ? "Accéder au tableau de bord" : "Go to Dashboard";
-  const footer = isFr
+  const cta = isFrLocale ? "Accéder au tableau de bord" : "Go to Dashboard";
+  const footer = isFrLocale
     ? "Si vous n\u2019avez pas créé de compte, veuillez ignorer ce courriel."
     : "If you didn't create an account, please ignore this email.";
-  const heading = isFr ? "Bienvenue sur Welpco\u00a0!" : "Welcome to Welpco!";
+  const heading = isFrLocale ? "Bienvenue sur Welpco\u00a0!" : "Welcome to Welpco!";
 
   const content = `
 <h1 style="${h1Style}">${heading}</h1>
@@ -99,94 +203,121 @@ export function getWelcomeEmailHtml(
 
 export function getBookingEmailHtml(params: BookingEmailTemplateParams): string {
   const locale = params.locale ?? "en";
+  const fr = isFr(locale);
   const v = params.variables;
   const bookingUrl = v.bookingUrl ?? "#";
   const type = params.type;
-  const title = getBookingEmailSubject(type);
+  const title = getBookingEmailSubject(type, locale);
+  const viewBooking = fr ? "Voir la réservation" : "View booking";
+  const viewBookings = fr ? "Voir les réservations" : "View bookings";
+  const findWelper = fr ? "Trouver un autre Welper" : "Find another welper";
 
   let content: string;
 
   switch (type) {
     case "booking_created": {
       const serviceName = escapeHtml(v.serviceName || "Service");
-      const customerName = escapeHtml(v.customerName || "A customer");
+      const customerName = escapeHtml(v.customerName || (fr ? "Un client" : "A customer"));
       const date = escapeHtml(v.scheduledDate || "");
       const time = timeRange(v);
       const address = escapeHtml(v.address || "");
+      const heading = fr ? "Nouvelle demande de réservation" : "New booking request";
+      const intro = fr
+        ? `${customerName} a demandé une réservation pour <strong>${serviceName}</strong>.`
+        : `${customerName} has requested a booking for <strong>${serviceName}</strong>.`;
       content = `
-<h1 style="${h1Style}">New booking request</h1>
-<p style="${pStyle}">${customerName} has requested a booking for <strong>${serviceName}</strong>.</p>
-${date ? `<p style="${pStyle}"><strong>Date:</strong> ${date}${time ? `, ${time}` : ""}</p>` : ""}
-${address ? `<p style="${pStyle}"><strong>Address:</strong> ${address}</p>` : ""}
-<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">View booking</a></p>`;
+<h1 style="${h1Style}">${heading}</h1>
+<p style="${pStyle}">${intro}</p>
+${date ? `<p style="${pStyle}"><strong>${fr ? "Date" : "Date"}:</strong> ${date}${time ? `, ${time}` : ""}</p>` : ""}
+${address ? `<p style="${pStyle}"><strong>${fr ? "Adresse" : "Address"}:</strong> ${address}</p>` : ""}
+<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">${viewBooking}</a></p>`;
       break;
     }
     case "booking_accepted": {
-      const welperName = escapeHtml(v.welperName || "Your welper");
-      const serviceName = escapeHtml(v.serviceName || "your service");
+      const welperName = escapeHtml(v.welperName || (fr ? "Votre Welper" : "Your welper"));
+      const serviceName = escapeHtml(v.serviceName || (fr ? "votre service" : "your service"));
       const date = escapeHtml(v.scheduledDate || "");
       const time = timeRange(v);
       content = `
-<h1 style="${h1Style}">Your booking was accepted</h1>
-<p style="${pStyle}">${welperName} has accepted your request for <strong>${serviceName}</strong>.</p>
-${date ? `<p style="${pStyle}"><strong>When:</strong> ${date}${time ? `, ${time}` : ""}</p>` : ""}
-<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">View booking</a></p>`;
+<h1 style="${h1Style}">${fr ? "Votre réservation a été acceptée" : "Your booking was accepted"}</h1>
+<p style="${pStyle}">${welperName} ${fr ? "a accepté votre demande pour" : "has accepted your request for"} <strong>${serviceName}</strong>.</p>
+${date ? `<p style="${pStyle}"><strong>${fr ? "Quand" : "When"}:</strong> ${date}${time ? `, ${time}` : ""}</p>` : ""}
+<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">${viewBooking}</a></p>`;
       break;
     }
     case "booking_declined": {
-      const serviceName = escapeHtml(v.serviceName || "your request");
+      const serviceName = escapeHtml(v.serviceName || (fr ? "votre demande" : "your request"));
       const reason = v.declineReason
-        ? `<p style="${pStyle}"><strong>Reason:</strong> ${escapeHtml(v.declineReason)}</p>`
+        ? `<p style="${pStyle}"><strong>${fr ? "Raison" : "Reason"}:</strong> ${escapeHtml(v.declineReason)}</p>`
         : "";
       content = `
-<h1 style="${h1Style}">Booking request declined</h1>
-<p style="${pStyle}">Unfortunately your booking request for <strong>${serviceName}</strong> was declined.</p>
+<h1 style="${h1Style}">${fr ? "Demande de réservation refusée" : "Booking request declined"}</h1>
+<p style="${pStyle}">${fr ? "Malheureusement, votre demande pour" : "Unfortunately your booking request for"} <strong>${serviceName}</strong> ${fr ? "a été refusée." : "was declined."}</p>
 ${reason}
-<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">Find another welper</a></p>`;
+<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">${findWelper}</a></p>`;
       break;
     }
     case "booking_cancelled": {
-      const serviceName = escapeHtml(v.serviceName || "the booking");
+      const serviceName = escapeHtml(v.serviceName || (fr ? "la réservation" : "the booking"));
       const reason = v.cancellationReason
-        ? `<p style="${pStyle}"><strong>Reason:</strong> ${escapeHtml(v.cancellationReason)}</p>`
+        ? `<p style="${pStyle}"><strong>${fr ? "Raison" : "Reason"}:</strong> ${escapeHtml(v.cancellationReason)}</p>`
         : "";
       content = `
-<h1 style="${h1Style}">Booking cancelled</h1>
-<p style="${pStyle}">${serviceName} has been cancelled.</p>
+<h1 style="${h1Style}">${fr ? "Réservation annulée" : "Booking cancelled"}</h1>
+<p style="${pStyle}">${serviceName} ${fr ? "a été annulée." : "has been cancelled."}</p>
 ${reason}
-<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">View bookings</a></p>`;
+<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">${viewBookings}</a></p>`;
       break;
     }
     case "booking_checked_in": {
-      const welperName = escapeHtml(v.welperName || "Your welper");
-      const serviceName = escapeHtml(v.serviceName || "your service");
+      const welperName = escapeHtml(v.welperName || (fr ? "Votre Welper" : "Your welper"));
+      const serviceName = escapeHtml(v.serviceName || (fr ? "votre service" : "your service"));
       content = `
-<h1 style="${h1Style}">Welper has checked in</h1>
-<p style="${pStyle}">${welperName} has checked in for <strong>${serviceName}</strong>.</p>
-<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">View booking</a></p>`;
+<h1 style="${h1Style}">${fr ? "Le Welper s\u2019est enregistré" : "Welper has checked in"}</h1>
+<p style="${pStyle}">${welperName} ${fr ? "s\u2019est enregistré pour" : "has checked in for"} <strong>${serviceName}</strong>.</p>
+<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">${viewBooking}</a></p>`;
       break;
     }
     case "booking_completed": {
-      const serviceName = escapeHtml(v.serviceName || "your service");
+      const serviceName = escapeHtml(v.serviceName || (fr ? "votre service" : "your service"));
       content = `
-<h1 style="${h1Style}">Service completed</h1>
-<p style="${pStyle}">Your booking for <strong>${serviceName}</strong> is complete. Thank you for using Welpco!</p>
-<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">View booking</a></p>`;
+<h1 style="${h1Style}">${fr ? "Service terminé" : "Service completed"}</h1>
+<p style="${pStyle}">${fr ? "Votre réservation pour" : "Your booking for"} <strong>${serviceName}</strong> ${fr ? "est terminée. Merci d\u2019utiliser Welpco\u00a0!" : "is complete. Thank you for using Welpco!"}</p>
+<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">${viewBooking}</a></p>`;
       break;
     }
     case "booking_service_receipt": {
-      const serviceName = escapeHtml(v.serviceName || "your service");
+      const serviceName = escapeHtml(v.serviceName || (fr ? "votre service" : "your service"));
       const amount = escapeHtml(v.totalPrice || "");
       content = `
-<h1 style="${h1Style}">Service receipt</h1>
-<p style="${pStyle}">Your welper submitted a receipt for <strong>${serviceName}</strong>.</p>
-${amount ? `<p style="${pStyle}"><strong>Amount charged:</strong> $${amount} CAD</p>` : ""}
-<p style="${pStyle}">Open your booking to review details. If something looks wrong, you can start a dispute from the booking page.</p>
-<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">View booking</a></p>`;
+<h1 style="${h1Style}">${fr ? "Reçu de service" : "Service receipt"}</h1>
+<p style="${pStyle}">${fr ? "Votre Welper a soumis un reçu pour" : "Your welper submitted a receipt for"} <strong>${serviceName}</strong>.</p>
+${amount ? `<p style="${pStyle}"><strong>${fr ? "Montant facturé" : "Amount charged"}:</strong> $${amount} CAD</p>` : ""}
+<p style="${pStyle}">${fr ? "Ouvrez votre réservation pour consulter les détails. Si quelque chose ne va pas, vous pouvez signaler un problème depuis la page de la réservation." : "Open your booking to review details. If something looks wrong, you can start a dispute from the booking page."}</p>
+<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">${viewBooking}</a></p>`;
+      break;
+    }
+    case "booking_service_submitted": {
+      const serviceName = escapeHtml(v.serviceName || (fr ? "votre service" : "your service"));
+      const amount = escapeHtml(v.totalPrice || "");
+      content = `
+<h1 style="${h1Style}">${fr ? "Reçu de service soumis" : "Service receipt submitted"}</h1>
+<p style="${pStyle}">${fr ? "Vous avez soumis un reçu pour" : "You submitted a receipt for"} <strong>${serviceName}</strong>.</p>
+${amount ? `<p style="${pStyle}"><strong>${fr ? "Montant" : "Amount"}:</strong> $${amount} CAD</p>` : ""}
+<p style="${pStyle}">${fr ? "Le client en sera avisé. Le paiement sera traité selon les détails du reçu." : "The customer will be notified. Payment will be processed according to the receipt details."}</p>
+<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">${viewBooking}</a></p>`;
+      break;
+    }
+    case "booking_payment_released": {
+      const serviceName = escapeHtml(v.serviceName || (fr ? "votre service" : "your service"));
+      content = `
+<h1 style="${h1Style}">${fr ? "Réservation finalisée" : "Booking finalized"}</h1>
+<p style="${pStyle}">${fr ? "Le paiement pour" : "Payment for"} <strong>${serviceName}</strong> ${fr ? "est finalisé. Cette réservation est maintenant close." : "is complete. This booking is now closed."}</p>
+<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">${viewBooking}</a></p>`;
       break;
     }
     default:
-      content = `<p style="${pStyle}">You have a booking update.</p>`;
+      content = `<p style="${pStyle}">${fr ? "Vous avez une mise à jour de réservation." : "You have a booking update."}</p>`;
   }
 
   return wrapEmail({

@@ -221,6 +221,42 @@ export function formatAnswerDisplayValue(
   return String(value);
 }
 
+/** Job/booking payloads may key answers by question.id or ServiceQuestion.questionId. */
+export function resolveStoredAnswer(
+  answers: Record<string, string | number | boolean>,
+  sq: ServiceQuestion,
+): string | number | boolean | undefined {
+  const byQuestionId = answers[sq.question.id];
+  if (byQuestionId !== undefined && byQuestionId !== "") return byQuestionId;
+  const byServiceQuestionId = answers[sq.questionId];
+  if (byServiceQuestionId !== undefined && byServiceQuestionId !== "") {
+    return byServiceQuestionId;
+  }
+  return undefined;
+}
+
+export function buildAnswerDisplayRows(
+  serviceQuestions: ServiceQuestion[],
+  answers: Record<string, string | number | boolean>,
+  options?: { hideScheduleDuplicates?: boolean },
+): Array<{ key: string; label: string; displayValue: string }> {
+  const visible = getVisibleServiceQuestions(serviceQuestions, answers, {
+    hideScheduleDuplicates: options?.hideScheduleDuplicates ?? true,
+  });
+
+  return visible
+    .map((sq) => {
+      const value = resolveStoredAnswer(answers, sq);
+      if (value === undefined) return null;
+      return {
+        key: sq.question.id,
+        label: sq.question.label,
+        displayValue: formatAnswerDisplayValue(sq.question, value),
+      };
+    })
+    .filter((row): row is { key: string; label: string; displayValue: string } => row !== null);
+}
+
 export function buildAnswerLabelMap(
   serviceQuestions: ServiceQuestion[],
 ): Map<string, { label: string; format: (value: string | number | boolean) => string }> {

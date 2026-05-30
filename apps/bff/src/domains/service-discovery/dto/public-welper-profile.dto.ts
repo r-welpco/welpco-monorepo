@@ -40,8 +40,17 @@ export class PublicWelperProfileDto {
   @ApiPropertyOptional()
   firstName!: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description:
+      'Always null on public customer-facing responses. Use displayName instead.',
+    nullable: true,
+  })
   lastName!: string | null;
+
+  @ApiProperty({
+    description: 'Privacy-safe display name (first name + last initial).',
+  })
+  displayName!: string;
 
   @ApiPropertyOptional()
   bio!: string | null;

@@ -1,13 +1,27 @@
 "use client";
 
+import {
+  Button,
+  Card,
+  Flex,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Text,
+  TextArea,
+} from "@welpco/ui";
 import { useRouter } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { AdminErrorCallout, AdminSuccessCallout } from "@/components/admin-callout";
+import { NativeFormField, nativeInputProps } from "@/components/native-form-field";
 import {
   createDisputeResolution,
   type CreateDisputeResolutionParams,
   type DisputeResolutionType,
   type DisputeItem,
 } from "@/lib/services/dispute-service";
+import { formatAdminMoneyCents } from "@/lib/admin-format";
 
 const RESOLUTION_TYPES: DisputeResolutionType[] = [
   "refund",
@@ -16,11 +30,6 @@ const RESOLUTION_TYPES: DisputeResolutionType[] = [
   "no_action",
   "closed",
 ];
-
-function formatMoneyMajor(cents: number, currency: string): string {
-  const cur = currency.toUpperCase();
-  return `${(cents / 100).toFixed(2)} ${cur}`;
-}
 
 export function ResolutionForm({
   disputeId,
@@ -41,14 +50,14 @@ export function ResolutionForm({
   const capturedHint = dispute.capturedPayment;
   const refundHelp = useMemo(() => {
     if (resolutionType === "refund") {
-      return "Full refund: Stripe refunds each captured charge in full (hold + any receipt delta). Leave amount empty.";
+      return "Full refund: Stripe refunds each captured charge in full. Leave amount empty.";
     }
     if (resolutionType === "partial_refund") {
       const cap =
         capturedHint != null
-          ? ` Max captured on file: ${formatMoneyMajor(capturedHint.totalCents, capturedHint.currency)}.`
+          ? ` Max captured: ${formatAdminMoneyCents(capturedHint.totalCents, capturedHint.currency)}.`
           : "";
-      return `Enter the refund in dollars (e.g. 25.00). The amount is applied to the most recent capture first, then earlier captures until the total is reached.${cap}`;
+      return `Enter refund in dollars (e.g. 25.00). Applied to the most recent capture first.${cap}`;
     }
     return null;
   }, [resolutionType, capturedHint]);
@@ -82,7 +91,7 @@ export function ResolutionForm({
       if (sr.status === "succeeded") {
         stripeLine = ` Stripe: refund succeeded (${sr.refundsCreated ?? 1} charge(s)).`;
       } else if (sr.status === "failed") {
-        stripeLine = ` Stripe: refund failed — ${sr.message ?? "unknown error"}. Resolution is still saved; fix in Stripe or contact engineering.`;
+        stripeLine = ` Stripe: refund failed — ${sr.message ?? "unknown error"}. Resolution is still saved.`;
       } else if (sr.status === "skipped") {
         stripeLine = ` Stripe: ${sr.message ?? "No captured payment to refund."}`;
       }
@@ -98,78 +107,89 @@ export function ResolutionForm({
   }
 
   return (
-    <div className="admin-card" style={{ marginTop: "1.25rem" }}>
-      <h2 style={{ marginTop: 0, fontSize: "1rem" }}>Resolve dispute</h2>
-      <form onSubmit={onSubmit}>
-        <div className="field">
-          <label htmlFor="resolutionType">Resolution type</label>
-          <select
-            id="resolutionType"
-            value={resolutionType}
-            onChange={(e) => {
-              setResolutionType(e.target.value as DisputeResolutionType);
-              setError(null);
-            }}
-          >
-            {RESOLUTION_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t.replace(/_/g, " ")}
-              </option>
-            ))}
-          </select>
-          {refundHelp ? (
-            <p style={{ margin: "0.35rem 0 0", fontSize: "0.8rem", color: "var(--admin-muted)" }}>
-              {refundHelp}
-            </p>
-          ) : null}
-        </div>
-        <div className="field">
-          <label htmlFor="bookingOutcome">Booking outcome</label>
-          <select
-            id="bookingOutcome"
-            value={bookingOutcome}
-            onChange={(e) => setBookingOutcome(e.target.value as "completed" | "cancelled")}
-          >
-            <option value="completed">Mark booking completed</option>
-            <option value="cancelled">Mark booking cancelled</option>
-          </select>
-          <p style={{ margin: "0.35rem 0 0", fontSize: "0.8rem", color: "var(--admin-muted)" }}>
-            Outcome updates the booking after resolution. Pair <strong>refund</strong> with{" "}
-            <strong>cancelled</strong> when you are voiding the job.
-          </p>
-        </div>
-        <div className="field">
-          <label htmlFor="refundAmount">
-            Refund amount ({resolutionType === "partial_refund" ? "required" : "optional"})
-          </label>
-          <input
-            id="refundAmount"
-            type="number"
-            min={0}
-            step="0.01"
-            value={refundAmount}
-            onChange={(e) => setRefundAmount(e.target.value)}
-            placeholder={resolutionType === "partial_refund" ? "e.g. 25.00" : "Leave empty for full refund"}
-            disabled={resolutionType !== "refund" && resolutionType !== "partial_refund"}
-            aria-required={resolutionType === "partial_refund"}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="notes">Internal notes</label>
-          <textarea
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Visible on resolution record; used as cancellation reason if booking is cancelled."
-            rows={4}
-          />
-        </div>
-        {error ? <p className="err">{error}</p> : null}
-        {success ? <p className="ok">{success}</p> : null}
-        <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Submitting…" : "Submit resolution"}
-        </button>
+    <Card size="2" title="Resolve dispute">
+      <form onSubmit={(e) => void onSubmit(e)}>
+        <Flex direction="column" gap="4" style={{ maxWidth: 560 }}>
+          <Flex direction="column" gap="1">
+            <Text size="1" weight="medium">
+              Resolution type
+            </Text>
+            <Select
+              value={resolutionType}
+              onValueChange={(v) => {
+                setResolutionType(v as DisputeResolutionType);
+                setError(null);
+              }}
+            >
+              <SelectTrigger />
+              <SelectContent>
+                {RESOLUTION_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t.replace(/_/g, " ")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {refundHelp ? (
+              <Text size="1" color="gray">
+                {refundHelp}
+              </Text>
+            ) : null}
+          </Flex>
+
+          <Flex direction="column" gap="1">
+            <Text size="1" weight="medium">
+              Booking outcome
+            </Text>
+            <Select
+              value={bookingOutcome}
+              onValueChange={(v) => setBookingOutcome(v as "completed" | "cancelled")}
+            >
+              <SelectTrigger />
+              <SelectContent>
+                <SelectItem value="completed">Mark booking completed</SelectItem>
+                <SelectItem value="cancelled">Mark booking cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+            <Text size="1" color="gray">
+              Pair refund with cancelled when voiding the job.
+            </Text>
+          </Flex>
+
+          <NativeFormField label={`Refund amount (${resolutionType === "partial_refund" ? "required" : "optional"})`}>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={refundAmount}
+              onChange={(e) => setRefundAmount(e.target.value)}
+              placeholder={resolutionType === "partial_refund" ? "e.g. 25.00" : "Leave empty for full refund"}
+              disabled={resolutionType !== "refund" && resolutionType !== "partial_refund"}
+              aria-required={resolutionType === "partial_refund"}
+              {...nativeInputProps()}
+            />
+          </NativeFormField>
+
+          <Flex direction="column" gap="1">
+            <Text size="1" weight="medium">
+              Internal notes
+            </Text>
+            <TextArea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Visible on resolution record; used as cancellation reason if booking is cancelled."
+              rows={4}
+            />
+          </Flex>
+
+          {error ? <AdminErrorCallout message={error} /> : null}
+          {success ? <AdminSuccessCallout message={success} /> : null}
+
+          <Button type="submit" disabled={loading}>
+            {loading ? "Submitting…" : "Submit resolution"}
+          </Button>
+        </Flex>
       </form>
-    </div>
+    </Card>
   );
 }
