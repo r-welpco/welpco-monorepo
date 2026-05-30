@@ -47,7 +47,16 @@ export function JobStatusBadge({ status }: JobStatusBadgeProps) {
   }
   const { color, label } = statusToken;
   return (
-    <Badge color={color} variant="soft" highContrast>
+    <Badge color={color} variant="soft" radius="full" highContrast>
+      <span
+        aria-hidden
+        style={{
+          width: "6px",
+          height: "6px",
+          borderRadius: "9999px",
+          backgroundColor: `var(--${color}-9)`,
+        }}
+      />
       {label}
     </Badge>
   );

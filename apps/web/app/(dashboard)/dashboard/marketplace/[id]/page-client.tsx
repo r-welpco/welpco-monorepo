@@ -1,14 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Box } from "@welpco/ui/box";
+import { Card } from "@welpco/ui/card";
 import { Container } from "@welpco/ui/container";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Button } from "@welpco/ui/button";
+import { Badge } from "@welpco/ui/badge";
 import { Callout } from "@welpco/ui/callout";
+import { Separator } from "@welpco/ui/separator";
+import { Skeleton } from "@welpco/ui/skeleton";
+import {
+  DataList,
+  DataListItem,
+  DataListLabel,
+  DataListValue,
+} from "@welpco/ui/data-list";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
@@ -29,9 +39,145 @@ import {
   useWithdrawJobApplication,
 } from "@/lib/hooks/use-job-posting";
 import { ApiClientError } from "@/lib/api/client";
+import { ArrowLeft, ArrowRight, Check, MapPin, Users2 } from "lucide-react";
 
 interface JobDetailPageClientProps {
   jobId: string;
+}
+
+function formatScheduleDate(value?: string | null): string {
+  if (!value) return "—";
+  const parsed = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatDuration(minutes?: number): string {
+  if (!minutes) return "—";
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+function formatDateTime(value?: string | null): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+const APPLICATION_STATUS: Record<
+  string,
+  { label: string; color: "blue" | "green" | "red" | "gray"; helper: string }
+> = {
+  pending: {
+    label: "Pending",
+    color: "blue",
+    helper: "Your application is in — the customer will review it and reach out if it's a match.",
+  },
+  accepted: {
+    label: "Selected",
+    color: "green",
+    helper: "You've been selected. The customer will send you a booking request shortly.",
+  },
+  rejected: {
+    label: "Not selected",
+    color: "red",
+    helper: "This application wasn't selected this time. Keep an eye out for other jobs.",
+  },
+  withdrawn: {
+    label: "Withdrawn",
+    color: "gray",
+    helper: "You withdrew this application.",
+  },
+};
+
+const APPLY_STEPS = [
+  { key: "review", label: "Review job" },
+  { key: "submit", label: "Your proposal" },
+] as const;
+
+function ApplyStepper({ activeIndex }: { activeIndex: number }) {
+  const primary = SEMANTIC_COLOR.primary;
+  return (
+    <Flex align="center" gap="2" aria-hidden>
+      {APPLY_STEPS.map((step, i) => {
+        const isActive = i === activeIndex;
+        const isDone = i < activeIndex;
+        const accent = isActive || isDone;
+        return (
+          <Fragment key={step.key}>
+            <Flex
+              align="center"
+              gap="2"
+              px="3"
+              py="1"
+              style={{
+                borderRadius: "9999px",
+                backgroundColor: accent ? `var(--${primary}-3)` : "var(--gray-3)",
+                border: accent
+                  ? `1px solid var(--${primary}-6)`
+                  : "1px solid var(--gray-5)",
+                color: accent ? `var(--${primary}-11)` : "var(--gray-11)",
+              }}
+            >
+              {isDone ? (
+                <Check size={14} aria-hidden />
+              ) : (
+                <Text size="1" weight="bold">
+                  {i + 1}
+                </Text>
+              )}
+              <Text size="2" weight={isActive ? "bold" : "medium"}>
+                {step.label}
+              </Text>
+            </Flex>
+            {i < APPLY_STEPS.length - 1 && (
+              <Box
+                style={{ flex: 1, height: "1px", backgroundColor: "var(--gray-5)" }}
+              />
+            )}
+          </Fragment>
+        );
+      })}
+    </Flex>
+  );
+}
+
+function JobDetailSkeleton() {
+  return (
+    <Container size="3" py="6">
+      <Flex direction="column" gap="5">
+        <Skeleton width="160px" height="32px" />
+        <Card size="4" variant="surface">
+          <Flex direction="column" gap="4">
+            <Skeleton width="100px" height="20px" />
+            <Skeleton width="70%" height="32px" />
+            <Separator size="4" />
+            <Flex wrap="wrap" gapX="6" gapY="4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} width="140px" height="40px" />
+              ))}
+            </Flex>
+          </Flex>
+        </Card>
+        <Card size="4" variant="surface">
+          <Flex direction="column" gap="3">
+            <Skeleton width="140px" height="24px" />
+            <Skeleton width="100%" height="16px" />
+            <Skeleton width="90%" height="16px" />
+          </Flex>
+        </Card>
+      </Flex>
+    </Container>
+  );
 }
 
 export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps) {
@@ -85,18 +231,18 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
   };
 
   if (isLoading) {
-    return (
-      <Container size="3" py="6">
-        <Text>Loading…</Text>
-      </Container>
-    );
+    return <JobDetailSkeleton />;
   }
 
   if (isError || !job) {
     return (
       <Container size="3" py="6">
+        <Button variant="ghost" color="gray" mb="4" onClick={() => router.push("/dashboard/marketplace")}>
+          <ArrowLeft size={16} aria-hidden />
+          Back to marketplace
+        </Button>
         <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface">
-          <Callout.Text>Job not found.</Callout.Text>
+          <Callout.Text>We couldn't find this job. It may have been removed or expired.</Callout.Text>
         </Callout.Root>
       </Container>
     );
@@ -109,87 +255,201 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
     job.status !== "converted_to_booking" &&
     job.status !== "completed";
 
+  const locationLine =
+    job.locationCity && job.locationRegion
+      ? `${job.locationCity}, ${job.locationRegion}`
+      : job.locationCity ?? job.locationRegion ?? null;
+
+  const serviceLabel = job.subcategoryLabel ?? job.categoryLabel;
+  const closesAt = formatDateTime(job.expiresAt);
+  const canApplyNow = isWelper && isJobOpenForWelperApplications(job.status) && !job.myApplicationId;
+  const appStatus = myApplication ? APPLICATION_STATUS[myApplication.status] : null;
+
   return (
     <Container size="3" py="6">
       <Flex direction="column" gap="5">
-        <Flex justify="between" align="start" gap="3" wrap="wrap">
-          <Box>
-            <Flex align="center" gap="2" mb="2">
-              <Heading size="6">{job.title}</Heading>
-              <JobStatusBadge status={job.status as import("@welpco/ui/platform").JobStatus} />
-            </Flex>
-            <Text size="2" color="gray" highContrast>
-              {[
-                job.subcategoryLabel ?? job.categoryLabel,
-                job.locationCity && job.locationRegion
-                  ? `${job.locationCity}, ${job.locationRegion}`
-                  : job.locationCity ?? job.locationRegion,
-                `${job.scheduledDate} · ${job.scheduledStartTime}–${job.scheduledEndTime}`,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </Text>
-          </Box>
-          <Button variant="soft" onClick={() => router.push("/dashboard/marketplace")}>
+        <Box>
+          <Button variant="ghost" color="gray" onClick={() => router.push("/dashboard/marketplace")}>
+            <ArrowLeft size={16} aria-hidden />
             Back to marketplace
           </Button>
-        </Flex>
-
-        <Box>
-          <Text size="3">{job.description}</Text>
         </Box>
 
-        {isCustomer && job.locationAddress && (
-          <Callout.Root color="gray" variant="surface">
-            <Callout.Text>Service address: {job.locationAddress}</Callout.Text>
-          </Callout.Root>
-        )}
+        {/* Hero header */}
+        <Card size="4" variant="surface">
+          <Flex direction="column" gap="4">
+            <Flex justify="between" align="start" gap="3" wrap="wrap">
+              <Box style={{ minWidth: 0, flex: 1 }}>
+                {serviceLabel && (
+                  <Badge color="blue" variant="soft" size="1" radius="full" mb="2">
+                    {serviceLabel}
+                  </Badge>
+                )}
+                <Heading size="7" trim="start">
+                  {job.title}
+                </Heading>
+              </Box>
+              <Box style={{ flexShrink: 0 }}>
+                <JobStatusBadge status={job.status as import("@welpco/ui/platform").JobStatus} />
+              </Box>
+            </Flex>
 
-        {canCancel && (
-          <Button
-            variant="soft"
-            color={SEMANTIC_COLOR.danger}
-            disabled={cancelMutation.isPending}
-            onClick={() => cancelMutation.mutate(jobId)}
-          >
-            Cancel job
-          </Button>
-        )}
+            <Separator size="4" />
 
-        {isWelper && (
-          <>
-            {isJobOpenForWelperApplications(job.status) && !job.myApplicationId && (
-              <Button color={SEMANTIC_COLOR.primary} onClick={handleApplyClick}>
-                Apply to this job
-              </Button>
+            <DataList
+              orientation={{ initial: "vertical", xs: "horizontal" }}
+              size="2"
+            >
+              <DataListItem>
+                <DataListLabel minWidth="96px">Date</DataListLabel>
+                <DataListValue>{formatScheduleDate(job.scheduledDate)}</DataListValue>
+              </DataListItem>
+              <DataListItem>
+                <DataListLabel minWidth="96px">Time</DataListLabel>
+                <DataListValue>
+                  {`${job.scheduledStartTime}–${job.scheduledEndTime}`}
+                </DataListValue>
+              </DataListItem>
+              <DataListItem>
+                <DataListLabel minWidth="96px">Duration</DataListLabel>
+                <DataListValue>{formatDuration(job.durationMinutes)}</DataListValue>
+              </DataListItem>
+              {locationLine && (
+                <DataListItem>
+                  <DataListLabel minWidth="96px">Location</DataListLabel>
+                  <DataListValue>{locationLine}</DataListValue>
+                </DataListItem>
+              )}
+              {isCustomer && (
+                <DataListItem>
+                  <DataListLabel minWidth="96px">Applications</DataListLabel>
+                  <DataListValue>
+                    {String(job.applicationCount ?? applications.length)}
+                  </DataListValue>
+                </DataListItem>
+              )}
+              {isWelper && canApplyNow && closesAt && (
+                <DataListItem>
+                  <DataListLabel minWidth="96px">Closes</DataListLabel>
+                  <DataListValue>{closesAt}</DataListValue>
+                </DataListItem>
+              )}
+            </DataList>
+
+            {(canApplyNow || canCancel) && (
+              <>
+                <Separator size="4" />
+                <Flex justify="end" gap="3" wrap="wrap">
+                  {canCancel && (
+                    <Button
+                      variant="soft"
+                      color={SEMANTIC_COLOR.danger}
+                      disabled={cancelMutation.isPending}
+                      onClick={() => cancelMutation.mutate(jobId)}
+                    >
+                      Cancel job
+                    </Button>
+                  )}
+                  {canApplyNow && (
+                    <Button color={SEMANTIC_COLOR.primary} size="3" onClick={handleApplyClick}>
+                      Apply to this job
+                    </Button>
+                  )}
+                </Flex>
+              </>
             )}
-            {myApplication && (
-              <Callout.Root color="blue" variant="surface">
-                <Callout.Text>
-                  {`Application status: ${myApplication.status}`}
-                </Callout.Text>
-                {myApplication.status === "pending" && (
+          </Flex>
+        </Card>
+
+        {/* Welper application status */}
+        {isWelper && myApplication && appStatus && (
+          <Card size="3" variant="surface">
+            <Flex direction="column" gap="3">
+              <Flex align="center" gap="2" wrap="wrap">
+                <Text size="2" weight="bold">
+                  Your application
+                </Text>
+                <Badge color={appStatus.color} variant="soft" radius="full">
+                  {appStatus.label}
+                </Badge>
+              </Flex>
+              <Text size="2" color="gray" highContrast>
+                {appStatus.helper}
+              </Text>
+              {myApplication.status === "pending" && (
+                <Flex justify="end">
                   <Button
                     variant="soft"
-                    mt="2"
+                    color="gray"
                     disabled={withdrawMutation.isPending}
                     onClick={() => withdrawMutation.mutate(myApplication.id)}
                   >
                     Withdraw application
                   </Button>
-                )}
-              </Callout.Root>
-            )}
-          </>
+                </Flex>
+              )}
+            </Flex>
+          </Card>
         )}
 
+        {/* Description */}
+        {job.description && (
+          <Card size="4" variant="surface">
+            <Flex direction="column" gap="2">
+              <Heading size="4" trim="start">
+                About this job
+              </Heading>
+              <Text size="3" style={{ whiteSpace: "pre-line" }}>
+                {job.description}
+              </Text>
+            </Flex>
+          </Card>
+        )}
+
+        {isCustomer && job.locationAddress && (
+          <Callout.Root color="gray" variant="surface">
+            <Callout.Icon>
+              <MapPin size={16} aria-hidden />
+            </Callout.Icon>
+            <Callout.Text>Service address: {job.locationAddress}</Callout.Text>
+          </Callout.Root>
+        )}
+
+        {/* Applications (customer) */}
         {isCustomer && (
           <Box>
-            <Heading size="5" mb="3">
-              Applications ({applications.length})
-            </Heading>
+            <Flex align="center" gap="2" mb="3">
+              <Heading size="5" trim="start">
+                Applications
+              </Heading>
+              <Badge color="gray" variant="soft" radius="full" size="2">
+                {applications.length}
+              </Badge>
+            </Flex>
             {applications.length === 0 ? (
-              <Text size="2" color="gray">No applications yet.</Text>
+              <Card size="3" variant="surface">
+                <Flex direction="column" align="center" gap="2" py="5" style={{ textAlign: "center" }}>
+                  <Flex
+                    align="center"
+                    justify="center"
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "9999px",
+                      backgroundColor: "var(--gray-3)",
+                      color: "var(--gray-9)",
+                    }}
+                  >
+                    <Users2 size={22} aria-hidden />
+                  </Flex>
+                  <Text size="2" color="gray" highContrast weight="medium">
+                    No applications yet
+                  </Text>
+                  <Text size="2" color="gray">
+                    Welpers who match this job will appear here as they apply.
+                  </Text>
+                </Flex>
+              </Card>
             ) : (
               <ApplicationList
                 items={applications.map((app) => ({
@@ -226,19 +486,23 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
       </Flex>
 
       <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
-        <DialogContent>
-          <Box style={{ maxWidth: 640, maxHeight: "70vh", overflowY: "auto" }}>
-          {applyStep === "review" ? (
-            <Flex direction="column" gap="4">
-              <Box>
-                <Heading size="6" mb="1">
-                  Review job
-                </Heading>
-                <Text size="2" color="gray" highContrast>
-                  Confirm the job details and customer answers before submitting your application.
-                </Text>
-              </Box>
+        <DialogContent
+          title="Apply to this job"
+          description={
+            applyStep === "review"
+              ? "Check the job details and the customer's answers before you write your proposal."
+              : "Pick the offering you'll deliver this with and introduce yourself to the customer."
+          }
+        >
+          <ApplyStepper activeIndex={applyStep === "review" ? 0 : 1} />
+
+          <Box
+            pr="2"
+            style={{ maxHeight: "56vh", overflowY: "auto" }}
+          >
+            {applyStep === "review" ? (
               <JobPostingReviewSummary
+                embedded
                 title={job.title}
                 description={job.description}
                 categoryLabel={job.categoryLabel}
@@ -252,21 +516,11 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                 answers={job.answers ?? {}}
                 serviceQuestionCategoryId={job.serviceQuestionCategoryId}
               />
-              <Flex justify="end" gap="3">
-                <Button variant="soft" onClick={() => setApplyOpen(false)}>
-                  Cancel
-                </Button>
-                <Button color={SEMANTIC_COLOR.primary} onClick={() => setApplyStep("submit")}>
-                  Continue to application
-                </Button>
-              </Flex>
-            </Flex>
-          ) : (
-            <Flex direction="column" gap="4">
-              <Button variant="soft" onClick={() => setApplyStep("review")}>
-                Back to review
-              </Button>
+            ) : (
               <JobApplicationForm
+                embedded
+                formId="welper-apply-form"
+                hideSubmit
                 matchingOfferings={job.matchingOfferings ?? []}
                 loading={applyMutation.isPending}
                 error={applyError ?? undefined}
@@ -286,9 +540,37 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                   }
                 }}
               />
+            )}
+          </Box>
+
+          <Separator size="4" />
+
+          {applyStep === "review" ? (
+            <Flex justify="between" align="center" gap="3">
+              <Button variant="soft" color="gray" onClick={() => setApplyOpen(false)}>
+                Cancel
+              </Button>
+              <Button color={SEMANTIC_COLOR.primary} onClick={() => setApplyStep("submit")}>
+                Continue to proposal
+                <ArrowRight size={16} aria-hidden />
+              </Button>
+            </Flex>
+          ) : (
+            <Flex justify="between" align="center" gap="3">
+              <Button variant="ghost" color="gray" onClick={() => setApplyStep("review")}>
+                <ArrowLeft size={16} aria-hidden />
+                Back
+              </Button>
+              <Button
+                type="submit"
+                form="welper-apply-form"
+                color={SEMANTIC_COLOR.primary}
+                loading={applyMutation.isPending}
+              >
+                Submit application
+              </Button>
             </Flex>
           )}
-          </Box>
         </DialogContent>
       </Dialog>
 

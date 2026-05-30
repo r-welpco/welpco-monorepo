@@ -7,7 +7,11 @@ import { Flex } from "@welpco/ui/flex";
 import { Box } from "@welpco/ui/box";
 import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
+import { Avatar } from "@welpco/ui/avatar";
+import { Separator } from "@welpco/ui/separator";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { BadgeCheck, Clock, Wallet } from "lucide-react";
+import type { ReactNode } from "react";
 
 export interface ApplicationReviewCardProps {
   candidateName: string;
@@ -31,6 +35,22 @@ const statusLabel: Record<
   withdrawn: { label: "Withdrawn", color: "gray" },
 };
 
+function candidateInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+function MetaItem({ children }: { children: ReactNode }) {
+  return (
+    <Flex align="center" gap="2" style={{ minWidth: 0, color: "var(--gray-9)" }}>
+      {children}
+    </Flex>
+  );
+}
+
 export function ApplicationReviewCard({
   candidateName,
   role,
@@ -46,30 +66,67 @@ export function ApplicationReviewCard({
 
   return (
     <Card size="3" variant="surface" style={{ width: "100%" }}>
-      <Flex direction="column" gap="3">
+      <Flex direction="column" gap="4">
         <Flex justify="between" align="start" gap="3">
-          <Box flexGrow="1" style={{ minWidth: 0 }}>
-            <Flex align="center" gap="2" mb="1" wrap="wrap">
-              <Heading size="4" trim="start">
-                {candidateName}
-              </Heading>
-              <Badge color={statusToken.color} variant="soft" size="1">
-                {statusToken.label}
-              </Badge>
-              {welperVerified && (
-                <Badge color="green" variant="soft" size="1">
-                  Verified
-                </Badge>
-              )}
-            </Flex>
-            <Text size="2" color="gray" highContrast>
-              {`${role} · Rate ${hourlyRate}${submittedAt ? ` · Submitted ${submittedAt}` : ""}`}
-            </Text>
+          <Flex gap="3" align="center" style={{ minWidth: 0 }}>
+            <Avatar
+              size="3"
+              fallback={candidateInitials(candidateName)}
+              radius="full"
+              color={SEMANTIC_COLOR.primary}
+            />
+            <Box style={{ minWidth: 0 }}>
+              <Flex align="center" gap="2" mb="1" wrap="wrap">
+                <Heading size="4" trim="start">
+                  {candidateName}
+                </Heading>
+                {welperVerified && (
+                  <Badge color={SEMANTIC_COLOR.primary} variant="soft" size="1" radius="full">
+                    <Flex align="center" gap="1">
+                      <BadgeCheck size={12} aria-hidden />
+                      Verified
+                    </Flex>
+                  </Badge>
+                )}
+              </Flex>
+              <Text size="2" color="gray" truncate>
+                {role}
+              </Text>
+            </Box>
+          </Flex>
+          <Box style={{ flexShrink: 0 }}>
+            <Badge color={statusToken.color} variant="soft" size="2" radius="full">
+              {statusToken.label}
+            </Badge>
           </Box>
         </Flex>
 
+        <Flex wrap="wrap" gapX="4" gapY="2">
+          <MetaItem>
+            <Wallet size={14} aria-hidden style={{ flexShrink: 0 }} />
+            <Text size="2" color="gray" highContrast>
+              {hourlyRate}
+            </Text>
+          </MetaItem>
+          {submittedAt && (
+            <MetaItem>
+              <Clock size={14} aria-hidden style={{ flexShrink: 0 }} />
+              <Text size="2" color="gray" highContrast>
+                Applied {submittedAt}
+              </Text>
+            </MetaItem>
+          )}
+        </Flex>
+
         {proposalMessage && (
-          <Box p="3" style={{ backgroundColor: "var(--gray-2)", borderRadius: "var(--radius-3)" }}>
+          <Box
+            p="3"
+            style={{
+              backgroundColor: "var(--gray-2)",
+              borderRadius: "var(--radius-3)",
+              borderLeft: "2px solid var(--gray-5)",
+            }}
+          >
             <Text size="2" color="gray" highContrast>
               {proposalMessage}
             </Text>
@@ -77,17 +134,20 @@ export function ApplicationReviewCard({
         )}
 
         {onSendBookingRequest && status === "pending" && (
-          <Flex gap="2" justify="end" wrap="wrap">
-            <Button
-              onClick={onSendBookingRequest}
-              variant="solid"
-              color={SEMANTIC_COLOR.primary}
-              size="2"
-              disabled={sendBookingRequestDisabled}
-            >
-              Send booking request
-            </Button>
-          </Flex>
+          <>
+            <Separator size="4" />
+            <Flex gap="2" justify="end" wrap="wrap">
+              <Button
+                onClick={onSendBookingRequest}
+                variant="solid"
+                color={SEMANTIC_COLOR.primary}
+                size="2"
+                disabled={sendBookingRequestDisabled}
+              >
+                Send booking request
+              </Button>
+            </Flex>
+          </>
         )}
       </Flex>
     </Card>

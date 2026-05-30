@@ -47,6 +47,8 @@ export interface JobPostingReviewSummaryProps {
   showFullAddress?: boolean;
   answers: Record<string, string | number | boolean>;
   serviceQuestionCategoryId: string;
+  /** Render without the surrounding Card chrome (e.g. inside a dialog). */
+  embedded?: boolean;
 }
 
 export function JobPostingReviewSummary({
@@ -64,6 +66,7 @@ export function JobPostingReviewSummary({
   showFullAddress = false,
   answers,
   serviceQuestionCategoryId,
+  embedded = false,
 }: JobPostingReviewSummaryProps) {
   const {
     data: serviceQuestions,
@@ -81,8 +84,7 @@ export function JobPostingReviewSummary({
     ? locationAddress
     : [locationCity, locationRegion].filter(Boolean).join(", ");
 
-  return (
-    <Card size="3" variant="surface">
+  const content = (
       <Flex direction="column" gap={FORM_SPACING.sectionGap}>
         <Box>
           <Heading size="5" trim="start" mb={FORM_SPACING.titleGap}>
@@ -164,6 +166,13 @@ export function JobPostingReviewSummary({
           )}
         </Box>
       </Flex>
+  );
+
+  if (embedded) return content;
+
+  return (
+    <Card size="3" variant="surface">
+      {content}
     </Card>
   );
 }

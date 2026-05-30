@@ -11,36 +11,42 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    candidateName: 'John Doe',
-    role: 'Senior Mover',
-    hourlyRate: '$120/hr',
-    submittedAt: '1 hour ago',
-    coverLetter: 'I have 5 years of experience in moving and furniture handling. I am reliable and have all necessary equipment.',
-    status: 'new',
-  },
-};
-
-export const Shortlisted: Story = {
+export const Pending: Story = {
   args: {
     candidateName: 'Jane Smith',
     role: 'Professional Mover',
     hourlyRate: '$150/hr',
     submittedAt: '2 hours ago',
-    coverLetter: 'Available this weekend and have all necessary equipment. I specialize in delicate items.',
-    status: 'shortlist',
+    proposalMessage:
+      'Available this weekend and I have all the necessary equipment. I specialize in handling delicate items and can bring a second helper if needed.',
+    status: 'pending',
+    welperVerified: true,
+    onSendBookingRequest: () => {},
   },
 };
 
-export const Hired: Story = {
+export const Unverified: Story = {
+  args: {
+    candidateName: 'John Doe',
+    role: 'Senior Mover',
+    hourlyRate: '$120/hr',
+    submittedAt: '1 hour ago',
+    proposalMessage:
+      'I have 5 years of experience in moving and furniture handling. Reliable, punctual, and fully insured.',
+    status: 'pending',
+    onSendBookingRequest: () => {},
+  },
+};
+
+export const Selected: Story = {
   args: {
     candidateName: 'Bob Johnson',
     role: 'Experienced Mover',
     hourlyRate: '$100/hr',
     submittedAt: '3 hours ago',
-    coverLetter: 'Can help with moving tasks. Available immediately.',
-    status: 'hired',
+    proposalMessage: 'Can help with all moving tasks. Available immediately.',
+    status: 'accepted',
+    welperVerified: true,
   },
 };
 
@@ -50,8 +56,7 @@ export const Rejected: Story = {
     role: 'Junior Mover',
     hourlyRate: '$80/hr',
     submittedAt: '4 hours ago',
-    coverLetter: 'Looking for moving opportunities.',
-    status: 'reject',
+    proposalMessage: 'Looking for moving opportunities in the area.',
+    status: 'rejected',
   },
 };
-

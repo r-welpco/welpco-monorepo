@@ -33,7 +33,6 @@ import { useAuthStore } from "@/stores/authStore";
 import { ApiClientError } from "@/lib/api/client";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
-import { JobPostingReviewSummary } from "@/components/features/marketplace/job-posting-review-summary";
 import { QuestionField } from "@/components/features/booking/question-field";
 import {
   areRequiredServiceQuestionsAnswered,
@@ -598,27 +597,11 @@ export default function NewBookingPageClient({
         </Box>
 
         {isMarketplaceHandoff && handoff?.jobTitle && (
-          <Callout.Root color="blue" variant="surface">
+          <Callout.Root color={SEMANTIC_COLOR.info} variant="surface">
             <Callout.Text>
               This booking is linked to your marketplace job. Confirm the details below, then send the request.
             </Callout.Text>
           </Callout.Root>
-        )}
-
-        {isMarketplaceHandoff && handoff && (
-          <JobPostingReviewSummary
-            title={handoff.jobTitle}
-            scheduledDate={handoff.scheduledDate}
-            scheduledStartTime={handoff.scheduledStartTime}
-            scheduledEndTime={handoff.scheduledEndTime}
-            durationMinutes={handoff.durationMinutes}
-            locationAddress={handoff.locationAddress}
-            locationCity={handoff.locationCity}
-            locationRegion={handoff.locationRegion}
-            showFullAddress
-            answers={handoff.answers ?? {}}
-            serviceQuestionCategoryId={handoff.serviceQuestionCategoryId}
-          />
         )}
 
         {/* Welper info card */}
