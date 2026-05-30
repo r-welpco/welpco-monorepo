@@ -1343,7 +1343,7 @@
       },
       "confirm": {
         "acceptTitle": "Accept this booking?",
-        "acceptDescription": "We'll place a payment hold on the customer's saved card before confirming. If the hold fails, the booking stays pending.",
+        "acceptDescription": "We'll place a one-hour payment hold on the customer's saved card before confirming (not a charge). If the hold fails, the booking stays pending.",
         "acceptConfirm": "Accept booking",
         "acceptCancel": "Not now",
         "declineTitle": "Decline this booking?",
@@ -1353,7 +1353,7 @@
         "declineReasonLabel": "Reason (optional)",
         "declineReasonPlaceholder": "e.g. Schedule conflict on that day",
         "cancelTitle": "Cancel this booking?",
-        "cancelDescription": "Free cancellation up to 24 hours before the start time. Tell us why so we can keep things fair.",
+        "cancelDescription": "Cancel more than 24 hours before the start time and the one-hour hold is released with no fee. Cancel within 24 hours of the start time and that hold may be charged as a cancellation fee. Tell us why so we can keep things fair.",
         "cancelConfirm": "Cancel booking",
         "cancelCancel": "Keep booking",
         "cancelReasonLabel": "Reason for cancellation",

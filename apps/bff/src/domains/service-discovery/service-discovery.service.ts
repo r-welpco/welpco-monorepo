@@ -72,6 +72,7 @@ export class ServiceDiscoveryService {
     profileByWelperId: Map<string, Pick<WelperProfile, 'firstName' | 'lastName' | 'bio' | 'profilePhotoUrl' | 'serviceArea' | 'countryCode' | 'provinceCode' | 'rating' | 'reviewCount'>>,
     offeringsByWelperId: Map<string, Array<Pick<ServiceOffering, 'welperId' | 'hourlyRate' | 'serviceCategoryId'>>>,
     categoryMap: Map<string, string>,
+    backgroundCheckPassedByWelperId: Map<string, boolean>,
   ): SearchResultItemDto[] {
     return pageIds.map((welperId) => {
       const profile = profileByWelperId.get(welperId);
@@ -103,6 +104,7 @@ export class ServiceDiscoveryService {
         bioSnippet,
         rating,
         reviewCount,
+        verified: backgroundCheckPassedByWelperId.get(welperId) === true,
       };
     });
   }
@@ -305,7 +307,16 @@ export class ServiceDiscoveryService {
       offeringsByWelperId.set(o.welperId, list);
     }
 
-    const items = this.buildSearchResultItems(pageIds, profileByWelperId, offeringsByWelperId, categoryMap);
+    const backgroundCheckPassedByWelperId =
+      await this.backgroundCheckService.getBackgroundCheckPassedByUserIds(pageIds);
+
+    const items = this.buildSearchResultItems(
+      pageIds,
+      profileByWelperId,
+      offeringsByWelperId,
+      categoryMap,
+      backgroundCheckPassedByWelperId,
+    );
     return { items, total, page, limit };
   }
 
@@ -389,6 +400,7 @@ export class ServiceDiscoveryService {
     // see follow-up in AUDIT-LOG.md if read perf becomes a concern).
     const aggregates = await this.aggregatesService.getAggregates(welperId);
     const serviceAreaInfo = buildServiceAreaInfo(profile);
+    const verified = await this.backgroundCheckService.hasPassedBackgroundCheck(welperId);
 
     return {
       id: profile.id,
@@ -399,7 +411,7 @@ export class ServiceDiscoveryService {
       profilePhotoUrl: profile.profilePhotoUrl,
       serviceArea: profile.serviceArea,
       serviceAreaInfo,
-      verified: profile.verified === true,
+      verified,
       averageRating: aggregates.averageRating,
       reviewCount: aggregates.reviewCount,
       responseTimeMinutes: aggregates.responseTimeMinutes,

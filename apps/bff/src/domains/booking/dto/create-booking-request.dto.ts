@@ -79,17 +79,15 @@ export class CreateBookingRequestDto {
 
   /**
    * Duration bounds:
-   * - Min 15: shorter than 15min isn't a useful service window — payment auth
-   *   minimums + welper transit time eat the value.
+   * - Min 60 (1 hour): matches the card hold and minimum billable service window.
    * - Max 720 (12 hours): a marketplace booking longer than half a day is
    *   almost certainly a UI mistake (typed extra hour, AM/PM mix-up). The
    *   booking-detail / receipt UI also can't render a multi-day cleanly.
-   *   Day 11 audit: was unbounded above — accepted 24h+ bookings.
    */
-  @ApiProperty({ description: 'Duration in minutes (15–720)', example: 120 })
+  @ApiProperty({ description: 'Duration in minutes (60–720)', example: 120 })
   @Type(() => Number)
   @IsNumber()
-  @Min(15)
+  @Min(60)
   @Max(720)
   durationMinutes!: number;
 

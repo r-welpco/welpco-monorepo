@@ -68,6 +68,12 @@ describe('ServiceDiscoveryService', () => {
     invalidate: jest.fn(),
   };
 
+  const mockBackgroundCheckService = {
+    assertVisibleInSearch: jest.fn().mockResolvedValue(true),
+    getBackgroundCheckPassedByUserIds: jest.fn().mockResolvedValue(new Map()),
+    hasPassedBackgroundCheck: jest.fn().mockResolvedValue(false),
+  };
+
   const mockQueryBuilder = {
     select: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
@@ -123,9 +129,7 @@ describe('ServiceDiscoveryService', () => {
         },
         {
           provide: BackgroundCheckService,
-          useValue: {
-            assertVisibleInSearch: jest.fn().mockResolvedValue(true),
-          },
+          useValue: mockBackgroundCheckService,
         },
       ],
     }).compile();
@@ -167,6 +171,7 @@ describe('ServiceDiscoveryService', () => {
           provinceCode: null,
           rating: null,
           reviewCount: 0,
+          verified: true,
         },
         {
           welperId: 'w2',
@@ -179,11 +184,18 @@ describe('ServiceDiscoveryService', () => {
           provinceCode: null,
           rating: null,
           reviewCount: 0,
+          verified: false,
         },
       ]);
       mockCategoriesService.findAll.mockResolvedValue([
         { id: 'cat1', name: 'Care' },
       ]);
+      mockBackgroundCheckService.getBackgroundCheckPassedByUserIds.mockResolvedValue(
+        new Map([
+          ['w1', true],
+          ['w2', false],
+        ]),
+      );
       mockServiceOfferingRepo.find.mockResolvedValue([
         { welperId: 'w1', hourlyRate: 25, serviceCategoryId: 'cat1' },
         { welperId: 'w2', hourlyRate: 30, serviceCategoryId: 'cat1' },
@@ -204,6 +216,11 @@ describe('ServiceDiscoveryService', () => {
         title: 'Care',
         hourlyRate: 25,
         categories: ['Care'],
+        verified: true,
+      });
+      expect(result.items[1]).toMatchObject({
+        welperId: 'w2',
+        verified: false,
       });
     });
 
@@ -332,6 +349,7 @@ describe('ServiceDiscoveryService', () => {
         totalPages: 1,
       });
       mockCategoriesService.findAll.mockResolvedValue([{ id: 'cat1', name: 'Care', parent: null }]);
+      mockBackgroundCheckService.hasPassedBackgroundCheck.mockResolvedValue(false);
 
       const result = await service.getPublicWelperProfile('w1');
 
@@ -390,6 +408,7 @@ describe('ServiceDiscoveryService', () => {
         reviewCount: 12,
         responseTimeMinutes: 23,
       });
+      mockBackgroundCheckService.hasPassedBackgroundCheck.mockResolvedValue(true);
 
       const result = await service.getPublicWelperProfile('w2');
 

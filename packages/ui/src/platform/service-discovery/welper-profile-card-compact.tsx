@@ -8,6 +8,7 @@ import { Box } from "@welpco/ui/box";
 import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { VerifiedTrustBadge } from "./verified-trust-badge";
 
 export interface WelperProfileCardCompactProps {
   name: string;
@@ -19,6 +20,8 @@ export interface WelperProfileCardCompactProps {
   /** Total number of completed reviews. Required to gate the rating-vs-no-reviews choice honestly per bible §22.6. */
   reviews?: number;
   imageUrl?: string;
+  /** Background-check verified — render badge only when explicitly true. */
+  verified?: boolean;
   onView?: () => void;
   onBook?: () => void;
 }
@@ -31,6 +34,7 @@ export function WelperProfileCardCompact({
   rating,
   reviews,
   imageUrl,
+  verified = false,
   onView,
   onBook,
 }: WelperProfileCardCompactProps) {
@@ -56,9 +60,12 @@ export function WelperProfileCardCompact({
               style={{ flexShrink: 0 }}
             />
             <Box flexGrow="1" style={{ minWidth: 0 }}>
-              <Heading size="4" weight="bold" trim="start" mb="1">
-                {name}
-              </Heading>
+              <Flex align="center" gap="2" wrap="wrap" mb="1">
+                <Heading size="4" weight="bold" trim="start">
+                  {name}
+                </Heading>
+                {verified === true && <VerifiedTrustBadge size="1" />}
+              </Flex>
               <Text size="2" color="gray" highContrast>
                 {`${title} \u00B7 ${location}`}
               </Text>

@@ -37,6 +37,11 @@ import {
   buildBookingAnswersPayload,
   getVisibleServiceQuestions,
 } from "@/lib/services/service-questions-utils";
+import {
+  computeOneHourHoldSubtotal,
+  computeSubtotalFromMinutes,
+  MIN_BOOKING_DURATION_MINUTES,
+} from "@/lib/booking/booking-pricing";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -107,9 +112,11 @@ export default function NewBookingPageClient({
   // ── Queries & mutations ──────────────────────────────────────────────
   const {
     data: profile,
-    isLoading: profileLoading,
+    isPending: profilePending,
     isError: profileError,
   } = usePublicWelperProfile(welperId);
+
+  const profileLoading = profilePending && !profile;
 
   const createBooking = useCreateBooking();
   const bookable = useBookableAction();
@@ -141,19 +148,26 @@ export default function NewBookingPageClient({
       : [{ id: selectedOffering.serviceCategoryId, name: selectedOffering.categoryName }];
   }, [selectedOffering]);
 
+  const offeringSubcategoryCount = selectedOffering?.subcategories?.length ?? 0;
+  const showServiceTypeField = offeringSubcategoryCount > 0;
+  const serviceTypeIsReadOnly = offeringSubcategoryCount === 1;
+
   useEffect(() => {
     if (!selectedOffering) {
-      setSelectedQuestionCategoryId("");
+      setSelectedQuestionCategoryId((prev) => (prev === "" ? prev : ""));
       return;
     }
 
     const validIds = new Set(questionCategoryOptions.map((option) => option.id));
     if (selectedQuestionCategoryId && validIds.has(selectedQuestionCategoryId)) return;
 
-    setSelectedQuestionCategoryId(
-      questionCategoryOptions.length === 1 ? questionCategoryOptions[0]!.id : "",
-    );
-    setAnswers({});
+    const nextCategoryId =
+      questionCategoryOptions.length === 1 ? questionCategoryOptions[0]!.id : "";
+
+    if (nextCategoryId !== selectedQuestionCategoryId) {
+      setSelectedQuestionCategoryId(nextCategoryId);
+      setAnswers({});
+    }
   }, [questionCategoryOptions, selectedOffering, selectedQuestionCategoryId]);
 
   const serviceCategoryId = selectedQuestionCategoryId || undefined;
@@ -192,10 +206,7 @@ export default function NewBookingPageClient({
     startTime,
   ]);
 
-  // Booking duration is bounded by the BFF DTO at [15, 720] minutes (12h).
-  // Mirror those bounds here so the user gets a clear inline error before
-  // the BFF rejects the submit. Day 11 audit.
-  const MIN_DURATION_MINUTES = 15;
+  // Booking duration is bounded by the BFF DTO at [60, 720] minutes (1h–12h).
   const MAX_DURATION_MINUTES = 720;
 
   const durationMinutes = useMemo(() => {
@@ -209,15 +220,19 @@ export default function NewBookingPageClient({
 
   const durationOutOfBounds = useMemo(() => {
     if (durationMinutes === null) return null;
-    if (durationMinutes < MIN_DURATION_MINUTES) return "short";
+    if (durationMinutes < MIN_BOOKING_DURATION_MINUTES) return "short";
     if (durationMinutes > MAX_DURATION_MINUTES) return "long";
     return null;
   }, [durationMinutes]);
 
-  const totalPrice = useMemo(() => {
+  const oneHourHoldSubtotal = useMemo(() => {
+    if (!selectedOffering) return null;
+    return computeOneHourHoldSubtotal(selectedOffering.hourlyRate);
+  }, [selectedOffering]);
+
+  const estimatedJobSubtotal = useMemo(() => {
     if (!durationMinutes || !selectedOffering) return null;
-    const hours = durationMinutes / 60;
-    return Math.round(selectedOffering.hourlyRate * hours * 100) / 100;
+    return computeSubtotalFromMinutes(selectedOffering.hourlyRate, durationMinutes);
   }, [durationMinutes, selectedOffering]);
 
   const profileOkForBooking =
@@ -233,7 +248,7 @@ export default function NewBookingPageClient({
       !!startTime &&
       !!endTime &&
       durationMinutes !== null &&
-      durationMinutes >= MIN_DURATION_MINUTES &&
+      durationMinutes >= MIN_BOOKING_DURATION_MINUTES &&
       durationMinutes <= MAX_DURATION_MINUTES &&
       requiredQuestionsAnswered &&
       questionsReady &&
@@ -414,7 +429,7 @@ export default function NewBookingPageClient({
 
   const submitLabel = createBooking.isPending
     ? "Confirming…"
-    : totalPrice !== null
+    : oneHourHoldSubtotal !== null
       ? "Request booking"
       : "Continue";
 
@@ -429,37 +444,51 @@ export default function NewBookingPageClient({
           size="3"
           trim="start"
         >
-          Estimated subtotal
+          Payment hold
         </Heading>
-        {durationMinutes !== null && selectedOffering ? (
+        {selectedOffering ? (
           <Flex direction="column" gap="2">
-            <Flex justify="between">
-              <Text size="2" color="gray">
-                Duration
-              </Text>
-              <Text size="2" weight="medium">
-                {formatDuration(durationMinutes)}
-              </Text>
-            </Flex>
             <Flex justify="between">
               <Text size="2" color="gray">
                 Rate
               </Text>
               <Text size="2">{formatCurrency(selectedOffering.hourlyRate)}/hr</Text>
             </Flex>
-            <Separator size="4" my="1" />
             <Flex justify="between" align="center">
-              <Text size="2" weight="bold">
-                Subtotal
+              <Text size="2" color="gray">
+                Hold (1 hour)
               </Text>
               <Text size="4" weight="bold" color={SEMANTIC_COLOR.primary}>
-                {totalPrice !== null ? `${formatCurrency(totalPrice)} before tax` : "—"}
+                {oneHourHoldSubtotal !== null
+                  ? `${formatCurrency(oneHourHoldSubtotal)} hold`
+                  : "—"}
               </Text>
             </Flex>
+            <Text size="1" color="gray" highContrast as="p">
+              This is a temporary authorization — you are not charged now. Tax is included when
+              the hold is placed after the welper accepts.
+            </Text>
+            {durationMinutes !== null && estimatedJobSubtotal !== null ? (
+              <>
+                <Separator size="4" my="1" />
+                <Flex justify="between">
+                  <Text size="2" color="gray">
+                    Estimated job ({formatDuration(durationMinutes)})
+                  </Text>
+                  <Text size="2" weight="medium">
+                    {formatCurrency(estimatedJobSubtotal)} before tax
+                  </Text>
+                </Flex>
+                <Text size="1" color="gray" highContrast as="p">
+                  Final charge is based on actual time after the service, up to your selected
+                  window.
+                </Text>
+              </>
+            ) : null}
           </Flex>
         ) : (
           <Text size="2" color="gray">
-            Pick a service and time to see your subtotal.
+            Pick a service to see the hold amount.
           </Text>
         )}
 
@@ -473,7 +502,11 @@ export default function NewBookingPageClient({
             Before you confirm
           </Text>
           <Text size="1" color="gray" highContrast as="p">
-            Your card is held — not charged — when the welper accepts. You&rsquo;re only charged after the service is completed. Free cancellation any time before the service starts.
+            Each booking is for at least one hour of service. When the welper accepts, we place a
+            hold for one hour on your card — not a charge. You are only charged after the job is
+            completed. Cancel more than 24 hours before the start time and the hold is released with
+            no fee. Cancel within 24 hours of the start time and the one-hour hold may be charged as
+            a cancellation fee.
           </Text>
         </Flex>
       </Flex>
@@ -598,7 +631,7 @@ export default function NewBookingPageClient({
 
               {selectedOffering && (
                 <>
-              {questionCategoryOptions.length > 1 && (
+              {showServiceTypeField && (
                 <Box>
                   <Text
                     as="label"
@@ -609,33 +642,49 @@ export default function NewBookingPageClient({
                     style={{ display: "block" }}
                   >
                     Service type
-                    <RequiredMarker />
+                    {serviceTypeIsReadOnly ? null : <RequiredMarker />}
                   </Text>
-                  <Select
-                    value={selectedQuestionCategoryId || undefined}
-                    onValueChange={(value) => {
-                      setSelectedQuestionCategoryId(value);
-                      setAnswers({});
-                      setSubmitError(null);
-                    }}
-                  >
-                    <SelectTrigger
+                  {serviceTypeIsReadOnly ? (
+                    <Card
+                      size="1"
+                      variant="surface"
                       aria-labelledby="booking-service-type-label"
-                      aria-required="true"
-                      placeholder="Select a service type…"
-                    />
-                    <SelectContent>
-                      {questionCategoryOptions.map((option) => (
-                        <SelectItem key={option.id} value={option.id}>
-                          {option.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      style={{
+                        backgroundColor: "var(--gray-a2)",
+                        borderColor: "var(--gray-a6)",
+                      }}
+                    >
+                      <Text size="2" color="gray" highContrast>
+                        {questionCategoryOptions[0]!.name}
+                      </Text>
+                    </Card>
+                  ) : (
+                    <Select
+                      value={selectedQuestionCategoryId || undefined}
+                      onValueChange={(value) => {
+                        setSelectedQuestionCategoryId(value);
+                        setAnswers({});
+                        setSubmitError(null);
+                      }}
+                    >
+                      <SelectTrigger
+                        aria-labelledby="booking-service-type-label"
+                        aria-required="true"
+                        placeholder="Select a service type…"
+                      />
+                      <SelectContent>
+                        {questionCategoryOptions.map((option) => (
+                          <SelectItem key={option.id} value={option.id}>
+                            {option.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </Box>
               )}
 
-              {questionCategoryOptions.length > 1 && !serviceCategoryId && (
+              {offeringSubcategoryCount > 1 && !serviceCategoryId && (
                 <Callout.Root color="gray" variant="surface">
                   <Callout.Text>
                     Choose a service type to load the right questions.
@@ -814,7 +863,7 @@ export default function NewBookingPageClient({
                       size="1"
                       color={SEMANTIC_COLOR.danger}
                     >
-                      Bookings must be at least 15 minutes long. Lengthen the time window.
+                      Bookings must be at least 1 hour long. Lengthen the time window.
                     </Text>
                   )}
                   {durationOutOfBounds === "long" && (
@@ -946,10 +995,10 @@ export default function NewBookingPageClient({
         <Flex direction="column" gap="2">
           <Flex justify="between" align="center">
             <Text size="1" color="gray">
-              Estimated subtotal
+              Card hold (1 hr)
             </Text>
             <Text size="3" weight="bold" color={SEMANTIC_COLOR.primary}>
-              {totalPrice !== null ? `${formatCurrency(totalPrice)} before tax` : "—"}
+              {oneHourHoldSubtotal !== null ? formatCurrency(oneHourHoldSubtotal) : "—"}
             </Text>
           </Flex>
           <Button

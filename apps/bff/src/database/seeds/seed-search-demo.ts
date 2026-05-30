@@ -16,6 +16,7 @@ import {
 import {
   applySeedMarketplaceWelperUser,
   applySeedWelperProfileReady,
+  ensureSeedWelperBackgroundCheckPassed,
 } from './seed-user-helpers';
 
 /**
@@ -91,6 +92,7 @@ export async function seedSearchDemo(dataSource: DataSource): Promise<void> {
     profile.profileVisibility = ProfileVisibility.PUBLIC;
     profile.onboardingCompleted = true;
     await welperProfileRepo.save(profile);
+    await ensureSeedWelperBackgroundCheckPassed(dataSource, user.id);
 
     const existingOfferings = await serviceOfferingRepo.find({
       where: { welperId: user.id },
@@ -170,6 +172,8 @@ export async function seedSearchDemo(dataSource: DataSource): Promise<void> {
     demoProfile.profileVisibility = ProfileVisibility.PUBLIC;
     await welperProfileRepo.save(demoProfile);
   }
+
+  await ensureSeedWelperBackgroundCheckPassed(dataSource, demoUser.id);
 
   const demoOfferings = await serviceOfferingRepo.find({ where: { welperId: demoUser.id } });
   if (demoOfferings.length === 0) {

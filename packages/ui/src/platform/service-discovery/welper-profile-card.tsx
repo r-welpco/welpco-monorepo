@@ -10,6 +10,7 @@ import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { MapPin, Star } from "lucide-react";
+import { VerifiedTrustBadge } from "./verified-trust-badge";
 
 export interface WelperProfileCardProps {
   /** Unique id for the welper (used as React key in lists). */
@@ -23,6 +24,8 @@ export interface WelperProfileCardProps {
   specialties?: string[];
   /** Optional avatar image URL */
   imageUrl?: string;
+  /** Background-check verified — render badge only when explicitly true. */
+  verified?: boolean;
   onView?: () => void;
   onBook?: () => void;
 }
@@ -42,6 +45,7 @@ export function WelperProfileCard({
   reviews,
   specialties = [],
   imageUrl,
+  verified = false,
   onView,
   onBook,
 }: WelperProfileCardProps) {
@@ -72,9 +76,12 @@ export function WelperProfileCard({
           />
 
           <Box flexGrow="1" style={{ minWidth: 0 }}>
-            <Heading size="4" mb="1" trim="start">
-              {name}
-            </Heading>
+            <Flex align="center" gap="2" wrap="wrap" mb="1">
+              <Heading size="4" trim="start">
+                {name}
+              </Heading>
+              {verified === true && <VerifiedTrustBadge />}
+            </Flex>
             <Text size="2" weight="medium" as="div" mb="1">
               {title}
             </Text>

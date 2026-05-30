@@ -33,6 +33,7 @@ import { BackgroundCheckService } from '../safety-verification/background-check.
 import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { validateTransition, getValidTransitions } from './booking-state-machine';
 import type { ServiceQuestion } from '../content-management/entities/service-question.entity';
+import { computeTotalWithTax } from './booking-pricing';
 
 /** Hours before scheduled time when free cancellation is no longer possible */
 const FREE_CANCELLATION_HOURS = 24;
@@ -458,10 +459,8 @@ export class BookingService {
     if (offering.hourlyRate) {
       hourlyRate = Number(offering.hourlyRate);
       if (dto.durationMinutes) {
-        const subtotal = Math.round(hourlyRate * (dto.durationMinutes / 60) * 100) / 100;
         const taxRateBps = await this.applicationSettings.getBookingTaxRateBps();
-        const tax = Math.round(((subtotal * taxRateBps) / 10000) * 100) / 100;
-        totalPrice = Math.round((subtotal + tax) * 100) / 100;
+        totalPrice = computeTotalWithTax(hourlyRate, dto.durationMinutes, taxRateBps);
       }
     }
 
@@ -1025,18 +1024,20 @@ export class BookingService {
       validateTransition(booking.status, BookingRequestStatus.CANCELLED);
 
       const offset = timezoneOffsetMinutes ?? booking.timezoneOffsetMinutes ?? null;
-      if (booking.scheduledDate && booking.scheduledStartTime) {
+      let chargeLateCancellationFee = false;
+      const role = accountType.toLowerCase() === 'welper' ? ('welper' as const) : ('customer' as const);
+      if (role === 'customer' && booking.scheduledDate && booking.scheduledStartTime) {
         const scheduledUtcMs = this.scheduledTimeToUtcMs(
           booking.scheduledDate,
           booking.scheduledStartTime,
           offset,
         );
         const hoursUntil = (scheduledUtcMs - Date.now()) / (1000 * 60 * 60);
-        if (hoursUntil < FREE_CANCELLATION_HOURS) {
+        if (hoursUntil < FREE_CANCELLATION_HOURS && hoursUntil >= 0) {
+          chargeLateCancellationFee = true;
           this.logger.warn(
-            `Late cancellation for booking ${bookingId} (${hoursUntil.toFixed(1)}h before service)`,
+            `Late cancellation for booking ${bookingId} (${hoursUntil.toFixed(1)}h before service) — one-hour fee applies`,
           );
-          // MVP: late cancellations are logged only; fees not charged (see architecture docs).
         }
       }
 
@@ -1045,20 +1046,23 @@ export class BookingService {
       booking.cancelledAt = new Date();
       booking.cancellationReason = reason ?? null;
 
-      return bookingRepo.save(booking);
+      return { booking: await bookingRepo.save(booking), chargeLateCancellationFee };
     });
     const role = accountType.toLowerCase() === 'welper' ? ('welper' as const) : ('customer' as const);
     this.logger.log(`Booking ${bookingId} cancelled by ${role} ${userId}`);
-    await this.paymentService.onBookingCanceled(saved.id);
-    const paymentSummary = await this.paymentService.getBookingPaymentSummary(saved.id);
-    if (paymentSummary?.phase === 'captured') {
+    await this.paymentService.onBookingCanceled(saved.booking.id, {
+      chargeLateCancellationFee: saved.chargeLateCancellationFee,
+    });
+    const savedBooking = saved.booking;
+    const paymentSummary = await this.paymentService.getBookingPaymentSummary(savedBooking.id);
+    if (paymentSummary?.phase === 'captured' && !saved.chargeLateCancellationFee) {
       this.logger.warn(
-        `Booking ${saved.id} cancelled after card capture; funds were not auto-refunded. Use admin dispute resolution with refund if the customer should be reimbursed.`,
+        `Booking ${savedBooking.id} cancelled after card capture; funds were not auto-refunded. Use admin dispute resolution with refund if the customer should be reimbursed.`,
       );
     }
-    const notifyUserId = userId === saved.customerId ? saved.welperId : saved.customerId;
-    await this.notifyBookingEvent(saved, notifyUserId, 'booking_cancelled', 'Booking cancelled', 'A booking was cancelled.', { cancellationReason: reason ?? undefined });
-    return this.toResponse(saved, userId, role);
+    const notifyUserId = userId === savedBooking.customerId ? savedBooking.welperId : savedBooking.customerId;
+    await this.notifyBookingEvent(savedBooking, notifyUserId, 'booking_cancelled', 'Booking cancelled', 'A booking was cancelled.', { cancellationReason: reason ?? undefined });
+    return this.toResponse(savedBooking, userId, role);
   }
 
   // ─── Notifications ─────────────────────────────────────────────────────

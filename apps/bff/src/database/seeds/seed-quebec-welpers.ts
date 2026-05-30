@@ -12,7 +12,7 @@ import { ProfileCompletionStatus } from '../../domains/profile-management/entiti
 import { ProfileVisibility } from '../../domains/profile-management/entities/profile-visibility.enum';
 import type { GeoJSONPoint } from '../../common/types';
 import { SEARCH_DEMO_SUBCATEGORY_NAMES, pickSeedSubcategory } from './seed-category-names';
-import { applySeedMarketplaceWelperUser } from './seed-user-helpers';
+import { applySeedMarketplaceWelperUser, ensureSeedWelperBackgroundCheckPassed } from './seed-user-helpers';
 
 /** City config: [longitude, latitude] for GeoJSON Point, and display name */
 const CITIES: { key: string; coords: [number, number]; name: string }[] = [
@@ -146,6 +146,8 @@ export async function seedQuebecWelpers(dataSource: DataSource): Promise<void> {
           }),
         );
       }
+
+      await ensureSeedWelperBackgroundCheckPassed(dataSource, user.id);
     }
   }
 

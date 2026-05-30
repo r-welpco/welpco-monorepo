@@ -12,14 +12,13 @@ import { Heading } from "@welpco/ui/heading";
 import { Avatar } from "@welpco/ui/avatar";
 import { Card } from "@welpco/ui/card";
 import { Callout } from "@welpco/ui/callout";
-import { Badge } from "@welpco/ui/badge";
 import { Skeleton } from "@welpco/ui/skeleton";
 import { Grid } from "@welpco/ui/grid";
 import { Separator } from "@welpco/ui/separator";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { CustomerHeader, Footer } from "@welpco/ui/platform/layout";
-import { ServiceOfferingCard, ReviewList } from "@welpco/ui/platform";
-import { ShieldCheck, Star, ArrowLeft } from "lucide-react";
+import { ServiceOfferingCard, ReviewList, VerifiedTrustBadge } from "@welpco/ui/platform";
+import { Star, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import { useWelperReviews } from "@/lib/hooks/use-booking-review";
@@ -103,15 +102,6 @@ function ProfileError({ error }: { error: unknown }) {
         </Flex>
       </Box>
     </Callout.Root>
-  );
-}
-
-function VerifiedTrustBadge() {
-  return (
-    <Badge color={SEMANTIC_COLOR.success} variant="soft" highContrast size="2">
-      <ShieldCheck size={14} aria-hidden="true" />
-      Verified
-    </Badge>
   );
 }
 

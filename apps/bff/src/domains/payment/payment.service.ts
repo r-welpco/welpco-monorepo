@@ -15,6 +15,7 @@ import { validateTransition } from '../booking/booking-state-machine';
 import { UserAccount } from '../user-management/entities/user-account.entity';
 import { CustomerProfileService } from '../profile-management/customer-profile/customer-profile.service';
 import { ApplicationSettingsService } from './application-settings.service';
+import { computeOneHourHoldTotalCents } from '../booking/booking-pricing';
 import {
   BookingPayment,
   BookingPaymentKind,
@@ -75,6 +76,13 @@ export class PaymentService {
       throw new BadRequestException('Stripe is not configured');
     }
     return this.stripe;
+  }
+
+  private async authorizationHoldAmountCents(booking: BookingRequest): Promise<number> {
+    const hourlyRate = booking.hourlyRate != null ? Number(booking.hourlyRate) : 0;
+    if (hourlyRate <= 0) return 0;
+    const taxRateBps = await this.applicationSettings.getBookingTaxRateBps();
+    return computeOneHourHoldTotalCents(hourlyRate, taxRateBps);
   }
 
   private async findHoldPayment(bookingId: string): Promise<BookingPayment | null> {
@@ -258,8 +266,8 @@ export class PaymentService {
     if (booking.status !== BookingRequestStatus.PENDING) {
       throw new BadRequestException('Payment can only be authorized while the booking is pending');
     }
-    const total = booking.totalPrice != null ? Number(booking.totalPrice) : 0;
-    if (total <= 0) {
+    const amountCents = await this.authorizationHoldAmountCents(booking);
+    if (amountCents <= 0) {
       return;
     }
 
@@ -270,8 +278,6 @@ export class PaymentService {
         code: PAYMENT_METHOD_REQUIRED_CODE,
       });
     }
-
-    const amountCents = Math.round(total * 100);
     let row = await this.findHoldPayment(bookingId);
 
     if (row && row.status !== BookingPaymentRecordStatus.CANCELED && row.status !== BookingPaymentRecordStatus.FAILED) {
@@ -362,8 +368,8 @@ export class PaymentService {
     if (booking.status !== BookingRequestStatus.ACCEPTED) {
       throw new BadRequestException('Booking must be accepted before payment authorization');
     }
-    const total = booking.totalPrice != null ? Number(booking.totalPrice) : 0;
-    if (total <= 0) {
+    const amountCents = await this.authorizationHoldAmountCents(booking);
+    if (amountCents <= 0) {
       throw new BadRequestException('This booking has no chargeable amount');
     }
     const user = await this.ensureStripeCustomer(userId);
@@ -373,8 +379,6 @@ export class PaymentService {
         code: PAYMENT_METHOD_REQUIRED_CODE,
       });
     }
-
-    const amountCents = Math.round(total * 100);
     let row = await this.findHoldPayment(bookingId);
 
     if (row && row.status !== BookingPaymentRecordStatus.CANCELED && row.status !== BookingPaymentRecordStatus.FAILED) {
@@ -659,9 +663,15 @@ export class PaymentService {
     await this.bookingPaymentRepo.save(row);
   }
 
-  async onBookingCanceled(bookingId: string): Promise<void> {
+  async onBookingCanceled(
+    bookingId: string,
+    options?: { chargeLateCancellationFee?: boolean },
+  ): Promise<void> {
     const stripe = this.stripe;
+    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
     const rows = await this.bookingPaymentRepo.find({ where: { bookingId } });
+    const chargeLateFee = options?.chargeLateCancellationFee === true && booking;
+
     for (const row of rows) {
       if (row.capturedAt) {
         continue;
@@ -669,6 +679,36 @@ export class PaymentService {
       if (row.status === BookingPaymentRecordStatus.CANCELED || row.status === BookingPaymentRecordStatus.FAILED) {
         continue;
       }
+
+      const isAuthorizedHold =
+        row.paymentKind === BookingPaymentKind.HOLD &&
+        row.status === BookingPaymentRecordStatus.AUTHORIZED &&
+        !!row.stripePaymentIntentId;
+
+      if (chargeLateFee && isAuthorizedHold && stripe && booking) {
+        const feeCents = await this.authorizationHoldAmountCents(booking);
+        const captureCents = Math.min(feeCents, row.amountCents);
+        if (captureCents > 0) {
+          try {
+            await stripe.paymentIntents.capture(row.stripePaymentIntentId, {
+              amount_to_capture: captureCents,
+            });
+            row.status = BookingPaymentRecordStatus.CAPTURED;
+            row.capturedAt = new Date();
+            row.capturedAmountCents = captureCents;
+            await this.bookingPaymentRepo.save(row);
+            this.logger.log(
+              `Late cancellation fee captured ${captureCents} cents for booking ${bookingId}`,
+            );
+            continue;
+          } catch (e) {
+            this.logger.warn(
+              `Late cancellation capture failed for booking ${bookingId}: ${(e as Error).message}`,
+            );
+          }
+        }
+      }
+
       if (stripe && row.stripePaymentIntentId) {
         try {
           await stripe.paymentIntents.cancel(row.stripePaymentIntentId);

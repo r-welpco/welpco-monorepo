@@ -1342,7 +1342,7 @@
       },
       "confirm": {
         "acceptTitle": "Accepter cette réservation?",
-        "acceptDescription": "Nous placerons une retenue sur la carte du client avant de confirmer. Si la retenue échoue, la réservation reste en attente.",
+        "acceptDescription": "Nous placerons une retenue d'une heure sur la carte du client avant de confirmer (ce n'est pas un débit). Si la retenue échoue, la réservation reste en attente.",
         "acceptConfirm": "Accepter la réservation",
         "acceptCancel": "Pas maintenant",
         "declineTitle": "Refuser cette réservation?",
@@ -1352,7 +1352,7 @@
         "declineReasonLabel": "Raison (facultatif)",
         "declineReasonPlaceholder": "p. ex. Conflit d'horaire ce jour-là",
         "cancelTitle": "Annuler cette réservation?",
-        "cancelDescription": "Annulation gratuite jusqu'à 24 h avant le début. Dites-nous pourquoi pour rester équitable.",
+        "cancelDescription": "Annulez plus de 24 h avant le début : la retenue d'une heure est libérée sans frais. Annulez dans les 24 h précédant le début : cette retenue peut être facturée comme frais d'annulation. Dites-nous pourquoi pour rester équitable.",
         "cancelConfirm": "Annuler la réservation",
         "cancelCancel": "Garder la réservation",
         "cancelReasonLabel": "Raison de l'annulation",

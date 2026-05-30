@@ -546,7 +546,7 @@ export default function BookingsPageClient() {
           description={
             isWelper
               ? welperLabels.confirm.cancelDescription
-              : "Free cancellation up to 24 hours before the start time. Tell us why so we can keep things fair."
+              : "Cancel more than 24 hours before the start time and the one-hour hold is released with no fee. Cancel within 24 hours of the start time and that hold may be charged as a cancellation fee. Tell us why so we can keep things fair."
           }
           confirmLabel={isWelper ? welperLabels.confirm.cancelConfirm : "Cancel booking"}
           cancelLabel={isWelper ? welperLabels.confirm.cancelCancel : "Keep booking"}

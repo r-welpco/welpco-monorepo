@@ -30,6 +30,11 @@ export class SearchResultItemDto {
 
   @ApiPropertyOptional({ description: 'Review count' })
   reviewCount?: number;
+
+  @ApiPropertyOptional({
+    description: 'Background-check verified flag. True only when background_check_status is Passed.',
+  })
+  verified?: boolean;
 }
 
 export class SearchServicesResponseDto {

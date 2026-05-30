@@ -10,7 +10,7 @@ import { CreateBookingRequestDto } from './create-booking-request.dto';
  * 1. `durationMinutes` was unbounded above. A user with a typo (e.g. "12:00"
  *    PM/AM mix-up — 24h delta) could create a booking spanning more than a
  *    day, which the booking-detail UI can't render and the receipt flow
- *    can't bill cleanly. New `[15, 720]` window aligns with reality (a
+ *    can't bill cleanly. New `[60, 720]` window aligns with the one-hour
  *    marketplace booking longer than 12h is a UI mistake).
  *
  * 2. `notes` accepted arbitrarily long strings. Anyone hitting the API
@@ -41,9 +41,9 @@ describe('CreateBookingRequestDto', () => {
     expect(errors).toEqual([]);
   });
 
-  it('accepts a 15-minute booking (lower boundary)', async () => {
+  it('accepts a 1-hour booking (lower boundary)', async () => {
     const errors = await validate(
-      makeDto({ durationMinutes: 15, scheduledStartTime: '09:00', scheduledEndTime: '09:15' }),
+      makeDto({ durationMinutes: 60, scheduledStartTime: '09:00', scheduledEndTime: '10:00' }),
     );
     expect(errors).toEqual([]);
   });
@@ -55,8 +55,8 @@ describe('CreateBookingRequestDto', () => {
     expect(errors).toEqual([]);
   });
 
-  it('rejects a booking shorter than 15 minutes', async () => {
-    const errors = await validate(makeDto({ durationMinutes: 10 }));
+  it('rejects a booking shorter than 1 hour', async () => {
+    const errors = await validate(makeDto({ durationMinutes: 45 }));
     const dur = errors.find((e) => e.property === 'durationMinutes');
     expect(dur).toBeDefined();
     expect(JSON.stringify(dur?.constraints ?? {})).toMatch(/min/i);

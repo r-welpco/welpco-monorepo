@@ -256,7 +256,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
             src={avatarSrc}
             alt={greetingName}
             fallback={avatarFallback}
-            size="3"
+            size="6"
           />
           <Box flexGrow="1" style={{ minWidth: "min(100%, 12rem)" }}>
             <Heading as="h1" size="7" mb="2" trim="start">

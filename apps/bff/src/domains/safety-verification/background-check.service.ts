@@ -265,6 +265,35 @@ export class BackgroundCheckService {
     return verification?.backgroundCheckStatus === BackgroundCheckStatus.PASSED;
   }
 
+  /** True only when an adult welper's background check is explicitly Passed. */
+  async hasPassedBackgroundCheck(userId: string): Promise<boolean> {
+    const map = await this.getBackgroundCheckPassedByUserIds([userId]);
+    return map.get(userId) === true;
+  }
+
+  async getBackgroundCheckPassedByUserIds(
+    userIds: string[],
+  ): Promise<Map<string, boolean>> {
+    const map = new Map<string, boolean>();
+    if (userIds.length === 0) return map;
+
+    for (const userId of userIds) {
+      map.set(userId, false);
+    }
+
+    const verifications = await this.verificationRepo.find({
+      where: { userId: In(userIds) },
+      select: ['userId', 'backgroundCheckStatus'],
+    });
+    for (const verification of verifications) {
+      map.set(
+        verification.userId,
+        verification.backgroundCheckStatus === BackgroundCheckStatus.PASSED,
+      );
+    }
+    return map;
+  }
+
   async onPaymentSucceeded(orderId: string): Promise<void> {
     const order = await this.orderRepo.findOne({ where: { id: orderId } });
     if (!order) return;

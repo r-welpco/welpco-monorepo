@@ -297,6 +297,8 @@ export interface SearchResultItem {
   bioSnippet?: string | null;
   rating?: number;
   reviewCount?: number;
+  /** Background-check verified — only true when explicitly set by BFF. */
+  verified?: boolean;
 }
 
 export interface SearchServicesResponse {

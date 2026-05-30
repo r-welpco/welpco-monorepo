@@ -66,7 +66,7 @@ export class PublicWelperProfileDto {
 
   @ApiProperty({
     description:
-      'Wave 1 trust signal: KYC-verified flag. False until ops/product flips it via the KYC workflow. ' +
+      'Background-check trust signal. True only when background_check_status is Passed. ' +
       'Bible §22.6 forbids defaulting to true.',
   })
   verified!: boolean;

@@ -9,7 +9,12 @@ import { WelperProfile } from '../../domains/profile-management/entities/welper-
 import { ProfileCompletionStatus } from '../../domains/profile-management/entities/profile-completion-status.enum';
 import { ProfileVisibility } from '../../domains/profile-management/entities/profile-visibility.enum';
 import { PayoutMethodChoice } from '../../domains/profile-management/entities/payout-method-choice.enum';
+import {
+  BackgroundCheckStatus,
+  VerificationStatus,
+} from '../../domains/user-management/entities/verification-status.entity';
 import type { PhoneNumber } from '../../common/types';
+import type { DataSource } from 'typeorm';
 
 /** Default phone for seeded accounts that must pass signup identity checks. */
 export const SEED_DEFAULT_PHONE: PhoneNumber = {
@@ -133,6 +138,27 @@ export function applySeedWelperProfileReady(
     profile.backgroundCheckStepAcknowledgedAt ?? new Date();
   profile.payoutMethodChoice = PayoutMethodChoice.STRIPE;
   profile.availabilityAdHocOnly = profile.availabilityAdHocOnly || true;
+}
+
+/** Mark a seeded welper as background-check Passed so search shows the verified badge. */
+export async function ensureSeedWelperBackgroundCheckPassed(
+  dataSource: DataSource,
+  userId: string,
+): Promise<void> {
+  const verificationRepository = dataSource.getRepository(VerificationStatus);
+  let verification = await verificationRepository.findOne({ where: { userId } });
+  if (!verification) {
+    verification = verificationRepository.create({
+      userId,
+      emailVerified: true,
+      backgroundCheckStatus: BackgroundCheckStatus.PASSED,
+      verificationDate: new Date(),
+    });
+  } else {
+    verification.backgroundCheckStatus = BackgroundCheckStatus.PASSED;
+    verification.verificationDate = verification.verificationDate ?? new Date();
+  }
+  await verificationRepository.save(verification);
 }
 
 /** Mark marketplace-only welper rows searchable without full signup wizard data. */

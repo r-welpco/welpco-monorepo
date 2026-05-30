@@ -714,7 +714,7 @@ export default function BookingDetailClient({
       title: isWelper ? welperBookings.confirm.acceptTitle : "Accept this booking?",
       description: isWelper
         ? welperBookings.confirm.acceptDescription
-        : "We'll place a payment hold on the customer's saved card before confirming. If the hold fails, the booking stays pending.",
+        : "We'll place a one-hour payment hold on the customer's saved card before confirming (not a charge). If the hold fails, the booking stays pending.",
       confirmLabel: isWelper ? welperBookings.confirm.acceptConfirm : "Accept booking",
       cancelLabel: isWelper ? welperBookings.confirm.acceptCancel : "Not now",
       variant: "primary",
@@ -789,7 +789,7 @@ export default function BookingDetailClient({
       title: isWelper ? welperBookings.confirm.cancelTitle : "Cancel this booking?",
       description: isWelper
         ? welperBookings.confirm.cancelDescription
-        : "Free cancellation any time before the service starts — your card hold is released and no fee is charged. Tell us why so we can keep things fair.",
+        : "Cancel more than 24 hours before the start time and your one-hour card hold is released with no fee. Cancel within 24 hours of the start time and that hold may be charged as a cancellation fee. Tell us why so we can keep things fair.",
       confirmLabel: isWelper ? welperBookings.confirm.cancelConfirm : "Cancel booking",
       cancelLabel: isWelper ? welperBookings.confirm.cancelCancel : "Keep booking",
       variant: "danger",
@@ -1445,7 +1445,7 @@ export default function BookingDetailClient({
                   {showAuthorizePayment ? (
                     <Flex direction="column" gap="2" align="start">
                       <Text size="2" color="gray">
-                        Complete payment authorization on your saved card (hold only — charged after the service is completed).
+                        Complete payment authorization on your saved card (one-hour hold — not a charge until the service is completed).
                         If you see this after the welper accepted, the automatic hold may have failed; try again or update your
                         card in Settings.
                       </Text>
@@ -1468,8 +1468,8 @@ export default function BookingDetailClient({
                     </Flex>
                   ) : paymentPhase === "authorized" ? (
                     <Text size="2" color="gray">
-                      Payment hold is active (placed when the welper accepted). You are not charged until the service is
-                      completed.
+                      A one-hour hold is active on your card (placed when the welper accepted). You are not charged
+                      until the service is completed.
                       {booking.captureEligibleAt
                         ? ` Capture is scheduled after ${formatDateTime(booking.captureEligibleAt)} (pending service completion and dispute window).`
                         : null}

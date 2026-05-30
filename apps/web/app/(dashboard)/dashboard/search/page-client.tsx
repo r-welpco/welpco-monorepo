@@ -439,6 +439,7 @@ export default function DashboardSearchPageClient() {
       reviews: item.reviewCount ?? 0,
       specialties: item.categories,
       imageUrl: item.profilePhotoUrl ?? undefined,
+      verified: item.verified === true,
       onView: () => openProfileDialog(item.welperId),
       onBook: () => openServiceSelection(item.welperId),
     }));
@@ -651,6 +652,7 @@ export default function DashboardSearchPageClient() {
                         rating={item.rating}
                         reviews={item.reviews}
                         imageUrl={item.imageUrl}
+                        verified={item.verified}
                         onView={item.onView}
                         onBook={item.onBook}
                       />
