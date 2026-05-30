@@ -1,9 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { ChatThread } from './entities/chat-thread.entity';
 import { Message } from './entities/message.entity';
 import { BookingRequest, BookingRequestStatus } from '../booking/entities/booking-request.entity';
+import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
+import { CustomerProfile } from '../profile-management/entities/customer-profile.entity';
 import { BookingService } from '../booking/booking.service';
 import { UsersService } from '../user-management/users/users.service';
 import { WelperProfileService } from '../profile-management/welper-profile/welper-profile.service';
@@ -15,6 +22,8 @@ import { MessagesQueryDto, getMessagesQueryParams } from './dto/messages-query.d
 import { ChatInboxItemDto } from './dto/chat-inbox-item.dto';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
+import { ApplicationSettingsService } from '../payment/application-settings.service';
+import { isBookingParticipantMessagingOpen } from '../booking/dispute-report-window';
 
 const INBOX_PREVIEW_MAX = 160;
 
@@ -57,6 +66,10 @@ export class CommunicationService {
   constructor(
     @InjectRepository(BookingRequest)
     private readonly bookingRepo: Repository<BookingRequest>,
+    @InjectRepository(WelperProfile)
+    private readonly welperProfileRepo: Repository<WelperProfile>,
+    @InjectRepository(CustomerProfile)
+    private readonly customerProfileRepo: Repository<CustomerProfile>,
     @InjectRepository(ChatThread)
     private readonly threadRepo: Repository<ChatThread>,
     @InjectRepository(Message)
@@ -66,6 +79,7 @@ export class CommunicationService {
     private readonly welperProfileService: WelperProfileService,
     private readonly customerProfileService: CustomerProfileService,
     private readonly notificationService: NotificationService,
+    private readonly applicationSettings: ApplicationSettingsService,
   ) {}
 
   /**
@@ -77,6 +91,20 @@ export class CommunicationService {
     accountType: string,
   ): Promise<void> {
     await this.bookingService.findById(bookingId, userId, accountType);
+  }
+
+  private async assertMessagingAllowed(bookingId: string): Promise<BookingRequest> {
+    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+    const windowMinutes = await this.applicationSettings.getDisputeReportWindowMinutes();
+    if (!isBookingParticipantMessagingOpen(booking, windowMinutes)) {
+      throw new BadRequestException(
+        `Messaging is only available for ${windowMinutes} minutes after service completion`,
+      );
+    }
+    return booking;
   }
 
   async getOrCreateThread(
@@ -223,7 +251,16 @@ export class CommunicationService {
       return [];
     }
 
-    const bookingIds = bookings.map((b) => b.id);
+    const windowMinutes = await this.applicationSettings.getDisputeReportWindowMinutes();
+    const messageableBookings = bookings.filter((b) =>
+      isBookingParticipantMessagingOpen(b, windowMinutes),
+    );
+
+    if (messageableBookings.length === 0) {
+      return [];
+    }
+
+    const bookingIds = messageableBookings.map((b) => b.id);
     const threads = await this.threadRepo.find({
       where: { bookingId: In(bookingIds) },
     });
@@ -257,7 +294,7 @@ export class CommunicationService {
       }
     }
 
-    const items: ChatInboxItemDto[] = bookings.map((booking) => {
+    const items: ChatInboxItemDto[] = messageableBookings.map((booking) => {
       const thread = threadByBookingId.get(booking.id);
       const last = thread ? lastByThreadId.get(thread.id) : undefined;
       const isCustomer = booking.customerId === userId;
@@ -288,6 +325,54 @@ export class CommunicationService {
     });
 
     items.sort((a, b) => (a.sortAt < b.sortAt ? 1 : a.sortAt > b.sortAt ? -1 : 0));
+
+    const welperIds = [
+      ...new Set(
+        messageableBookings
+          .filter((b) => b.customerId === userId)
+          .map((b) => b.welperId),
+      ),
+    ];
+    const customerIds = [
+      ...new Set(
+        messageableBookings
+          .filter((b) => b.welperId === userId)
+          .map((b) => b.customerId),
+      ),
+    ];
+
+    const [welperProfiles, customerProfiles] = await Promise.all([
+      welperIds.length
+        ? this.welperProfileRepo.find({
+            where: { welperId: In(welperIds) },
+            select: ['welperId', 'firstName', 'lastName', 'profilePhotoUrl'],
+          })
+        : Promise.resolve([] as WelperProfile[]),
+      customerIds.length
+        ? this.customerProfileRepo.find({
+            where: { customerId: In(customerIds) },
+            select: ['customerId', 'firstName', 'lastName', 'profilePhotoUrl'],
+          })
+        : Promise.resolve([] as CustomerProfile[]),
+    ]);
+
+    const welperById = new Map(welperProfiles.map((p) => [p.welperId, p]));
+    const customerById = new Map(customerProfiles.map((p) => [p.customerId, p]));
+
+    for (const item of items) {
+      const booking = messageableBookings.find((b) => b.id === item.bookingId);
+      if (!booking) continue;
+      if (booking.customerId === userId) {
+        const welper = welperById.get(booking.welperId);
+        item.otherPartyFirstName = welper?.firstName?.trim() || null;
+        item.otherPartyPhotoUrl = welper?.profilePhotoUrl ?? null;
+      } else {
+        const customer = customerById.get(booking.customerId);
+        item.otherPartyFirstName = customer?.firstName?.trim() || null;
+        item.otherPartyPhotoUrl = customer?.profilePhotoUrl ?? null;
+      }
+    }
+
     return items;
   }
 
@@ -298,6 +383,7 @@ export class CommunicationService {
     dto: SendMessageDto,
   ): Promise<MessageDto> {
     await this.assertParticipant(bookingId, userId, accountType);
+    const booking = await this.assertMessagingAllowed(bookingId);
 
     let thread = await this.threadRepo.findOne({ where: { bookingId } });
     if (!thread) {
@@ -317,8 +403,7 @@ export class CommunicationService {
     // message. The 5-min `metadata.bookingId` dedup window in
     // `NotificationService.send` keeps a fast back-and-forth from spamming
     // the bell — first message in a 5-min window emits, the rest fold in.
-    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
-    if (booking) {
+    {
       const recipientId =
         booking.customerId === userId ? booking.welperId : booking.customerId;
       const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
@@ -361,6 +446,7 @@ export class CommunicationService {
 
   private async toMessageDto(message: Message): Promise<MessageDto> {
     let senderDisplayName = 'User';
+    let senderPhotoUrl: string | null = null;
     try {
       const welperProfile = await this.welperProfileService
         .findByWelperId(message.senderId)
@@ -370,10 +456,12 @@ export class CommunicationService {
           .filter(Boolean)
           .join(' ')
           .trim() || 'Welper';
+        senderPhotoUrl = welperProfile.profilePhotoUrl ?? null;
         return {
           id: message.id,
           senderId: message.senderId,
           senderDisplayName,
+          senderPhotoUrl,
           content: message.content,
           createdAt: message.createdAt.toISOString(),
         };
@@ -390,10 +478,12 @@ export class CommunicationService {
           .filter(Boolean)
           .join(' ')
           .trim() || 'Customer';
+        senderPhotoUrl = customerProfile.profilePhotoUrl ?? null;
         return {
           id: message.id,
           senderId: message.senderId,
           senderDisplayName,
+          senderPhotoUrl,
           content: message.content,
           createdAt: message.createdAt.toISOString(),
         };
@@ -411,6 +501,7 @@ export class CommunicationService {
       id: message.id,
       senderId: message.senderId,
       senderDisplayName,
+      senderPhotoUrl,
       content: message.content,
       createdAt: message.createdAt.toISOString(),
     };

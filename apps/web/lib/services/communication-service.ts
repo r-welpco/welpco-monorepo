@@ -21,6 +21,7 @@ export interface ChatMessage {
   id: string;
   senderId: string;
   senderDisplayName: string;
+  senderPhotoUrl?: string | null;
   content: string;
   createdAt: string;
 }
@@ -44,6 +45,8 @@ export interface ChatInboxItem {
   scheduledDate: string | null;
   scheduledStartTime: string | null;
   otherPartyId: string;
+  otherPartyFirstName?: string | null;
+  otherPartyPhotoUrl?: string | null;
   lastMessageAt: string | null;
   lastMessagePreview: string | null;
   lastMessageSenderId: string | null;

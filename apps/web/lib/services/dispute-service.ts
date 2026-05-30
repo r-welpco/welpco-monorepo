@@ -138,25 +138,36 @@ export async function createDispute(
   );
 }
 
-/** Get dispute for this booking. Throws if none (404). */
+type BookingDisputeResponse = { dispute: DisputeItem | null };
+
+function unwrapBookingDispute(
+  body: BookingDisputeResponse | DisputeItem | null,
+): DisputeItem | null {
+  if (body && typeof body === "object" && "dispute" in body) {
+    return body.dispute ?? null;
+  }
+  return body ?? null;
+}
+
+/** Get dispute for this booking. Throws if none filed yet. */
 export async function getBookingDispute(
   bookingId: string,
 ): Promise<DisputeItem> {
-  return apiClient.get<DisputeItem>(`/api/bookings/${bookingId}/dispute`);
+  const dispute = await getBookingDisputeOrNull(bookingId);
+  if (!dispute) {
+    throw new ApiClientError("No dispute found for this booking", 404);
+  }
+  return dispute;
 }
 
-/** Get dispute for this booking, or null if none (catch 404). */
+/** Get dispute for this booking, or null if none. */
 export async function getBookingDisputeOrNull(
   bookingId: string,
 ): Promise<DisputeItem | null> {
-  try {
-    return await apiClient.get<DisputeItem>(
-      `/api/bookings/${bookingId}/dispute`,
-    );
-  } catch (e) {
-    if (e instanceof ApiClientError && e.statusCode === 404) return null;
-    throw e;
-  }
+  const body = await apiClient.get<BookingDisputeResponse | DisputeItem | null>(
+    `/api/bookings/${bookingId}/dispute`,
+  );
+  return unwrapBookingDispute(body);
 }
 
 /** List disputes for current user (paginated). */

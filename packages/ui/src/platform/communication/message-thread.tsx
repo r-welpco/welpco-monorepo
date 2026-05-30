@@ -15,12 +15,16 @@ import { useEffect, useRef } from "react";
 
 export interface MessageThreadProps {
   title?: string;
+  /** Tighter layout for embedded hub panes (less padding, fills parent height). */
+  compact?: boolean;
   messages: MessageBubbleProps[];
   currentUserId: string;
   /** True while initial messages page is loading. Renders skeleton bubbles. */
   loading?: boolean;
   /** True while a send mutation is in flight. Drives the composer button copy. */
   sending?: boolean;
+  /** When true, the composer is read-only (e.g. post-completion window closed). */
+  composerDisabled?: boolean;
   onSendMessage?: (message: string) => void | Promise<void>;
   onAttachment?: () => void;
 }
@@ -32,10 +36,12 @@ export interface MessageThreadProps {
  */
 export function MessageThread({
   title,
+  compact = false,
   messages,
   currentUserId,
   loading,
   sending,
+  composerDisabled,
   onSendMessage,
   onAttachment,
 }: MessageThreadProps) {
@@ -58,18 +64,18 @@ export function MessageThread({
 
   return (
     <Card
-      size="4"
+      size={compact ? "3" : "4"}
       variant="surface"
-      style={{ width: "100%", height: "600px" }}
+      style={{ width: "100%", height: compact ? "100%" : "600px" }}
     >
-      <Flex direction="column" gap="3" height="100%">
-        {title && (
+      <Flex direction="column" gap={compact ? "2" : "3"} height="100%">
+        {title ? (
           <Box pb="1">
             <Heading size="4" mb="0" trim="start">
               {title}
             </Heading>
           </Box>
-        )}
+        ) : null}
 
         <ScrollArea style={{ flex: 1, minHeight: 0 }}>
           {/*
@@ -79,8 +85,8 @@ export function MessageThread({
            */}
           <Flex
             direction="column"
-            gap="3"
-            p="3"
+            gap={compact ? "2" : "3"}
+            p={compact ? "2" : "3"}
             role="log"
             aria-live="polite"
             aria-relevant="additions"
@@ -146,12 +152,13 @@ export function MessageThread({
         </ScrollArea>
 
         <Separator size="4" />
-        <Box pt="1">
+        <Box pt={compact ? "0" : "1"}>
           <ChatInput
             onSend={onSendMessage}
             onAttachment={onAttachment}
             loading={loading}
             sending={sending}
+            disabled={composerDisabled}
           />
         </Box>
       </Flex>

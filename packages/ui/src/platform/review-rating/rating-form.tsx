@@ -1,14 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { IconButton } from "@welpco/ui/icon-button";
 import { TextArea } from "@welpco/ui/text-area";
 import { Flex } from "@welpco/ui/flex";
 import { Box } from "@welpco/ui/box";
 import { Text } from "@welpco/ui/text";
-import { Heading } from "@welpco/ui/heading";
 import { Callout } from "@welpco/ui/callout";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm, Controller } from "react-hook-form";
@@ -24,10 +22,6 @@ export interface RatingFormProps {
   loading?: boolean;
   error?: string;
   onSubmit?: (values: RatingFormValues) => void | Promise<void>;
-  /** Overrides default "Write a review" heading inside the card */
-  heading?: string;
-  /** Overrides default gray subheading */
-  subheading?: string;
   /** Overrides default submit button label */
   submitLabel?: string;
 }
@@ -56,8 +50,6 @@ export function RatingForm({
   loading,
   error,
   onSubmit,
-  heading = "Write a review",
-  subheading = "Share your experience to help others.",
   submitLabel,
 }: RatingFormProps) {
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
@@ -78,25 +70,15 @@ export function RatingForm({
   const currentRating = hoveredRating ?? form.watch("rating");
 
   return (
-    <Card size="4" variant="surface" style={{ width: "100%", maxWidth: 640 }}>
-      <Flex direction="column" gap="5">
-        <Box>
-          <Heading size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            {heading}
-          </Heading>
-          <Text size="2" color="gray">
-            {subheading}
-          </Text>
-        </Box>
+    <Flex direction="column" gap="5" style={{ width: "100%" }}>
+      {error && (
+        <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
+          <Callout.Text>{error}</Callout.Text>
+        </Callout.Root>
+      )}
 
-        {error && (
-          <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface">
-            <Callout.Text>{error}</Callout.Text>
-          </Callout.Root>
-        )}
-
-        <Flex asChild direction="column" gap="5">
-          <form onSubmit={handleSubmit}>
+      <Flex asChild direction="column" gap="5">
+        <form onSubmit={handleSubmit}>
           <Box>
             <Text id="rating-group-label" as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap}>
               Rating
@@ -198,6 +180,7 @@ export function RatingForm({
               size="3"
               maxLength={COMMENT_MAX_LENGTH}
               disabled={loading}
+              style={{ width: "100%" }}
               {...form.register("comment")}
             />
             <Flex justify="between" align="center" mt={FORM_SPACING.helperGap} gap="2" wrap="wrap">
@@ -229,10 +212,10 @@ export function RatingForm({
           <Button type="submit" size="3" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
             {loading ? "Submitting..." : submitLabel ?? "Submit review"}
           </Button>
-          </form>
-        </Flex>
+        </form>
       </Flex>
-    </Card>
+    </Flex>
   );
 }
 
+RatingForm.displayName = "RatingForm";

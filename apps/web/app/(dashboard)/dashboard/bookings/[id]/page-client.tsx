@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useCallback, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import {
+  MIN_BOOKING_DURATION_MINUTES,
+  snapReceiptBillingWindow,
+  receiptBillingDurationMinutes,
+  RECEIPT_BILLING_STEP_MINUTES,
+} from "@/lib/booking/booking-pricing";
+import { canReportDisputeForBooking, canMessageBookingParticipant } from "@/lib/booking/dispute-report-window";
 import { Box } from "@welpco/ui/box";
 import { Container } from "@welpco/ui/container";
 import { Flex } from "@welpco/ui/flex";
@@ -18,6 +24,7 @@ import { TextArea } from "@welpco/ui/text-area";
 import { TextField } from "@welpco/ui/text-field";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   RatingForm,
   Dialog,
@@ -36,8 +43,9 @@ import {
   useCheckInBooking,
   useServiceReceiptDraft,
   useSubmitServiceReceipt,
-  useServiceQuestions,
+  useServiceQuestionsForCategories,
 } from "@/lib/hooks/use-bookings";
+import { useCustomerProfile } from "@/lib/hooks/use-profile";
 import { buildAnswerLabelMap } from "@/lib/services/service-questions-utils";
 import {
   useBookingReview,
@@ -115,6 +123,21 @@ function isoToDatetimeLocal(iso: string): string {
   const d = new Date(iso);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function toDatetimeLocalValue(date: Date): string {
+  return isoToDatetimeLocal(date.toISOString());
+}
+
+function applyReceiptBillingWindow(checkIn: Date, checkOut: Date): {
+  checkInLocal: string;
+  checkOutLocal: string;
+} {
+  const snapped = snapReceiptBillingWindow(checkIn, checkOut);
+  return {
+    checkInLocal: toDatetimeLocalValue(snapped.checkIn),
+    checkOutLocal: toDatetimeLocalValue(snapped.checkOut),
+  };
 }
 
 function previewReceiptTotalCents(checkInLocal: string, checkOutLocal: string, hourlyRate: number): number {
@@ -349,20 +372,31 @@ export default function BookingDetailClient({
     [bookable],
   );
 
-  const { data: bookingReview, isSuccess: reviewQuerySuccess } = useBookingReview(bookingId);
+  const disputableStatuses = ["in_progress", "completed", "payment_released", "no_show"];
+  const bookingAllowsReview =
+    booking?.status === "completed" || booking?.status === "payment_released";
+  const shouldFetchDispute =
+    !!booking &&
+    (booking.status === "disputed" ||
+      disputableStatuses.includes(booking.status));
+
+  const { data: bookingReview, isSuccess: reviewQuerySuccess } = useBookingReview(bookingId, {
+    enabled: bookingAllowsReview,
+  });
   const createReviewMutation = useCreateBookingReview(bookingId);
   const updateReviewMutation = useUpdateBookingReview(bookingId);
 
-  const { data: bookingDispute, isSuccess: disputeQuerySuccess } = useBookingDispute(bookingId);
+  const { data: bookingDispute, isSuccess: disputeQuerySuccess } = useBookingDispute(bookingId, {
+    enabled: shouldFetchDispute,
+  });
   const createDisputeMutation = useCreateDispute(bookingId);
   const bookingPayIntentMutation = useCreateBookingPaymentIntent(bookingId);
-
-  const disputableStatuses = ["in_progress", "completed", "payment_released", "no_show"];
   const canDispute =
     booking &&
     user?.id &&
     (booking.customerId === user.id || booking.welperId === user.id) &&
-    disputableStatuses.includes(booking.status);
+    disputableStatuses.includes(booking.status) &&
+    canReportDisputeForBooking(booking);
   const hasDispute = disputeQuerySuccess && bookingDispute != null;
 
   const isWelper = user?.role === "welper";
@@ -388,8 +422,12 @@ export default function BookingDetailClient({
 
   useEffect(() => {
     if (!receiptDraft || receiptDraft.confirmedReceipt || !receiptDialogOpen) return;
-    setBillingInLocal(isoToDatetimeLocal(receiptDraft.suggestedBillingCheckInAt));
-    setBillingOutLocal(isoToDatetimeLocal(receiptDraft.suggestedBillingCheckOutAt));
+    const { checkInLocal, checkOutLocal } = applyReceiptBillingWindow(
+      new Date(receiptDraft.suggestedBillingCheckInAt),
+      new Date(receiptDraft.suggestedBillingCheckOutAt),
+    );
+    setBillingInLocal(checkInLocal);
+    setBillingOutLocal(checkOutLocal);
   }, [
     receiptDialogOpen,
     receiptDraft,
@@ -402,6 +440,50 @@ export default function BookingDetailClient({
     if (!receiptDraft || receiptDraft.confirmedReceipt) return 0;
     return previewReceiptTotalCents(billingInLocal, billingOutLocal, receiptDraft.hourlyRate);
   }, [receiptDraft, billingInLocal, billingOutLocal]);
+
+  const receiptBillingDurationOk = useMemo(() => {
+    if (!billingInLocal || !billingOutLocal) return false;
+    const checkIn = new Date(billingInLocal);
+    const checkOut = new Date(billingOutLocal);
+    if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime())) return false;
+    return receiptBillingDurationMinutes(checkIn, checkOut) >= MIN_BOOKING_DURATION_MINUTES;
+  }, [billingInLocal, billingOutLocal]);
+
+  const handleReceiptBillingInChange = useCallback(
+    (raw: string) => {
+      if (!raw) {
+        setBillingInLocal("");
+        return;
+      }
+      const checkIn = new Date(raw);
+      if (Number.isNaN(checkIn.getTime())) return;
+      const checkOut = billingOutLocal
+        ? new Date(billingOutLocal)
+        : new Date(checkIn.getTime() + MIN_BOOKING_DURATION_MINUTES * 60 * 1000);
+      const { checkInLocal, checkOutLocal } = applyReceiptBillingWindow(checkIn, checkOut);
+      setBillingInLocal(checkInLocal);
+      setBillingOutLocal(checkOutLocal);
+    },
+    [billingOutLocal],
+  );
+
+  const handleReceiptBillingOutChange = useCallback(
+    (raw: string) => {
+      if (!raw) {
+        setBillingOutLocal("");
+        return;
+      }
+      const checkOut = new Date(raw);
+      if (Number.isNaN(checkOut.getTime())) return;
+      const checkIn = billingInLocal
+        ? new Date(billingInLocal)
+        : new Date(checkOut.getTime() - MIN_BOOKING_DURATION_MINUTES * 60 * 1000);
+      const { checkInLocal, checkOutLocal } = applyReceiptBillingWindow(checkIn, checkOut);
+      setBillingInLocal(checkInLocal);
+      setBillingOutLocal(checkOutLocal);
+    },
+    [billingInLocal],
+  );
 
   const paymentPhase = booking?.paymentPhase ?? "none";
   const needsCustomerAuthorization =
@@ -504,9 +586,52 @@ export default function BookingDetailClient({
       : bookingOffering.categoryName;
   }, [bookingOffering]);
 
-  const { data: serviceQuestionsForAnswers } = useServiceQuestions(
-    bookingOffering?.serviceCategoryId,
+  const questionCategoryIds = useMemo(() => {
+    if (!bookingOffering) return [];
+    const ids = new Set<string>([bookingOffering.serviceCategoryId]);
+    for (const sub of bookingOffering.subcategories ?? []) {
+      ids.add(sub.id);
+    }
+    for (const id of bookingOffering.subcategoryIds ?? []) {
+      ids.add(id);
+    }
+    return [...ids];
+  }, [bookingOffering]);
+
+  const { data: serviceQuestionsForAnswers } = useServiceQuestionsForCategories(
+    questionCategoryIds,
   );
+
+  const { data: myCustomerProfile } = useCustomerProfile(
+    user?.id ?? "",
+    isCustomer && user?.id === booking?.customerId,
+  );
+
+  const customerDisplayFirstName = useMemo(() => {
+    if (isCustomer && user?.id === booking?.customerId) {
+      return myCustomerProfile?.firstName?.trim() || booking?.customerFirstName?.trim() || null;
+    }
+    return booking?.customerFirstName?.trim() || null;
+  }, [
+    isCustomer,
+    user?.id,
+    booking?.customerId,
+    booking?.customerFirstName,
+    myCustomerProfile?.firstName,
+  ]);
+
+  const customerDisplayPhotoUrl = useMemo(() => {
+    if (isCustomer && user?.id === booking?.customerId) {
+      return myCustomerProfile?.photoUrl ?? booking?.customerPhotoUrl ?? null;
+    }
+    return booking?.customerPhotoUrl ?? null;
+  }, [
+    isCustomer,
+    user?.id,
+    booking?.customerId,
+    booking?.customerPhotoUrl,
+    myCustomerProfile?.photoUrl,
+  ]);
 
   const bookingAnswerRows = useMemo(() => {
     if (!booking?.answers) return [];
@@ -515,7 +640,7 @@ export default function BookingDetailClient({
       const meta = labelMap.get(questionId);
       return {
         key: questionId,
-        label: meta?.label ?? `Question ${questionId.slice(0, 8)}…`,
+        label: meta?.label ?? "Additional detail",
         displayValue: meta ? meta.format(value) : String(value),
       };
     });
@@ -657,9 +782,6 @@ export default function BookingDetailClient({
       </Container>
     );
   }
-
-  const bookingAllowsReview =
-    booking.status === "completed" || booking.status === "payment_released";
 
   const canShowReviewInActions =
     reviewQuerySuccess &&
@@ -944,7 +1066,8 @@ export default function BookingDetailClient({
                     {isWelper ? welperBookings.decline : "Decline"}
                   </Button>
                 )}
-                {actions.includes("cancel") && (
+                {actions.includes("cancel") &&
+                  !(isWelper && actions.includes("decline")) && (
                   <Button
                     size="3"
                     color={SEMANTIC_COLOR.danger}
@@ -1041,12 +1164,15 @@ export default function BookingDetailClient({
                   <Flex align="center" gap="2">
                     <Avatar
                       size="2"
+                      src={customerDisplayPhotoUrl ?? undefined}
                       fallback={
-                        isCustomer && user?.id === booking.customerId
-                          ? (user?.name?.trim().slice(0, 2) ||
-                              user?.email?.slice(0, 2) ||
-                              "ME").toUpperCase()
-                          : "CU"
+                        customerDisplayFirstName
+                          ? customerDisplayFirstName.slice(0, 2).toUpperCase()
+                          : isCustomer && user?.id === booking.customerId
+                            ? (user?.name?.trim().slice(0, 2) ||
+                                user?.email?.slice(0, 2) ||
+                                "ME").toUpperCase()
+                            : "CU"
                       }
                     />
                     <Text size="2">
@@ -1054,7 +1180,8 @@ export default function BookingDetailClient({
                         ? isWelper
                           ? welperDetail.you
                           : "You"
-                        : `#${booking.customerId.slice(-8).toUpperCase()}`}
+                        : customerDisplayFirstName ??
+                          `#${booking.customerId.slice(-8).toUpperCase()}`}
                     </Text>
                   </Flex>
                 </Flex>
@@ -1244,7 +1371,7 @@ export default function BookingDetailClient({
                     {isWelper ? welperDetail.reportProblem : "Report a problem"}
                   </Button>
                 ) : null}
-                {user?.id ? (
+                {user?.id && booking && canMessageBookingParticipant(booking) ? (
                   <Button
                     size="2"
                     variant="outline"
@@ -1647,8 +1774,9 @@ export default function BookingDetailClient({
                     id="receipt-billing-in"
                     type="datetime-local"
                     size="2"
+                    step={RECEIPT_BILLING_STEP_MINUTES * 60}
                     value={billingInLocal}
-                    onChange={(e) => setBillingInLocal(e.target.value)}
+                    onChange={(e) => handleReceiptBillingInChange(e.target.value)}
                     aria-required="true"
                   />
                 </Box>
@@ -1669,8 +1797,9 @@ export default function BookingDetailClient({
                     id="receipt-billing-out"
                     type="datetime-local"
                     size="2"
+                    step={RECEIPT_BILLING_STEP_MINUTES * 60}
                     value={billingOutLocal}
-                    onChange={(e) => setBillingOutLocal(e.target.value)}
+                    onChange={(e) => handleReceiptBillingOutChange(e.target.value)}
                     aria-required="true"
                   />
                 </Box>
@@ -1716,16 +1845,21 @@ export default function BookingDetailClient({
                       submitReceiptMutation.isPending ||
                       receiptPreviewCents <= 0 ||
                       !billingInLocal ||
-                      !billingOutLocal
+                      !billingOutLocal ||
+                      !receiptBillingDurationOk
                     }
                     onClick={() => {
                       setMutationError(null);
+                      const snapped = snapReceiptBillingWindow(
+                        new Date(billingInLocal),
+                        new Date(billingOutLocal),
+                      );
                       submitReceiptMutation.mutate(
                         {
                           bookingId,
                           params: {
-                            billingCheckInAt: new Date(billingInLocal).toISOString(),
-                            billingCheckOutAt: new Date(billingOutLocal).toISOString(),
+                            billingCheckInAt: snapped.checkIn.toISOString(),
+                            billingCheckOutAt: snapped.checkOut.toISOString(),
                             notes: receiptNotes.trim() || undefined,
                           },
                         },
@@ -1819,12 +1953,6 @@ export default function BookingDetailClient({
                       }
                     : undefined
                 }
-                heading={bookingReview ? "Update your review" : undefined}
-                subheading={
-                  bookingReview
-                    ? "Change your rating or comment below."
-                    : undefined
-                }
                 submitLabel={
                   bookingReview
                     ? isWelper
@@ -1892,6 +2020,8 @@ export default function BookingDetailClient({
                 payload so the resulting dispute carries the photos / PDFs
                 the user attached. */}
             <DisputeForm
+              reporterRole={isWelper ? "welper" : "customer"}
+              categoryLabels={isWelper ? welperDetail.dispute.categories : undefined}
               loading={createDisputeMutation.isPending}
               uploadEvidence={uploadDisputeEvidence}
               error={

@@ -1,11 +1,55 @@
 /** Card authorization hold is always one hour of the welper's rate (plus tax). */
 export const BOOKING_HOLD_DURATION_HOURS = 1;
 
-/** Minimum booked service window (matches hold duration). */
+/** Minimum billable service duration on a receipt. */
 export const MIN_BOOKING_DURATION_MINUTES = BOOKING_HOLD_DURATION_HOURS * 60;
+
+/** Receipt time pickers snap to this grid (minutes). */
+export const RECEIPT_BILLING_STEP_MINUTES = 15;
+
+/** Check-out may ceil up to this many minutes ahead of now (matches minimum bill). */
+export const RECEIPT_CHECKOUT_FUTURE_GRACE_MINUTES = MIN_BOOKING_DURATION_MINUTES;
 
 export function roundMoney(amount: number): number {
   return Math.round(amount * 100) / 100;
+}
+
+/** Round billing check-in down to the previous step (local time). */
+export function floorToReceiptBillingStep(date: Date): Date {
+  const d = new Date(date.getTime());
+  const mins = d.getMinutes();
+  const remainder = mins % RECEIPT_BILLING_STEP_MINUTES;
+  if (remainder === 0 && d.getSeconds() === 0 && d.getMilliseconds() === 0) {
+    return d;
+  }
+  d.setMinutes(mins - remainder, 0, 0);
+  return d;
+}
+
+/** Round billing check-out up to the next step (local time). */
+export function ceilToReceiptBillingStep(date: Date): Date {
+  const d = new Date(date.getTime());
+  const mins = d.getMinutes();
+  const remainder = mins % RECEIPT_BILLING_STEP_MINUTES;
+  if (remainder === 0 && d.getSeconds() === 0 && d.getMilliseconds() === 0) {
+    return d;
+  }
+  d.setMinutes(mins + (RECEIPT_BILLING_STEP_MINUTES - remainder), 0, 0);
+  return d;
+}
+
+/** Snap to the billing grid and enforce the one-hour minimum duration. */
+export function snapReceiptBillingWindow(
+  checkIn: Date,
+  checkOut: Date,
+): { checkIn: Date; checkOut: Date } {
+  const inAt = floorToReceiptBillingStep(checkIn);
+  let outAt = ceilToReceiptBillingStep(checkOut);
+  const minMs = MIN_BOOKING_DURATION_MINUTES * 60 * 1000;
+  if (outAt.getTime() - inAt.getTime() < minMs) {
+    outAt = new Date(inAt.getTime() + minMs);
+  }
+  return { checkIn: inAt, checkOut: outAt };
 }
 
 export function computeSubtotalFromMinutes(

@@ -1640,6 +1640,13 @@
       "reviewSkip": "Skip for now",
       "disputeTitle": "Report a problem",
       "disputeDescription": "We'll review your case and get back to you within 48 hours.",
+      "disputeCategories": {
+        "no_show": "Customer didn't show up",
+        "quality": "Scope or job expectations",
+        "overcharge": "Payment or pricing issue",
+        "safety": "Safety concern",
+        "other": "Something else"
+      },
       "attachmentFallback": "Attachment",
       "previewUnavailable": "Preview unavailable right now"
     },

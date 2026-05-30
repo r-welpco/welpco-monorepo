@@ -51,21 +51,34 @@ export async function updateBookingReview(
   return apiClient.patch<ReviewItem>(`/api/bookings/${bookingId}/review`, params);
 }
 
-/** Get the current user's review for this booking. Throws if no review (404). */
-export async function getBookingReview(bookingId: string): Promise<ReviewItem> {
-  return apiClient.get<ReviewItem>(`/api/bookings/${bookingId}/review`);
+type BookingReviewResponse = { review: ReviewItem | null };
+
+function unwrapBookingReview(
+  body: BookingReviewResponse | ReviewItem | null,
+): ReviewItem | null {
+  if (body && typeof body === "object" && "review" in body) {
+    return body.review ?? null;
+  }
+  return body ?? null;
 }
 
-/** Get the current user's review for this booking, or null if none (catch 404). */
+/** Get the current user's review for this booking. Throws if no review submitted yet. */
+export async function getBookingReview(bookingId: string): Promise<ReviewItem> {
+  const review = await getBookingReviewOrNull(bookingId);
+  if (!review) {
+    throw new ApiClientError("No review found for this booking", 404);
+  }
+  return review;
+}
+
+/** Get the current user's review for this booking, or null if none. */
 export async function getBookingReviewOrNull(
   bookingId: string,
 ): Promise<ReviewItem | null> {
-  try {
-    return await apiClient.get<ReviewItem>(`/api/bookings/${bookingId}/review`);
-  } catch (e) {
-    if (e instanceof ApiClientError && e.statusCode === 404) return null;
-    throw e;
-  }
+  const body = await apiClient.get<BookingReviewResponse | ReviewItem | null>(
+    `/api/bookings/${bookingId}/review`,
+  );
+  return unwrapBookingReview(body);
 }
 
 /** List reviews for a welper (paginated). */

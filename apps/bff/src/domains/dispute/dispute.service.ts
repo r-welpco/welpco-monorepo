@@ -24,6 +24,7 @@ import { CreateResolutionDto } from './dto/create-resolution.dto';
 import { DisputeParticipantSummaryDto } from './dto/dispute-participant-summary.dto';
 import { DisputeResolutionSummaryDto } from './dto/dispute-resolution-summary.dto';
 import { PaymentService, type RefundCapturedResult } from '../payment/payment.service';
+import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { majorCurrencyUnitsToCents } from '../payment/money';
 import { AdminAuditService } from '../user-management/admin/admin-audit.service';
 import { S3UrlPresignerService } from '../../clients/s3';
@@ -33,6 +34,7 @@ import { WelperProfile } from '../profile-management/entities/welper-profile.ent
 import type { PhoneNumber } from '../../common/types';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
+import { isDisputeReportWindowOpen } from '../booking/dispute-report-window';
 
 const OPEN_STATUSES: string[] = ['open', 'in_review', 'escalated'];
 const RESOLVABLE_STATUSES: string[] = ['open', 'in_review'];
@@ -73,6 +75,7 @@ export class DisputeService {
     private readonly welperProfileRepo: Repository<WelperProfile>,
     private readonly dataSource: DataSource,
     private readonly paymentService: PaymentService,
+    private readonly applicationSettings: ApplicationSettingsService,
     private readonly adminAuditService: AdminAuditService,
     private readonly s3Presigner: S3UrlPresignerService,
     private readonly notificationService: NotificationService,
@@ -294,6 +297,13 @@ export class DisputeService {
         throw new ForbiddenException('You are not authorized to file a dispute for this booking');
       }
       validateTransition(booking.status, BookingRequestStatus.DISPUTED);
+
+      const reportWindowMinutes = await this.applicationSettings.getDisputeReportWindowMinutes();
+      if (!isDisputeReportWindowOpen(booking, reportWindowMinutes)) {
+        throw new BadRequestException(
+          `Problem reports must be filed within ${reportWindowMinutes} minutes of service completion`,
+        );
+      }
 
       const existingOpen = await disputeRepo
         .createQueryBuilder('d')

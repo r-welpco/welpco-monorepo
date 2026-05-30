@@ -17,12 +17,15 @@ function useIsAuthenticated(): boolean {
 // ─── Booking review (current user's review for a booking) ─────────────────
 
 /** Current user's review for this booking, or null if not yet submitted. */
-export function useBookingReview(bookingId: string | undefined) {
+export function useBookingReview(
+  bookingId: string | undefined,
+  options?: { enabled?: boolean },
+) {
   const isAuthenticated = useIsAuthenticated();
   return useQuery({
     queryKey: ["bookingReview", bookingId],
     queryFn: () => getBookingReviewOrNull(bookingId!),
-    enabled: !!bookingId && isAuthenticated,
+    enabled: !!bookingId && isAuthenticated && (options?.enabled ?? true),
     staleTime: 60 * 1000,
   });
 }

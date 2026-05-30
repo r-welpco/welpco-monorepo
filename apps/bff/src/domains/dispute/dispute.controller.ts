@@ -91,17 +91,17 @@ export class DisputeController {
   }
 
   @Get('bookings/:bookingId/dispute')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get dispute for this booking (if any)' })
   @ApiParam({ name: 'bookingId', description: 'Booking ID' })
-  @ApiResponse({ status: 200, description: 'Dispute if exists' })
-  @ApiResponse({ status: 404, description: 'No dispute or booking not found' })
+  @ApiResponse({ status: 200, description: 'Dispute if exists, or null if none filed' })
+  @ApiResponse({ status: 404, description: 'Booking not found' })
   async getByBooking(
     @CurrentUser() user: CurrentUserData,
     @Param('bookingId') bookingId: string,
-  ): Promise<DisputeResponseDto> {
+  ): Promise<{ dispute: DisputeResponseDto | null }> {
     const dispute = await this.disputeService.findByBooking(bookingId, user.userId);
-    if (!dispute) throw new NotFoundException('No dispute found for this booking');
-    return dispute;
+    return { dispute };
   }
 
   @Get('disputes')

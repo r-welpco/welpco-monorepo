@@ -1,4 +1,5 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData, useQueries } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { useSession } from "next-auth/react";
 import {
   getBookings,
@@ -15,6 +16,7 @@ import {
   type BookingListParams,
   type CreateBookingParams,
   type SubmitServiceReceiptParams,
+  type ServiceQuestion,
 } from "@/lib/services/booking-service";
 
 function useIsAuthenticated(): boolean {
@@ -165,4 +167,40 @@ export function useServiceQuestions(serviceCategoryId: string | undefined) {
     staleTime: 5 * 60 * 1000,
     retry: 2,
   });
+}
+
+/** Load and merge service questions across parent + subcategory IDs on an offering. */
+export function useServiceQuestionsForCategories(categoryIds: string[]) {
+  const uniqueIds = useMemo(
+    () => [...new Set(categoryIds.filter((id): id is string => !!id?.trim()))],
+    [categoryIds],
+  );
+
+  const queries = useQueries({
+    queries: uniqueIds.map((categoryId) => ({
+      queryKey: ["serviceQuestions", categoryId],
+      queryFn: () => getServiceQuestions(categoryId),
+      enabled: true,
+      staleTime: 5 * 60 * 1000,
+      retry: 2,
+    })),
+  });
+
+  const data = useMemo(() => {
+    const merged: ServiceQuestion[] = [];
+    const seen = new Set<string>();
+    for (const query of queries) {
+      for (const sq of query.data ?? []) {
+        if (seen.has(sq.question.id)) continue;
+        seen.add(sq.question.id);
+        merged.push(sq);
+      }
+    }
+    return merged;
+  }, [queries]);
+
+  return {
+    data,
+    isLoading: uniqueIds.length > 0 && queries.some((query) => query.isLoading),
+  };
 }

@@ -409,6 +409,59 @@ describe('BookingService', () => {
         ForbiddenException,
       );
     });
+
+    it('should offer welper accept and decline (not cancel) on pending requests', async () => {
+      mockBookingRepo.findOne.mockResolvedValue({
+        id: 'b1',
+        customerId: 'c1',
+        welperId: 'w1',
+        status: BookingRequestStatus.PENDING,
+        answers: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await service.findById('b1', 'w1', 'welper');
+
+      expect(result.availableActions).toEqual(expect.arrayContaining(['accept', 'decline']));
+      expect(result.availableActions).not.toContain('cancel');
+    });
+
+    it('should offer welper cancel (not accept/decline) after accepting', async () => {
+      mockBookingRepo.findOne.mockResolvedValue({
+        id: 'b1',
+        customerId: 'c1',
+        welperId: 'w1',
+        status: BookingRequestStatus.ACCEPTED,
+        answers: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await service.findById('b1', 'w1', 'welper');
+
+      expect(result.availableActions).toContain('cancel');
+      expect(result.availableActions).not.toContain('accept');
+      expect(result.availableActions).not.toContain('decline');
+    });
+
+    it('should still offer customer cancel on pending requests', async () => {
+      mockBookingRepo.findOne.mockResolvedValue({
+        id: 'b1',
+        customerId: 'c1',
+        welperId: 'w1',
+        status: BookingRequestStatus.PENDING,
+        answers: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await service.findById('b1', 'c1', 'customer');
+
+      expect(result.availableActions).toContain('cancel');
+      expect(result.availableActions).not.toContain('accept');
+      expect(result.availableActions).not.toContain('decline');
+    });
   });
 
   describe('cancel', () => {

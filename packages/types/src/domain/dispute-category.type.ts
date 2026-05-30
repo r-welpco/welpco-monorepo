@@ -45,3 +45,23 @@ export const DISPUTE_CATEGORY_LABELS: Record<DisputeCategory, string> = {
   safety: 'Safety concern',
   other: 'Something else',
 };
+
+/** Customer-facing labels for the dispute form (default reporter perspective). */
+export const DISPUTE_CATEGORY_LABELS_CUSTOMER = DISPUTE_CATEGORY_LABELS;
+
+/** Welper-facing labels — same enum values, perspective flipped where needed. */
+export const DISPUTE_CATEGORY_LABELS_WELPER: Record<DisputeCategory, string> = {
+  no_show: "Customer didn't show up",
+  quality: 'Scope or job expectations',
+  overcharge: 'Payment or pricing issue',
+  safety: 'Safety concern',
+  other: 'Something else',
+};
+
+export type DisputeReporterRole = 'customer' | 'welper';
+
+export function getDisputeCategoryLabels(
+  role: DisputeReporterRole,
+): Record<DisputeCategory, string> {
+  return role === 'welper' ? DISPUTE_CATEGORY_LABELS_WELPER : DISPUTE_CATEGORY_LABELS_CUSTOMER;
+}

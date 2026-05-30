@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class MessageDto {
   @ApiProperty({ description: 'Message ID' })
@@ -9,6 +9,9 @@ export class MessageDto {
 
   @ApiProperty({ description: 'Display name for the sender' })
   senderDisplayName!: string;
+
+  @ApiPropertyOptional({ description: 'Sender profile photo URL', nullable: true })
+  senderPhotoUrl?: string | null;
 
   @ApiProperty({ description: 'Message content' })
   content!: string;

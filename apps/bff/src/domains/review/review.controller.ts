@@ -68,17 +68,16 @@ export class ReviewController {
   }
 
   @Get('bookings/:bookingId/review')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get current user\'s review for this booking' })
   @ApiParam({ name: 'bookingId', description: 'Booking ID' })
-  @ApiResponse({ status: 200, description: 'Review if submitted' })
-  @ApiResponse({ status: 404, description: 'No review found' })
+  @ApiResponse({ status: 200, description: 'Review if submitted, or null if not yet submitted' })
   async getByBooking(
     @CurrentUser() user: CurrentUserData,
     @Param('bookingId') bookingId: string,
-  ): Promise<ReviewResponseDto> {
+  ): Promise<{ review: ReviewResponseDto | null }> {
     const review = await this.reviewService.getByBooking(bookingId, user.userId);
-    if (!review) throw new NotFoundException('No review found for this booking');
-    return review;
+    return { review };
   }
 
   @Get('welpers/:welperId/reviews')

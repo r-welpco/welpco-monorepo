@@ -33,14 +33,19 @@ import { BackgroundCheckService } from '../safety-verification/background-check.
 import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { validateTransition, getValidTransitions } from './booking-state-machine';
 import type { ServiceQuestion } from '../content-management/entities/service-question.entity';
-import { computeTotalWithTax } from './booking-pricing';
+import {
+  computeTotalWithTax,
+  MIN_BOOKING_DURATION_MINUTES,
+  RECEIPT_CHECKOUT_FUTURE_GRACE_MINUTES,
+  snapReceiptBillingWindow,
+} from './booking-pricing';
+import { getDisputeReportDeadlineAt } from './dispute-report-window';
 
 /** Hours before scheduled time when free cancellation is no longer possible */
 const FREE_CANCELLATION_HOURS = 24;
 const MAX_RECEIPT_BILLING_MINUTES = 720;
 const RECEIPT_SCHEDULE_GRACE_BEFORE_MINUTES = 60;
 const RECEIPT_SCHEDULE_GRACE_AFTER_MINUTES = 120;
-const RECEIPT_FUTURE_GRACE_MINUTES = 5;
 const MAX_BOOKING_ANSWER_KEYS = 100;
 const MAX_BOOKING_ANSWER_STRING_LENGTH = 2000;
 const MAX_BOOKING_ANSWERS_JSON_LENGTH = 20000;
@@ -276,7 +281,13 @@ export class BookingService {
         actions.push('decline');
       }
       if (next === BookingRequestStatus.CANCELLED && booking.status !== BookingRequestStatus.DISPUTED) {
-        actions.push('cancel');
+        const welperPendingRequest =
+          userRole === 'welper' &&
+          booking.welperId === userId &&
+          booking.status === BookingRequestStatus.PENDING;
+        if (!welperPendingRequest) {
+          actions.push('cancel');
+        }
       }
       if (next === BookingRequestStatus.IN_PROGRESS && userRole === 'welper' && booking.welperId === userId) {
         actions.push('check-in');
@@ -319,14 +330,22 @@ export class BookingService {
     }
 
     const durationMinutes = ms / (1000 * 60);
+    if (durationMinutes < MIN_BOOKING_DURATION_MINUTES) {
+      throw new BadRequestException(
+        `Billing duration must be at least ${MIN_BOOKING_DURATION_MINUTES / 60} hour`,
+      );
+    }
     if (durationMinutes > MAX_RECEIPT_BILLING_MINUTES) {
       throw new BadRequestException(
         `Billing duration cannot exceed ${MAX_RECEIPT_BILLING_MINUTES / 60} hours`,
       );
     }
 
-    if (checkOut.getTime() > Date.now() + RECEIPT_FUTURE_GRACE_MINUTES * 60 * 1000) {
-      throw new BadRequestException('Billing check-out cannot be in the future');
+    const futureGraceMs = RECEIPT_CHECKOUT_FUTURE_GRACE_MINUTES * 60 * 1000;
+    if (checkOut.getTime() > Date.now() + futureGraceMs) {
+      throw new BadRequestException(
+        'Billing check-out cannot be more than 1 hour in the future',
+      );
     }
 
     if (booking.scheduledDate && booking.scheduledStartTime && booking.scheduledEndTime) {
@@ -392,6 +411,17 @@ export class BookingService {
     };
   }
 
+  private async attachCustomerDisplayInfo(dto: BookingResponseDto): Promise<void> {
+    try {
+      const profile = await this.customerProfileService.findByCustomerId(dto.customerId);
+      dto.customerFirstName = profile.firstName?.trim() || null;
+      dto.customerPhotoUrl = profile.profilePhotoUrl ?? null;
+    } catch {
+      dto.customerFirstName = null;
+      dto.customerPhotoUrl = null;
+    }
+  }
+
   private async attachPaymentAndReceipt(dto: BookingResponseDto, bookingId: string): Promise<void> {
     const pay = await this.paymentService.getBookingPaymentSummary(bookingId);
     if (pay) {
@@ -400,6 +430,15 @@ export class BookingService {
     }
     const receipt = await this.serviceReceiptRepo.findOne({ where: { bookingId } });
     dto.serviceReceipt = receipt ? await this.toServiceReceiptDto(receipt) : null;
+  }
+
+  private async attachDisputeReportWindow(
+    dto: BookingResponseDto,
+    booking: BookingRequest,
+  ): Promise<void> {
+    const windowMinutes = await this.applicationSettings.getDisputeReportWindowMinutes();
+    const deadline = getDisputeReportDeadlineAt(booking, windowMinutes);
+    dto.disputeReportDeadlineAt = deadline?.toISOString() ?? null;
   }
 
   private async withTransaction<T>(fn: (queryRunner: QueryRunner) => Promise<T>): Promise<T> {
@@ -536,7 +575,9 @@ export class BookingService {
     }
     const role = accountType.toLowerCase() === 'welper' ? 'welper' as const : 'customer' as const;
     const dto = this.toResponse(booking, userId, role);
+    await this.attachCustomerDisplayInfo(dto);
     await this.attachPaymentAndReceipt(dto, bookingId);
+    await this.attachDisputeReportWindow(dto, booking);
     if (role === 'customer' && dto.paymentPhase === 'requires_action') {
       dto.paymentClientSecret = await this.paymentService.getClientSecretForReceiptDeltaIfRequired(
         bookingId,
@@ -833,6 +874,10 @@ export class BookingService {
       );
     }
 
+    const snapped = snapReceiptBillingWindow(suggestedIn, suggestedOut);
+    suggestedIn = snapped.checkIn;
+    suggestedOut = snapped.checkOut;
+
     const subtotalCents = this.computeReceiptSubtotalCents(suggestedIn, suggestedOut, hourly);
     const taxRateBps = await this.applicationSettings.getBookingTaxRateBps();
     const taxCents = this.computeTaxCents(subtotalCents, taxRateBps);
@@ -855,11 +900,19 @@ export class BookingService {
     welperId: string,
     dto: SubmitServiceReceiptDto,
   ): Promise<ConfirmServiceReceiptResponseDto> {
-    const billingCheckInAt = new Date(dto.billingCheckInAt);
-    const billingCheckOutAt = new Date(dto.billingCheckOutAt);
-    if (Number.isNaN(billingCheckInAt.getTime()) || Number.isNaN(billingCheckOutAt.getTime())) {
+    const billingCheckInAtRaw = new Date(dto.billingCheckInAt);
+    const billingCheckOutAtRaw = new Date(dto.billingCheckOutAt);
+    if (
+      Number.isNaN(billingCheckInAtRaw.getTime()) ||
+      Number.isNaN(billingCheckOutAtRaw.getTime())
+    ) {
       throw new BadRequestException('Invalid billing date values');
     }
+
+    const { checkIn: billingCheckInAt, checkOut: billingCheckOutAt } = snapReceiptBillingWindow(
+      billingCheckInAtRaw,
+      billingCheckOutAtRaw,
+    );
 
     const existingReceipt = await this.serviceReceiptRepo.findOne({ where: { bookingId } });
     if (existingReceipt) {
@@ -985,6 +1038,7 @@ export class BookingService {
 
     const resDto = this.toResponse(savedBooking, welperId, 'welper');
     await this.attachPaymentAndReceipt(resDto, bookingId);
+    await this.attachDisputeReportWindow(resDto, savedBooking);
 
     return {
       booking: resDto,

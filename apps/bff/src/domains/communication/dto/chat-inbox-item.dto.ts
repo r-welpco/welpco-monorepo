@@ -16,6 +16,12 @@ export class ChatInboxItemDto {
   @ApiProperty()
   otherPartyId!: string;
 
+  @ApiPropertyOptional({ nullable: true, description: 'Counterparty first name for inbox display' })
+  otherPartyFirstName?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, description: 'Counterparty profile photo URL for inbox display' })
+  otherPartyPhotoUrl?: string | null;
+
   @ApiPropertyOptional({ nullable: true, description: 'ISO timestamp of the latest message, if any' })
   lastMessageAt!: string | null;
 

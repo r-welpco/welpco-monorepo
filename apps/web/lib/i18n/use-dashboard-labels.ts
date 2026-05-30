@@ -628,6 +628,13 @@ export function useWelperBookingDetailLabels() {
     dispute: {
       title: t("disputeTitle"),
       description: t("disputeDescription"),
+      categories: {
+        no_show: t("disputeCategories.no_show"),
+        quality: t("disputeCategories.quality"),
+        overcharge: t("disputeCategories.overcharge"),
+        safety: t("disputeCategories.safety"),
+        other: t("disputeCategories.other"),
+      },
     },
     attachmentFallback: t("attachmentFallback"),
     previewUnavailable: t("previewUnavailable"),

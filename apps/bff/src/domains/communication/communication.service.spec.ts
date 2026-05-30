@@ -1,12 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { CommunicationService } from './communication.service';
 import { ChatThread } from './entities/chat-thread.entity';
 import { Message } from './entities/message.entity';
-import { BookingRequest } from '../booking/entities/booking-request.entity';
+import { BookingRequest, BookingRequestStatus } from '../booking/entities/booking-request.entity';
+import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
+import { CustomerProfile } from '../profile-management/entities/customer-profile.entity';
 import { BookingService } from '../booking/booking.service';
+import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { UsersService } from '../user-management/users/users.service';
 import { WelperProfileService } from '../profile-management/welper-profile/welper-profile.service';
 import { CustomerProfileService } from '../profile-management/customer-profile/customer-profile.service';
@@ -48,7 +51,20 @@ describe('CommunicationService', () => {
       id: BOOKING_ID,
       customerId: CUSTOMER_ID,
       welperId: WELPER_ID,
+      status: BookingRequestStatus.IN_PROGRESS,
     }),
+  };
+
+  const mockApplicationSettings = {
+    getDisputeReportWindowMinutes: jest.fn().mockResolvedValue(10),
+  };
+
+  const mockWelperProfileRepo = {
+    find: jest.fn().mockResolvedValue([]),
+  };
+
+  const mockCustomerProfileRepo = {
+    find: jest.fn().mockResolvedValue([]),
   };
 
   const mockBookingService = {
@@ -82,6 +98,8 @@ describe('CommunicationService', () => {
       providers: [
         CommunicationService,
         { provide: getRepositoryToken(BookingRequest), useValue: mockBookingRepo },
+        { provide: getRepositoryToken(WelperProfile), useValue: mockWelperProfileRepo },
+        { provide: getRepositoryToken(CustomerProfile), useValue: mockCustomerProfileRepo },
         { provide: getRepositoryToken(ChatThread), useValue: mockThreadRepo },
         { provide: getRepositoryToken(Message), useValue: mockMessageRepo },
         { provide: BookingService, useValue: mockBookingService },
@@ -89,6 +107,7 @@ describe('CommunicationService', () => {
         { provide: WelperProfileService, useValue: mockWelperProfileService },
         { provide: CustomerProfileService, useValue: mockCustomerProfileService },
         { provide: NotificationService, useValue: mockNotificationService },
+        { provide: ApplicationSettingsService, useValue: mockApplicationSettings },
       ],
     }).compile();
 
@@ -383,6 +402,28 @@ describe('CommunicationService', () => {
 
       const [recipient] = mockNotificationService.emitForUser.mock.calls[0]!;
       expect(recipient).toBe(CUSTOMER_ID);
+    });
+
+    it('throws BadRequestException when the post-completion messaging window has closed', async () => {
+      mockBookingService.findById.mockResolvedValue({ id: BOOKING_ID });
+      mockBookingRepo.findOne.mockResolvedValue({
+        id: BOOKING_ID,
+        customerId: CUSTOMER_ID,
+        welperId: WELPER_ID,
+        status: BookingRequestStatus.COMPLETED,
+        completedAt: new Date('2026-05-30T10:00:00.000Z'),
+        updatedAt: new Date('2026-05-30T10:00:00.000Z'),
+      });
+
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-05-30T10:11:00.000Z'));
+
+      await expect(
+        service.sendMessage(BOOKING_ID, CUSTOMER_ID, 'Customer', { content: 'Hello' }),
+      ).rejects.toThrow(BadRequestException);
+      expect(messageRepo.create).not.toHaveBeenCalled();
+
+      jest.useRealTimers();
     });
   });
 

@@ -24,12 +24,15 @@ function useIsAuthenticated(): boolean {
 // ─── Booking dispute ─────────────────────────────────────────────────────
 
 /** Current user's dispute for this booking, or null if none. */
-export function useBookingDispute(bookingId: string | undefined) {
+export function useBookingDispute(
+  bookingId: string | undefined,
+  options?: { enabled?: boolean },
+) {
   const isAuthenticated = useIsAuthenticated();
   return useQuery({
     queryKey: ["bookingDispute", bookingId],
     queryFn: () => getBookingDisputeOrNull(bookingId!),
-    enabled: !!bookingId && isAuthenticated,
+    enabled: !!bookingId && isAuthenticated && (options?.enabled ?? true),
     staleTime: 60 * 1000,
   });
 }

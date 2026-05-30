@@ -1639,6 +1639,13 @@
       "reviewSkip": "Passer pour l'instant",
       "disputeTitle": "Signaler un problème",
       "disputeDescription": "Nous examinerons votre dossier et vous répondrons dans les 48 heures.",
+      "disputeCategories": {
+        "no_show": "Le client ne s'est pas présenté",
+        "quality": "Portée du travail ou attentes",
+        "overcharge": "Problème de paiement ou tarification",
+        "safety": "Problème de sécurité",
+        "other": "Autre chose"
+      },
       "attachmentFallback": "Pièce jointe",
       "previewUnavailable": "Aperçu indisponible pour le moment"
     },

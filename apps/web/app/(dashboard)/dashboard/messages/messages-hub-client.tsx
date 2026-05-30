@@ -13,11 +13,13 @@ import { Badge } from "@welpco/ui/badge";
 import { Skeleton } from "@welpco/ui/skeleton";
 import { Card } from "@welpco/ui/card";
 import { Callout } from "@welpco/ui/callout";
+import { Avatar } from "@welpco/ui/avatar";
 import { MessageThread } from "@welpco/ui";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useAuthStore } from "@/stores/authStore";
+import { canMessageBookingParticipant } from "@/lib/booking/dispute-report-window";
 import {
   useBookingChatMessages,
   useSendBookingMessage,
@@ -26,7 +28,6 @@ import {
 } from "@/lib/hooks/use-booking-chat";
 import { useBookingById } from "@/lib/hooks/use-bookings";
 import { getStatusColor } from "@/lib/constants/booking";
-import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import {
   useBookingStatusLabel,
   useWelperMessagesLabels,
@@ -87,27 +88,19 @@ function formatDateSafe(dateStr: string | null, dateLocale: Locale): string {
   }
 }
 
-function InboxCounterpartyLabel({
-  viewerRole,
-  otherPartyId,
-  welperMsg,
-}: {
-  viewerRole: "customer" | "welper";
-  otherPartyId: string;
-  welperMsg?: ReturnType<typeof useWelperMessagesLabels>;
-}) {
-  const { data: welper } = usePublicWelperProfile(
-    viewerRole === "customer" ? otherPartyId : null
-  );
-  const name =
-    viewerRole === "customer" && welper
-      ? [welper.firstName, welper.lastName].filter(Boolean).join(" ").trim()
-      : null;
-  if (name) return <>{name}</>;
+function inboxCounterpartyName(
+  item: ChatInboxItem,
+  viewerRole: "customer" | "welper",
+  welperMsg?: ReturnType<typeof useWelperMessagesLabels>,
+): string {
+  if (item.otherPartyFirstName) return item.otherPartyFirstName;
   if (viewerRole === "welper") {
-    return <>{welperMsg?.counterpartyCustomer(otherPartyId) ?? `Customer · #${otherPartyId.slice(-8).toUpperCase()}`}</>;
+    return (
+      welperMsg?.counterpartyCustomer(item.otherPartyId) ??
+      `Customer · #${item.otherPartyId.slice(-8).toUpperCase()}`
+    );
   }
-  return <>Welper &middot; #{otherPartyId.slice(-8).toUpperCase()}</>;
+  return `Welper · #${item.otherPartyId.slice(-8).toUpperCase()}`;
 }
 
 function InboxRow({
@@ -132,11 +125,7 @@ function InboxRow({
 
   // Compose a descriptive aria-label so screen readers hear:
   // "<Counterparty>, booking #ABCD1234, scheduled Apr 27, unread, last message: ..."
-  const counterparty =
-    viewerRole === "welper"
-      ? (welperMsg?.counterpartyCustomer(item.otherPartyId) ??
-        `Customer #${item.otherPartyId.slice(-8).toUpperCase()}`)
-      : `Welper #${item.otherPartyId.slice(-8).toUpperCase()}`;
+  const counterparty = inboxCounterpartyName(item, viewerRole, welperMsg);
   const ariaSummary = [
     counterparty,
     viewerRole === "welper"
@@ -170,18 +159,22 @@ function InboxRow({
           className={`${styles.rowInner} ${isSelected ? styles.rowInnerSelected : ""}`}
         >
           <Flex align="center" justify="between" gap="2">
-            <Text
-              size="2"
-              weight="medium"
-              className={styles.truncate}
-              style={{ flex: 1, minWidth: 0 }}
-            >
-              <InboxCounterpartyLabel
-                viewerRole={viewerRole}
-                otherPartyId={item.otherPartyId}
-                welperMsg={welperMsg}
+            <Flex align="center" gap="2" style={{ flex: 1, minWidth: 0 }}>
+              <Avatar
+                size="2"
+                src={item.otherPartyPhotoUrl ?? undefined}
+                fallback={counterparty.slice(0, 2).toUpperCase()}
+                style={{ flexShrink: 0 }}
               />
-            </Text>
+              <Text
+                size="2"
+                weight="medium"
+                className={styles.truncate}
+                style={{ flex: 1, minWidth: 0 }}
+              >
+                {counterparty}
+              </Text>
+            </Flex>
             {unread ? (
               <Box
                 aria-label={welperMsg?.unreadAria ?? "Unread messages"}
@@ -258,12 +251,15 @@ function MessagesThreadPane({
       message: msg.content,
       sender: msg.senderDisplayName,
       senderId: msg.senderId,
+      senderAvatar: msg.senderPhotoUrl ?? undefined,
       timestamp: format(new Date(msg.createdAt), "h:mm a", { locale: dateLocale }),
     }));
   }, [messageRows, showThreadLoading]);
 
+  const messagingOpen = booking ? canMessageBookingParticipant(booking) : false;
+
   return (
-    <Flex direction="column" gap="4" className={styles.threadFlex}>
+    <Flex direction="column" gap="3" className={styles.threadFlex}>
       <Flex
         align="start"
         justify="between"
@@ -303,25 +299,38 @@ function MessagesThreadPane({
           <Callout.Text>{chatError}</Callout.Text>
         </Callout.Root>
       ) : null}
+      {!messagingOpen && booking ? (
+        <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="note">
+          <Callout.Text>
+            {welperMsg?.messagingClosed ??
+              "Messaging is no longer available for this booking. Open booking details if you need to leave a review."}
+          </Callout.Text>
+        </Callout.Root>
+      ) : null}
       <Box className={styles.threadInnerBox}>
         <MessageThread
-          title={welperMsg?.threadTitle ?? "Messages"}
+          compact
           messages={chatMessagesForThread}
           currentUserId={currentUserId}
           loading={showThreadLoading}
           sending={sendMessageMutation.isPending}
-          onSendMessage={(content) => {
-            setChatError(null);
-            sendMessageMutation.mutate(content, {
-              onError: (err) =>
-                setChatError(
-                  err instanceof Error
-                    ? err.message
-                    : (welperMsg?.sendFailed ??
-                      "We couldn't send your message. Try again in a moment.")
-                ),
-            });
-          }}
+          composerDisabled={!messagingOpen}
+          onSendMessage={
+            messagingOpen
+              ? (content) => {
+                  setChatError(null);
+                  sendMessageMutation.mutate(content, {
+                    onError: (err) =>
+                      setChatError(
+                        err instanceof Error
+                          ? err.message
+                          : (welperMsg?.sendFailed ??
+                            "We couldn't send your message. Try again in a moment."),
+                      ),
+                  });
+                }
+              : undefined
+          }
         />
       </Box>
     </Flex>
@@ -488,8 +497,8 @@ export function MessagesHub() {
 
           <Flex
             direction="column"
-            p="5"
-            gap="4"
+            p="3"
+            gap="3"
             className={styles.threadPane}
           >
             {selectedBookingId && user.id ? (

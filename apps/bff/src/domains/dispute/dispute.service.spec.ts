@@ -13,6 +13,7 @@ import { Dispute } from './entities/dispute.entity';
 import { Resolution } from './entities/resolution.entity';
 import { BookingRequest, BookingRequestStatus } from '../booking/entities/booking-request.entity';
 import { PaymentService } from '../payment/payment.service';
+import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { AdminAuditService } from '../user-management/admin/admin-audit.service';
 import { S3UrlPresignerService } from '../../clients/s3';
 import { UserAccount } from '../user-management/entities/user-account.entity';
@@ -54,6 +55,10 @@ describe('DisputeService', () => {
   const mockPaymentService = {
     refundCapturedAmount: jest.fn().mockResolvedValue({ ok: true, refundsCreated: 1 }),
     getTotalCapturedForBooking: jest.fn().mockResolvedValue({ totalCents: 10_000, currency: 'cad' }),
+  };
+
+  const mockApplicationSettings = {
+    getDisputeReportWindowMinutes: jest.fn().mockResolvedValue(10),
   };
 
   // DISPUTES-001 (Day 16): hoist the presigner mock so the new evidence-presign
@@ -109,6 +114,7 @@ describe('DisputeService', () => {
         { provide: getRepositoryToken(WelperProfile), useValue: mockWelperProfileRepo },
         { provide: DataSource, useValue: mockDataSource },
         { provide: PaymentService, useValue: mockPaymentService },
+        { provide: ApplicationSettingsService, useValue: mockApplicationSettings },
         { provide: AdminAuditService, useValue: { record: jest.fn().mockResolvedValue(undefined) } },
         {
           provide: S3UrlPresignerService,
@@ -372,6 +378,29 @@ describe('DisputeService', () => {
         ConflictException,
       );
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+    });
+
+    it('throws BadRequestException when the post-completion report window has closed', async () => {
+      const completedAt = new Date('2026-05-30T10:00:00.000Z');
+      const booking = {
+        id: 'booking-1',
+        customerId: 'cust-1',
+        welperId: 'welp-1',
+        status: BookingRequestStatus.COMPLETED,
+        completedAt,
+        updatedAt: completedAt,
+      } as BookingRequest;
+
+      setupTxMocks({ booking });
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-05-30T10:11:00.000Z'));
+
+      await expect(service.create('booking-1', 'cust-1', 'Customer', createDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+
+      jest.useRealTimers();
     });
   });
 

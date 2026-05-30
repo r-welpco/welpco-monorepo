@@ -48,4 +48,16 @@ export class BookingResponseDto {
 
   @ApiPropertyOptional({ type: ServiceReceiptDto })
   serviceReceipt?: ServiceReceiptDto | null;
+
+  @ApiPropertyOptional({ description: 'Customer first name for booking detail display' })
+  customerFirstName?: string | null;
+
+  @ApiPropertyOptional({ description: 'Customer profile photo URL for booking detail display' })
+  customerPhotoUrl?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Last moment a participant can file a problem report after completion. Null while service is in progress.',
+  })
+  disputeReportDeadlineAt?: string | null;
 }

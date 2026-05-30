@@ -106,6 +106,10 @@ export interface BookingItem {
   captureEligibleAt?: string | null;
   paymentClientSecret?: string | null;
   serviceReceipt?: ServiceReceipt | null;
+  customerFirstName?: string | null;
+  customerPhotoUrl?: string | null;
+  /** Last moment to file a problem report after completion; null while in progress. */
+  disputeReportDeadlineAt?: string | null;
 }
 
 export interface BookingListResponse {

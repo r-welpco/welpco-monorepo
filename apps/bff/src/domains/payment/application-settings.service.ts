@@ -4,7 +4,11 @@ import { Repository } from 'typeorm';
 import { ApplicationSetting } from './entities/application-setting.entity';
 
 export const PAYMENT_CAPTURE_DELAY_KEY = 'payment_capture_delay_minutes';
+export const DISPUTE_REPORT_WINDOW_MINUTES_KEY = 'dispute_report_window_minutes';
 export const BOOKING_TAX_RATE_BPS_KEY = 'booking_tax_rate_bps';
+
+/** Matches `DISPUTE_REPORT_WINDOW_MINUTES_DEFAULT` in booking/dispute-report-window.ts */
+const DISPUTE_REPORT_WINDOW_MINUTES_FALLBACK = 10;
 
 @Injectable()
 export class ApplicationSettingsService {
@@ -17,6 +21,12 @@ export class ApplicationSettingsService {
     const row = await this.repo.findOne({ where: { key: PAYMENT_CAPTURE_DELAY_KEY } });
     const n = parseInt(row?.value ?? '30', 10);
     return Number.isFinite(n) && n >= 0 ? n : 30;
+  }
+
+  async getDisputeReportWindowMinutes(): Promise<number> {
+    const row = await this.repo.findOne({ where: { key: DISPUTE_REPORT_WINDOW_MINUTES_KEY } });
+    const n = parseInt(row?.value ?? String(DISPUTE_REPORT_WINDOW_MINUTES_FALLBACK), 10);
+    return Number.isFinite(n) && n >= 0 ? n : DISPUTE_REPORT_WINDOW_MINUTES_FALLBACK;
   }
 
   /**
