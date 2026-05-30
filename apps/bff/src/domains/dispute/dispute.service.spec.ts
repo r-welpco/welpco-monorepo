@@ -21,6 +21,7 @@ import { CustomerProfile } from '../profile-management/entities/customer-profile
 import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
+import { Message } from '../communication/entities';
 
 describe('DisputeService', () => {
   let service: DisputeService;
@@ -74,6 +75,9 @@ describe('DisputeService', () => {
   const mockUserAccountRepo = { findOne: jest.fn().mockResolvedValue(null) };
   const mockCustomerProfileRepo = { findOne: jest.fn().mockResolvedValue(null) };
   const mockWelperProfileRepo = { findOne: jest.fn().mockResolvedValue(null) };
+  const mockMessageRepo = {
+    createQueryBuilder: jest.fn(),
+  };
 
   // NOTIFICATIONS-001 (Day 16 dispatch 2): DisputeService now emits to the
   // counterparty on create, both parties on resolution, counterparty on
@@ -112,6 +116,7 @@ describe('DisputeService', () => {
         { provide: getRepositoryToken(UserAccount), useValue: mockUserAccountRepo },
         { provide: getRepositoryToken(CustomerProfile), useValue: mockCustomerProfileRepo },
         { provide: getRepositoryToken(WelperProfile), useValue: mockWelperProfileRepo },
+        { provide: getRepositoryToken(Message), useValue: mockMessageRepo },
         { provide: DataSource, useValue: mockDataSource },
         { provide: PaymentService, useValue: mockPaymentService },
         { provide: ApplicationSettingsService, useValue: mockApplicationSettings },
@@ -295,9 +300,8 @@ describe('DisputeService', () => {
 
     /**
      * DISPUTES-001 (Day 16): the dispute create path must accept and persist
-     * the evidence array verbatim. The service does not validate keys (the
-     * DTO whitelists `key` length / shape); it just hands the array to the
-     * entity. This case locks that contract in.
+     * the evidence array after ownership validation. This case locks the
+     * persisted evidence contract in.
      */
     it('persists evidence array verbatim when supplied', async () => {
       const booking = {
@@ -332,6 +336,33 @@ describe('DisputeService', () => {
 
       expect(captured).not.toBeNull();
       expect(captured!.evidence).toEqual(evidence);
+    });
+
+    it('rejects message evidence that is not part of the booking chat', async () => {
+      const booking = {
+        id: 'booking-1',
+        customerId: 'cust-1',
+        welperId: 'welp-1',
+        status: BookingRequestStatus.IN_PROGRESS,
+      } as BookingRequest;
+      setupTxMocks({ booking });
+
+      const messageEvidenceQb = {
+        innerJoin: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockResolvedValue([]),
+      };
+      mockMessageRepo.createQueryBuilder.mockReturnValue(messageEvidenceQb);
+
+      await expect(
+        service.create('booking-1', 'cust-1', 'Customer', {
+          ...createDto,
+          evidence: [{ type: 'message', id: 'message-from-other-booking' }],
+        }),
+      ).rejects.toThrow('Message evidence must belong to this booking');
+      expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
     });
 
     it('persists null evidence when none supplied (empty reports allowed)', async () => {

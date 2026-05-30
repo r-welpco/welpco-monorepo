@@ -11,6 +11,7 @@ import { AvailabilityService } from '../profile-management/availability/availabi
 import { NotificationService } from '../notification/notification.service';
 import { PaymentService } from '../payment/payment.service';
 import { ApplicationSettingsService } from '../payment/application-settings.service';
+import { BookingTaxService } from '../payment/booking-tax.service';
 import { CustomerProfileService } from '../profile-management/customer-profile/customer-profile.service';
 import { WelperProfileService } from '../profile-management/welper-profile/welper-profile.service';
 import { UsersService } from '../user-management/users/users.service';
@@ -68,10 +69,32 @@ describe('BookingService', () => {
 
   const mockApplicationSettingsService = {
     getBookingTaxRateBps: jest.fn().mockResolvedValue(0),
+    getDisputeReportWindowMinutes: jest.fn().mockResolvedValue(10),
+  };
+
+  const mockBookingTaxService = {
+    quoteScheduledJobTotal: jest.fn().mockResolvedValue({ totalDollars: 0, quote: null }),
+    quoteServiceReceipt: jest.fn().mockResolvedValue({
+      subtotalCents: 0,
+      taxCents: 0,
+      totalCents: 0,
+      taxRateBps: 0,
+      stripeTaxCalculationId: '',
+    }),
   };
 
   const mockCustomerProfileService = {
-    findByCustomerId: jest.fn().mockResolvedValue({ firstName: 'Test', lastName: 'Customer' }),
+    findByCustomerId: jest.fn().mockResolvedValue({
+      firstName: 'Test',
+      lastName: 'Customer',
+      address: {
+        streetAddress: '123 Main St',
+        city: 'Montreal',
+        state: 'QC',
+        zipCode: 'H2X 1Y4',
+        country: 'CA',
+      },
+    }),
   };
 
   const mockWelperProfileService = {
@@ -140,6 +163,7 @@ describe('BookingService', () => {
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: PaymentService, useValue: mockPaymentService },
         { provide: ApplicationSettingsService, useValue: mockApplicationSettingsService },
+        { provide: BookingTaxService, useValue: mockBookingTaxService },
         { provide: CustomerProfileService, useValue: mockCustomerProfileService },
         { provide: WelperProfileService, useValue: mockWelperProfileService },
         { provide: UsersService, useValue: mockUsersService },
@@ -284,6 +308,37 @@ describe('BookingService', () => {
         dto.scheduledDate,
         dto.scheduledStartTime,
         dto.scheduledEndTime,
+      );
+      expect(txBookingRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          address: {
+            street: '123 Main St',
+            city: 'Montreal',
+            region: 'QC',
+            postalCode: 'H2X 1Y4',
+            country: 'CA',
+          },
+        }),
+      );
+    });
+
+    it('should throw when customer profile has no service address', async () => {
+      mockCustomerProfileService.findByCustomerId.mockResolvedValueOnce({
+        firstName: 'Test',
+        lastName: 'Customer',
+        address: null,
+      });
+      mockServiceOfferingService.findById.mockResolvedValue({
+        id: offeringId,
+        welperId,
+        serviceCategoryId: 'cat-1',
+        active: true,
+        hourlyRate: 25,
+      });
+      mockServiceQuestionsService.findByServiceCategory.mockResolvedValue([]);
+
+      await expect(service.create(customerId, dto)).rejects.toThrow(
+        'Add a complete home address in Settings before booking.',
       );
     });
 
@@ -494,6 +549,24 @@ describe('BookingService', () => {
 
       expect(txBookingRepo.save).toHaveBeenCalled();
       expect(result.status).toBe(BookingRequestStatus.CANCELLED);
+    });
+
+    it('should reject welper cancel on a pending request', async () => {
+      const booking = {
+        id: 'b1',
+        customerId: 'c1',
+        welperId: 'w1',
+        status: BookingRequestStatus.PENDING,
+        answers: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      txQueryBuilder.getOne.mockResolvedValue(booking);
+
+      await expect(
+        service.cancel('b1', 'w1', 'welper', undefined, undefined),
+      ).rejects.toThrow('Pending booking requests must be declined by the welper');
+      expect(txBookingRepo.save).not.toHaveBeenCalled();
     });
 
     it('should reject cancel when booking is disputed', async () => {

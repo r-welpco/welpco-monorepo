@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CANADIAN_PROVINCE_CODES } from "./canadian-provinces";
 
 export type ServiceOfferingValidationLabels = {
   titleRequired: string;
@@ -41,8 +42,12 @@ export function createServiceAreaSchema(v: ServiceOfferingValidationLabels) {
       .object({
         streetAddress: z.string().default(""),
         city: z.string().min(2, v.cityRequired),
-        stateProvince: z.string().min(2, v.stateRequired),
-        zipPostalCode: z.string().min(3, v.postalRequired),
+        stateProvince: z
+          .string()
+          .refine((value) => CANADIAN_PROVINCE_CODES.has(value), v.stateRequired),
+        zipPostalCode: z
+          .string()
+          .regex(/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/, v.postalRequired),
         country: z.string().optional(),
       })
       .optional(),

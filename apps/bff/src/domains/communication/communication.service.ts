@@ -384,6 +384,10 @@ export class CommunicationService {
   ): Promise<MessageDto> {
     await this.assertParticipant(bookingId, userId, accountType);
     const booking = await this.assertMessagingAllowed(bookingId);
+    const content = dto.content.trim();
+    if (!content) {
+      throw new BadRequestException('Message content cannot be empty');
+    }
 
     let thread = await this.threadRepo.findOne({ where: { bookingId } });
     if (!thread) {
@@ -394,7 +398,7 @@ export class CommunicationService {
     const message = this.messageRepo.create({
       chatThreadId: thread.id,
       senderId: userId,
-      content: dto.content.trim(),
+      content,
     });
     const saved = await this.messageRepo.save(message);
 
@@ -407,7 +411,7 @@ export class CommunicationService {
       const recipientId =
         booking.customerId === userId ? booking.welperId : booking.customerId;
       const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-      const link = `${baseUrl}/dashboard/messages?bookingId=${bookingId}`;
+      const link = `${baseUrl}/dashboard/messages/${bookingId}`;
       // Honest body: keep a short preview so the recipient can triage from
       // the bell, but don't leak long content into email subject lines.
       const preview = saved.content.length > 80 ? `${saved.content.slice(0, 80)}…` : saved.content;

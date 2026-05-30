@@ -79,7 +79,7 @@ export async function updateCustomerProfile(
         city: data.address.city || "",
         state: data.address.stateProvince || "", // Map stateProvince to state
         zipCode: data.address.zipPostalCode || "", // Map zipPostalCode to zipCode
-        country: data.address.country || "",
+        country: data.address.country || "CA",
       };
     }
 

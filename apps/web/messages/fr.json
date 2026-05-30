@@ -1381,6 +1381,7 @@
       "threadTitle": "Messages",
       "threadBooking": "Réservation #{id}",
       "viewBooking": "Voir les détails de la réservation",
+      "messagingClosed": "La messagerie n'est plus disponible pour cette réservation. Ouvrez les détails de la réservation si vous devez laisser un avis.",
       "sendFailed": "Impossible d'envoyer votre message. Réessayez."
     },
     "settings": {

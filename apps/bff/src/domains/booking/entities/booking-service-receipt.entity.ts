@@ -45,6 +45,10 @@ export class BookingServiceReceipt extends BaseEntity {
   @Column({ name: 'tax_rate_bps', type: 'int', default: 0 })
   taxRateBps!: number;
 
+  /** Stripe Tax Calculation id for the final receipt amount. */
+  @Column({ name: 'stripe_tax_calculation_id', type: 'varchar', length: 255, nullable: true })
+  stripeTaxCalculationId!: string | null;
+
   @Column({ name: 'total_cents', type: 'int' })
   totalCents!: number;
 

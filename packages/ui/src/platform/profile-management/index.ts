@@ -20,4 +20,5 @@ export * from "./service-offering-list";
 export * from "./favorite-welper-list";
 export * from "./service-preferences";
 export * from "./address-input";
+export * from "./canadian-provinces";
 export * from "./privacy-settings";

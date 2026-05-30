@@ -14,6 +14,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useEffect } from "react";
 import { z } from "zod";
 import { AddressInput, type AddressValues } from "./address-input";
+import { CANADIAN_PROVINCE_CODES } from "./canadian-provinces";
 
 export interface CustomerProfileFormProps {
   defaultValues?: Partial<CustomerProfileValues>;
@@ -25,8 +26,12 @@ export interface CustomerProfileFormProps {
 const addressSchema = z.object({
   streetAddress: z.string().min(5, "Street address is required"),
   city: z.string().min(2, "City is required"),
-  stateProvince: z.string().min(2, "State/Province is required"),
-  zipPostalCode: z.string().min(3, "ZIP/Postal code is required"),
+  stateProvince: z
+    .string()
+    .refine((v) => CANADIAN_PROVINCE_CODES.has(v), "Select a province"),
+  zipPostalCode: z
+    .string()
+    .regex(/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/, "Enter a valid Canadian postal code"),
   country: z.string().optional(),
 });
 

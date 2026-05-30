@@ -31,15 +31,19 @@ import { WelperProfileService } from '../profile-management/welper-profile/welpe
 import { UsersService } from '../user-management/users/users.service';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
 import { ApplicationSettingsService } from '../payment/application-settings.service';
+import { BookingTaxService } from '../payment/booking-tax.service';
+import type { BookingTaxContext } from '../payment/booking-tax.types';
 import { validateTransition, getValidTransitions } from './booking-state-machine';
 import type { ServiceQuestion } from '../content-management/entities/service-question.entity';
 import {
-  computeTotalWithTax,
   MIN_BOOKING_DURATION_MINUTES,
   RECEIPT_CHECKOUT_FUTURE_GRACE_MINUTES,
   snapReceiptBillingWindow,
 } from './booking-pricing';
 import { getDisputeReportDeadlineAt } from './dispute-report-window';
+import { customerProfileAddressToBookingRecord } from './booking-address.util';
+import { resolveServiceTaxAddress } from '../payment/booking-tax-address.util';
+import type { Address } from '../../common/types';
 
 /** Hours before scheduled time when free cancellation is no longer possible */
 const FREE_CANCELLATION_HOURS = 24;
@@ -68,6 +72,7 @@ export class BookingService {
     private readonly notificationService: NotificationService,
     private readonly paymentService: PaymentService,
     private readonly applicationSettings: ApplicationSettingsService,
+    private readonly bookingTaxService: BookingTaxService,
     private readonly customerProfileService: CustomerProfileService,
     private readonly welperProfileService: WelperProfileService,
     private readonly usersService: UsersService,
@@ -76,6 +81,26 @@ export class BookingService {
   ) {}
 
   // ─── Helpers ──────────────────────────────────────────────────────────
+
+  /** Home services are always at the customer's profile address. */
+  private async resolveCustomerServiceAddress(customerId: string): Promise<Record<string, string>> {
+    const profile = await this.customerProfileService.findByCustomerId(customerId);
+    const profileAddress = profile?.address as Address | null | undefined;
+    if (!profileAddress) {
+      throw new BadRequestException(
+        'Add a complete home address in Settings before booking.',
+      );
+    }
+
+    const bookingAddress = customerProfileAddressToBookingRecord(profileAddress);
+    if (!resolveServiceTaxAddress(bookingAddress, null)) {
+      throw new BadRequestException(
+        'Your profile address must include street, city, province, and postal code before booking.',
+      );
+    }
+
+    return bookingAddress;
+  }
 
   private isServiceQuestionVisible(
     sq: ServiceQuestion,
@@ -314,11 +339,6 @@ export class BookingService {
     return Math.round(hours * hourlyRate * 100);
   }
 
-  private computeTaxCents(subtotalCents: number, taxRateBps: number): number {
-    if (subtotalCents <= 0 || taxRateBps <= 0) return 0;
-    return Math.round((subtotalCents * taxRateBps) / 10000);
-  }
-
   private assertReceiptBillingWindowReasonable(
     booking: BookingRequest,
     checkIn: Date,
@@ -476,6 +496,8 @@ export class BookingService {
 
     await this.paymentService.assertCustomerHasDefaultPaymentMethod(customerId);
 
+    const serviceAddress = await this.resolveCustomerServiceAddress(customerId);
+
     // Validate service question answers
     const answers = dto.answers ?? {};
     const allowedQuestionCategoryIds = new Set([
@@ -498,8 +520,17 @@ export class BookingService {
     if (offering.hourlyRate) {
       hourlyRate = Number(offering.hourlyRate);
       if (dto.durationMinutes) {
-        const taxRateBps = await this.applicationSettings.getBookingTaxRateBps();
-        totalPrice = computeTotalWithTax(hourlyRate, dto.durationMinutes, taxRateBps);
+        const pricingPreview: BookingTaxContext = {
+          id: 'pricing-preview',
+          customerId,
+          hourlyRate: String(hourlyRate),
+          address: serviceAddress,
+        };
+        const { totalDollars } = await this.bookingTaxService.quoteScheduledJobTotal(
+          pricingPreview,
+          dto.durationMinutes,
+        );
+        totalPrice = totalDollars;
       }
     }
 
@@ -537,7 +568,7 @@ export class BookingService {
         timezoneOffsetMinutes: dto.timezoneOffsetMinutes ?? null,
         hourlyRate,
         totalPrice,
-        address: dto.address ?? null,
+        address: serviceAddress,
         notes: dto.notes ?? null,
       });
 
@@ -879,9 +910,12 @@ export class BookingService {
     suggestedOut = snapped.checkOut;
 
     const subtotalCents = this.computeReceiptSubtotalCents(suggestedIn, suggestedOut, hourly);
-    const taxRateBps = await this.applicationSettings.getBookingTaxRateBps();
-    const taxCents = this.computeTaxCents(subtotalCents, taxRateBps);
-    const computedTotalCents = subtotalCents + taxCents;
+    const taxQuote = await this.bookingTaxService.quoteServiceReceipt(
+      booking,
+      subtotalCents,
+      `draft-${bookingId}`,
+    );
+    const computedTotalCents = taxQuote.totalCents;
 
     return {
       bookingId,
@@ -935,6 +969,34 @@ export class BookingService {
     let savedBooking: BookingRequest;
     let totalCents: number;
 
+    const bookingForTax = await this.bookingRepo.findOne({ where: { id: bookingId } });
+    if (!bookingForTax) {
+      throw new NotFoundException('Booking not found');
+    }
+    if (bookingForTax.welperId !== welperId) {
+      throw new ForbiddenException('You are not authorized to manage this booking');
+    }
+    if (bookingForTax.status !== BookingRequestStatus.IN_PROGRESS) {
+      throw new BadRequestException(
+        'You can only submit a service receipt while the booking is in progress.',
+      );
+    }
+    const hourlyForTax = bookingForTax.hourlyRate != null ? Number(bookingForTax.hourlyRate) : null;
+    if (hourlyForTax == null || hourlyForTax <= 0) {
+      throw new BadRequestException('This booking has no hourly rate for billing');
+    }
+    this.assertReceiptBillingWindowReasonable(bookingForTax, billingCheckInAt, billingCheckOutAt);
+    const receiptSubtotalCents = this.computeReceiptSubtotalCents(
+      billingCheckInAt,
+      billingCheckOutAt,
+      hourlyForTax,
+    );
+    const taxQuote = await this.bookingTaxService.quoteServiceReceipt(
+      bookingForTax,
+      receiptSubtotalCents,
+      `receipt-${bookingId}`,
+    );
+
     const row = await this.withTransaction(async (queryRunner) => {
       const booking = await this.getBookingForWelperLocked(queryRunner, bookingId, welperId);
       if (booking.status !== BookingRequestStatus.IN_PROGRESS) {
@@ -946,11 +1008,6 @@ export class BookingService {
       if (hourlyNum == null || hourlyNum <= 0) {
         throw new BadRequestException('This booking has no hourly rate for billing');
       }
-      this.assertReceiptBillingWindowReasonable(booking, billingCheckInAt, billingCheckOutAt);
-      const taxRateBps = await this.applicationSettings.getBookingTaxRateBps();
-      const subtotalCents = this.computeReceiptSubtotalCents(billingCheckInAt, billingCheckOutAt, hourlyNum);
-      const taxCents = this.computeTaxCents(subtotalCents, taxRateBps);
-      const cents = subtotalCents + taxCents;
       validateTransition(booking.status, BookingRequestStatus.COMPLETED);
 
       const receiptRepo = queryRunner.manager.getRepository(BookingServiceReceipt);
@@ -959,10 +1016,11 @@ export class BookingService {
         billingCheckInAt,
         billingCheckOutAt,
         hourlyRate: String(hourlyNum),
-        subtotalCents,
-        taxCents,
-        taxRateBps,
-        totalCents: cents,
+        subtotalCents: taxQuote.subtotalCents,
+        taxCents: taxQuote.taxCents,
+        taxRateBps: taxQuote.taxRateBps,
+        totalCents: taxQuote.totalCents,
+        stripeTaxCalculationId: taxQuote.stripeTaxCalculationId || null,
         currency: 'cad',
         notes: dto.notes?.trim() ? dto.notes.trim() : null,
         confirmedAt: new Date(),
@@ -974,11 +1032,11 @@ export class BookingService {
       booking.checkedInAt = billingCheckInAt;
       booking.checkedOutAt = billingCheckOutAt;
       booking.completedAt = new Date();
-      booking.totalPrice = Math.round(cents) / 100;
+      booking.totalPrice = Math.round(taxQuote.totalCents) / 100;
 
       const bookingRepo = queryRunner.manager.getRepository(BookingRequest);
       const persistedBooking = await bookingRepo.save(booking);
-      return { receipt: persistedReceipt, booking: persistedBooking, totalCents: cents };
+      return { receipt: persistedReceipt, booking: persistedBooking, totalCents: taxQuote.totalCents };
     });
     savedReceipt = row.receipt;
     savedBooking = row.booking;
@@ -1069,6 +1127,12 @@ export class BookingService {
       if (booking.customerId !== userId && booking.welperId !== userId) {
         throw new ForbiddenException('You are not authorized to cancel this booking');
       }
+      const role = accountType.toLowerCase() === 'welper' ? ('welper' as const) : ('customer' as const);
+      if (role === 'welper' && booking.status === BookingRequestStatus.PENDING) {
+        throw new BadRequestException(
+          'Pending booking requests must be declined by the welper, not cancelled.',
+        );
+      }
       if (booking.status === BookingRequestStatus.DISPUTED) {
         throw new BadRequestException(
           'This booking is under dispute. It cannot be cancelled by participants until support resolves the dispute.',
@@ -1079,7 +1143,6 @@ export class BookingService {
 
       const offset = timezoneOffsetMinutes ?? booking.timezoneOffsetMinutes ?? null;
       let chargeLateCancellationFee = false;
-      const role = accountType.toLowerCase() === 'welper' ? ('welper' as const) : ('customer' as const);
       if (role === 'customer' && booking.scheduledDate && booking.scheduledStartTime) {
         const scheduledUtcMs = this.scheduledTimeToUtcMs(
           booking.scheduledDate,

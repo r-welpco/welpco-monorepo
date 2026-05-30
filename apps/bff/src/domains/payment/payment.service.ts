@@ -15,7 +15,8 @@ import { validateTransition } from '../booking/booking-state-machine';
 import { UserAccount } from '../user-management/entities/user-account.entity';
 import { CustomerProfileService } from '../profile-management/customer-profile/customer-profile.service';
 import { ApplicationSettingsService } from './application-settings.service';
-import { computeOneHourHoldTotalCents } from '../booking/booking-pricing';
+import { BookingTaxService } from './booking-tax.service';
+import type { BookingTaxQuote } from './booking-tax.types';
 import {
   BookingPayment,
   BookingPaymentKind,
@@ -64,6 +65,7 @@ export class PaymentService {
     @InjectRepository(BookingRequest)
     private readonly bookingRepo: Repository<BookingRequest>,
     private readonly applicationSettings: ApplicationSettingsService,
+    private readonly bookingTaxService: BookingTaxService,
     private readonly customerProfileService: CustomerProfileService,
     private readonly notificationService: NotificationService,
   ) {
@@ -78,11 +80,13 @@ export class PaymentService {
     return this.stripe;
   }
 
+  private async authorizationHoldQuote(booking: BookingRequest): Promise<BookingTaxQuote> {
+    return this.bookingTaxService.quoteAuthorizationHold(booking);
+  }
+
   private async authorizationHoldAmountCents(booking: BookingRequest): Promise<number> {
-    const hourlyRate = booking.hourlyRate != null ? Number(booking.hourlyRate) : 0;
-    if (hourlyRate <= 0) return 0;
-    const taxRateBps = await this.applicationSettings.getBookingTaxRateBps();
-    return computeOneHourHoldTotalCents(hourlyRate, taxRateBps);
+    const quote = await this.authorizationHoldQuote(booking);
+    return quote.totalCents;
   }
 
   private async findHoldPayment(bookingId: string): Promise<BookingPayment | null> {
@@ -271,6 +275,12 @@ export class PaymentService {
       return;
     }
 
+    const holdQuote = await this.authorizationHoldQuote(booking);
+    if (holdQuote.stripeTaxCalculationId) {
+      booking.holdStripeTaxCalculationId = holdQuote.stripeTaxCalculationId;
+      await this.bookingRepo.save(booking);
+    }
+
     const user = await this.ensureStripeCustomer(booking.customerId);
     if (!user.stripeDefaultPaymentMethodId) {
       throw new BadRequestException({
@@ -371,6 +381,11 @@ export class PaymentService {
     const amountCents = await this.authorizationHoldAmountCents(booking);
     if (amountCents <= 0) {
       throw new BadRequestException('This booking has no chargeable amount');
+    }
+    const holdQuote = await this.authorizationHoldQuote(booking);
+    if (holdQuote.stripeTaxCalculationId) {
+      booking.holdStripeTaxCalculationId = holdQuote.stripeTaxCalculationId;
+      await this.bookingRepo.save(booking);
     }
     const user = await this.ensureStripeCustomer(userId);
     if (!user.stripeDefaultPaymentMethodId) {

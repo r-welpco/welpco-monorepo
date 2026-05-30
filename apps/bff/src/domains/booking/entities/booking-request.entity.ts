@@ -94,4 +94,8 @@ export class BookingRequest extends BaseEntity {
 
   @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })
   completedAt!: Date | null;
+
+  /** Stripe Tax Calculation id used for the one-hour authorization hold. */
+  @Column({ name: 'hold_stripe_tax_calculation_id', type: 'varchar', length: 255, nullable: true })
+  holdStripeTaxCalculationId!: string | null;
 }

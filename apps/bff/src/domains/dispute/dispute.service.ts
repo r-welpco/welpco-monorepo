@@ -35,6 +35,7 @@ import type { PhoneNumber } from '../../common/types';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
 import { isDisputeReportWindowOpen } from '../booking/dispute-report-window';
+import { Message } from '../communication/entities';
 
 const OPEN_STATUSES: string[] = ['open', 'in_review', 'escalated'];
 const RESOLVABLE_STATUSES: string[] = ['open', 'in_review'];
@@ -73,6 +74,8 @@ export class DisputeService {
     private readonly customerProfileRepo: Repository<CustomerProfile>,
     @InjectRepository(WelperProfile)
     private readonly welperProfileRepo: Repository<WelperProfile>,
+    @InjectRepository(Message)
+    private readonly messageRepo: Repository<Message>,
     private readonly dataSource: DataSource,
     private readonly paymentService: PaymentService,
     private readonly applicationSettings: ApplicationSettingsService,
@@ -260,6 +263,34 @@ export class DisputeService {
     }
   }
 
+  private async assertMessageEvidenceBelongsToBooking(
+    bookingId: string,
+    evidence: CreateDisputeDto['evidence'],
+  ): Promise<void> {
+    const messageIds = [
+      ...new Set(
+        (evidence ?? [])
+          .filter((item) => item.type === 'message')
+          .map((item) => item.id?.trim())
+          .filter((id): id is string => !!id),
+      ),
+    ];
+    if (messageIds.length === 0) return;
+
+    const rows = await this.messageRepo
+      .createQueryBuilder('m')
+      .innerJoin('m.chatThread', 'thread')
+      .select('m.id', 'id')
+      .where('m.id IN (:...messageIds)', { messageIds })
+      .andWhere('thread.booking_id = :bookingId', { bookingId })
+      .getRawMany<{ id: string }>();
+
+    const found = new Set(rows.map((row) => row.id));
+    if (messageIds.some((id) => !found.has(id))) {
+      throw new BadRequestException('Message evidence must belong to this booking');
+    }
+  }
+
   private resolutionToSummary(r: Resolution): DisputeResolutionSummaryDto {
     return {
       id: r.id,
@@ -314,6 +345,7 @@ export class DisputeService {
         throw new ConflictException('This booking already has an open dispute');
       }
       this.assertEvidenceBelongsToFiler(userId, dto.evidence);
+      await this.assertMessageEvidenceBelongsToBooking(bookingId, dto.evidence);
 
       const dispute = disputeRepo.create({
         bookingId,

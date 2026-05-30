@@ -6,10 +6,15 @@ import {
   ValidationArguments,
 } from 'class-validator';
 import { Address } from '../../../../common/types';
+import {
+  CANADA_COUNTRY_CODE,
+  CANADIAN_POSTAL_CODE_PATTERN,
+  CANADIAN_PROVINCE_CODES,
+  normalizeCanadianProvinceCode,
+} from '../../../../common/constants/canadian-provinces';
 
 /**
- * Validates address structure
- * Validates required fields and optional coordinate validation
+ * Validates Canadian address structure for customer profiles and service areas.
  */
 @ValidatorConstraint({ name: 'isValidAddress', async: false })
 export class IsValidAddressConstraint
@@ -22,7 +27,6 @@ export class IsValidAddressConstraint
 
     const addr = address as Address;
 
-    // Validate required fields
     if (!addr.streetAddress || typeof addr.streetAddress !== 'string') {
       return false;
     }
@@ -35,17 +39,23 @@ export class IsValidAddressConstraint
       return false;
     }
 
-    // Validate zip code (US: 5 digits or ZIP+4 format)
-    if (!addr.zipCode || !/^\d{5}(-\d{4})?$/.test(addr.zipCode)) {
+    const provinceCode = normalizeCanadianProvinceCode(addr.state);
+    if (!CANADIAN_PROVINCE_CODES.has(provinceCode)) {
       return false;
     }
 
-    // Optional country field
-    if (addr.country && typeof addr.country !== 'string') {
+    if (!addr.zipCode || !CANADIAN_POSTAL_CODE_PATTERN.test(addr.zipCode.trim())) {
       return false;
     }
 
-    // Optional coordinates validation
+    if (addr.country !== undefined && typeof addr.country !== 'string') {
+      return false;
+    }
+
+    if (addr.country && addr.country.trim().toUpperCase() !== CANADA_COUNTRY_CODE) {
+      return false;
+    }
+
     if (addr.coordinates) {
       if (
         typeof addr.coordinates.latitude !== 'number' ||
@@ -54,7 +64,6 @@ export class IsValidAddressConstraint
         return false;
       }
 
-      // Validate latitude range (-90 to 90)
       if (
         addr.coordinates.latitude < -90 ||
         addr.coordinates.latitude > 90
@@ -62,7 +71,6 @@ export class IsValidAddressConstraint
         return false;
       }
 
-      // Validate longitude range (-180 to 180)
       if (
         addr.coordinates.longitude < -180 ||
         addr.coordinates.longitude > 180
@@ -75,7 +83,7 @@ export class IsValidAddressConstraint
   }
 
   defaultMessage(args: ValidationArguments): string {
-    return 'Address must be a valid object with streetAddress, city, state, and zipCode (5 digits or ZIP+4 format)';
+    return 'Address must include street, city, a valid Canadian province, and postal code (A1A 1A1)';
   }
 }
 
@@ -90,4 +98,3 @@ export function IsValidAddress(validationOptions?: ValidationOptions) {
     });
   };
 }
-

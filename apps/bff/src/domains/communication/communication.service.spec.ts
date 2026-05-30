@@ -295,6 +295,16 @@ describe('CommunicationService', () => {
       expect(result.senderId).toBe(CUSTOMER_ID);
     });
 
+    it('should reject whitespace-only messages before creating a thread/message', async () => {
+      mockBookingService.findById.mockResolvedValue({ id: BOOKING_ID });
+
+      await expect(
+        service.sendMessage(BOOKING_ID, CUSTOMER_ID, 'Customer', { content: '   ' }),
+      ).rejects.toThrow('Message content cannot be empty');
+      expect(threadRepo.findOne).not.toHaveBeenCalled();
+      expect(messageRepo.create).not.toHaveBeenCalled();
+    });
+
     it('should create thread and then message when thread does not exist', async () => {
       const newThread = {
         id: THREAD_ID,
@@ -376,7 +386,7 @@ describe('CommunicationService', () => {
       expect(params.category).toBe(NotificationCategory.MESSAGE);
       expect(params.title).toBe('New message');
       expect(params.body).toBe('Need a hand at 3?');
-      expect(params.link).toContain(`/dashboard/messages?bookingId=${BOOKING_ID}`);
+      expect(params.link).toContain(`/dashboard/messages/${BOOKING_ID}`);
       expect(params.metadata).toMatchObject({
         bookingId: BOOKING_ID,
         threadId: THREAD_ID,

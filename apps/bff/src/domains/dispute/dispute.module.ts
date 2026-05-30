@@ -15,6 +15,7 @@ import { NotificationModule } from '../notification/notification.module';
 import { UserAccount } from '../user-management/entities/user-account.entity';
 import { CustomerProfile } from '../profile-management/entities/customer-profile.entity';
 import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
+import { ChatThread, Message } from '../communication/entities';
 
 @Module({
   imports: [
@@ -26,6 +27,8 @@ import { WelperProfile } from '../profile-management/entities/welper-profile.ent
       UserAccount,
       CustomerProfile,
       WelperProfile,
+      ChatThread,
+      Message,
     ]),
     AuthModule,
     PaymentModule,

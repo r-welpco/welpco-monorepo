@@ -4,7 +4,13 @@ import { TextField } from "@welpco/ui/text-field";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Text } from "@welpco/ui/text";
+import { Select, SelectTrigger, SelectContent, SelectItem } from "@welpco/ui/select";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import {
+  CANADA_COUNTRY_CODE,
+  CANADIAN_PROVINCES,
+  normalizeCanadianProvinceCode,
+} from "./canadian-provinces";
 
 export interface AddressValues {
   streetAddress: string;
@@ -20,14 +26,18 @@ export interface AddressInputLabels {
   stateProvince: string;
   zipPostalCode: string;
   streetPlaceholder: string;
+  provincePlaceholder?: string;
+  country?: string;
 }
 
 const DEFAULT_ADDRESS_INPUT_LABELS: AddressInputLabels = {
   streetAddress: "Street address",
   city: "City",
-  stateProvince: "Province / state",
-  zipPostalCode: "Postal / ZIP code",
+  stateProvince: "Province",
+  zipPostalCode: "Postal code",
   streetPlaceholder: "123 Main Street",
+  provincePlaceholder: "Select province",
+  country: "Country",
 };
 
 export interface AddressInputProps {
@@ -43,8 +53,16 @@ export interface AddressInputProps {
   };
   loading?: boolean;
   required?: boolean;
-  /** When false, hides the country field (e.g. signup — Canada only for now). */
+  /** @deprecated Country is always Canada; kept for API compatibility. */
   showCountry?: boolean;
+}
+
+function withCanada(values: AddressValues): AddressValues {
+  return {
+    ...values,
+    country: CANADA_COUNTRY_CODE,
+    stateProvince: normalizeCanadianProvinceCode(values.stateProvince) || values.stateProvince,
+  };
 }
 
 export function AddressInput({
@@ -53,21 +71,24 @@ export function AddressInput({
     city: "",
     stateProvince: "",
     zipPostalCode: "",
-    country: "",
+    country: CANADA_COUNTRY_CODE,
   },
   labels: labelsProp,
   onChange,
   errors,
   loading,
   required = true,
-  showCountry = true,
 }: AddressInputProps) {
   const labels = labelsProp ?? DEFAULT_ADDRESS_INPUT_LABELS;
+  const provinceValue = normalizeCanadianProvinceCode(values.stateProvince);
+
   const handleChange = (field: keyof AddressValues, value: string) => {
-    onChange?.({
-      ...values,
-      [field]: value,
-    });
+    onChange?.(
+      withCanada({
+        ...values,
+        [field]: value,
+      }),
+    );
   };
 
   return (
@@ -75,7 +96,11 @@ export function AddressInput({
       <Box>
         <Text as="label" size="2" weight="bold" htmlFor="address-street" mb="1">
           {labels.streetAddress}
-          {required && <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>}
+          {required && (
+            <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+              *
+            </Text>
+          )}
         </Text>
         <TextField.Root
           id="address-street"
@@ -100,11 +125,15 @@ export function AddressInput({
         <Box style={{ flex: 2 }}>
           <Text as="label" size="2" weight="bold" htmlFor="address-city" mb="1">
             {labels.city}
-            {required && <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>}
+            {required && (
+              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+                *
+              </Text>
+            )}
           </Text>
           <TextField.Root
             id="address-city"
-            placeholder="San Francisco"
+            placeholder="Toronto"
             autoComplete="address-level2"
             size="2"
             disabled={loading}
@@ -124,20 +153,32 @@ export function AddressInput({
         <Box style={{ flex: 1 }}>
           <Text as="label" size="2" weight="bold" htmlFor="address-state" mb="1">
             {labels.stateProvince}
-            {required && <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>}
+            {required && (
+              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+                *
+              </Text>
+            )}
           </Text>
-          <TextField.Root
-            id="address-state"
-            placeholder="CA"
-            autoComplete="address-level1"
-            size="2"
+          <Select
+            value={provinceValue || undefined}
+            onValueChange={(value) => handleChange("stateProvince", value)}
             disabled={loading}
-            aria-required={required || undefined}
-            aria-invalid={errors?.stateProvince ? "true" : undefined}
-            aria-describedby={errors?.stateProvince ? "address-state-error" : undefined}
-            value={values.stateProvince}
-            onChange={(e) => handleChange("stateProvince", e.target.value)}
-          />
+          >
+            <SelectTrigger
+              id="address-state"
+              aria-required={required || undefined}
+              aria-invalid={errors?.stateProvince ? "true" : undefined}
+              aria-describedby={errors?.stateProvince ? "address-state-error" : undefined}
+              placeholder={labels.provincePlaceholder ?? "Select province"}
+            />
+            <SelectContent>
+              {CANADIAN_PROVINCES.map((province) => (
+                <SelectItem key={province.code} value={province.code}>
+                  {province.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errors?.stateProvince && (
             <Text id="address-state-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
               {errors.stateProvince}
@@ -148,11 +189,15 @@ export function AddressInput({
         <Box style={{ flex: 1 }}>
           <Text as="label" size="2" weight="bold" htmlFor="address-zip" mb="1">
             {labels.zipPostalCode}
-            {required && <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>}
+            {required && (
+              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+                *
+              </Text>
+            )}
           </Text>
           <TextField.Root
             id="address-zip"
-            placeholder="94102"
+            placeholder="M5H 1A1"
             autoComplete="postal-code"
             size="2"
             disabled={loading}
@@ -160,7 +205,7 @@ export function AddressInput({
             aria-invalid={errors?.zipPostalCode ? "true" : undefined}
             aria-describedby={errors?.zipPostalCode ? "address-zip-error" : undefined}
             value={values.zipPostalCode}
-            onChange={(e) => handleChange("zipPostalCode", e.target.value)}
+            onChange={(e) => handleChange("zipPostalCode", e.target.value.toUpperCase())}
           />
           {errors?.zipPostalCode && (
             <Text id="address-zip-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
@@ -170,22 +215,9 @@ export function AddressInput({
         </Box>
       </Flex>
 
-      {showCountry ? (
-        <Box>
-          <Text as="label" size="2" weight="bold" htmlFor="address-country" mb="1">
-            Country (optional)
-          </Text>
-          <TextField.Root
-            id="address-country"
-            placeholder="United States"
-            autoComplete="country-name"
-            size="2"
-            disabled={loading}
-            value={values.country || ""}
-            onChange={(e) => handleChange("country", e.target.value)}
-          />
-        </Box>
-      ) : null}
+      <Text size="1" color="gray">
+        {labels.country ?? "Country"}: Canada
+      </Text>
     </Flex>
   );
 }

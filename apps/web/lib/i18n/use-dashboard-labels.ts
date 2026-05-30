@@ -423,6 +423,7 @@ export function useWelperMessagesLabels() {
     threadBooking: (id: string) =>
       t("threadBooking", { id: id.slice(-8).toUpperCase() }),
     viewBooking: t("viewBooking"),
+    messagingClosed: t("messagingClosed"),
     sendFailed: t("sendFailed"),
   };
 }

@@ -13,6 +13,7 @@ import { BookingRequest, BookingRequestStatus } from '../booking/entities/bookin
 import { UserAccount } from '../user-management/entities/user-account.entity';
 import { CustomerProfileService } from '../profile-management/customer-profile/customer-profile.service';
 import { ApplicationSettingsService } from './application-settings.service';
+import { BookingTaxService } from './booking-tax.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
 import type Stripe from 'stripe';
@@ -54,6 +55,16 @@ describe('PaymentService', () => {
     getPaymentCaptureDelayMinutes: jest.fn().mockResolvedValue(30),
   };
 
+  const mockBookingTaxService = {
+    quoteAuthorizationHold: jest.fn().mockResolvedValue({
+      subtotalCents: 5000,
+      taxCents: 650,
+      totalCents: 5650,
+      taxRateBps: 1300,
+      stripeTaxCalculationId: 'taxcalc_test',
+    }),
+  };
+
   const mockCustomerProfile = {
     refreshProfileCompletionFromPayment: jest.fn().mockResolvedValue(undefined),
   };
@@ -86,6 +97,7 @@ describe('PaymentService', () => {
         { provide: getRepositoryToken(UserAccount), useValue: mockUserRepo },
         { provide: getRepositoryToken(BookingRequest), useValue: mockBookingRepo },
         { provide: ApplicationSettingsService, useValue: mockApplicationSettings },
+        { provide: BookingTaxService, useValue: mockBookingTaxService },
         { provide: CustomerProfileService, useValue: mockCustomerProfile },
         { provide: NotificationService, useValue: mockNotificationService },
       ],

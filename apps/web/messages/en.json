@@ -1382,6 +1382,7 @@
       "threadTitle": "Messages",
       "threadBooking": "Booking #{id}",
       "viewBooking": "View booking details",
+      "messagingClosed": "Messaging is no longer available for this booking. Open booking details if you need to leave a review.",
       "sendFailed": "We couldn't send your message. Try again in a moment."
     },
     "settings": {

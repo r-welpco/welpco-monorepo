@@ -14,6 +14,7 @@ import {
   resolveServiceAreaRadiusKm,
   SERVICE_AREA_RADIUS_KM_MAX,
   SERVICE_AREA_RADIUS_KM_MIN,
+  CANADIAN_PROVINCE_CODES,
   type ServiceArea,
 } from "@welpco/ui/platform/profile-management";
 import {
@@ -79,8 +80,8 @@ function validateServiceArea(
   const zip = area.centerAddress?.zipPostalCode?.trim() ?? "";
   const km = area.radiusKm;
   if (!city) return v.cityRequired;
-  if (province.length < 2) return v.provinceRequired;
-  if (!zip) return v.postalRequired;
+  if (!CANADIAN_PROVINCE_CODES.has(province)) return v.provinceRequired;
+  if (!/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(zip)) return v.postalRequired;
   if (
     typeof km !== "number" ||
     !Number.isFinite(km) ||

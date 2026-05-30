@@ -19,7 +19,7 @@ export const Default: Story = {
       city: '',
       stateProvince: '',
       zipPostalCode: '',
-      country: '',
+      country: 'CA',
     });
     return (
       <div style={{ width: '600px' }}>
@@ -37,10 +37,10 @@ export const WithDefaultValues: Story = {
   render: () => {
     const [values, setValues] = useState({
       streetAddress: '123 Main Street',
-      city: 'San Francisco',
-      stateProvince: 'CA',
-      zipPostalCode: '94102',
-      country: 'United States',
+      city: 'Toronto',
+      stateProvince: 'ON',
+      zipPostalCode: 'M5H 1A1',
+      country: 'CA',
     });
     return (
       <div style={{ width: '600px' }}>
@@ -61,7 +61,7 @@ export const Optional: Story = {
       city: '',
       stateProvince: '',
       zipPostalCode: '',
-      country: '',
+      country: 'CA',
     });
     return (
       <div style={{ width: '600px' }}>
@@ -80,9 +80,9 @@ export const WithErrors: Story = {
     const [values, setValues] = useState({
       streetAddress: '12',
       city: '',
-      stateProvince: 'C',
-      zipPostalCode: '94',
-      country: '',
+      stateProvince: '',
+      zipPostalCode: 'M5H',
+      country: 'CA',
     });
     return (
       <div style={{ width: '600px' }}>
@@ -92,8 +92,8 @@ export const WithErrors: Story = {
           errors={{
             streetAddress: 'Street address is too short',
             city: 'City is required',
-            stateProvince: 'State/Province is too short',
-            zipPostalCode: 'ZIP/Postal code is too short',
+            stateProvince: 'Select a province',
+            zipPostalCode: 'Enter a valid postal code',
           }}
           required
         />
@@ -106,10 +106,10 @@ export const Loading: Story = {
   render: () => {
     const [values, setValues] = useState({
       streetAddress: '123 Main Street',
-      city: 'San Francisco',
-      stateProvince: 'CA',
-      zipPostalCode: '94102',
-      country: 'United States',
+      city: 'Montreal',
+      stateProvince: 'QC',
+      zipPostalCode: 'H2X 1Y4',
+      country: 'CA',
     });
     return (
       <div style={{ width: '600px' }}>
@@ -123,4 +123,3 @@ export const Loading: Story = {
     );
   },
 };
-
