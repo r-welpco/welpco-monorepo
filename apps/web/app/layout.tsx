@@ -7,6 +7,8 @@ import { AuthSessionSync } from "@/components/providers/session-provider";
 import { SessionProvider } from "next-auth/react";
 import { ThemeInitScript } from "@/components/providers/theme-init-script";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 
 /** Required with `cacheComponents`: client providers + pages must not block prerender without a boundary. */
 function RouterTreeFallback() {
@@ -65,6 +67,8 @@ export default function RootLayout({
             </AuthSessionSync>
           </SessionProvider>
         </QueryProvider>
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
