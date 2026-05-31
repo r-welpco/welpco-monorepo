@@ -33,6 +33,9 @@ export interface AdminJobDetail extends AdminJobListItem {
     status: string;
     hourlyRateSnapshot?: number | null;
     createdAt: string;
+    welperDisplayName?: string | null;
+    welperRating?: number | null;
+    welperVerified?: boolean;
   }>;
 }
 

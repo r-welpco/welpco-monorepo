@@ -16,6 +16,7 @@ import Link from "next/link";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { NativeFormField, nativeInputProps, nativeSelectProps } from "@/components/native-form-field";
+import { formatAdminDate, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
 import { searchAdminJobs } from "@/lib/services/admin-job-service";
 
 export const dynamic = "force-dynamic";
@@ -88,6 +89,23 @@ export default async function AdminJobsPage({
   }
 
   const totalPages = list?.totalPages ?? 1;
+  const buildHref = (p: number, overrides?: Record<string, string | undefined>) => {
+    const merged = {
+      customerId,
+      status,
+      dateFrom,
+      dateTo,
+      ...overrides,
+    };
+    const q = new URLSearchParams();
+    if (p > 1) q.set("page", String(p));
+    if (merged.customerId) q.set("customerId", merged.customerId);
+    if (merged.status) q.set("status", merged.status);
+    if (merged.dateFrom) q.set("dateFrom", merged.dateFrom);
+    if (merged.dateTo) q.set("dateTo", merged.dateTo);
+    const qs = q.toString();
+    return qs ? `/jobs?${qs}` : "/jobs";
+  };
 
   return (
     <Flex direction="column" gap="5">
@@ -96,9 +114,7 @@ export default async function AdminJobsPage({
       <Flex gap="2" wrap="wrap">
         {QUICK_PRESETS.map((preset) => (
           <Button key={preset.label} asChild size="1" variant="soft">
-            <Link href={`/jobs?${new URLSearchParams(preset.query as Record<string, string>).toString()}`}>
-              {preset.label}
-            </Link>
+            <Link href={buildHref(1, preset.query)}>{preset.label}</Link>
           </Button>
         ))}
       </Flex>
@@ -161,11 +177,15 @@ export default async function AdminJobsPage({
                       <Text weight="medium">{job.title}</Text>
                     </Link>
                     <Text size="1" color="gray">
-                      {job.id.slice(0, 8)}…
+                      {shortId(job.id)}
                     </Text>
                   </TableCell>
                   <TableCell>
-                    <Text size="2">{job.customerId?.slice(0, 8) ?? "—"}…</Text>
+                    {job.customerId ? (
+                      <Link href={`/users/${job.customerId}`}>{shortId(job.customerId)}</Link>
+                    ) : (
+                      "—"
+                    )}
                   </TableCell>
                   <TableCell>
                     <Text size="2">
@@ -174,19 +194,19 @@ export default async function AdminJobsPage({
                   </TableCell>
                   <TableCell>
                     <Badge color={statusColor(job.status)} variant="soft" size="1">
-                      {job.status}
+                      {formatAdminStatusLabel(job.status)}
                     </Badge>
                   </TableCell>
                   <TableCell>{job.applicationCount}</TableCell>
                   <TableCell>
                     {job.bookingId ? (
-                      <Link href={`/bookings/${job.bookingId}`}>{job.bookingId.slice(0, 8)}…</Link>
+                      <Link href={`/bookings/${job.bookingId}`}>{shortId(job.bookingId)}</Link>
                     ) : (
                       "—"
                     )}
                   </TableCell>
                   <TableCell>
-                    {job.publishedAt ? new Date(job.publishedAt).toLocaleDateString() : "—"}
+                    {formatAdminDate(job.publishedAt)}
                   </TableCell>
                 </TableRow>
               ))
@@ -201,12 +221,16 @@ export default async function AdminJobsPage({
             Page {page} of {totalPages} · {list?.total ?? 0} total
           </Text>
           <Flex gap="2">
-            <Button asChild variant="soft" size="2" disabled={page <= 1}>
-              <Link href={`/jobs?page=${page - 1}`}>Previous</Link>
-            </Button>
-            <Button asChild variant="soft" size="2" disabled={page >= totalPages}>
-              <Link href={`/jobs?page=${page + 1}`}>Next</Link>
-            </Button>
+            {page > 1 ? (
+              <Button asChild variant="soft" size="2">
+                <Link href={buildHref(page - 1)}>Previous</Link>
+              </Button>
+            ) : null}
+            {page < totalPages ? (
+              <Button asChild variant="soft" size="2">
+                <Link href={buildHref(page + 1)}>Next</Link>
+              </Button>
+            ) : null}
           </Flex>
         </Flex>
       </Card>

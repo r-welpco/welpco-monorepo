@@ -16,7 +16,11 @@ import { notFound } from "next/navigation";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { AdminTimeline } from "@/components/admin-timeline";
+import { DetailRow, DetailTable } from "@/components/detail-rows";
+import { formatAdminStatusLabel, shortId } from "@/lib/admin-format";
+import { buildBookingAnswerRows } from "@/lib/booking-answers-utils";
 import { getAdminJob } from "@/lib/services/admin-job-service";
+import { listQuestions } from "@/lib/services/admin-questions-service";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +53,18 @@ export default async function AdminJobDetailPage({
   }
 
   if (!job) notFound();
+
+  let answerRows;
+  try {
+    const questions = await listQuestions();
+    answerRows = buildBookingAnswerRows(job.answers ?? {}, questions);
+  } catch {
+    answerRows = Object.entries(job.answers ?? {}).map(([questionId, value]) => ({
+      key: questionId,
+      label: questionId,
+      displayValue: typeof value === "boolean" ? (value ? "Yes" : "No") : String(value),
+    }));
+  }
 
   const timelineEvents = [
     { id: "published", label: "Published", timestamp: job.publishedAt },
@@ -83,9 +99,11 @@ export default async function AdminJobDetailPage({
         <Flex direction="column" gap="3">
           <Text weight="bold">Job details</Text>
           <Text size="2">
-            Status: <Badge variant="soft">{job.status}</Badge>
+            Status: <Badge variant="soft">{formatAdminStatusLabel(job.status)}</Badge>
           </Text>
-          <Text size="2">Customer: {job.customerId}</Text>
+          <Text size="2">
+            Customer: <Link href={`/users/${job.customerId}`}>{job.customerId}</Link>
+          </Text>
           <Text size="2">
             Category: {job.subcategoryLabel ?? job.categoryLabel ?? `${job.categoryId} / ${job.subcategoryId}`}
           </Text>
@@ -101,6 +119,20 @@ export default async function AdminJobDetailPage({
           )}
         </Flex>
       </Card>
+
+      {answerRows.length > 0 ? (
+        <Card size="2" title={`Job answers (${answerRows.length})`}>
+          <DetailTable>
+            {answerRows.map((row) => (
+              <DetailRow key={row.key} label={row.label}>
+                <Text size="2" style={{ whiteSpace: "pre-wrap" }}>
+                  {row.displayValue}
+                </Text>
+              </DetailRow>
+            ))}
+          </DetailTable>
+        </Card>
+      ) : null}
 
       <Card size="2">
         <Text weight="bold" mb="3">
@@ -126,12 +158,22 @@ export default async function AdminJobDetailPage({
             ) : (
               job.applications.map((app) => (
                 <TableRow key={app.id}>
-                  <TableCell>{app.welperId}</TableCell>
-                  <TableCell>{app.offeringId.slice(0, 8)}…</TableCell>
+                  <TableCell>
+                    <Flex direction="column" gap="1">
+                      <Link href={`/users/${app.welperId}`}>
+                        {app.welperDisplayName ?? shortId(app.welperId)}
+                      </Link>
+                      <Text size="1" color="gray">
+                        {shortId(app.welperId)}
+                        {app.welperVerified ? " · verified" : ""}
+                      </Text>
+                    </Flex>
+                  </TableCell>
+                  <TableCell>{shortId(app.offeringId)}</TableCell>
                   <TableCell>
                     {app.hourlyRateSnapshot != null ? `$${app.hourlyRateSnapshot}/hr` : "—"}
                   </TableCell>
-                  <TableCell>{app.status}</TableCell>
+                  <TableCell>{formatAdminStatusLabel(app.status)}</TableCell>
                   <TableCell>
                     <Text size="2" style={{ maxWidth: 320 }}>
                       {app.proposalMessage}
