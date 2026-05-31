@@ -9,6 +9,11 @@ import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { VerifiedTrustBadge } from "./verified-trust-badge";
+import { WeeklyAvailabilityStrip } from "./weekly-availability-strip";
+import type {
+  WeeklyAvailabilityDisplayLabels,
+  WeeklyAvailabilitySummary,
+} from "./weekly-availability-utils";
 
 export interface WelperProfileCardCompactProps {
   name: string;
@@ -22,6 +27,9 @@ export interface WelperProfileCardCompactProps {
   imageUrl?: string;
   /** Background-check verified — render badge only when explicitly true. */
   verified?: boolean;
+  weeklyAvailability?: WeeklyAvailabilitySummary | null;
+  availabilityLabels?: WeeklyAvailabilityDisplayLabels;
+  availabilityLocale?: string;
   onView?: () => void;
   onBook?: () => void;
 }
@@ -35,6 +43,9 @@ export function WelperProfileCardCompact({
   reviews,
   imageUrl,
   verified = false,
+  weeklyAvailability,
+  availabilityLabels,
+  availabilityLocale,
   onView,
   onBook,
 }: WelperProfileCardCompactProps) {
@@ -97,6 +108,14 @@ export function WelperProfileCardCompact({
             )}
           </Flex>
         </Flex>
+        {weeklyAvailability && availabilityLabels && (
+          <WeeklyAvailabilityStrip
+            availability={weeklyAvailability}
+            labels={availabilityLabels}
+            locale={availabilityLocale}
+            section
+          />
+        )}
         {(onView || onBook) && (
           <Flex gap="2" justify="end" wrap="wrap">
             {onView ? (

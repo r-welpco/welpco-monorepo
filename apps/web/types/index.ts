@@ -299,6 +299,22 @@ export interface SearchResultItem {
   reviewCount?: number;
   /** Background-check verified — only true when explicitly set by BFF. */
   verified?: boolean;
+  weeklyAvailability?: WeeklyAvailabilitySummary;
+}
+
+export interface WeeklyAvailabilityTimeSlot {
+  startTime: string;
+  endTime: string;
+}
+
+export interface WeeklyAvailabilityDaySchedule {
+  slots: WeeklyAvailabilityTimeSlot[];
+}
+
+export interface WeeklyAvailabilitySummary {
+  days: boolean[];
+  adHocOnly: boolean;
+  schedule?: WeeklyAvailabilityDaySchedule[];
 }
 
 export interface SearchServicesResponse {
@@ -356,6 +372,7 @@ export interface PublicWelperProfile {
    */
   responseTimeMinutes: number | null;
   serviceOfferings: PublicServiceOffering[];
+  weeklyAvailability: WeeklyAvailabilitySummary;
 }
 
 export interface SearchServicesParams {

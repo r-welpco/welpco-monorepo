@@ -14,6 +14,8 @@ import { ProfileCompletionStatus } from '../profile-management/entities/profile-
 import { ProfileVisibility } from '../profile-management/entities/profile-visibility.enum';
 import { DiscoveryCategoriesCacheService } from '../../common/discovery-categories-cache/discovery-categories-cache.service';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
+import { AvailabilityService } from '../profile-management/availability/availability.service';
+import { emptyWeeklyAvailabilitySummary } from '../profile-management/availability/dto/weekly-availability-summary.dto';
 
 describe('ServiceDiscoveryService', () => {
   let service: ServiceDiscoveryService;
@@ -74,6 +76,16 @@ describe('ServiceDiscoveryService', () => {
     hasPassedBackgroundCheck: jest.fn().mockResolvedValue(false),
   };
 
+  const mockAvailabilityService = {
+    getWeeklySummariesForWelpers: jest.fn().mockImplementation(async (welperIds: string[]) => {
+      const map = new Map<string, ReturnType<typeof emptyWeeklyAvailabilitySummary>>();
+      for (const id of welperIds) {
+        map.set(id, emptyWeeklyAvailabilitySummary());
+      }
+      return map;
+    }),
+  };
+
   const mockQueryBuilder = {
     select: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
@@ -130,6 +142,10 @@ describe('ServiceDiscoveryService', () => {
         {
           provide: BackgroundCheckService,
           useValue: mockBackgroundCheckService,
+        },
+        {
+          provide: AvailabilityService,
+          useValue: mockAvailabilityService,
         },
       ],
     }).compile();

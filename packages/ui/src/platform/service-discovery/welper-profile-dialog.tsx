@@ -12,6 +12,11 @@ import { Skeleton } from "@welpco/ui/skeleton";
 import { Separator } from "@welpco/ui/separator";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { customerWelperDisplayName } from "./customer-welper-display-name";
+import { WeeklyAvailabilityStrip } from "./weekly-availability-strip";
+import type {
+  WeeklyAvailabilityDisplayLabels,
+  WeeklyAvailabilitySummary,
+} from "./weekly-availability-utils";
 
 /** Minimal offering shape for the dialog (no dependency on app types). */
 export interface WelperProfileDialogOffering {
@@ -35,6 +40,7 @@ export interface WelperProfileDialogProfile {
   bio: string | null;
   profilePhotoUrl: string | null;
   serviceOfferings: WelperProfileDialogOffering[];
+  weeklyAvailability?: WeeklyAvailabilitySummary | null;
 }
 
 export interface WelperProfileDialogProps {
@@ -45,6 +51,8 @@ export interface WelperProfileDialogProps {
   loading?: boolean;
   /** Called when user clicks "Book now" (no specific offering) or "Book this service" (offering passed). */
   onBook?: (offering?: WelperProfileDialogOffering) => void;
+  availabilityLabels?: WeeklyAvailabilityDisplayLabels;
+  availabilityLocale?: string;
 }
 
 /**
@@ -57,6 +65,8 @@ export function WelperProfileDialog({
   profile,
   loading = false,
   onBook,
+  availabilityLabels,
+  availabilityLocale,
 }: WelperProfileDialogProps) {
   const displayName = customerWelperDisplayName(profile);
 
@@ -107,6 +117,14 @@ export function WelperProfileDialog({
                   </Text>
                 </Box>
               </Flex>
+
+              {profile.weeklyAvailability && availabilityLabels && (
+                <WeeklyAvailabilityStrip
+                  availability={profile.weeklyAvailability}
+                  labels={availabilityLabels}
+                  locale={availabilityLocale}
+                />
+              )}
 
               {hasOfferings && (
                 <>

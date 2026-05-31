@@ -35,7 +35,8 @@ import { ApiClientError } from "@/lib/api/client";
 import { transformCategoriesToOptions, validateCategoryId } from "@/lib/utils/category-utils";
 import type { SearchResultItem } from "@/types";
 import { maskCustomerWelperName, publicWelperDisplayName } from "@/lib/display-name";
-import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useMarketplaceLabels, useWelperAvailabilityDisplayLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useLocale } from "next-intl";
 import { Button } from "@welpco/ui/button";
 import { IconButton } from "@welpco/ui/icon-button";
 import { Text } from "@welpco/ui/text";
@@ -77,6 +78,10 @@ function mapToWelperProfileDialogProfile(
       hourlyRate: number;
       experienceYears?: number | null;
     }> | null;
+    weeklyAvailability?: {
+      days: boolean[];
+      adHocOnly: boolean;
+    };
   } | null
 ): WelperProfileDialogProfile | null {
   if (!data) return null;
@@ -98,12 +103,15 @@ function mapToWelperProfileDialogProfile(
       hourlyRate: o.hourlyRate,
       experienceYears: o.experienceYears ?? 0,
     })),
+    weeklyAvailability: data.weeklyAvailability,
   };
 }
 
 export default function DashboardSearchPageClient() {
   const router = useRouter();
   const marketplaceLabels = useMarketplaceLabels();
+  const availabilityLabels = useWelperAvailabilityDisplayLabels();
+  const locale = useLocale();
   const searchParams = useSearchParams();
 
   const q = searchParams.get("q") ?? undefined;
@@ -135,7 +143,7 @@ export default function DashboardSearchPageClient() {
   const sort = (sortParam === "price" ? "price" : sortParam === "distance" ? "distance" : "relevance") as "relevance" | "price" | "distance";
 
   const [isPending, startTransition] = useTransition();
-  const [viewMode, setViewMode] = useState<SearchResultsViewMode>("list");
+  const [viewMode, setViewMode] = useState<SearchResultsViewMode>("grid");
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -440,10 +448,13 @@ export default function DashboardSearchPageClient() {
       specialties: item.categories,
       imageUrl: item.profilePhotoUrl ?? undefined,
       verified: item.verified === true,
+      weeklyAvailability: item.weeklyAvailability,
+      availabilityLabels,
+      availabilityLocale: locale,
       onView: () => openProfileDialog(item.welperId),
       onBook: () => openServiceSelection(item.welperId),
     }));
-  }, [data?.items, openProfileDialog, openServiceSelection]);
+  }, [data?.items, availabilityLabels, locale, openProfileDialog, openServiceSelection]);
 
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / DEFAULT_LIMIT) || 1;
@@ -498,6 +509,8 @@ export default function DashboardSearchPageClient() {
             onOpenChange={(open) => !open && setProfileDialogWelperId(null)}
             profile={profileDialogProfile}
             loading={profileDialogLoading}
+            availabilityLabels={availabilityLabels}
+            availabilityLocale={locale}
             onBook={() => {
               if (profileDialogWelperId) openServiceSelection(profileDialogWelperId);
             }}
@@ -651,6 +664,9 @@ export default function DashboardSearchPageClient() {
                         reviews={item.reviews}
                         imageUrl={item.imageUrl}
                         verified={item.verified}
+                        weeklyAvailability={item.weeklyAvailability}
+                        availabilityLabels={item.availabilityLabels}
+                        availabilityLocale={item.availabilityLocale}
                         onView={item.onView}
                         onBook={item.onBook}
                       />

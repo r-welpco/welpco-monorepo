@@ -11,6 +11,11 @@ import { Heading } from "@welpco/ui/heading";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { MapPin, Star } from "lucide-react";
 import { VerifiedTrustBadge } from "./verified-trust-badge";
+import { WeeklyAvailabilityStrip } from "./weekly-availability-strip";
+import type {
+  WeeklyAvailabilityDisplayLabels,
+  WeeklyAvailabilitySummary,
+} from "./weekly-availability-utils";
 
 export interface WelperProfileCardProps {
   /** Unique id for the welper (used as React key in lists). */
@@ -26,6 +31,11 @@ export interface WelperProfileCardProps {
   imageUrl?: string;
   /** Background-check verified — render badge only when explicitly true. */
   verified?: boolean;
+  weeklyAvailability?: WeeklyAvailabilitySummary | null;
+  availabilityLabels?: WeeklyAvailabilityDisplayLabels;
+  availabilityLocale?: string;
+  /** List layout: stretch to the full column width (no 640px cap). */
+  fullWidth?: boolean;
   onView?: () => void;
   onBook?: () => void;
 }
@@ -46,6 +56,10 @@ export function WelperProfileCard({
   specialties = [],
   imageUrl,
   verified = false,
+  weeklyAvailability,
+  availabilityLabels,
+  availabilityLocale,
+  fullWidth = false,
   onView,
   onBook,
 }: WelperProfileCardProps) {
@@ -61,7 +75,11 @@ export function WelperProfileCard({
     <Card
       size="4"
       variant="surface"
-      style={{ width: "100%", maxWidth: "640px", minWidth: 0 }}
+      style={{
+        width: "100%",
+        minWidth: 0,
+        ...(fullWidth ? {} : { maxWidth: "640px" }),
+      }}
     >
       <Flex direction="column" gap="4">
         {/* Identity row: avatar + name+title+location | price+rating */}
@@ -148,6 +166,15 @@ export function WelperProfileCard({
               </Badge>
             ))}
           </Flex>
+        )}
+
+        {weeklyAvailability && availabilityLabels && (
+          <WeeklyAvailabilityStrip
+            availability={weeklyAvailability}
+            labels={availabilityLabels}
+            locale={availabilityLocale}
+            section
+          />
         )}
 
         {/* Actions — right-aligned, primary last */}

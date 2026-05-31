@@ -23,11 +23,13 @@ import {
   SelectTrigger,
 } from "@welpco/ui/select";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { WeeklyAvailabilityTable } from "@welpco/ui/platform";
+import { useLocale } from "next-intl";
 import styles from "./booking-wizard.module.css";
 import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import { publicWelperDisplayName } from "@/lib/display-name";
 import { useCreateBooking, useServiceQuestions } from "@/lib/hooks/use-bookings";
-import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useMarketplaceLabels, useWelperAvailabilityDisplayLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useBookingHandoff } from "@/lib/hooks/use-job-posting";
 import { useCustomerProfile } from "@/lib/hooks/use-profile";
 import { useAuthStore } from "@/stores/authStore";
@@ -101,6 +103,8 @@ export default function NewBookingPageClient({
 }: NewBookingPageClientProps) {
   const router = useRouter();
   const marketplaceLabels = useMarketplaceLabels();
+  const availabilityLabels = useWelperAvailabilityDisplayLabels();
+  const locale = useLocale();
   const { user } = useAuthStore();
   const { data: handoff, isLoading: handoffLoading } = useBookingHandoff(jobId, applicationId);
   const welperId = welperIdProp ?? handoff?.welperId;
@@ -606,24 +610,33 @@ export default function NewBookingPageClient({
 
         {/* Welper info card */}
         <Card size="3" variant="surface">
-          <Flex gap="4" align="center">
-            <Avatar
-              size="4"
-              src={profile.profilePhotoUrl ?? undefined}
-              fallback={displayName.slice(0, 2).toUpperCase()}
-            />
-            <Box style={{ minWidth: 0 }}>
-              <Text size="4" weight="bold" style={{ display: "block" }}>
-                {displayName}
-              </Text>
-              {profile.bio && (
-                <Text as="p" size="2" color="gray" mt="1">
-                  {profile.bio.length > 120
-                    ? `${profile.bio.slice(0, 120)}…`
-                    : profile.bio}
+          <Flex direction="column" gap="3">
+            <Flex gap="4" align="center">
+              <Avatar
+                size="4"
+                src={profile.profilePhotoUrl ?? undefined}
+                fallback={displayName.slice(0, 2).toUpperCase()}
+              />
+              <Box style={{ minWidth: 0 }}>
+                <Text size="4" weight="bold" style={{ display: "block" }}>
+                  {displayName}
                 </Text>
-              )}
-            </Box>
+                {profile.bio && (
+                  <Text as="p" size="2" color="gray" mt="1">
+                    {profile.bio.length > 120
+                      ? `${profile.bio.slice(0, 120)}…`
+                      : profile.bio}
+                  </Text>
+                )}
+              </Box>
+            </Flex>
+            {profile.weeklyAvailability && (
+              <WeeklyAvailabilityTable
+                availability={profile.weeklyAvailability}
+                labels={availabilityLabels}
+                locale={locale}
+              />
+            )}
           </Flex>
         </Card>
 

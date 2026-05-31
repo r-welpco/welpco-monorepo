@@ -1194,6 +1194,38 @@
       "back": "← Back",
       "genericError": "Something went wrong."
     },
+    "footer": {
+      "heading": "Application footer",
+      "tagline": "Trusted local help — vetted Welpers, secure payments, on-platform messaging.",
+      "legalNav": "Legal"
+    },
+    "welperAvailabilityDisplay": {
+      "label": "Availability",
+      "adHocOnly": "By request",
+      "unavailable": "—",
+      "noSlots": "No hours listed",
+      "dayColumn": "Day",
+      "hoursColumn": "Hours",
+      "viewTimesAria": "View available hours for {day}",
+      "dayLetters": {
+        "mon": "M",
+        "tue": "T",
+        "wed": "W",
+        "thu": "T",
+        "fri": "F",
+        "sat": "S",
+        "sun": "S"
+      },
+      "dayNames": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      }
+    },
     "setup": {
       "loading": "Loading your setup checklist…",
       "loadError": "We couldn't load your setup checklist. Refresh the page and try again.",

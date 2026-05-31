@@ -38,7 +38,7 @@ export function SearchResultsToolbar({
   sort,
   onSortChange,
   showSortDistance = false,
-  viewMode = "list",
+  viewMode = "grid",
   onViewModeChange,
   showViewToggle = true,
   loading = false,

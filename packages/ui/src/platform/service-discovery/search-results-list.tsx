@@ -85,9 +85,13 @@ export function SearchResultsList({
           </Text>
         </Box>
       )}
-      <Flex direction="column" gap="5">
+      <Flex direction="column" gap="5" style={{ width: "100%", minWidth: 0 }}>
         {items.map((item) => (
-          <WelperProfileCard key={item.welperId ?? `${item.name}-${item.title}`} {...item} />
+          <WelperProfileCard
+            key={item.welperId ?? `${item.name}-${item.title}`}
+            {...item}
+            fullWidth
+          />
         ))}
       </Flex>
     </Flex>

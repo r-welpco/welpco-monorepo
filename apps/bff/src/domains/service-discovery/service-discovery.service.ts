@@ -18,6 +18,9 @@ import type { PublicWelperProfileDto, PublicServiceOfferingDto } from './dto/pub
 import { DiscoveryCategoriesCacheService } from '../../common/discovery-categories-cache/discovery-categories-cache.service';
 import { BackgroundCheckStatus } from '../user-management/entities/verification-status.entity';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
+import { AvailabilityService } from '../profile-management/availability/availability.service';
+import { emptyWeeklyAvailabilitySummary } from '../profile-management/availability/dto/weekly-availability-summary.dto';
+import type { WeeklyAvailabilitySummaryDto } from '../profile-management/availability/dto/weekly-availability-summary.dto';
 import { formatWelperDisplayNameForCustomer } from '../../common/display-name.util';
 import { customerHourlyChargeFromWelperRate } from '../booking/booking-pricing';
 
@@ -57,6 +60,7 @@ export class ServiceDiscoveryService {
     private readonly discoveryCategoriesCache: DiscoveryCategoriesCacheService,
     @Inject(GEOCODE_SERVICE) private readonly geocodeService: IGeocodeService,
     private readonly backgroundCheckService: BackgroundCheckService,
+    private readonly availabilityService: AvailabilityService,
   ) {}
 
   private async getCachedCategories(): Promise<ServiceCategory[]> {
@@ -75,6 +79,7 @@ export class ServiceDiscoveryService {
     offeringsByWelperId: Map<string, Array<Pick<ServiceOffering, 'welperId' | 'hourlyRate' | 'serviceCategoryId'>>>,
     categoryMap: Map<string, string>,
     backgroundCheckPassedByWelperId: Map<string, boolean>,
+    weeklyAvailabilityByWelperId: Map<string, WeeklyAvailabilitySummaryDto>,
   ): SearchResultItemDto[] {
     return pageIds.map((welperId) => {
       const profile = profileByWelperId.get(welperId);
@@ -109,6 +114,9 @@ export class ServiceDiscoveryService {
         rating,
         reviewCount,
         verified: backgroundCheckPassedByWelperId.get(welperId) === true,
+        weeklyAvailability:
+          weeklyAvailabilityByWelperId.get(welperId) ??
+          emptyWeeklyAvailabilitySummary(),
       };
     });
   }
@@ -314,12 +322,16 @@ export class ServiceDiscoveryService {
     const backgroundCheckPassedByWelperId =
       await this.backgroundCheckService.getBackgroundCheckPassedByUserIds(pageIds);
 
+    const weeklyAvailabilityByWelperId =
+      await this.availabilityService.getWeeklySummariesForWelpers(pageIds);
+
     const items = this.buildSearchResultItems(
       pageIds,
       profileByWelperId,
       offeringsByWelperId,
       categoryMap,
       backgroundCheckPassedByWelperId,
+      weeklyAvailabilityByWelperId,
     );
     return { items, total, page, limit };
   }
@@ -405,6 +417,10 @@ export class ServiceDiscoveryService {
     const aggregates = await this.aggregatesService.getAggregates(welperId);
     const serviceAreaInfo = buildServiceAreaInfo(profile);
     const verified = await this.backgroundCheckService.hasPassedBackgroundCheck(welperId);
+    const weeklyAvailabilityMap =
+      await this.availabilityService.getWeeklySummariesForWelpers([welperId]);
+    const weeklyAvailability =
+      weeklyAvailabilityMap.get(welperId) ?? emptyWeeklyAvailabilitySummary();
 
     return {
       id: profile.id,
@@ -421,6 +437,7 @@ export class ServiceDiscoveryService {
       reviewCount: aggregates.reviewCount,
       responseTimeMinutes: aggregates.responseTimeMinutes,
       serviceOfferings,
+      weeklyAvailability,
     };
   }
 }

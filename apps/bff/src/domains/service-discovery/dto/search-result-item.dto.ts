@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { WeeklyAvailabilitySummaryDto } from '../../profile-management/availability/dto/weekly-availability-summary.dto';
 
 export class SearchResultItemDto {
   @ApiProperty({ description: 'Welper user/profile ID' })
@@ -35,6 +36,9 @@ export class SearchResultItemDto {
     description: 'Background-check verified flag. True only when background_check_status is Passed.',
   })
   verified?: boolean;
+
+  @ApiProperty({ type: WeeklyAvailabilitySummaryDto })
+  weeklyAvailability!: WeeklyAvailabilitySummaryDto;
 }
 
 export class SearchServicesResponseDto {

@@ -37,6 +37,7 @@ describe('AvailabilityService', () => {
 
   const mockWelperProfileRepository = {
     findOne: jest.fn(),
+    find: jest.fn(),
   };
 
   const mockEventPublisher = {
@@ -381,6 +382,55 @@ describe('AvailabilityService', () => {
       await expect(service.deleteException('welper-1', 'ex-1')).rejects.toThrow(
         'You can only delete your own availability exceptions',
       );
+    });
+  });
+
+  describe('getWeeklySummariesForWelpers', () => {
+    it('returns Mon–Sun booleans and adHocOnly per welper', async () => {
+      mockWelperProfileRepository.find.mockResolvedValue([
+        { welperId: 'w1', availabilityAdHocOnly: false },
+        { welperId: 'w2', availabilityAdHocOnly: true },
+      ]);
+      mockAvailabilityRepository.find.mockResolvedValue([
+        { welperId: 'w1', dayOfWeek: DayOfWeek.MONDAY, startTime: '09:00', endTime: '17:00' },
+        { welperId: 'w1', dayOfWeek: DayOfWeek.WEDNESDAY, startTime: '10:00', endTime: '14:00' },
+        { welperId: 'w1', dayOfWeek: DayOfWeek.FRIDAY, startTime: '09:00', endTime: '12:00' },
+      ]);
+
+      const result = await service.getWeeklySummariesForWelpers(['w1', 'w2']);
+
+      expect(result.get('w1')).toEqual({
+        adHocOnly: false,
+        days: [true, false, true, false, true, false, false],
+        schedule: [
+          { slots: [{ startTime: '09:00', endTime: '17:00' }] },
+          { slots: [] },
+          { slots: [{ startTime: '10:00', endTime: '14:00' }] },
+          { slots: [] },
+          { slots: [{ startTime: '09:00', endTime: '12:00' }] },
+          { slots: [] },
+          { slots: [] },
+        ],
+      });
+      expect(result.get('w2')).toEqual({
+        adHocOnly: true,
+        days: [false, false, false, false, false, false, false],
+        schedule: [
+          { slots: [] },
+          { slots: [] },
+          { slots: [] },
+          { slots: [] },
+          { slots: [] },
+          { slots: [] },
+          { slots: [] },
+        ],
+      });
+    });
+
+    it('returns empty map when no welper ids are provided', async () => {
+      const result = await service.getWeeklySummariesForWelpers([]);
+      expect(result.size).toBe(0);
+      expect(mockWelperProfileRepository.find).not.toHaveBeenCalled();
     });
   });
 });

@@ -1193,6 +1193,38 @@
       "back": "← Retour",
       "genericError": "Une erreur s'est produite."
     },
+    "footer": {
+      "heading": "Pied de page de l'application",
+      "tagline": "Aide locale de confiance — Welpers vérifiés, paiements sécurisés, messagerie intégrée.",
+      "legalNav": "Mentions légales"
+    },
+    "welperAvailabilityDisplay": {
+      "label": "Disponibilités",
+      "adHocOnly": "Sur demande",
+      "unavailable": "—",
+      "noSlots": "Aucun horaire",
+      "dayColumn": "Jour",
+      "hoursColumn": "Heures",
+      "viewTimesAria": "Voir les heures disponibles pour {day}",
+      "dayLetters": {
+        "mon": "L",
+        "tue": "M",
+        "wed": "M",
+        "thu": "J",
+        "fri": "V",
+        "sat": "S",
+        "sun": "D"
+      },
+      "dayNames": {
+        "monday": "Lundi",
+        "tuesday": "Mardi",
+        "wednesday": "Mercredi",
+        "thursday": "Jeudi",
+        "friday": "Vendredi",
+        "saturday": "Samedi",
+        "sunday": "Dimanche"
+      }
+    },
     "setup": {
       "loading": "Chargement de votre liste de configuration…",
       "loadError": "Impossible de charger la liste de configuration. Actualisez la page.",

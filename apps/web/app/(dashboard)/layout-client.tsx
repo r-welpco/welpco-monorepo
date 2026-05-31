@@ -22,6 +22,7 @@ import { getDashboardTabStripStyle } from "@/lib/personalization/dashboard-tab-s
 import { AppearanceTunerEffects } from "@/components/features/personalization/appearance-tuner-effects";
 import { DashboardAppearanceTuner } from "@/components/features/personalization/dashboard-appearance-tuner";
 import { useAppearanceTunerStore } from "@/stores/appearanceTunerStore";
+import { AppFooter } from "@/components/layout/app-footer";
 
 const showAppearanceTuner = process.env.NODE_ENV === "development";
 interface DashboardLayoutClientProps {
@@ -147,6 +148,7 @@ export default function DashboardLayoutClient({
         >
           {children}
         </Box>
+        <AppFooter />
       </Flex>
     );
   }
@@ -222,6 +224,7 @@ export default function DashboardLayoutClient({
           {children}
         </Box>
       </Box>
+      <AppFooter />
       {showAppearanceTuner ? (
         <>
           <AppearanceTunerEffects />

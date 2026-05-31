@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { AvailabilityCalendar } from '../entities/availability-calendar.entity';
 import { AvailabilityException } from '../entities/availability-exception.entity';
 import { WelperProfile } from '../entities/welper-profile.entity';
@@ -13,6 +13,11 @@ import { UpdateAvailabilityDto } from './dto/update-availability.dto';
 import { CreateAvailabilityExceptionDto } from './dto/create-availability-exception.dto';
 import { EventPublisherService } from '../events/event-publisher.service';
 import { DayOfWeek } from '../entities/day-of-week.enum';
+import {
+  WEEKLY_AVAILABILITY_DAY_ORDER,
+  type WeeklyAvailabilityDayScheduleDto,
+  type WeeklyAvailabilitySummaryDto,
+} from './dto/weekly-availability-summary.dto';
 
 const DAY_NAMES: DayOfWeek[] = [
   'Sunday' as DayOfWeek,
@@ -308,6 +313,64 @@ export class AvailabilityService {
       reason: dto.reason ?? null,
     });
     return this.exceptionRepository.save(exception);
+  }
+
+  /**
+   * Batch weekly availability for customer-facing search/booking UI.
+   * A day is active when the welper has at least one `available: true` slot on that weekday.
+   */
+  async getWeeklySummariesForWelpers(
+    welperIds: string[],
+  ): Promise<Map<string, WeeklyAvailabilitySummaryDto>> {
+    const uniqueIds = [...new Set(welperIds.filter(Boolean))];
+    const result = new Map<string, WeeklyAvailabilitySummaryDto>();
+    if (uniqueIds.length === 0) {
+      return result;
+    }
+
+    const profiles = await this.welperProfileRepository.find({
+      where: { welperId: In(uniqueIds) },
+      select: ['welperId', 'availabilityAdHocOnly'],
+    });
+    const adHocOnlyByWelperId = new Map(
+      profiles.map((p) => [p.welperId, p.availabilityAdHocOnly === true]),
+    );
+
+    const calendars = await this.availabilityRepository.find({
+      where: { welperId: In(uniqueIds), available: true },
+      select: ['welperId', 'dayOfWeek', 'startTime', 'endTime'],
+    });
+
+    const slotsByWelperDay = new Map<string, Map<string, WeeklyAvailabilityDayScheduleDto['slots']>>();
+    for (const cal of calendars) {
+      const dayKey = cal.dayOfWeek as string;
+      const byDay = slotsByWelperDay.get(cal.welperId) ?? new Map();
+      const slots = byDay.get(dayKey) ?? [];
+      slots.push({
+        startTime: toHHmm(cal.startTime as string),
+        endTime: toHHmm(cal.endTime as string),
+      });
+      byDay.set(dayKey, slots);
+      slotsByWelperDay.set(cal.welperId, byDay);
+    }
+
+    for (const welperId of uniqueIds) {
+      const adHocOnly = adHocOnlyByWelperId.get(welperId) === true;
+      const byDay = slotsByWelperDay.get(welperId) ?? new Map();
+      const schedule = WEEKLY_AVAILABILITY_DAY_ORDER.map((day) => {
+        const slots = [...(byDay.get(day) ?? [])].sort((a, b) =>
+          a.startTime.localeCompare(b.startTime),
+        );
+        return { slots };
+      });
+      result.set(welperId, {
+        adHocOnly,
+        days: schedule.map((day) => day.slots.length > 0),
+        schedule,
+      });
+    }
+
+    return result;
   }
 
   /** Delete an exception; its calendar must belong to welper */

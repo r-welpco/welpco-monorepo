@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ProfilePhotoUploadLabels } from "@welpco/ui/platform/profile-management";
+import type { WeeklyAvailabilityDisplayLabels } from "@welpco/ui/platform";
 import type { BookingStatus } from "@/lib/services/booking-service";
 import { useAuthRegisterStep } from "@/lib/i18n/auth-message-templates";
 import { useWelperServiceAreaStepLabels } from "@/lib/i18n/use-auth-labels";
@@ -1104,6 +1105,39 @@ export function useMarketplaceLabels() {
       linkedCallout: t("bookingHandoff.linkedCallout"),
       pageSubtitle: (jobTitle: string) => t("bookingHandoff.pageSubtitle", { jobTitle }),
     },
+  };
+}
+
+/** Labels for customer-facing Mon–Sun availability strips on search cards and booking. */
+export function useWelperAvailabilityDisplayLabels(): WeeklyAvailabilityDisplayLabels {
+  const t = useTranslations("dashboard.welperAvailabilityDisplay");
+
+  return {
+    label: t("label"),
+    adHocOnly: t("adHocOnly"),
+    unavailable: t("unavailable"),
+    noSlots: t("noSlots"),
+    dayColumn: t("dayColumn"),
+    hoursColumn: t("hoursColumn"),
+    viewTimesAria: (day: string) => t("viewTimesAria", { day }),
+    dayLetters: [
+      t("dayLetters.mon"),
+      t("dayLetters.tue"),
+      t("dayLetters.wed"),
+      t("dayLetters.thu"),
+      t("dayLetters.fri"),
+      t("dayLetters.sat"),
+      t("dayLetters.sun"),
+    ],
+    dayNames: [
+      t("dayNames.monday"),
+      t("dayNames.tuesday"),
+      t("dayNames.wednesday"),
+      t("dayNames.thursday"),
+      t("dayNames.friday"),
+      t("dayNames.saturday"),
+      t("dayNames.sunday"),
+    ],
   };
 }
 

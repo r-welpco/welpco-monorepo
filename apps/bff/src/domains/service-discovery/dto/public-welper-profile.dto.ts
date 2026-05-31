@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ServiceAreaInfo } from '../../../common/types';
+import { WeeklyAvailabilitySummaryDto } from '../../profile-management/availability/dto/weekly-availability-summary.dto';
 
 export class PublicServiceOfferingDto {
   @ApiProperty()
@@ -103,4 +104,7 @@ export class PublicWelperProfileDto {
 
   @ApiProperty({ type: [PublicServiceOfferingDto], description: 'Active service offerings' })
   serviceOfferings!: PublicServiceOfferingDto[];
+
+  @ApiProperty({ type: WeeklyAvailabilitySummaryDto })
+  weeklyAvailability!: WeeklyAvailabilitySummaryDto;
 }
