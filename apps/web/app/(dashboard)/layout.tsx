@@ -1,5 +1,6 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
+import { readGeoFromHeaders } from "@/i18n/geo";
 import { requireOnboardingComplete } from "@/lib/auth/server-auth";
 import {
   loadMessages,
@@ -18,7 +19,11 @@ export default async function DashboardLayout({
   if (!user) return null;
 
   const cookieStore = await cookies();
-  const locale = resolveLocaleFromCookie(cookieStore.get(LOCALE_COOKIE)?.value);
+  const { country, region } = readGeoFromHeaders(await headers());
+  const locale = resolveLocaleFromCookie(
+    cookieStore.get(LOCALE_COOKIE)?.value,
+    { country, region },
+  );
   const messages = await loadMessages(locale);
 
   return (

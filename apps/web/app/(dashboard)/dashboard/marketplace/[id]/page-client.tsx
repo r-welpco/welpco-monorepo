@@ -41,6 +41,7 @@ import {
 } from "@/lib/hooks/use-job-posting";
 import { ApiClientError } from "@/lib/api/client";
 import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import { ArrowLeft, ArrowRight, Check, MapPin, Users2 } from "lucide-react";
 
 interface JobDetailPageClientProps {
@@ -171,6 +172,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
   const router = useRouter();
   const locale = useLocale();
   const labels = useMarketplaceLabels();
+  const categoryDisplayName = useCategoryDisplayName();
   const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const isCustomer = user?.role === "customer";
@@ -284,7 +286,8 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
       ? `${job.locationCity}, ${job.locationRegion}`
       : job.locationCity ?? job.locationRegion ?? null;
 
-  const serviceLabel = job.subcategoryLabel ?? job.categoryLabel;
+  const rawServiceLabel = job.subcategoryLabel ?? job.categoryLabel;
+  const serviceLabel = rawServiceLabel ? categoryDisplayName(rawServiceLabel) : null;
   const closesAt = formatDateTime(job.expiresAt, locale);
   const canApplyNow = isWelper && isJobOpenForWelperApplications(job.status) && !job.myApplicationId;
   const appStatus = myApplication
@@ -487,7 +490,9 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                 labels={applicationReviewLabels}
                 items={applications.map((app) => ({
                   candidateName: app.welperDisplayName ?? labels.detail.welperFallback,
-                  role: job.subcategoryLabel ?? labels.card.defaultCategory,
+                  role: job.subcategoryLabel
+                    ? categoryDisplayName(job.subcategoryLabel)
+                    : labels.card.defaultCategory,
                   hourlyRate:
                     app.hourlyRateSnapshot != null
                       ? `$${app.hourlyRateSnapshot}/hr`

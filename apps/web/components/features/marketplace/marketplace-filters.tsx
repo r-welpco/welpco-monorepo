@@ -15,6 +15,7 @@ import {
 } from "@welpco/ui/select";
 import { ListFilter, X } from "lucide-react";
 import { useContentCategories, useCategoriesByParent } from "@/lib/hooks/use-content";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 
 interface MarketplaceFiltersProps {
@@ -43,6 +44,7 @@ export function MarketplaceFilters({
   trailing,
 }: MarketplaceFiltersProps) {
   const labels = useMarketplaceLabels();
+  const categoryDisplayName = useCategoryDisplayName();
   const { data: categories = [] } = useContentCategories(false);
   const parentCategories = categories.filter((c) => c.level === 1);
 
@@ -85,7 +87,7 @@ export function MarketplaceFilters({
                   <SelectItem value="__all__">{labels.filters.allCategories}</SelectItem>
                   {parentCategories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
-                      {c.name}
+                      {categoryDisplayName(c.name)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -103,7 +105,7 @@ export function MarketplaceFilters({
                     <SelectItem value="__all__">{labels.filters.allServices}</SelectItem>
                     {subcategories.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
-                        {c.name}
+                        {categoryDisplayName(c.name)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -159,15 +161,19 @@ export function MarketplaceFilters({
               <Box style={{ width: "1px", height: "16px", backgroundColor: "var(--gray-5)" }} />
               {selectedCategory && (
                 <FilterChip
-                  label={selectedCategory.name}
-                  removeAria={labels.filters.removeFilterAria(selectedCategory.name)}
+                  label={categoryDisplayName(selectedCategory.name)}
+                  removeAria={labels.filters.removeFilterAria(
+                    categoryDisplayName(selectedCategory.name),
+                  )}
                   onRemove={() => onCategoryChange("")}
                 />
               )}
               {selectedSubcategory && (
                 <FilterChip
-                  label={selectedSubcategory.name}
-                  removeAria={labels.filters.removeFilterAria(selectedSubcategory.name)}
+                  label={categoryDisplayName(selectedSubcategory.name)}
+                  removeAria={labels.filters.removeFilterAria(
+                    categoryDisplayName(selectedSubcategory.name),
+                  )}
                   onRemove={() => onSubcategoryChange("")}
                 />
               )}

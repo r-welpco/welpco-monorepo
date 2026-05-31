@@ -14,6 +14,7 @@ import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useServiceQuestions } from "@/lib/hooks/use-bookings";
 import { buildAnswerDisplayRows } from "@/lib/services/service-questions-utils";
 import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 
 function formatDuration(minutes: number): string {
   const h = Math.floor(minutes / 60);
@@ -72,6 +73,7 @@ export function JobPostingReviewSummary({
 }: JobPostingReviewSummaryProps) {
   const locale = useLocale();
   const labels = useMarketplaceLabels();
+  const categoryDisplayName = useCategoryDisplayName();
   const {
     data: serviceQuestions,
     isLoading: questionsLoading,
@@ -83,7 +85,8 @@ export function JobPostingReviewSummary({
     [answers, serviceQuestions],
   );
 
-  const serviceLabel = subcategoryLabel ?? categoryLabel;
+  const rawServiceLabel = subcategoryLabel ?? categoryLabel;
+  const serviceLabel = rawServiceLabel ? categoryDisplayName(rawServiceLabel) : null;
   const locationLine = showFullAddress && locationAddress
     ? locationAddress
     : [locationCity, locationRegion].filter(Boolean).join(", ");

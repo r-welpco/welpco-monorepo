@@ -11,7 +11,7 @@ const LOCALES = ["en", "fr"] as const;
 const LOCALE_COOKIE = "NEXT_LOCALE";
 const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
-/** Set before navigation so proxy (geo / French login) sees the new locale immediately. */
+/** Persist explicit user choice — geo defaults do not set this cookie. */
 function persistLocaleCookie(locale: (typeof LOCALES)[number]) {
   document.cookie = `${LOCALE_COOKIE}=${locale};path=/;max-age=${LOCALE_COOKIE_MAX_AGE};SameSite=Lax`;
 }

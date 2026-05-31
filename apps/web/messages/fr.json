@@ -1245,7 +1245,7 @@
       "tabs": {
         "dashboard": "Tableau de bord",
         "search": "Trouver un Welper",
-        "marketplace": "Marché",
+        "marketplace": "Marketplace",
         "messages": "Messages",
         "bookings": "Réservations",
         "profile": "Profil",
@@ -1373,7 +1373,7 @@
     "marketplace": {
       "list": {
         "titleCustomer": "Mes offres d'emploi",
-        "titleWelper": "Marché",
+        "titleWelper": "Marketplace",
         "subtitleCustomer": "Publiez une offre si vous ne trouvez pas le bon Welper via la recherche, puis examinez les candidatures.",
         "subtitleWelper": "Parcourez les offres ouvertes de clients près de chez vous. Vous devez avoir une offre de service correspondante pour postuler.",
         "postJob": "Publier une offre",
@@ -1458,7 +1458,7 @@
         "submitFailed": "Impossible de publier l'offre."
       },
       "detail": {
-        "back": "Retour au marché",
+        "back": "Retour à Marketplace",
         "notFound": "Cette offre est introuvable. Elle a peut-être été retirée ou a expiré.",
         "date": "Date",
         "time": "Heure",
@@ -1553,7 +1553,7 @@
         "postJob": "Publier une offre"
       },
       "bookingHandoff": {
-        "linkedCallout": "Cette réservation est liée à votre offre sur le marché. Confirmez les détails ci-dessous, puis envoyez la demande.",
+        "linkedCallout": "Cette réservation est liée à votre offre sur la marketplace. Confirmez les détails ci-dessous, puis envoyez la demande.",
         "pageSubtitle": "Examiner et envoyer une demande de réservation pour « {jobTitle} »"
       }
     },

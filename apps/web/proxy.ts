@@ -10,51 +10,54 @@ import {
   localizedPathFromRequest,
   stripLocale,
 } from "@/i18n/locale-routes";
+import { resolveRequestLocale } from "@/i18n/resolve-locale";
 import { routing } from "@/i18n/routing";
 import { hasPlatformAccess } from "@/lib/auth/platform-access";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 
 const intlMiddleware = createIntlMiddleware(routing);
 
-type AuthUser = {
-  email?: string;
-  emailVerified?: boolean;
-  signupCompleted?: boolean;
-  onboardingCompleted?: boolean;
-  platformAccessEnabled?: boolean;
-};
+function localeFromRequest(request: NextRequest) {
+  const { country, region } = readGeoFromHeaders(request.headers);
+  return resolveRequestLocale({
+    cookieValue: request.cookies.get("NEXT_LOCALE")?.value,
+    country,
+    region,
+  });
+}
 
-/** Unprefixed legal URLs when NEXT_LOCALE is French → `/fr/legal/...`. */
+/** Unprefixed legal URLs when locale resolves to French → `/fr/legal/...`. */
 function applyFrenchLegalRedirect(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
   if (hasFrenchPrefix(pathname)) return null;
   if (!pathname.startsWith("/legal")) return null;
-  if (request.cookies.get("NEXT_LOCALE")?.value !== "fr") return null;
+  if (localeFromRequest(request) !== "fr") return null;
 
   const url = request.nextUrl.clone();
   url.pathname = `/fr${pathname}`;
   return NextResponse.redirect(url);
 }
 
-/** NextAuth `pages.signIn` is `/login` (default locale). Honor NEXT_LOCALE for French users. */
+/** NextAuth `pages.signIn` is `/login` (default locale). Honor French locale for Quebec / cookie. */
 function applyFrenchLoginRedirect(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
   if (pathname !== "/login") return null;
   if (hasFrenchPrefix(pathname)) return null;
-  if (request.cookies.get("NEXT_LOCALE")?.value !== "fr") return null;
+  if (localeFromRequest(request) !== "fr") return null;
 
   const url = request.nextUrl.clone();
   url.pathname = "/fr/login";
   return NextResponse.redirect(url);
 }
 
+/** Geo default: redirect unprefixed marketing/auth routes to `/fr/...` when locale resolves to French. */
 function applyGeoRedirect(request: NextRequest): NextResponse | null {
   const { pathname } = request.nextUrl;
-  if (!isMarketingRoute(pathname) || hasFrenchPrefix(pathname)) {
+  if (!isLocaleAwareRoute(pathname) || hasFrenchPrefix(pathname)) {
     return null;
   }
 
-  // Honor explicit choice from the language switcher (NEXT_LOCALE cookie).
+  // Cookie is set only when the user explicitly switches language — not on geo default.
   if (request.cookies.get("NEXT_LOCALE")?.value) {
     return null;
   }
@@ -65,10 +68,16 @@ function applyGeoRedirect(request: NextRequest): NextResponse | null {
 
   const url = request.nextUrl.clone();
   url.pathname = `/fr${pathname === "/" ? "" : pathname}`;
-  const response = NextResponse.redirect(url);
-  response.cookies.set("NEXT_LOCALE", locale);
-  return response;
+  return NextResponse.redirect(url);
 }
+
+type AuthUser = {
+  email?: string;
+  emailVerified?: boolean;
+  signupCompleted?: boolean;
+  onboardingCompleted?: boolean;
+  platformAccessEnabled?: boolean;
+};
 
 /** Legacy next-intl links used `/fr/dashboard/*`; redirect to unprefixed app shell. */
 function redirectPrefixedDashboard(request: NextRequest): NextResponse | null {
@@ -89,18 +98,17 @@ export default auth((req) => {
   const pathname = nextUrl.pathname;
   let intlResponse: NextResponse | null = null;
 
-  if (isLocaleAwareRoute(pathname)) {
-    const frenchLegal = applyFrenchLegalRedirect(req);
-    if (frenchLegal) return frenchLegal;
+    if (isLocaleAwareRoute(pathname)) {
+      const frenchLegal = applyFrenchLegalRedirect(req);
+      if (frenchLegal) return frenchLegal;
 
-    const frenchLogin = applyFrenchLoginRedirect(req);
-    if (frenchLogin) return frenchLogin;
+      const frenchLogin = applyFrenchLoginRedirect(req);
+      if (frenchLogin) return frenchLogin;
 
-    if (isMarketingRoute(pathname)) {
       const geo = applyGeoRedirect(req);
       if (geo) return geo;
-    }
-    intlResponse = intlMiddleware(req);
+
+      intlResponse = intlMiddleware(req);
     if (intlResponse.status >= 300 && intlResponse.status < 400) {
       return intlResponse;
     }

@@ -21,6 +21,7 @@ import { useState } from "react";
 import type { JobApplyBlockReason, JobPostingListItem } from "@/lib/services/job-posting.service";
 import { isJobOpenForWelperApplications } from "@/lib/marketplace/apply-block-messages";
 import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import { PlusIcon, SearchIcon, FileTextIcon } from "lucide-react";
 
 function formatLocation(city?: string | null, region?: string | null): string | undefined {
@@ -48,6 +49,7 @@ export default function MarketplacePageClient() {
   const router = useRouter();
   const locale = useLocale();
   const labels = useMarketplaceLabels();
+  const categoryDisplayName = useCategoryDisplayName();
   const { user } = useAuthStore();
   const isCustomer = user?.role === "customer";
   const isWelper = user?.role === "welper";
@@ -102,12 +104,18 @@ export default function MarketplacePageClient() {
     router.push(`/dashboard/marketplace/${job.id}`);
   };
 
-  const renderJobCard = (job: JobPostingListItem) => (
+  const renderJobCard = (job: JobPostingListItem) => {
+    const rawCategory = job.subcategoryLabel ?? job.categoryLabel;
+    const category = rawCategory
+      ? categoryDisplayName(rawCategory)
+      : labels.card.defaultCategory;
+
+    return (
     <JobCard
       key={job.id}
       layout={viewMode}
       title={job.title}
-      category={job.subcategoryLabel ?? job.categoryLabel ?? labels.card.defaultCategory}
+      category={category}
       scheduledDate={formatScheduleDate(job.scheduledDate, locale)}
       scheduledTime={formatTimeRange(job.scheduledStartTime, job.scheduledEndTime)}
       location={formatLocation(job.locationCity, job.locationRegion)}
@@ -136,7 +144,8 @@ export default function MarketplacePageClient() {
           : undefined
       }
     />
-  );
+    );
+  };
 
   const showToggle = !isLoading && !isError && jobs.length > 0;
 

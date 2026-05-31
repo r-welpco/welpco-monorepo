@@ -4,11 +4,16 @@
  */
 
 import { cache } from "react";
+import { cookies, headers } from "next/headers";
 import { auth } from "@/auth";
+import { readGeoFromHeaders } from "@/i18n/geo";
 import { localizedPath } from "@/i18n/locale-routes";
 import type { Locale } from "@/i18n/routing";
+import { resolveRequestLocale } from "@/i18n/resolve-locale";
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
+
+const LOCALE_COOKIE = "NEXT_LOCALE";
 
 export interface AuthCheckResult {
   isAuthenticated: boolean;
@@ -81,13 +86,22 @@ export async function getServerSession(): Promise<AuthCheckResult> {
   return getServerSessionCached();
 }
 
-async function localizedRedirect(path: string): Promise<never> {
-  let locale: Locale = "en";
+async function resolveRedirectLocale(): Promise<Locale> {
   try {
-    locale = (await getLocale()) as Locale;
+    return (await getLocale()) as Locale;
   } catch {
-    // Outside [locale] segment (e.g. dashboard) — default English paths.
+    const cookieStore = await cookies();
+    const { country, region } = readGeoFromHeaders(await headers());
+    return resolveRequestLocale({
+      cookieValue: cookieStore.get(LOCALE_COOKIE)?.value,
+      country,
+      region,
+    });
   }
+}
+
+async function localizedRedirect(path: string): Promise<never> {
+  const locale = await resolveRedirectLocale();
   redirect(localizedPath(path, locale));
 }
 
@@ -113,12 +127,7 @@ export async function requireEmailVerification(): Promise<NonNullable<AuthCheckR
   const user = await requireAuth();
 
   if (!user.emailVerified) {
-    let locale: Locale = "en";
-    try {
-      locale = (await getLocale()) as Locale;
-    } catch {
-      /* default */
-    }
+    const locale = await resolveRedirectLocale();
     redirect(
       `${localizedPath("/verification", locale)}?email=${encodeURIComponent(user.email)}`,
     );

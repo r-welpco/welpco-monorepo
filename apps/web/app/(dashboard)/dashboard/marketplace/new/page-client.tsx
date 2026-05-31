@@ -36,6 +36,7 @@ import { EmailVerificationRequiredDialog } from "@/components/features/dashboard
 import { ApiClientError } from "@/lib/api/client";
 import { MIN_BOOKING_DURATION_MINUTES } from "@/lib/booking/booking-pricing";
 import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 
 type WizardStep = 1 | 2;
 
@@ -68,6 +69,7 @@ function deriveJobDescription(
 export default function NewJobPageClient() {
   const router = useRouter();
   const labels = useMarketplaceLabels();
+  const categoryDisplayName = useCategoryDisplayName();
   const { user } = useAuthStore();
   const bookable = useBookableAction();
   const createJob = useCreateJobPosting();
@@ -236,7 +238,9 @@ export default function NewJobPageClient() {
                   <SelectTrigger placeholder={labels.new.selectCategory} />
                   <SelectContent>
                     {parentCategories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      <SelectItem key={c.id} value={c.id}>
+                        {categoryDisplayName(c.name)}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -253,7 +257,9 @@ export default function NewJobPageClient() {
                   <SelectTrigger placeholder={labels.new.selectSubcategory} />
                   <SelectContent>
                     {subcategories.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      <SelectItem key={c.id} value={c.id}>
+                        {categoryDisplayName(c.name)}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

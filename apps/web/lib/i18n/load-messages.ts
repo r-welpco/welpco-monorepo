@@ -1,11 +1,16 @@
 import type { AbstractIntlMessages } from "next-intl";
-import { routing, type Locale } from "@/i18n/routing";
+import { resolveRequestLocale } from "@/i18n/resolve-locale";
+import type { Locale } from "@/i18n/routing";
 
 export function resolveLocaleFromCookie(
   cookieValue: string | undefined,
+  geo?: { country?: string; region?: string },
 ): Locale {
-  if (cookieValue === "fr" || cookieValue === "en") return cookieValue;
-  return routing.defaultLocale;
+  return resolveRequestLocale({
+    cookieValue,
+    country: geo?.country,
+    region: geo?.region,
+  });
 }
 
 export async function loadMessages(
