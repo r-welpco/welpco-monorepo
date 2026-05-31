@@ -5,7 +5,6 @@ import { getTranslations } from "next-intl/server";
 import "./tokens.css";
 import "./responsive.css";
 import { MarketingTopNavGate } from "./marketing-top-nav-gate";
-import { WelperLaunchAnnouncementGate } from "./welper-launch-announcement-gate";
 import { Footer } from "@/components/features/marketing/shared/footer";
 
 /**
@@ -33,6 +32,8 @@ import { Footer } from "@/components/features/marketing/shared/footer";
  * Chrome:
  *   - `<MarketingTopNavGate>` mounts `<TopNav>` on every marketing route except
  *     `/` (immersive hero supplies its own floating nav). `<Footer>` is always here.
+ *   - `<WelperLaunchAnnouncementGate>` is available but not mounted here; wire it
+ *     back in when a launch announcement should appear on marketing pages.
  *   - No Radix `<Theme>` wrapper — the bundle has its own button/card/pill
  *     system in `tokens.css` (`.btn`, `.card`, `.pill`, …) and does not
  *     consume any `@welpco/ui` primitives.
@@ -125,7 +126,6 @@ export default async function MarketingLayout({
       <MarketingTopNavGate />
       <main id="main-content">{children}</main>
       <Footer />
-      <WelperLaunchAnnouncementGate />
     </div>
   );
 }

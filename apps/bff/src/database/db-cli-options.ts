@@ -1,4 +1,9 @@
-import type { DataSource, DataSourceOptions, MigrationInterface } from 'typeorm';
+import type {
+  DataSource,
+  DataSourceOptions,
+  MigrationInterface,
+  QueryRunner,
+} from 'typeorm';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 
 /** Extract leading numeric timestamp from a migration class or file name. */
@@ -76,6 +81,18 @@ export function basePostgresDataSourceOptions(
   return base;
 }
 
+/** Matches TypeORM's default Postgres migrations table (see MigrationExecutor). */
+async function ensureMigrationsTable(queryRunner: QueryRunner): Promise<void> {
+  await queryRunner.query(`
+    CREATE TABLE IF NOT EXISTS "migrations" (
+      "id" SERIAL NOT NULL,
+      "timestamp" bigint NOT NULL,
+      "name" character varying NOT NULL,
+      CONSTRAINT "PK_migrations_id" PRIMARY KEY ("id")
+    )
+  `);
+}
+
 /**
  * TypeORM's executor orders pending migrations by class name, not filename timestamp.
  * Run pending migrations in chronological order (required for legacy DBs + unix-ms baselines).
@@ -85,6 +102,7 @@ export async function runPendingMigrationsInOrder(
 ): Promise<{ name: string }[]> {
   const queryRunner = dataSource.createQueryRunner();
   await queryRunner.connect();
+  await ensureMigrationsTable(queryRunner);
 
   const executedRows = (await queryRunner.query(
     `SELECT "name" FROM "migrations"`,
