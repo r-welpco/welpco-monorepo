@@ -18,6 +18,7 @@ export interface ApplicationListProps {
   error?: string;
   emptyMessage?: string;
   onRetry?: () => void;
+  labels?: ApplicationReviewCardProps["labels"];
 }
 
 /**
@@ -31,6 +32,7 @@ export function ApplicationList({
   error,
   emptyMessage,
   onRetry,
+  labels,
 }: ApplicationListProps) {
   // Loading
   if (loading) {
@@ -111,7 +113,7 @@ export function ApplicationList({
   return (
     <Flex direction="column" gap="3">
       {items.map((item, idx) => (
-        <ApplicationReviewCard key={`${item.candidateName}-${idx}`} {...item} />
+        <ApplicationReviewCard key={`${item.candidateName}-${idx}`} {...item} labels={labels ?? item.labels} />
       ))}
     </Flex>
   );

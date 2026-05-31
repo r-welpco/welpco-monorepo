@@ -42,6 +42,7 @@ import {
   MIN_BOOKING_DURATION_MINUTES,
   RECEIPT_CHECKOUT_FUTURE_GRACE_MINUTES,
   snapReceiptBillingWindow,
+  customerHourlyChargeFromWelperRate,
 } from './booking-pricing';
 import { getDisputeReportDeadlineAt } from './dispute-report-window';
 import { customerProfileAddressToBookingRecord } from './booking-address.util';
@@ -545,7 +546,7 @@ export class BookingService {
     let hourlyRate: number | null = null;
     let totalPrice: number | null = null;
     if (offering.hourlyRate) {
-      hourlyRate = Number(offering.hourlyRate);
+      hourlyRate = customerHourlyChargeFromWelperRate(Number(offering.hourlyRate));
       if (dto.durationMinutes) {
         const pricingPreview: BookingTaxContext = {
           id: 'pricing-preview',

@@ -38,14 +38,17 @@ const token: Record<
 
 export interface JobStatusBadgeProps {
   status: JobStatus;
+  /** Override the built-in English status label (pass a localized string). */
+  label?: string;
 }
 
-export function JobStatusBadge({ status }: JobStatusBadgeProps) {
+export function JobStatusBadge({ status, label }: JobStatusBadgeProps) {
   const statusToken = token[status];
-  if (!statusToken) {
+  if (!statusToken && !label) {
     return null;
   }
-  const { color, label } = statusToken;
+  const color = statusToken?.color ?? "gray";
+  const displayLabel = label ?? statusToken!.label;
   return (
     <Badge color={color} variant="soft" radius="full" highContrast>
       <span
@@ -57,7 +60,7 @@ export function JobStatusBadge({ status }: JobStatusBadgeProps) {
           backgroundColor: `var(--${color}-9)`,
         }}
       />
-      {label}
+      {displayLabel}
     </Badge>
   );
 }

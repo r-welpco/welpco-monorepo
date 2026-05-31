@@ -15,6 +15,7 @@ import {
 } from "@welpco/ui/select";
 import { ListFilter, X } from "lucide-react";
 import { useContentCategories, useCategoriesByParent } from "@/lib/hooks/use-content";
+import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 
 interface MarketplaceFiltersProps {
   categoryId: string;
@@ -41,6 +42,7 @@ export function MarketplaceFilters({
   resultCount,
   trailing,
 }: MarketplaceFiltersProps) {
+  const labels = useMarketplaceLabels();
   const { data: categories = [] } = useContentCategories(false);
   const parentCategories = categories.filter((c) => c.level === 1);
 
@@ -69,7 +71,7 @@ export function MarketplaceFilters({
             <Flex align="center" gap="2" style={{ color: "var(--gray-10)" }}>
               <ListFilter size={16} aria-hidden />
               <Text size="2" weight="medium" color="gray" highContrast>
-                Filters
+                {labels.filters.title}
               </Text>
             </Flex>
 
@@ -78,9 +80,9 @@ export function MarketplaceFilters({
                 value={categoryId || "__all__"}
                 onValueChange={(v) => onCategoryChange(v === "__all__" ? "" : v)}
               >
-                <SelectTrigger placeholder="All categories" />
+                <SelectTrigger placeholder={labels.filters.allCategories} />
                 <SelectContent>
-                  <SelectItem value="__all__">All categories</SelectItem>
+                  <SelectItem value="__all__">{labels.filters.allCategories}</SelectItem>
                   {parentCategories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
@@ -96,9 +98,9 @@ export function MarketplaceFilters({
                   value={subcategoryId || "__all__"}
                   onValueChange={(v) => onSubcategoryChange(v === "__all__" ? "" : v)}
                 >
-                  <SelectTrigger placeholder="All services" />
+                  <SelectTrigger placeholder={labels.filters.allServices} />
                   <SelectContent>
-                    <SelectItem value="__all__">All services</SelectItem>
+                    <SelectItem value="__all__">{labels.filters.allServices}</SelectItem>
                     {subcategories.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.name}
@@ -127,7 +129,7 @@ export function MarketplaceFilters({
                 htmlFor="marketplace-eligible-only"
                 style={{ cursor: "pointer" }}
               >
-                Only jobs I can apply to
+                {labels.filters.eligibleOnly}
               </Text>
               <Switch
                 id="marketplace-eligible-only"
@@ -147,8 +149,8 @@ export function MarketplaceFilters({
           {typeof resultCount === "number" && (
             <Text size="2" color="gray">
               {resultCount === 0
-                ? "No jobs found"
-                : `${resultCount} ${resultCount === 1 ? "job" : "jobs"}`}
+                ? labels.filters.noJobsFound
+                : labels.filters.jobCount(resultCount)}
             </Text>
           )}
 
@@ -158,17 +160,23 @@ export function MarketplaceFilters({
               {selectedCategory && (
                 <FilterChip
                   label={selectedCategory.name}
+                  removeAria={labels.filters.removeFilterAria(selectedCategory.name)}
                   onRemove={() => onCategoryChange("")}
                 />
               )}
               {selectedSubcategory && (
                 <FilterChip
                   label={selectedSubcategory.name}
+                  removeAria={labels.filters.removeFilterAria(selectedSubcategory.name)}
                   onRemove={() => onSubcategoryChange("")}
                 />
               )}
               {eligibleOnly && (
-                <FilterChip label="Can apply" onRemove={() => onEligibleChange(false)} />
+                <FilterChip
+                  label={labels.filters.canApplyChip}
+                  removeAria={labels.filters.removeFilterAria(labels.filters.canApplyChip)}
+                  onRemove={() => onEligibleChange(false)}
+                />
               )}
             </>
           )}
@@ -176,7 +184,7 @@ export function MarketplaceFilters({
 
         {hasFilters && (
           <Button variant="ghost" color="gray" size="2" onClick={onClearAll}>
-            Clear all
+            {labels.filters.clearAll}
           </Button>
         )}
       </Flex>
@@ -184,7 +192,15 @@ export function MarketplaceFilters({
   );
 }
 
-function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+function FilterChip({
+  label,
+  removeAria,
+  onRemove,
+}: {
+  label: string;
+  removeAria: string;
+  onRemove: () => void;
+}) {
   return (
     <Button
       variant="soft"
@@ -192,7 +208,7 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
       size="1"
       radius="full"
       onClick={onRemove}
-      aria-label={`Remove ${label} filter`}
+      aria-label={removeAria}
     >
       {label}
       <X size={12} aria-hidden />

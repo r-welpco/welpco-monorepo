@@ -35,6 +35,7 @@ import { ApiClientError } from "@/lib/api/client";
 import { transformCategoriesToOptions, validateCategoryId } from "@/lib/utils/category-utils";
 import type { SearchResultItem } from "@/types";
 import { maskCustomerWelperName, publicWelperDisplayName } from "@/lib/display-name";
+import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 import { Button } from "@welpco/ui/button";
 import { IconButton } from "@welpco/ui/icon-button";
 import { Text } from "@welpco/ui/text";
@@ -102,6 +103,7 @@ function mapToWelperProfileDialogProfile(
 
 export default function DashboardSearchPageClient() {
   const router = useRouter();
+  const marketplaceLabels = useMarketplaceLabels();
   const searchParams = useSearchParams();
 
   const q = searchParams.get("q") ?? undefined;
@@ -691,7 +693,7 @@ export default function DashboardSearchPageClient() {
                 title="No Welpers found"
                 description="Try adjusting your search or filters, or post a job and let welpers apply."
                 primaryAction={{
-                  label: "Post a job",
+                  label: marketplaceLabels.searchEmpty.postJob,
                   onClick: () => router.push("/dashboard/marketplace/new"),
                 }}
                 secondaryAction={

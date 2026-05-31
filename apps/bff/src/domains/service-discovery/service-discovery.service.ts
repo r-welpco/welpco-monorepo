@@ -19,6 +19,7 @@ import { DiscoveryCategoriesCacheService } from '../../common/discovery-categori
 import { BackgroundCheckStatus } from '../user-management/entities/verification-status.entity';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
 import { formatWelperDisplayNameForCustomer } from '../../common/display-name.util';
+import { customerHourlyChargeFromWelperRate } from '../booking/booking-pricing';
 
 const BIO_SNIPPET_LENGTH = 120;
 
@@ -83,7 +84,9 @@ export class ServiceDiscoveryService {
         : 'Welper';
       const categoryNames = [...new Set(offerings.map((o) => categoryMap.get(o.serviceCategoryId) ?? '').filter(Boolean))].sort();
       const title = categoryNames[0] ?? 'Welper';
-      const rates = offerings.map((o) => Number(o.hourlyRate));
+      const rates = offerings.map((o) =>
+        customerHourlyChargeFromWelperRate(Number(o.hourlyRate)),
+      );
       const hourlyRate = rates.length ? Math.min(...rates) : 0;
       const location = profile ? locationSummary(profile) : '—';
       let bioSnippet: string | null = null;
@@ -392,7 +395,7 @@ export class ServiceDiscoveryService {
         categoryName: category?.name ?? '',
         ...(category?.parent?.name && { parentCategoryName: category.parent.name }),
         serviceDescription: o.serviceDescription,
-        hourlyRate: Number(o.hourlyRate),
+        hourlyRate: customerHourlyChargeFromWelperRate(Number(o.hourlyRate)),
         experienceYears: o.experienceYears,
       };
     });

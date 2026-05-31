@@ -14,6 +14,42 @@ import {
 } from "./labels";
 import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
 
+function StripeSetupGuide({ labels }: { labels: WelperPayoutStepLabels }) {
+  const listStyle = {
+    margin: 0,
+    paddingLeft: "1.25rem",
+    color: "var(--gray-11)",
+    fontSize: "var(--font-size-2)",
+    lineHeight: 1.6,
+  } as const;
+
+  return (
+    <Box>
+      <Heading as="h3" size="3" trim="start" mb="2">
+        {labels.stripeSetupGuideTitle}
+      </Heading>
+      <Text size="2" color="gray" highContrast as="p" mb="3">
+        {labels.stripeSetupGuideIntro}
+      </Text>
+      <Box asChild>
+        <ol style={listStyle}>
+          <li style={{ marginBottom: 8 }}>{labels.stripeSetupStepBusinessType}</li>
+          <li style={{ marginBottom: 8 }}>{labels.stripeSetupStepPersonalDetails}</li>
+          <li style={{ marginBottom: 8 }}>
+            {labels.stripeSetupBusinessDetailsLead}
+            <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: "1.25rem", listStyle: "disc" }}>
+              <li style={{ marginBottom: 4 }}>{labels.stripeSetupBusinessIndustry}</li>
+              <li style={{ marginBottom: 4 }}>{labels.stripeSetupBusinessWebsite}</li>
+              <li>{labels.stripeSetupBusinessProduct}</li>
+            </ul>
+          </li>
+          <li>{labels.stripeSetupStepBankDetails}</li>
+        </ol>
+      </Box>
+    </Box>
+  );
+}
+
 export interface WelperPayoutStepValues {
   stripeOnboardingCompleted: true;
 }
@@ -87,7 +123,9 @@ export function WelperPayoutStep({
             </Callout.Root>
           )
         ) : (
-          <Card variant="surface" size="3">
+          <>
+            <StripeSetupGuide labels={labels} />
+            <Card variant="surface" size="3">
             <Flex direction="column" gap="3">
               <Box>
                 <Heading as="h3" size="4" trim="start" mb="1">
@@ -109,6 +147,7 @@ export function WelperPayoutStep({
               </Button>
             </Flex>
           </Card>
+          </>
         )}
 
         {onBack ? (

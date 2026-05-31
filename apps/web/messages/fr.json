@@ -986,7 +986,8 @@
           "category": "Catégorie",
           "subcategory": "Sous-catégorie",
           "serviceTitle": "Titre du service",
-          "hourlyRate": "Tarif horaire ($)",
+          "hourlyRate": "Votre taux horaire ($)",
+          "customerChargeHint": "Les clients paieront {charge}/h pour ce service.",
           "descriptionLabel": "Description",
           "addToList": "Ajouter à la liste",
           "loadingCategories": "Chargement des catégories…",
@@ -1053,7 +1054,16 @@
           "connectDescription": "Vérification d'identité et de compte bancaire hébergée par Stripe. Une fois terminé, vous pourrez accepter des réservations payantes.",
           "connectCta": "Configurer les paiements avec Stripe",
           "connectInProgress": "Ouverture de Stripe…",
-          "continue": "Continuer"
+          "continue": "Continuer",
+          "stripeSetupGuideTitle": "Comment configurer mon compte Stripe?",
+          "stripeSetupGuideIntro": "Lors de la création de votre profil Welper, une étape vous permettra de créer votre compte Stripe. Une fois votre identifiant créé, suivez simplement les instructions ci-dessous :",
+          "stripeSetupStepBusinessType": "Type d'entreprise : sélectionnez « Particulier ou entreprise individuelle ».",
+          "stripeSetupStepPersonalDetails": "Données personnelles : pour le champ « Intitulé de poste », vous pouvez inscrire « Travailleur autonome » ou plus précisément « Promeneur de chiens », « Femme/Homme de ménage », « Cuisinier », etc.",
+          "stripeSetupBusinessDetailsLead": "Informations sur l'entreprise :",
+          "stripeSetupBusinessIndustry": "Secteur d'activité : sélectionnez « Services personnels – Autres services à la personne ».",
+          "stripeSetupBusinessWebsite": "Votre site web : www.welpco.com",
+          "stripeSetupBusinessProduct": "Description du produit/service : fournissez une brève description des services que vous offrez.",
+          "stripeSetupStepBankDetails": "Informations bancaires : entrez les informations de votre compte bancaire personnel afin de recevoir votre paiement hebdomadaire."
         },
         "optionalProfile": {
           "title": "Complétez votre profil",
@@ -1360,6 +1370,193 @@
         "cancelReasonPlaceholder": "p. ex. Plans changés, autre Welper trouvé"
       }
     },
+    "marketplace": {
+      "list": {
+        "titleCustomer": "Mes offres d'emploi",
+        "titleWelper": "Marché",
+        "subtitleCustomer": "Publiez une offre si vous ne trouvez pas le bon Welper via la recherche, puis examinez les candidatures.",
+        "subtitleWelper": "Parcourez les offres ouvertes de clients près de chez vous. Vous devez avoir une offre de service correspondante pour postuler.",
+        "postJob": "Publier une offre",
+        "loadFailed": "Impossible de charger les offres. Réessayez.",
+        "jobPostCount": "{count, plural, one {# offre publiée} other {# offres publiées}}",
+        "empty": {
+          "customerTitle": "Aucune offre pour l'instant",
+          "customerDescription": "Lorsque vous publiez une offre, elle apparaît ici pour suivre les candidatures et choisir un Welper.",
+          "customerCta": "Publier votre première offre",
+          "welperNoFiltersTitle": "Aucune offre ouverte pour l'instant",
+          "welperNoFiltersDescription": "Revenez bientôt, ou ajustez vos offres de service pour voir plus d'offres disponibles.",
+          "welperFilteredTitle": "Aucune offre ne correspond à vos filtres",
+          "welperFilteredDescription": "Élargissez votre recherche — effacez la catégorie ou désactivez le filtre d'éligibilité.",
+          "clearFilters": "Effacer les filtres"
+        }
+      },
+      "filters": {
+        "title": "Filtres",
+        "allCategories": "Toutes les catégories",
+        "allServices": "Tous les services",
+        "eligibleOnly": "Seulement les offres auxquelles je peux postuler",
+        "canApplyChip": "Peut postuler",
+        "noJobsFound": "Aucune offre trouvée",
+        "jobCount": "{count, plural, one {# offre} other {# offres}}",
+        "clearAll": "Tout effacer",
+        "removeFilterAria": "Retirer le filtre {label}"
+      },
+      "viewToggle": {
+        "label": "Affichage",
+        "listAria": "Vue liste",
+        "gridAria": "Vue grille"
+      },
+      "card": {
+        "defaultCategory": "Service",
+        "viewDetails": "Voir les détails",
+        "apply": "Postuler",
+        "applied": "Candidature envoyée",
+        "noApplicationsYet": "Aucune candidature pour l'instant",
+        "applicationCount": "{count, plural, one {# candidature} other {# candidatures}}",
+        "posted": "Publiée le {date}"
+      },
+      "status": {
+        "published": "Ouverte",
+        "applications_open": "Candidatures ouvertes",
+        "converted_to_booking": "Réservation envoyée",
+        "completed": "Terminée",
+        "expired": "Expirée",
+        "cancelled": "Annulée",
+        "draft": "Brouillon",
+        "open": "Ouverte",
+        "reviewing": "En examen",
+        "shortlisted": "Présélectionnée",
+        "interviewing": "Entrevue",
+        "offer": "Offre",
+        "filled": "Pourvue"
+      },
+      "new": {
+        "title": "Publier une offre",
+        "stepOf": "Étape {step} sur 2 — {stepName}",
+        "stepCategory": "Catégorie",
+        "stepDetails": "Détails de l'offre",
+        "profileIncomplete": "Complétez votre profil dans Paramètres avant de publier une offre.",
+        "category": "Catégorie",
+        "subcategory": "Sous-catégorie",
+        "selectCategory": "Choisir une catégorie",
+        "selectSubcategory": "Choisir une sous-catégorie",
+        "continue": "Continuer",
+        "aboutJob": "À propos de cette offre",
+        "titleLabel": "Titre",
+        "serviceQuestions": "Questions sur le service",
+        "noServiceQuestions": "Aucune question supplémentaire pour ce service.",
+        "when": "Quand",
+        "date": "Date",
+        "startTime": "Heure de début",
+        "endTime": "Heure de fin",
+        "endAfterStart": "L'heure de fin doit être après l'heure de début.",
+        "minDuration": "Les offres doivent durer au moins 1 heure.",
+        "serviceLocation": "Lieu du service : {address}",
+        "back": "Retour",
+        "posting": "Publication…",
+        "postJob": "Publier l'offre",
+        "submitFailed": "Impossible de publier l'offre."
+      },
+      "detail": {
+        "back": "Retour au marché",
+        "notFound": "Cette offre est introuvable. Elle a peut-être été retirée ou a expiré.",
+        "date": "Date",
+        "time": "Heure",
+        "duration": "Durée",
+        "location": "Lieu",
+        "applications": "Candidatures",
+        "closes": "Ferme le",
+        "cancelJob": "Annuler l'offre",
+        "applyToJob": "Postuler à cette offre",
+        "yourApplication": "Votre candidature",
+        "withdrawApplication": "Retirer la candidature",
+        "aboutJob": "À propos de cette offre",
+        "serviceAddress": "Adresse du service : {address}",
+        "applicationsTitle": "Candidatures",
+        "noApplicationsTitle": "Aucune candidature pour l'instant",
+        "noApplicationsDescription": "Les Welpers correspondant à cette offre apparaîtront ici lorsqu'ils postuleront.",
+        "welperFallback": "Welper",
+        "viewLinkedBooking": "Voir la réservation liée",
+        "applyDialogTitle": "Postuler à cette offre",
+        "applyDialogReviewDescription": "Vérifiez les détails de l'offre et les réponses du client avant de rédiger votre proposition.",
+        "applyDialogSubmitDescription": "Choisissez l'offre de service avec laquelle vous réaliserez ce mandat et présentez-vous au client.",
+        "applyStepReview": "Examiner l'offre",
+        "applyStepSubmit": "Votre proposition",
+        "cancel": "Annuler",
+        "continueToProposal": "Continuer vers la proposition",
+        "submitApplication": "Envoyer la candidature",
+        "applyFailed": "Impossible de postuler.",
+        "applicationStatus": {
+          "pending": {
+            "label": "En attente",
+            "helper": "Votre candidature est envoyée — le client l'examinera et vous contactera si c'est pertinent."
+          },
+          "accepted": {
+            "label": "Sélectionné",
+            "helper": "Vous avez été sélectionné. Le client vous enverra une demande de réservation sous peu."
+          },
+          "rejected": {
+            "label": "Non retenu",
+            "helper": "Cette candidature n'a pas été retenue cette fois. Surveillez d'autres offres."
+          },
+          "withdrawn": {
+            "label": "Retirée",
+            "helper": "Vous avez retiré cette candidature."
+          }
+        }
+      },
+      "applyBlocked": {
+        "title": "Postulation impossible pour l'instant",
+        "close": "Fermer",
+        "manageOfferings": "Gérer les offres de service",
+        "completeProfile": "Compléter le profil",
+        "NOT_DISCOVERABLE": "Complétez votre profil et votre vérification des antécédents pour apparaître dans la recherche avant de postuler.",
+        "NO_MATCHING_OFFERING": "Ajoutez une offre de service active incluant la sous-catégorie de cette offre avant de pouvoir postuler.",
+        "JOB_CLOSED": "Cette offre n'accepte plus de candidatures.",
+        "JOB_EXPIRED": "Cette offre a expiré.",
+        "APPLICATION_CAP_REACHED": "Cette offre a atteint le nombre maximal de candidatures.",
+        "ALREADY_APPLIED": "Vous avez déjà postulé à cette offre."
+      },
+      "reviewSummary": {
+        "jobDetails": "Détails de l'offre",
+        "schedule": "Horaire",
+        "location": "Lieu",
+        "serviceQuestions": "Questions sur le service",
+        "questionsLoadFailed": "Impossible de charger les questions sur le service.",
+        "noServiceDetails": "Aucun détail supplémentaire sur le service n'a été fourni."
+      },
+      "applicationForm": {
+        "title": "Envoyer la candidature",
+        "subtitle": "Rédigez une brève proposition. Votre tarif horaire provient de l'offre de service sélectionnée.",
+        "serviceOffering": "Offre de service",
+        "selectOffering": "Choisir une offre",
+        "selectOfferingError": "Choisissez une offre",
+        "yourRate": "Votre tarif : {rate}/h",
+        "proposalMessage": "Message de proposition",
+        "proposalPlaceholder": "Expliquez votre adéquation, votre expérience pertinente et votre approche.",
+        "proposalMinError": "Saisissez au moins 10 caractères",
+        "submitting": "Envoi…",
+        "submit": "Envoyer la candidature"
+      },
+      "applicationReview": {
+        "verified": "Vérifié",
+        "applied": "Candidature le {date}",
+        "sendBookingRequest": "Envoyer une demande de réservation",
+        "status": {
+          "pending": "En attente",
+          "accepted": "Sélectionné",
+          "rejected": "Refusé",
+          "withdrawn": "Retirée"
+        }
+      },
+      "searchEmpty": {
+        "postJob": "Publier une offre"
+      },
+      "bookingHandoff": {
+        "linkedCallout": "Cette réservation est liée à votre offre sur le marché. Confirmez les détails ci-dessous, puis envoyez la demande.",
+        "pageSubtitle": "Examiner et envoyer une demande de réservation pour « {jobTitle} »"
+      }
+    },
     "messages": {
       "title": "Messages",
       "subtitle": "Choisissez une réservation pour discuter avec votre client.",
@@ -1490,7 +1687,8 @@
           "category": "Catégorie",
           "subcategoriesOptional": "Sous-catégories (facultatif)",
           "subcategoriesHint": "Choisissez une ou plusieurs sous-catégories qui s'appliquent à cette offre.",
-          "hourlyRate": "Taux horaire ($)",
+          "hourlyRate": "Votre taux horaire ($)",
+          "customerChargeHint": "Les clients paieront {charge}/h pour ce service.",
           "experienceYears": "Expérience (années)",
           "description": "Description",
           "descriptionPlaceholder": "Expliquez ce que les clients peuvent attendre, ce qui est inclus et toute préparation nécessaire.",
@@ -1624,6 +1822,8 @@
       "confirmCheckInConfirm": "Enregistrer l'arrivée",
       "confirmCheckInCancel": "Pas encore",
       "checkInFailed": "Impossible d'enregistrer l'arrivée.",
+      "checkInLateHint": "Vous avez oublié d'enregistrer votre arrivée ou votre départ pour un mandat terminé? Pas de problème! Vous pouvez maintenant enregistrer votre arrivée, votre départ et ajuster vos heures après la fin du mandat.",
+      "paymentReleasedPayoutNote": "Les paiements sont traités chaque vendredi de la semaine suivante pour les mandats terminés.",
       "receiptDialogTitle": "Confirmer le reçu de service",
       "receiptDialogDescription": "Ajustez l'arrivée et le départ de facturation si nécessaire. Le client est facturé du total affiché lorsque vous confirmez.",
       "receiptBillingIn": "Arrivée (facturation)",

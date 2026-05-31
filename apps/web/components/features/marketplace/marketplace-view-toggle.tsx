@@ -6,6 +6,7 @@ import { Button } from "@welpco/ui/button";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { LayoutGrid, LayoutList } from "lucide-react";
 import type { JobCardLayout } from "@welpco/ui/platform";
+import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 
 interface MarketplaceViewToggleProps {
   viewMode: JobCardLayout;
@@ -13,10 +14,12 @@ interface MarketplaceViewToggleProps {
 }
 
 export function MarketplaceViewToggle({ viewMode, onViewModeChange }: MarketplaceViewToggleProps) {
+  const labels = useMarketplaceLabels();
+
   return (
     <Flex align="center" gap="2">
       <Text size="2" weight="medium" color="gray" highContrast>
-        View
+        {labels.viewToggle.label}
       </Text>
       <Flex align="center" gap="1">
         <Button
@@ -24,7 +27,7 @@ export function MarketplaceViewToggle({ viewMode, onViewModeChange }: Marketplac
           color={viewMode === "list" ? SEMANTIC_COLOR.primary : "gray"}
           size="2"
           onClick={() => onViewModeChange("list")}
-          aria-label="List view"
+          aria-label={labels.viewToggle.listAria}
           aria-pressed={viewMode === "list"}
         >
           <LayoutList size={18} />
@@ -34,7 +37,7 @@ export function MarketplaceViewToggle({ viewMode, onViewModeChange }: Marketplac
           color={viewMode === "grid" ? SEMANTIC_COLOR.primary : "gray"}
           size="2"
           onClick={() => onViewModeChange("grid")}
-          aria-label="Grid view"
+          aria-label={labels.viewToggle.gridAria}
           aria-pressed={viewMode === "grid"}
         >
           <LayoutGrid size={18} />

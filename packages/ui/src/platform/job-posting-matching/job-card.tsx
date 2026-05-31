@@ -24,6 +24,25 @@ import { JobStatus, JobStatusBadge } from "./job-status-badge";
 
 export type JobCardLayout = "list" | "grid";
 
+export interface JobCardLabels {
+  viewDetails: string;
+  apply: string;
+  applied: string;
+  noApplicationsYet: string;
+  applicationCount: (count: number) => string;
+  posted: (date: string) => string;
+}
+
+const DEFAULT_LABELS: JobCardLabels = {
+  viewDetails: "View details",
+  apply: "Apply",
+  applied: "Applied",
+  noApplicationsYet: "No applications yet",
+  applicationCount: (count) =>
+    count === 1 ? "1 application" : `${count} applications`,
+  posted: (date) => `Posted ${date}`,
+};
+
 export interface JobCardProps {
   title: string;
   category: string;
@@ -44,6 +63,7 @@ export interface JobCardProps {
   customerName?: string | null;
   customerPhotoUrl?: string | null;
   layout?: JobCardLayout;
+  labels?: JobCardLabels;
   onView?: () => void;
   onApply?: () => void;
 }
@@ -97,19 +117,24 @@ function JobMeta({
   );
 }
 
-function JobCardActions({ onView, onApply }: Pick<JobCardProps, "onView" | "onApply">) {
+function JobCardActions({
+  onView,
+  onApply,
+  labels,
+}: Pick<JobCardProps, "onView" | "onApply" | "labels">) {
+  const l = labels ?? DEFAULT_LABELS;
   if (!onView && !onApply) return null;
 
   return (
     <Flex gap="2" wrap="wrap" justify="end" align="center">
       {onView && (
         <Button variant="soft" color="gray" size="2" onClick={onView}>
-          View details
+          {l.viewDetails}
         </Button>
       )}
       {onApply && (
         <Button onClick={onApply} variant="solid" color={SEMANTIC_COLOR.primary} size="2">
-          Apply
+          {l.apply}
         </Button>
       )}
     </Flex>
@@ -119,13 +144,15 @@ function JobCardActions({ onView, onApply }: Pick<JobCardProps, "onView" | "onAp
 function FooterSignal({
   applicationCount,
   applied,
-}: Pick<JobCardProps, "applicationCount" | "applied">) {
+  labels,
+}: Pick<JobCardProps, "applicationCount" | "applied" | "labels">) {
+  const l = labels ?? DEFAULT_LABELS;
   if (applied) {
     return (
       <Flex align="center" gap="1" style={{ color: "var(--grass-11)" }}>
         <CheckCircle2 size={14} aria-hidden />
         <Text size="2" weight="medium">
-          Applied
+          {l.applied}
         </Text>
       </Flex>
     );
@@ -136,8 +163,8 @@ function FooterSignal({
         <Users size={14} aria-hidden />
         <Text size="2" weight="medium">
           {applicationCount === 0
-            ? "No applications yet"
-            : `${applicationCount} application${applicationCount === 1 ? "" : "s"}`}
+            ? l.noApplicationsYet
+            : l.applicationCount(applicationCount)}
         </Text>
       </Flex>
     );
@@ -186,9 +213,11 @@ export function JobCard({
   applied,
   customerName,
   customerPhotoUrl,
+  labels,
   onView,
   onApply,
 }: JobCardProps) {
+  const l = labels ?? DEFAULT_LABELS;
   const tagBadges =
     tags.length > 0 ? (
       <Flex gap="2" wrap="wrap">
@@ -262,14 +291,14 @@ export function JobCard({
               )}
             </>
           )}
-          <FooterSignal applicationCount={applicationCount} applied={applied} />
+          <FooterSignal applicationCount={applicationCount} applied={applied} labels={l} />
           {createdAt && (
             <Text size="1" color="gray">
-              Posted {createdAt}
+              {l.posted(createdAt)}
             </Text>
           )}
         </Flex>
-        <JobCardActions onView={onView} onApply={onApply} />
+        <JobCardActions onView={onView} onApply={onApply} labels={l} />
       </Flex>
     </Flex>
   ) : null;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { Box } from "@welpco/ui/box";
 import { Container } from "@welpco/ui/container";
 import { Flex } from "@welpco/ui/flex";
@@ -19,6 +20,7 @@ import { useBrowseJobPostings, useMyJobPostings } from "@/lib/hooks/use-job-post
 import { useState } from "react";
 import type { JobApplyBlockReason, JobPostingListItem } from "@/lib/services/job-posting.service";
 import { isJobOpenForWelperApplications } from "@/lib/marketplace/apply-block-messages";
+import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 import { PlusIcon, SearchIcon, FileTextIcon } from "lucide-react";
 
 function formatLocation(city?: string | null, region?: string | null): string | undefined {
@@ -26,11 +28,11 @@ function formatLocation(city?: string | null, region?: string | null): string | 
   return city ?? region ?? undefined;
 }
 
-function formatScheduleDate(value?: string | null): string | undefined {
+function formatScheduleDate(value: string | null | undefined, locale: string): string | undefined {
   if (!value) return undefined;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -44,6 +46,8 @@ function formatTimeRange(start?: string | null, end?: string | null): string | u
 
 export default function MarketplacePageClient() {
   const router = useRouter();
+  const locale = useLocale();
+  const labels = useMarketplaceLabels();
   const { user } = useAuthStore();
   const isCustomer = user?.role === "customer";
   const isWelper = user?.role === "welper";
@@ -103,12 +107,24 @@ export default function MarketplacePageClient() {
       key={job.id}
       layout={viewMode}
       title={job.title}
-      category={job.subcategoryLabel ?? job.categoryLabel ?? "Service"}
-      scheduledDate={formatScheduleDate(job.scheduledDate)}
+      category={job.subcategoryLabel ?? job.categoryLabel ?? labels.card.defaultCategory}
+      scheduledDate={formatScheduleDate(job.scheduledDate, locale)}
       scheduledTime={formatTimeRange(job.scheduledStartTime, job.scheduledEndTime)}
       location={formatLocation(job.locationCity, job.locationRegion)}
-      createdAt={job.publishedAt ? new Date(job.publishedAt).toLocaleDateString() : undefined}
+      createdAt={
+        job.publishedAt
+          ? new Date(job.publishedAt).toLocaleDateString(locale)
+          : undefined
+      }
       status={job.status as import("@welpco/ui/platform").JobStatus}
+      labels={{
+        viewDetails: labels.card.viewDetails,
+        apply: labels.card.apply,
+        applied: labels.card.applied,
+        noApplicationsYet: labels.card.noApplicationsYet,
+        applicationCount: labels.card.applicationCount,
+        posted: labels.card.posted,
+      }}
       customerName={isWelper ? job.customerDisplayName : undefined}
       customerPhotoUrl={isWelper ? job.customerPhotoUrl : undefined}
       applicationCount={isCustomer ? job.applicationCount : undefined}
@@ -130,12 +146,10 @@ export default function MarketplacePageClient() {
         <Flex justify="between" align="start" gap="4" wrap="wrap">
           <Box style={{ maxWidth: "640px" }}>
             <Heading size="7" mb="1">
-              {isCustomer ? "My job posts" : "Marketplace"}
+              {isCustomer ? labels.list.titleCustomer : labels.list.titleWelper}
             </Heading>
             <Text size="3" color="gray">
-              {isCustomer
-                ? "Post a job when you can't find the right welper through search, then review who applies."
-                : "Browse open jobs from customers nearby. You need a matching service offering to apply."}
+              {isCustomer ? labels.list.subtitleCustomer : labels.list.subtitleWelper}
             </Text>
           </Box>
           {isCustomer && (
@@ -145,7 +159,7 @@ export default function MarketplacePageClient() {
               onClick={() => router.push("/dashboard/marketplace/new")}
             >
               <PlusIcon size={16} aria-hidden />
-              Post a job
+              {labels.list.postJob}
             </Button>
           )}
         </Flex>
@@ -173,7 +187,7 @@ export default function MarketplacePageClient() {
             <Text size="2" color="gray">
               {isLoading || typeof totalCount !== "number"
                 ? ""
-                : `${totalCount} ${totalCount === 1 ? "job post" : "job posts"}`}
+                : labels.list.jobPostCount(totalCount)}
             </Text>
             {showToggle && (
               <MarketplaceViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
@@ -188,7 +202,7 @@ export default function MarketplacePageClient() {
                 ? customerQuery.error.message
                 : welperQuery.error instanceof Error
                   ? welperQuery.error.message
-                  : "Could not load jobs. Please try again."}
+                  : labels.list.loadFailed}
             </Callout.Text>
           </Callout.Root>
         )}
@@ -205,6 +219,7 @@ export default function MarketplacePageClient() {
           <EmptyState
             isCustomer={Boolean(isCustomer)}
             hasFilters={Boolean(hasFilters)}
+            labels={labels}
             onPostJob={() => router.push("/dashboard/marketplace/new")}
             onClearFilters={clearFilters}
           />
@@ -237,25 +252,27 @@ export default function MarketplacePageClient() {
 function EmptyState({
   isCustomer,
   hasFilters,
+  labels,
   onPostJob,
   onClearFilters,
 }: {
   isCustomer: boolean;
   hasFilters: boolean;
+  labels: ReturnType<typeof useMarketplaceLabels>;
   onPostJob: () => void;
   onClearFilters: () => void;
 }) {
   const Icon = isCustomer ? FileTextIcon : SearchIcon;
   const title = isCustomer
-    ? "No job posts yet"
+    ? labels.list.empty.customerTitle
     : hasFilters
-      ? "No jobs match your filters"
-      : "No open jobs right now";
+      ? labels.list.empty.welperFilteredTitle
+      : labels.list.empty.welperNoFiltersTitle;
   const description = isCustomer
-    ? "When you post a job, it'll appear here so you can track applications and pick a welper."
+    ? labels.list.empty.customerDescription
     : hasFilters
-      ? "Try widening your search — clear the category or turn off the eligibility filter."
-      : "Check back soon, or adjust your service offerings so more jobs become available to you.";
+      ? labels.list.empty.welperFilteredDescription
+      : labels.list.empty.welperNoFiltersDescription;
 
   return (
     <Flex
@@ -290,12 +307,12 @@ function EmptyState({
       {isCustomer && (
         <Button color={SEMANTIC_COLOR.primary} size="3" onClick={onPostJob}>
           <PlusIcon size={16} aria-hidden />
-          Post your first job
+          {labels.list.empty.customerCta}
         </Button>
       )}
       {!isCustomer && hasFilters && (
         <Button variant="soft" color="gray" size="2" onClick={onClearFilters}>
-          Clear filters
+          {labels.list.empty.clearFilters}
         </Button>
       )}
     </Flex>

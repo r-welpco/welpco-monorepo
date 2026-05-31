@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useLocale } from "next-intl";
 import { Box } from "@welpco/ui/box";
 import { Card } from "@welpco/ui/card";
 import { Flex } from "@welpco/ui/flex";
@@ -12,6 +13,7 @@ import { Callout } from "@welpco/ui/callout";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useServiceQuestions } from "@/lib/hooks/use-bookings";
 import { buildAnswerDisplayRows } from "@/lib/services/service-questions-utils";
+import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 
 function formatDuration(minutes: number): string {
   const h = Math.floor(minutes / 60);
@@ -21,10 +23,10 @@ function formatDuration(minutes: number): string {
   return `${h}h ${m}m`;
 }
 
-function formatScheduleDate(date: string): string {
+function formatScheduleDate(date: string, locale: string): string {
   const parsed = new Date(`${date}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) return date;
-  return parsed.toLocaleDateString(undefined, {
+  return parsed.toLocaleDateString(locale, {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -68,6 +70,8 @@ export function JobPostingReviewSummary({
   serviceQuestionCategoryId,
   embedded = false,
 }: JobPostingReviewSummaryProps) {
+  const locale = useLocale();
+  const labels = useMarketplaceLabels();
   const {
     data: serviceQuestions,
     isLoading: questionsLoading,
@@ -88,7 +92,7 @@ export function JobPostingReviewSummary({
       <Flex direction="column" gap={FORM_SPACING.sectionGap}>
         <Box>
           <Heading size="5" trim="start" mb={FORM_SPACING.titleGap}>
-            Job details
+            {labels.reviewSummary.jobDetails}
           </Heading>
           <Text size="3" weight="bold" style={{ display: "block" }}>
             {title}
@@ -109,10 +113,10 @@ export function JobPostingReviewSummary({
 
         <Box>
           <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>
-            Schedule
+            {labels.reviewSummary.schedule}
           </Text>
           <Text size="2" style={{ display: "block" }}>
-            {formatScheduleDate(scheduledDate)}
+            {formatScheduleDate(scheduledDate, locale)}
           </Text>
           <Text size="2" color="gray" highContrast>
             {`${scheduledStartTime} – ${scheduledEndTime} (${formatDuration(durationMinutes)})`}
@@ -122,7 +126,7 @@ export function JobPostingReviewSummary({
         {locationLine && (
           <Box>
             <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>
-              Location
+              {labels.reviewSummary.location}
             </Text>
             <Text size="2">{locationLine}</Text>
           </Box>
@@ -132,7 +136,7 @@ export function JobPostingReviewSummary({
 
         <Box>
           <Heading size="4" trim="start" mb={FORM_SPACING.titleGap}>
-            Service questions
+            {labels.reviewSummary.serviceQuestions}
           </Heading>
           {questionsLoading && (
             <Flex direction="column" gap="2">
@@ -142,12 +146,12 @@ export function JobPostingReviewSummary({
           )}
           {questionsError && (
             <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface">
-              <Callout.Text>Could not load service questions.</Callout.Text>
+              <Callout.Text>{labels.reviewSummary.questionsLoadFailed}</Callout.Text>
             </Callout.Root>
           )}
           {!questionsLoading && !questionsError && answerRows.length === 0 && (
             <Text size="2" color="gray">
-              No additional service details were provided.
+              {labels.reviewSummary.noServiceDetails}
             </Text>
           )}
           {!questionsLoading && !questionsError && answerRows.length > 0 && (

@@ -24,6 +24,7 @@ import {
   type ServiceOfferingValidationLabels,
   type ServiceOfferingValues,
 } from "./service-offering-schema";
+import { WelperRateCustomerChargeHint } from "./welper-rate-customer-charge-hint";
 import type { AddressInputLabels } from "./address-input";
 import type { ServiceAreaSelectorLabels } from "./service-area-selector";
 
@@ -39,6 +40,8 @@ export type ServiceOfferingFormLabels = {
   subcategoriesOptional: string;
   subcategoriesHint: string;
   hourlyRate: string;
+  /** Shown under the rate field — welper sets y, customers are charged x = y / 0.75. */
+  customerChargeHint?: (formattedCustomerCharge: string) => string;
   experienceYears: string;
   description: string;
   descriptionPlaceholder: string;
@@ -214,12 +217,14 @@ function RateAndExperienceFields({
   loading?: boolean;
   labels?: ServiceOfferingFormLabels;
 }) {
+  const welperRate = form.watch("hourlyRate");
+
   return (
     <Box mb={FORM_SPACING.fieldGap}>
       <Flex gap="3" direction={{ initial: "column", sm: "row" }}>
         <Box style={{ flex: 1 }}>
           <Text as="label" size="2" weight="bold" htmlFor="service-rate" mb={FORM_SPACING.labelGap}>
-            {labels?.hourlyRate ?? "Hourly rate ($)"}
+            {labels?.hourlyRate ?? "Your hourly rate ($)"}
             <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
           </Text>
           <TextField.Root
@@ -235,6 +240,10 @@ function RateAndExperienceFields({
           {form.formState.errors.hourlyRate && (
             <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>{form.formState.errors.hourlyRate.message}</Text>
           )}
+          <WelperRateCustomerChargeHint
+            welperRate={welperRate}
+            formatMessage={labels?.customerChargeHint}
+          />
         </Box>
         <Box style={{ flex: 1 }}>
           <Text as="label" size="2" weight="bold" htmlFor="service-experience" mb={FORM_SPACING.labelGap}>

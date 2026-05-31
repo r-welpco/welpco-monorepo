@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { ProfilePhotoUploadLabels } from "@welpco/ui/platform/profile-management";
 import type { BookingStatus } from "@/lib/services/booking-service";
 import { useAuthRegisterStep } from "@/lib/i18n/auth-message-templates";
@@ -611,6 +611,8 @@ export function useWelperBookingDetailLabels() {
       cancel: t("confirmCheckInCancel"),
     },
     checkInFailed: t("checkInFailed"),
+    checkInLateHint: t("checkInLateHint"),
+    paymentReleasedPayoutNote: t("paymentReleasedPayoutNote"),
     receiptDialog: {
       title: t("receiptDialogTitle"),
       description: t("receiptDialogDescription"),
@@ -690,6 +692,7 @@ export function useWelperServiceOfferingFormLabels() {
     subcategoriesOptional: t("subcategoriesOptional"),
     subcategoriesHint: t("subcategoriesHint"),
     hourlyRate: t("hourlyRate"),
+    customerChargeHint: (charge: string) => t("customerChargeHint", { charge }),
     experienceYears: t("experienceYears"),
     description: t("description"),
     descriptionPlaceholder: t("descriptionPlaceholder"),
@@ -908,6 +911,199 @@ export function useDashboardSettingsFormLabels() {
     deleteConfirmLabel: t("deleteConfirmLabel"),
     deleteSubmit: t("deleteSubmit"),
     deleteCancel: t("deleteCancel"),
+  };
+}
+
+import type { JobApplyBlockReason } from "@/lib/services/job-posting.service";
+import type { JobStatus } from "@welpco/ui/platform";
+
+const MARKETPLACE_JOB_STATUSES = new Set<JobStatus>([
+  "published",
+  "applications_open",
+  "converted_to_booking",
+  "completed",
+  "expired",
+  "cancelled",
+  "draft",
+  "open",
+  "reviewing",
+  "shortlisted",
+  "interviewing",
+  "offer",
+  "filled",
+]);
+
+export function useMarketplaceLabels() {
+  const locale = useLocale();
+  const t = useTranslations("dashboard.marketplace");
+
+  const statusLabel = useCallback(
+    (status: JobStatus) => {
+      if (MARKETPLACE_JOB_STATUSES.has(status)) {
+        return t(`status.${status}`);
+      }
+      return status.replace(/_/g, " ");
+    },
+    [t],
+  );
+
+  const applyBlockMessage = useCallback(
+    (reason: JobApplyBlockReason) => t(`applyBlocked.${reason}`),
+    [t],
+  );
+
+  return {
+    list: {
+      titleCustomer: t("list.titleCustomer"),
+      titleWelper: t("list.titleWelper"),
+      subtitleCustomer: t("list.subtitleCustomer"),
+      subtitleWelper: t("list.subtitleWelper"),
+      postJob: t("list.postJob"),
+      loadFailed: t("list.loadFailed"),
+      jobPostCount: (count: number) => t("list.jobPostCount", { count }),
+      empty: {
+        customerTitle: t("list.empty.customerTitle"),
+        customerDescription: t("list.empty.customerDescription"),
+        customerCta: t("list.empty.customerCta"),
+        welperNoFiltersTitle: t("list.empty.welperNoFiltersTitle"),
+        welperNoFiltersDescription: t("list.empty.welperNoFiltersDescription"),
+        welperFilteredTitle: t("list.empty.welperFilteredTitle"),
+        welperFilteredDescription: t("list.empty.welperFilteredDescription"),
+        clearFilters: t("list.empty.clearFilters"),
+      },
+    },
+    filters: {
+      title: t("filters.title"),
+      allCategories: t("filters.allCategories"),
+      allServices: t("filters.allServices"),
+      eligibleOnly: t("filters.eligibleOnly"),
+      canApplyChip: t("filters.canApplyChip"),
+      noJobsFound: t("filters.noJobsFound"),
+      jobCount: (count: number) => t("filters.jobCount", { count }),
+      clearAll: t("filters.clearAll"),
+      removeFilterAria: (label: string) => t("filters.removeFilterAria", { label }),
+    },
+    viewToggle: {
+      label: t("viewToggle.label"),
+      listAria: t("viewToggle.listAria"),
+      gridAria: t("viewToggle.gridAria"),
+    },
+    card: {
+      defaultCategory: t("card.defaultCategory"),
+      viewDetails: t("card.viewDetails"),
+      apply: t("card.apply"),
+      applied: t("card.applied"),
+      noApplicationsYet: t("card.noApplicationsYet"),
+      applicationCount: (count: number) => t("card.applicationCount", { count }),
+      posted: (date: string) => t("card.posted", { date }),
+    },
+    statusLabel,
+    new: {
+      title: t("new.title"),
+      stepOf: (step: number, stepName: string) => t("new.stepOf", { step, stepName }),
+      stepCategory: t("new.stepCategory"),
+      stepDetails: t("new.stepDetails"),
+      profileIncomplete: t("new.profileIncomplete"),
+      category: t("new.category"),
+      subcategory: t("new.subcategory"),
+      selectCategory: t("new.selectCategory"),
+      selectSubcategory: t("new.selectSubcategory"),
+      continue: t("new.continue"),
+      aboutJob: t("new.aboutJob"),
+      titleLabel: t("new.titleLabel"),
+      serviceQuestions: t("new.serviceQuestions"),
+      noServiceQuestions: t("new.noServiceQuestions"),
+      when: t("new.when"),
+      date: t("new.date"),
+      startTime: t("new.startTime"),
+      endTime: t("new.endTime"),
+      endAfterStart: t("new.endAfterStart"),
+      minDuration: t("new.minDuration"),
+      serviceLocation: (address: string) => t("new.serviceLocation", { address }),
+      back: t("new.back"),
+      posting: t("new.posting"),
+      postJob: t("new.postJob"),
+      submitFailed: t("new.submitFailed"),
+    },
+    detail: {
+      back: t("detail.back"),
+      notFound: t("detail.notFound"),
+      date: t("detail.date"),
+      time: t("detail.time"),
+      duration: t("detail.duration"),
+      location: t("detail.location"),
+      applications: t("detail.applications"),
+      closes: t("detail.closes"),
+      cancelJob: t("detail.cancelJob"),
+      applyToJob: t("detail.applyToJob"),
+      yourApplication: t("detail.yourApplication"),
+      withdrawApplication: t("detail.withdrawApplication"),
+      aboutJob: t("detail.aboutJob"),
+      serviceAddress: (address: string) => t("detail.serviceAddress", { address }),
+      applicationsTitle: t("detail.applicationsTitle"),
+      noApplicationsTitle: t("detail.noApplicationsTitle"),
+      noApplicationsDescription: t("detail.noApplicationsDescription"),
+      welperFallback: t("detail.welperFallback"),
+      viewLinkedBooking: t("detail.viewLinkedBooking"),
+      applyDialogTitle: t("detail.applyDialogTitle"),
+      applyDialogReviewDescription: t("detail.applyDialogReviewDescription"),
+      applyDialogSubmitDescription: t("detail.applyDialogSubmitDescription"),
+      applyStepReview: t("detail.applyStepReview"),
+      applyStepSubmit: t("detail.applyStepSubmit"),
+      cancel: t("detail.cancel"),
+      continueToProposal: t("detail.continueToProposal"),
+      submitApplication: t("detail.submitApplication"),
+      applyFailed: t("detail.applyFailed"),
+      applicationStatus: (status: "pending" | "accepted" | "rejected" | "withdrawn") => ({
+        label: t(`detail.applicationStatus.${status}.label`),
+        helper: t(`detail.applicationStatus.${status}.helper`),
+      }),
+    },
+    applyBlocked: {
+      title: t("applyBlocked.title"),
+      close: t("applyBlocked.close"),
+      manageOfferings: t("applyBlocked.manageOfferings"),
+      completeProfile: t("applyBlocked.completeProfile"),
+      message: applyBlockMessage,
+    },
+    reviewSummary: {
+      jobDetails: t("reviewSummary.jobDetails"),
+      schedule: t("reviewSummary.schedule"),
+      location: t("reviewSummary.location"),
+      serviceQuestions: t("reviewSummary.serviceQuestions"),
+      questionsLoadFailed: t("reviewSummary.questionsLoadFailed"),
+      noServiceDetails: t("reviewSummary.noServiceDetails"),
+    },
+    applicationForm: {
+      title: t("applicationForm.title"),
+      subtitle: t("applicationForm.subtitle"),
+      serviceOffering: t("applicationForm.serviceOffering"),
+      selectOffering: t("applicationForm.selectOffering"),
+      selectOfferingError: t("applicationForm.selectOfferingError"),
+      yourRate: (rate: number) => {
+        const formatted = locale === "fr" ? `${rate} $` : `$${rate}`;
+        return t("applicationForm.yourRate", { rate: formatted });
+      },
+      proposalMessage: t("applicationForm.proposalMessage"),
+      proposalPlaceholder: t("applicationForm.proposalPlaceholder"),
+      proposalMinError: t("applicationForm.proposalMinError"),
+      submitting: t("applicationForm.submitting"),
+      submit: t("applicationForm.submit"),
+    },
+    applicationReview: {
+      verified: t("applicationReview.verified"),
+      applied: (date: string) => t("applicationReview.applied", { date }),
+      sendBookingRequest: t("applicationReview.sendBookingRequest"),
+      statusLabel: (status: "pending" | "accepted" | "rejected" | "withdrawn") =>
+        t(`applicationReview.status.${status}`),
+    },
+    searchEmpty: {
+      postJob: t("searchEmpty.postJob"),
+    },
+    bookingHandoff: {
+      linkedCallout: t("bookingHandoff.linkedCallout"),
+      pageSubtitle: (jobTitle: string) => t("bookingHandoff.pageSubtitle", { jobTitle }),
+    },
   };
 }
 

@@ -219,6 +219,7 @@ export function useWelperOfferingStepLabels(maxServices: number): WelperOffering
     subcategory: t("subcategory"),
     serviceTitle: t("serviceTitle"),
     hourlyRate: t("hourlyRate"),
+    customerChargeHint: (charge) => t("customerChargeHint", { charge }),
     descriptionLabel: t("descriptionLabel"),
     addToList: t("addToList"),
     loadingCategories: t("loadingCategories"),
@@ -317,6 +318,15 @@ export function useWelperPayoutStepLabels(): WelperPayoutStepLabels {
     connectDescription: t("connectDescription"),
     connectCta: t("connectCta"),
     connectInProgress: t("connectInProgress"),
+    stripeSetupGuideTitle: t("stripeSetupGuideTitle"),
+    stripeSetupGuideIntro: t("stripeSetupGuideIntro"),
+    stripeSetupStepBusinessType: t("stripeSetupStepBusinessType"),
+    stripeSetupStepPersonalDetails: t("stripeSetupStepPersonalDetails"),
+    stripeSetupBusinessDetailsLead: t("stripeSetupBusinessDetailsLead"),
+    stripeSetupBusinessIndustry: t("stripeSetupBusinessIndustry"),
+    stripeSetupBusinessWebsite: t("stripeSetupBusinessWebsite"),
+    stripeSetupBusinessProduct: t("stripeSetupBusinessProduct"),
+    stripeSetupStepBankDetails: t("stripeSetupStepBankDetails"),
   };
 }
 

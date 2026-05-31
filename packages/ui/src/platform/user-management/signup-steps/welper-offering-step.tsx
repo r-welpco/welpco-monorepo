@@ -26,6 +26,7 @@ import {
   type WelperOfferingStepLabels,
 } from "./labels";
 import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite } from "./types";
+import { WelperRateCustomerChargeHint } from "../../profile-management/welper-rate-customer-charge-hint";
 
 export interface WelperOfferingCategoryOption {
   id: string;
@@ -164,6 +165,7 @@ export function WelperOfferingStep({
   });
 
   const parentCategoryId = form.watch("parentCategoryId");
+  const welperRate = form.watch("hourlyRate");
   const subcategoryOptions = parentCategoryId
     ? (subcategoriesByParent.get(parentCategoryId) ?? [])
     : [];
@@ -468,6 +470,10 @@ export function WelperOfferingStep({
                   {form.formState.errors.hourlyRate.message}
                 </Text>
               )}
+              <WelperRateCustomerChargeHint
+                welperRate={welperRate}
+                formatMessage={labels.customerChargeHint}
+              />
             </Box>
 
             <Box mb={FORM_SPACING.fieldGap}>

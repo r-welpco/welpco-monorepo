@@ -25,6 +25,34 @@ export interface MatchingOfferingOption {
   serviceDescription: string;
 }
 
+export interface JobApplicationFormLabels {
+  title: string;
+  subtitle: string;
+  serviceOffering: string;
+  selectOffering: string;
+  selectOfferingError: string;
+  yourRate: (rate: number) => string;
+  proposalMessage: string;
+  proposalPlaceholder: string;
+  proposalMinError: string;
+  submitting: string;
+  submit: string;
+}
+
+const DEFAULT_FORM_LABELS: JobApplicationFormLabels = {
+  title: "Submit application",
+  subtitle: "Share a brief proposal. Your hourly rate comes from the selected offering.",
+  serviceOffering: "Service offering",
+  selectOffering: "Select offering",
+  selectOfferingError: "Select an offering",
+  yourRate: (rate) => `Your rate: $${rate}/hr`,
+  proposalMessage: "Proposal message",
+  proposalPlaceholder: "Explain your fit, relevant experience, and approach.",
+  proposalMinError: "Provide at least 10 characters",
+  submitting: "Submitting…",
+  submit: "Submit application",
+};
+
 export interface JobApplicationFormProps {
   matchingOfferings: MatchingOfferingOption[];
   loading?: boolean;
@@ -36,14 +64,19 @@ export interface JobApplicationFormProps {
   formId?: string;
   /** Hide the built-in submit button (use with `formId` + an external submit button). */
   hideSubmit?: boolean;
+  labels?: JobApplicationFormLabels;
 }
 
-const schema = z.object({
-  offeringId: z.string().min(1, "Select an offering"),
-  proposalMessage: z.string().min(10, "Provide at least 10 characters").max(2000),
-});
+const schema = (labels: JobApplicationFormLabels) =>
+  z.object({
+    offeringId: z.string().min(1, labels.selectOfferingError),
+    proposalMessage: z
+      .string()
+      .min(10, labels.proposalMinError)
+      .max(2000),
+  });
 
-export type JobApplicationValues = z.infer<typeof schema>;
+export type JobApplicationValues = z.infer<ReturnType<typeof schema>>;
 
 export function JobApplicationForm({
   matchingOfferings,
@@ -53,10 +86,12 @@ export function JobApplicationForm({
   embedded = false,
   formId,
   hideSubmit = false,
+  labels: labelsProp,
 }: JobApplicationFormProps) {
+  const labels = labelsProp ?? DEFAULT_FORM_LABELS;
   const defaultOfferingId = matchingOfferings.length === 1 ? matchingOfferings[0]!.id : "";
   const form = useForm<JobApplicationValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema(labels)),
     defaultValues: {
       offeringId: defaultOfferingId,
       proposalMessage: "",
@@ -75,10 +110,10 @@ export function JobApplicationForm({
         {!embedded && (
           <Box>
             <Heading size="6" trim="start" mb={FORM_SPACING.titleGap}>
-              Submit application
+              {labels.title}
             </Heading>
             <Text size="2" color="gray" highContrast>
-              Share a brief proposal. Your hourly rate comes from the selected offering.
+              {labels.subtitle}
             </Text>
           </Box>
         )}
@@ -94,7 +129,7 @@ export function JobApplicationForm({
             {matchingOfferings.length > 1 && (
               <Box>
                 <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap}>
-                  Service offering
+                  {labels.serviceOffering}
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
                 </Text>
                 <Controller
@@ -102,7 +137,7 @@ export function JobApplicationForm({
                   name="offeringId"
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange} disabled={loading}>
-                      <SelectTrigger placeholder="Select offering" />
+                      <SelectTrigger placeholder={labels.selectOffering} />
                       <SelectContent>
                         {matchingOfferings.map((o) => (
                           <SelectItem key={o.id} value={o.id}>
@@ -124,20 +159,20 @@ export function JobApplicationForm({
             {selectedOffering && (
               <Callout.Root color={SEMANTIC_COLOR.info} variant="surface">
                 <Callout.Text>
-                  {`Your rate: $${selectedOffering.hourlyRate}/hr`}
+                  {labels.yourRate(selectedOffering.hourlyRate)}
                 </Callout.Text>
               </Callout.Root>
             )}
 
             <Box>
               <Text as="label" size="2" weight="bold" htmlFor="application-proposal" mb={FORM_SPACING.labelGap}>
-                Proposal message
+                {labels.proposalMessage}
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
               <TextArea
                 id="application-proposal"
                 rows={5}
-                placeholder="Explain your fit, relevant experience, and approach."
+                placeholder={labels.proposalPlaceholder}
                 size="3"
                 disabled={loading}
                 aria-required="true"
@@ -152,7 +187,7 @@ export function JobApplicationForm({
 
             {!hideSubmit && (
               <Button type="submit" size="3" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
-                {loading ? "Submitting…" : "Submit application"}
+                {loading ? labels.submitting : labels.submit}
               </Button>
             )}
           </form>

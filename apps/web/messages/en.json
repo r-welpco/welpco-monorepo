@@ -987,7 +987,8 @@
           "category": "Category",
           "subcategory": "Subcategory",
           "serviceTitle": "Service title",
-          "hourlyRate": "Hourly rate ($)",
+          "hourlyRate": "Your hourly rate ($)",
+          "customerChargeHint": "Customers will be charged {charge}/hr for this service.",
           "descriptionLabel": "Description",
           "addToList": "Add to list",
           "loadingCategories": "Loading categories...",
@@ -1054,7 +1055,16 @@
           "connectDescription": "Bank-grade identity and account verification, hosted by Stripe. Once it's done, you can accept paying bookings.",
           "connectCta": "Set up payouts with Stripe",
           "connectInProgress": "Opening Stripe…",
-          "continue": "Continue"
+          "continue": "Continue",
+          "stripeSetupGuideTitle": "How do I set up my Stripe account?",
+          "stripeSetupGuideIntro": "When creating your Welper profile, there will be a step to create your Stripe account. Once you create your login, simply follow the directions below:",
+          "stripeSetupStepBusinessType": "Business type: Select \"Individual or Sole proprietorship.\"",
+          "stripeSetupStepPersonalDetails": "Personal details: for \"Job Title\" you can enter \"Contractor\" or more specifically \"Dog walker,\" \"House cleaner,\" \"Cook,\" etc.",
+          "stripeSetupBusinessDetailsLead": "Business details:",
+          "stripeSetupBusinessIndustry": "Industry: select \"Personal Services – Other personal services.\"",
+          "stripeSetupBusinessWebsite": "Your website: www.welpco.com",
+          "stripeSetupBusinessProduct": "Product description: provide a brief description of the services you offer.",
+          "stripeSetupStepBankDetails": "Bank details: enter your personal bank account details to receive your weekly payout."
         },
         "optionalProfile": {
           "title": "Finish your profile",
@@ -1361,6 +1371,193 @@
         "cancelReasonPlaceholder": "e.g. Plans changed, found another welper"
       }
     },
+    "marketplace": {
+      "list": {
+        "titleCustomer": "My job posts",
+        "titleWelper": "Marketplace",
+        "subtitleCustomer": "Post a job when you can't find the right welper through search, then review who applies.",
+        "subtitleWelper": "Browse open jobs from customers nearby. You need a matching service offering to apply.",
+        "postJob": "Post a job",
+        "loadFailed": "Could not load jobs. Please try again.",
+        "jobPostCount": "{count, plural, one {# job post} other {# job posts}}",
+        "empty": {
+          "customerTitle": "No job posts yet",
+          "customerDescription": "When you post a job, it'll appear here so you can track applications and pick a welper.",
+          "customerCta": "Post your first job",
+          "welperNoFiltersTitle": "No open jobs right now",
+          "welperNoFiltersDescription": "Check back soon, or adjust your service offerings so more jobs become available to you.",
+          "welperFilteredTitle": "No jobs match your filters",
+          "welperFilteredDescription": "Try widening your search — clear the category or turn off the eligibility filter.",
+          "clearFilters": "Clear filters"
+        }
+      },
+      "filters": {
+        "title": "Filters",
+        "allCategories": "All categories",
+        "allServices": "All services",
+        "eligibleOnly": "Only jobs I can apply to",
+        "canApplyChip": "Can apply",
+        "noJobsFound": "No jobs found",
+        "jobCount": "{count, plural, one {# job} other {# jobs}}",
+        "clearAll": "Clear all",
+        "removeFilterAria": "Remove {label} filter"
+      },
+      "viewToggle": {
+        "label": "View",
+        "listAria": "List view",
+        "gridAria": "Grid view"
+      },
+      "card": {
+        "defaultCategory": "Service",
+        "viewDetails": "View details",
+        "apply": "Apply",
+        "applied": "Applied",
+        "noApplicationsYet": "No applications yet",
+        "applicationCount": "{count, plural, one {# application} other {# applications}}",
+        "posted": "Posted {date}"
+      },
+      "status": {
+        "published": "Open",
+        "applications_open": "Applications open",
+        "converted_to_booking": "Booking sent",
+        "completed": "Completed",
+        "expired": "Expired",
+        "cancelled": "Cancelled",
+        "draft": "Draft",
+        "open": "Open",
+        "reviewing": "Reviewing",
+        "shortlisted": "Shortlisted",
+        "interviewing": "Interviewing",
+        "offer": "Offer",
+        "filled": "Filled"
+      },
+      "new": {
+        "title": "Post a job",
+        "stepOf": "Step {step} of 2 — {stepName}",
+        "stepCategory": "Category",
+        "stepDetails": "Job details",
+        "profileIncomplete": "Complete your profile in Settings before posting a job.",
+        "category": "Category",
+        "subcategory": "Subcategory",
+        "selectCategory": "Select category",
+        "selectSubcategory": "Select subcategory",
+        "continue": "Continue",
+        "aboutJob": "About this job",
+        "titleLabel": "Title",
+        "serviceQuestions": "Service questions",
+        "noServiceQuestions": "No additional questions for this service.",
+        "when": "When",
+        "date": "Date",
+        "startTime": "Start time",
+        "endTime": "End time",
+        "endAfterStart": "End time must be after start time.",
+        "minDuration": "Jobs must be at least 1 hour long.",
+        "serviceLocation": "Service location: {address}",
+        "back": "Back",
+        "posting": "Posting…",
+        "postJob": "Post job",
+        "submitFailed": "Failed to post job."
+      },
+      "detail": {
+        "back": "Back to marketplace",
+        "notFound": "We couldn't find this job. It may have been removed or expired.",
+        "date": "Date",
+        "time": "Time",
+        "duration": "Duration",
+        "location": "Location",
+        "applications": "Applications",
+        "closes": "Closes",
+        "cancelJob": "Cancel job",
+        "applyToJob": "Apply to this job",
+        "yourApplication": "Your application",
+        "withdrawApplication": "Withdraw application",
+        "aboutJob": "About this job",
+        "serviceAddress": "Service address: {address}",
+        "applicationsTitle": "Applications",
+        "noApplicationsTitle": "No applications yet",
+        "noApplicationsDescription": "Welpers who match this job will appear here as they apply.",
+        "welperFallback": "Welper",
+        "viewLinkedBooking": "View linked booking",
+        "applyDialogTitle": "Apply to this job",
+        "applyDialogReviewDescription": "Check the job details and the customer's answers before you write your proposal.",
+        "applyDialogSubmitDescription": "Pick the offering you'll deliver this with and introduce yourself to the customer.",
+        "applyStepReview": "Review job",
+        "applyStepSubmit": "Your proposal",
+        "cancel": "Cancel",
+        "continueToProposal": "Continue to proposal",
+        "submitApplication": "Submit application",
+        "applyFailed": "Failed to apply.",
+        "applicationStatus": {
+          "pending": {
+            "label": "Pending",
+            "helper": "Your application is in — the customer will review it and reach out if it's a match."
+          },
+          "accepted": {
+            "label": "Selected",
+            "helper": "You've been selected. The customer will send you a booking request shortly."
+          },
+          "rejected": {
+            "label": "Not selected",
+            "helper": "This application wasn't selected this time. Keep an eye out for other jobs."
+          },
+          "withdrawn": {
+            "label": "Withdrawn",
+            "helper": "You withdrew this application."
+          }
+        }
+      },
+      "applyBlocked": {
+        "title": "Cannot apply yet",
+        "close": "Close",
+        "manageOfferings": "Manage offerings",
+        "completeProfile": "Complete profile",
+        "NOT_DISCOVERABLE": "Complete your profile setup and background check to appear in search before applying.",
+        "NO_MATCHING_OFFERING": "Add an active service offering that includes this job's subcategory before you can apply.",
+        "JOB_CLOSED": "This job is no longer accepting applications.",
+        "JOB_EXPIRED": "This job has expired.",
+        "APPLICATION_CAP_REACHED": "This job has reached the maximum number of applications.",
+        "ALREADY_APPLIED": "You have already applied to this job."
+      },
+      "reviewSummary": {
+        "jobDetails": "Job details",
+        "schedule": "Schedule",
+        "location": "Location",
+        "serviceQuestions": "Service questions",
+        "questionsLoadFailed": "Could not load service questions.",
+        "noServiceDetails": "No additional service details were provided."
+      },
+      "applicationForm": {
+        "title": "Submit application",
+        "subtitle": "Share a brief proposal. Your hourly rate comes from the selected offering.",
+        "serviceOffering": "Service offering",
+        "selectOffering": "Select offering",
+        "selectOfferingError": "Select an offering",
+        "yourRate": "Your rate: {rate}/hr",
+        "proposalMessage": "Proposal message",
+        "proposalPlaceholder": "Explain your fit, relevant experience, and approach.",
+        "proposalMinError": "Provide at least 10 characters",
+        "submitting": "Submitting…",
+        "submit": "Submit application"
+      },
+      "applicationReview": {
+        "verified": "Verified",
+        "applied": "Applied {date}",
+        "sendBookingRequest": "Send booking request",
+        "status": {
+          "pending": "Pending",
+          "accepted": "Selected",
+          "rejected": "Rejected",
+          "withdrawn": "Withdrawn"
+        }
+      },
+      "searchEmpty": {
+        "postJob": "Post a job"
+      },
+      "bookingHandoff": {
+        "linkedCallout": "This booking is linked to your marketplace job. Confirm the details below, then send the request.",
+        "pageSubtitle": "Review and send booking request for \"{jobTitle}\""
+      }
+    },
     "messages": {
       "title": "Messages",
       "subtitle": "Pick a booking to chat with your customer.",
@@ -1491,7 +1688,8 @@
           "category": "Category",
           "subcategoriesOptional": "Subcategories (optional)",
           "subcategoriesHint": "Select one or more subcategories that apply to this offering.",
-          "hourlyRate": "Hourly rate ($)",
+          "hourlyRate": "Your hourly rate ($)",
+          "customerChargeHint": "Customers will be charged {charge}/hr for this service.",
           "experienceYears": "Experience (years)",
           "description": "Description",
           "descriptionPlaceholder": "Explain what clients can expect, what's included, and any preparation needed.",
@@ -1625,6 +1823,8 @@
       "confirmCheckInConfirm": "Check in",
       "confirmCheckInCancel": "Not yet",
       "checkInFailed": "Failed to check in.",
+      "checkInLateHint": "Forgot to check in or check out on a completed job? No problem! You can now check in, check out, and adjust your hours after the job has been completed.",
+      "paymentReleasedPayoutNote": "Payouts will be processed every Friday of the following week for completed jobs.",
       "receiptDialogTitle": "Confirm service receipt",
       "receiptDialogDescription": "Adjust billing check-in and check-out if needed. The customer is charged the total shown when you confirm.",
       "receiptBillingIn": "Billing check-in",

@@ -1,7 +1,8 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLocale } from "next-intl";
 import { Box } from "@welpco/ui/box";
 import { Card } from "@welpco/ui/card";
 import { Container } from "@welpco/ui/container";
@@ -39,17 +40,18 @@ import {
   useWithdrawJobApplication,
 } from "@/lib/hooks/use-job-posting";
 import { ApiClientError } from "@/lib/api/client";
+import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 import { ArrowLeft, ArrowRight, Check, MapPin, Users2 } from "lucide-react";
 
 interface JobDetailPageClientProps {
   jobId: string;
 }
 
-function formatScheduleDate(value?: string | null): string {
+function formatScheduleDate(value: string | null | undefined, locale: string): string {
   if (!value) return "—";
   const parsed = new Date(`${value}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString(undefined, {
+  return parsed.toLocaleDateString(locale, {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -66,49 +68,24 @@ function formatDuration(minutes?: number): string {
   return `${h}h ${m}m`;
 }
 
-function formatDateTime(value?: string | null): string | null {
+function formatDateTime(value: string | null | undefined, locale: string): string | null {
   if (!value) return null;
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
-  return parsed.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return parsed.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
-const APPLICATION_STATUS: Record<
-  string,
-  { label: string; color: "blue" | "green" | "red" | "gray"; helper: string }
-> = {
-  pending: {
-    label: "Pending",
-    color: "blue",
-    helper: "Your application is in — the customer will review it and reach out if it's a match.",
-  },
-  accepted: {
-    label: "Selected",
-    color: "green",
-    helper: "You've been selected. The customer will send you a booking request shortly.",
-  },
-  rejected: {
-    label: "Not selected",
-    color: "red",
-    helper: "This application wasn't selected this time. Keep an eye out for other jobs.",
-  },
-  withdrawn: {
-    label: "Withdrawn",
-    color: "gray",
-    helper: "You withdrew this application.",
-  },
-};
-
-const APPLY_STEPS = [
-  { key: "review", label: "Review job" },
-  { key: "submit", label: "Your proposal" },
-] as const;
-
-function ApplyStepper({ activeIndex }: { activeIndex: number }) {
+function ApplyStepper({
+  activeIndex,
+  steps,
+}: {
+  activeIndex: number;
+  steps: readonly { key: string; label: string }[];
+}) {
   const primary = SEMANTIC_COLOR.primary;
   return (
     <Flex align="center" gap="2" aria-hidden>
-      {APPLY_STEPS.map((step, i) => {
+      {steps.map((step, i) => {
         const isActive = i === activeIndex;
         const isDone = i < activeIndex;
         const accent = isActive || isDone;
@@ -139,7 +116,7 @@ function ApplyStepper({ activeIndex }: { activeIndex: number }) {
                 {step.label}
               </Text>
             </Flex>
-            {i < APPLY_STEPS.length - 1 && (
+            {i < steps.length - 1 && (
               <Box
                 style={{ flex: 1, height: "1px", backgroundColor: "var(--gray-5)" }}
               />
@@ -150,6 +127,16 @@ function ApplyStepper({ activeIndex }: { activeIndex: number }) {
     </Flex>
   );
 }
+
+const APPLICATION_STATUS_COLORS: Record<
+  "pending" | "accepted" | "rejected" | "withdrawn",
+  "blue" | "green" | "red" | "gray"
+> = {
+  pending: "blue",
+  accepted: "green",
+  rejected: "red",
+  withdrawn: "gray",
+};
 
 function JobDetailSkeleton() {
   return (
@@ -182,6 +169,8 @@ function JobDetailSkeleton() {
 
 export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const labels = useMarketplaceLabels();
   const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const isCustomer = user?.role === "customer";
@@ -197,6 +186,41 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
   const [applyStep, setApplyStep] = useState<"review" | "submit">("review");
   const [applyError, setApplyError] = useState<string | null>(null);
   const [applyBlockedReason, setApplyBlockedReason] = useState<JobApplyBlockReason | null>(null);
+
+  const applySteps = useMemo(
+    () => [
+      { key: "review", label: labels.detail.applyStepReview },
+      { key: "submit", label: labels.detail.applyStepSubmit },
+    ],
+    [labels.detail.applyStepReview, labels.detail.applyStepSubmit],
+  );
+
+  const applicationReviewLabels = useMemo(
+    () => ({
+      verified: labels.applicationReview.verified,
+      applied: labels.applicationReview.applied,
+      sendBookingRequest: labels.applicationReview.sendBookingRequest,
+      statusLabel: labels.applicationReview.statusLabel,
+    }),
+    [labels.applicationReview],
+  );
+
+  const applicationFormLabels = useMemo(
+    () => ({
+      title: labels.applicationForm.title,
+      subtitle: labels.applicationForm.subtitle,
+      serviceOffering: labels.applicationForm.serviceOffering,
+      selectOffering: labels.applicationForm.selectOffering,
+      selectOfferingError: labels.applicationForm.selectOfferingError,
+      yourRate: labels.applicationForm.yourRate,
+      proposalMessage: labels.applicationForm.proposalMessage,
+      proposalPlaceholder: labels.applicationForm.proposalPlaceholder,
+      proposalMinError: labels.applicationForm.proposalMinError,
+      submitting: labels.applicationForm.submitting,
+      submit: labels.applicationForm.submit,
+    }),
+    [labels.applicationForm],
+  );
 
   useEffect(() => {
     if (applyOpen) {
@@ -239,10 +263,10 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
       <Container size="3" py="6">
         <Button variant="ghost" color="gray" mb="4" onClick={() => router.push("/dashboard/marketplace")}>
           <ArrowLeft size={16} aria-hidden />
-          Back to marketplace
+          {labels.detail.back}
         </Button>
         <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface">
-          <Callout.Text>We couldn't find this job. It may have been removed or expired.</Callout.Text>
+          <Callout.Text>{labels.detail.notFound}</Callout.Text>
         </Callout.Root>
       </Container>
     );
@@ -261,9 +285,14 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
       : job.locationCity ?? job.locationRegion ?? null;
 
   const serviceLabel = job.subcategoryLabel ?? job.categoryLabel;
-  const closesAt = formatDateTime(job.expiresAt);
+  const closesAt = formatDateTime(job.expiresAt, locale);
   const canApplyNow = isWelper && isJobOpenForWelperApplications(job.status) && !job.myApplicationId;
-  const appStatus = myApplication ? APPLICATION_STATUS[myApplication.status] : null;
+  const appStatus = myApplication
+    ? {
+        ...labels.detail.applicationStatus(myApplication.status),
+        color: APPLICATION_STATUS_COLORS[myApplication.status],
+      }
+    : null;
 
   return (
     <Container size="3" py="6">
@@ -271,7 +300,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
         <Box>
           <Button variant="ghost" color="gray" onClick={() => router.push("/dashboard/marketplace")}>
             <ArrowLeft size={16} aria-hidden />
-            Back to marketplace
+            {labels.detail.back}
           </Button>
         </Box>
 
@@ -290,7 +319,10 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                 </Heading>
               </Box>
               <Box style={{ flexShrink: 0 }}>
-                <JobStatusBadge status={job.status as import("@welpco/ui/platform").JobStatus} />
+                <JobStatusBadge
+                  status={job.status as import("@welpco/ui/platform").JobStatus}
+                  label={labels.statusLabel(job.status as import("@welpco/ui/platform").JobStatus)}
+                />
               </Box>
             </Flex>
 
@@ -301,28 +333,28 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
               size="2"
             >
               <DataListItem>
-                <DataListLabel minWidth="96px">Date</DataListLabel>
-                <DataListValue>{formatScheduleDate(job.scheduledDate)}</DataListValue>
+                <DataListLabel minWidth="96px">{labels.detail.date}</DataListLabel>
+                <DataListValue>{formatScheduleDate(job.scheduledDate, locale)}</DataListValue>
               </DataListItem>
               <DataListItem>
-                <DataListLabel minWidth="96px">Time</DataListLabel>
+                <DataListLabel minWidth="96px">{labels.detail.time}</DataListLabel>
                 <DataListValue>
                   {`${job.scheduledStartTime}–${job.scheduledEndTime}`}
                 </DataListValue>
               </DataListItem>
               <DataListItem>
-                <DataListLabel minWidth="96px">Duration</DataListLabel>
+                <DataListLabel minWidth="96px">{labels.detail.duration}</DataListLabel>
                 <DataListValue>{formatDuration(job.durationMinutes)}</DataListValue>
               </DataListItem>
               {locationLine && (
                 <DataListItem>
-                  <DataListLabel minWidth="96px">Location</DataListLabel>
+                  <DataListLabel minWidth="96px">{labels.detail.location}</DataListLabel>
                   <DataListValue>{locationLine}</DataListValue>
                 </DataListItem>
               )}
               {isCustomer && (
                 <DataListItem>
-                  <DataListLabel minWidth="96px">Applications</DataListLabel>
+                  <DataListLabel minWidth="96px">{labels.detail.applications}</DataListLabel>
                   <DataListValue>
                     {String(job.applicationCount ?? applications.length)}
                   </DataListValue>
@@ -330,7 +362,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
               )}
               {isWelper && canApplyNow && closesAt && (
                 <DataListItem>
-                  <DataListLabel minWidth="96px">Closes</DataListLabel>
+                  <DataListLabel minWidth="96px">{labels.detail.closes}</DataListLabel>
                   <DataListValue>{closesAt}</DataListValue>
                 </DataListItem>
               )}
@@ -347,12 +379,12 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                       disabled={cancelMutation.isPending}
                       onClick={() => cancelMutation.mutate(jobId)}
                     >
-                      Cancel job
+                      {labels.detail.cancelJob}
                     </Button>
                   )}
                   {canApplyNow && (
                     <Button color={SEMANTIC_COLOR.primary} size="3" onClick={handleApplyClick}>
-                      Apply to this job
+                      {labels.detail.applyToJob}
                     </Button>
                   )}
                 </Flex>
@@ -367,7 +399,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
             <Flex direction="column" gap="3">
               <Flex align="center" gap="2" wrap="wrap">
                 <Text size="2" weight="bold">
-                  Your application
+                  {labels.detail.yourApplication}
                 </Text>
                 <Badge color={appStatus.color} variant="soft" radius="full">
                   {appStatus.label}
@@ -384,7 +416,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                     disabled={withdrawMutation.isPending}
                     onClick={() => withdrawMutation.mutate(myApplication.id)}
                   >
-                    Withdraw application
+                    {labels.detail.withdrawApplication}
                   </Button>
                 </Flex>
               )}
@@ -397,7 +429,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
           <Card size="4" variant="surface">
             <Flex direction="column" gap="2">
               <Heading size="4" trim="start">
-                About this job
+                {labels.detail.aboutJob}
               </Heading>
               <Text size="3" style={{ whiteSpace: "pre-line" }}>
                 {job.description}
@@ -411,7 +443,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
             <Callout.Icon>
               <MapPin size={16} aria-hidden />
             </Callout.Icon>
-            <Callout.Text>Service address: {job.locationAddress}</Callout.Text>
+            <Callout.Text>{labels.detail.serviceAddress(job.locationAddress)}</Callout.Text>
           </Callout.Root>
         )}
 
@@ -420,7 +452,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
           <Box>
             <Flex align="center" gap="2" mb="3">
               <Heading size="5" trim="start">
-                Applications
+                {labels.detail.applicationsTitle}
               </Heading>
               <Badge color="gray" variant="soft" radius="full" size="2">
                 {applications.length}
@@ -443,23 +475,24 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                     <Users2 size={22} aria-hidden />
                   </Flex>
                   <Text size="2" color="gray" highContrast weight="medium">
-                    No applications yet
+                    {labels.detail.noApplicationsTitle}
                   </Text>
                   <Text size="2" color="gray">
-                    Welpers who match this job will appear here as they apply.
+                    {labels.detail.noApplicationsDescription}
                   </Text>
                 </Flex>
               </Card>
             ) : (
               <ApplicationList
+                labels={applicationReviewLabels}
                 items={applications.map((app) => ({
-                  candidateName: app.welperDisplayName ?? "Welper",
-                  role: job.subcategoryLabel ?? "Service",
+                  candidateName: app.welperDisplayName ?? labels.detail.welperFallback,
+                  role: job.subcategoryLabel ?? labels.card.defaultCategory,
                   hourlyRate:
                     app.hourlyRateSnapshot != null
                       ? `$${app.hourlyRateSnapshot}/hr`
                       : "—",
-                  submittedAt: new Date(app.createdAt).toLocaleDateString(),
+                  submittedAt: new Date(app.createdAt).toLocaleDateString(locale),
                   proposalMessage: app.proposalMessage,
                   status: app.status,
                   welperVerified: app.welperVerified,
@@ -478,7 +511,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                 mt="3"
                 onClick={() => router.push(`/dashboard/bookings/${job.bookingId}`)}
               >
-                View linked booking
+                {labels.detail.viewLinkedBooking}
               </Button>
             )}
           </Box>
@@ -487,14 +520,14 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
 
       <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
         <DialogContent
-          title="Apply to this job"
+          title={labels.detail.applyDialogTitle}
           description={
             applyStep === "review"
-              ? "Check the job details and the customer's answers before you write your proposal."
-              : "Pick the offering you'll deliver this with and introduce yourself to the customer."
+              ? labels.detail.applyDialogReviewDescription
+              : labels.detail.applyDialogSubmitDescription
           }
         >
-          <ApplyStepper activeIndex={applyStep === "review" ? 0 : 1} />
+          <ApplyStepper activeIndex={applyStep === "review" ? 0 : 1} steps={applySteps} />
 
           <Box
             pr="2"
@@ -521,6 +554,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                 embedded
                 formId="welper-apply-form"
                 hideSubmit
+                labels={applicationFormLabels}
                 matchingOfferings={job.matchingOfferings ?? []}
                 loading={applyMutation.isPending}
                 error={applyError ?? undefined}
@@ -535,7 +569,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                         ? e.message
                         : e instanceof Error
                           ? e.message
-                          : "Failed to apply.",
+                          : labels.detail.applyFailed,
                     );
                   }
                 }}
@@ -548,10 +582,10 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
           {applyStep === "review" ? (
             <Flex justify="between" align="center" gap="3">
               <Button variant="soft" color="gray" onClick={() => setApplyOpen(false)}>
-                Cancel
+                {labels.detail.cancel}
               </Button>
               <Button color={SEMANTIC_COLOR.primary} onClick={() => setApplyStep("submit")}>
-                Continue to proposal
+                {labels.detail.continueToProposal}
                 <ArrowRight size={16} aria-hidden />
               </Button>
             </Flex>
@@ -559,7 +593,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
             <Flex justify="between" align="center" gap="3">
               <Button variant="ghost" color="gray" onClick={() => setApplyStep("review")}>
                 <ArrowLeft size={16} aria-hidden />
-                Back
+                {labels.new.back}
               </Button>
               <Button
                 type="submit"
@@ -567,7 +601,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                 color={SEMANTIC_COLOR.primary}
                 loading={applyMutation.isPending}
               >
-                Submit application
+                {labels.detail.submitApplication}
               </Button>
             </Flex>
           )}

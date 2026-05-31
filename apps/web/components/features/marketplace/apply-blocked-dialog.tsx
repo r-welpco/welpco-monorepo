@@ -7,7 +7,7 @@ import { Text } from "@welpco/ui/text";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { JobApplyBlockReason } from "@/lib/services/job-posting.service";
-import { APPLY_BLOCK_MESSAGES } from "@/lib/marketplace/apply-block-messages";
+import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 
 interface ApplyBlockedDialogProps {
   open: boolean;
@@ -17,17 +17,17 @@ interface ApplyBlockedDialogProps {
 
 export function ApplyBlockedDialog({ open, onOpenChange, reason }: ApplyBlockedDialogProps) {
   const router = useRouter();
-  const message = reason ? APPLY_BLOCK_MESSAGES[reason] : null;
+  const labels = useMarketplaceLabels();
 
-  if (!message) return null;
+  if (!reason) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title="Cannot apply yet">
-        <Text size="2">{message}</Text>
+      <DialogContent title={labels.applyBlocked.title}>
+        <Text size="2">{labels.applyBlocked.message(reason)}</Text>
         <Flex justify="end" gap="3" mt="4">
           <Button variant="soft" onClick={() => onOpenChange(false)}>
-            Close
+            {labels.applyBlocked.close}
           </Button>
           {reason === "NO_MATCHING_OFFERING" && (
             <Button
@@ -37,7 +37,7 @@ export function ApplyBlockedDialog({ open, onOpenChange, reason }: ApplyBlockedD
                 router.push("/dashboard/profile?tab=offerings");
               }}
             >
-              Manage offerings
+              {labels.applyBlocked.manageOfferings}
             </Button>
           )}
           {reason === "NOT_DISCOVERABLE" && (
@@ -48,7 +48,7 @@ export function ApplyBlockedDialog({ open, onOpenChange, reason }: ApplyBlockedD
                 router.push("/dashboard/profile");
               }}
             >
-              Complete profile
+              {labels.applyBlocked.completeProfile}
             </Button>
           )}
         </Flex>

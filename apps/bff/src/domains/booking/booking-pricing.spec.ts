@@ -6,11 +6,17 @@ import {
   computeOneHourHoldTotal,
   computeOneHourHoldTotalCents,
   computeTotalWithTax,
+  customerHourlyChargeFromWelperRate,
   floorToReceiptBillingStep,
   snapReceiptBillingWindow,
 } from './booking-pricing';
 
 describe('booking-pricing', () => {
+  it('derives customer hourly charge from welper rate (y = 0.75x)', () => {
+    expect(customerHourlyChargeFromWelperRate(75)).toBe(100);
+    expect(customerHourlyChargeFromWelperRate(0)).toBe(0);
+  });
+
   it('uses one hour for hold duration constant', () => {
     expect(BOOKING_HOLD_DURATION_HOURS).toBe(1);
     expect(MIN_BOOKING_DURATION_MINUTES).toBe(60);

@@ -303,6 +303,7 @@ export interface WelperOfferingStepLabels extends SignupCommonLabels {
   subcategory: string;
   serviceTitle: string;
   hourlyRate: string;
+  customerChargeHint?: (formattedCustomerCharge: string) => string;
   descriptionLabel: string;
   addToList: string;
   loadingCategories: string;
@@ -334,7 +335,9 @@ export const DEFAULT_WELPER_OFFERING_LABELS: WelperOfferingStepLabels = {
   category: "Category",
   subcategory: "Subcategory",
   serviceTitle: "Service title",
-  hourlyRate: "Hourly rate ($)",
+  hourlyRate: "Your hourly rate ($)",
+  customerChargeHint: (charge) =>
+    `Customers will be charged ${charge}/hr for this service.`,
   descriptionLabel: "Description",
   addToList: "Add to list",
   loadingCategories: "Loading categories...",
@@ -462,6 +465,15 @@ export interface WelperPayoutStepLabels extends SignupCommonLabels {
   connectDescription: string;
   connectCta: string;
   connectInProgress: string;
+  stripeSetupGuideTitle: string;
+  stripeSetupGuideIntro: string;
+  stripeSetupStepBusinessType: string;
+  stripeSetupStepPersonalDetails: string;
+  stripeSetupBusinessDetailsLead: string;
+  stripeSetupBusinessIndustry: string;
+  stripeSetupBusinessWebsite: string;
+  stripeSetupBusinessProduct: string;
+  stripeSetupStepBankDetails: string;
 }
 
 export const DEFAULT_WELPER_PAYOUT_LABELS: WelperPayoutStepLabels = {
@@ -476,6 +488,20 @@ export const DEFAULT_WELPER_PAYOUT_LABELS: WelperPayoutStepLabels = {
     "Bank-grade identity and account verification, hosted by Stripe. Once it's done, you can accept paying bookings.",
   connectCta: "Set up payouts with Stripe",
   connectInProgress: "Opening Stripe…",
+  stripeSetupGuideTitle: "How do I set up my Stripe account?",
+  stripeSetupGuideIntro:
+    "When creating your Welper profile, there will be a step to create your Stripe account. Once you create your login, simply follow the directions below:",
+  stripeSetupStepBusinessType: 'Business type: Select "Individual or Sole proprietorship."',
+  stripeSetupStepPersonalDetails:
+    'Personal details: for "Job Title" you can enter "Contractor" or more specifically "Dog walker," "House cleaner," "Cook," etc.',
+  stripeSetupBusinessDetailsLead: "Business details:",
+  stripeSetupBusinessIndustry:
+    'Industry: select "Personal Services – Other personal services."',
+  stripeSetupBusinessWebsite: "Your website: www.welpco.com",
+  stripeSetupBusinessProduct:
+    "Product description: provide a brief description of the services you offer.",
+  stripeSetupStepBankDetails:
+    "Bank details: enter your personal bank account details to receive your weekly payout.",
 };
 
 const DEFAULT_OPTIONAL_PROFILE_PHOTO: ProfilePhotoUploadLabels = {

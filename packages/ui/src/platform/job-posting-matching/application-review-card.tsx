@@ -13,6 +13,30 @@ import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { BadgeCheck, Clock, Wallet } from "lucide-react";
 import type { ReactNode } from "react";
 
+export interface ApplicationReviewCardLabels {
+  verified: string;
+  applied: (date: string) => string;
+  sendBookingRequest: string;
+  statusLabel: (status: "pending" | "accepted" | "rejected" | "withdrawn") => string;
+}
+
+const STATUS_TOKENS: Record<
+  NonNullable<ApplicationReviewCardProps["status"]>,
+  { label: string; color: "gray" | "blue" | "red" | "green" }
+> = {
+  pending: { label: "Pending", color: "blue" },
+  accepted: { label: "Selected", color: "green" },
+  rejected: { label: "Rejected", color: "red" },
+  withdrawn: { label: "Withdrawn", color: "gray" },
+};
+
+const DEFAULT_LABELS: ApplicationReviewCardLabels = {
+  verified: "Verified",
+  applied: (date) => `Applied ${date}`,
+  sendBookingRequest: "Send booking request",
+  statusLabel: (status) => STATUS_TOKENS[status]?.label ?? STATUS_TOKENS.pending.label,
+};
+
 export interface ApplicationReviewCardProps {
   candidateName: string;
   role: string;
@@ -23,17 +47,8 @@ export interface ApplicationReviewCardProps {
   welperVerified?: boolean;
   onSendBookingRequest?: () => void;
   sendBookingRequestDisabled?: boolean;
+  labels?: ApplicationReviewCardLabels;
 }
-
-const statusLabel: Record<
-  NonNullable<ApplicationReviewCardProps["status"]>,
-  { label: string; color: "gray" | "blue" | "red" | "green" }
-> = {
-  pending: { label: "Pending", color: "blue" },
-  accepted: { label: "Selected", color: "green" },
-  rejected: { label: "Rejected", color: "red" },
-  withdrawn: { label: "Withdrawn", color: "gray" },
-};
 
 function candidateInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -61,8 +76,11 @@ export function ApplicationReviewCard({
   welperVerified,
   onSendBookingRequest,
   sendBookingRequestDisabled,
+  labels: labelsProp,
 }: ApplicationReviewCardProps) {
-  const statusToken = statusLabel[status] || statusLabel.pending;
+  const labels = labelsProp ?? DEFAULT_LABELS;
+  const statusToken = STATUS_TOKENS[status] || STATUS_TOKENS.pending;
+  const statusText = labels.statusLabel(status);
 
   return (
     <Card size="3" variant="surface" style={{ width: "100%" }}>
@@ -84,7 +102,7 @@ export function ApplicationReviewCard({
                   <Badge color={SEMANTIC_COLOR.primary} variant="soft" size="1" radius="full">
                     <Flex align="center" gap="1">
                       <BadgeCheck size={12} aria-hidden />
-                      Verified
+                      {labels.verified}
                     </Flex>
                   </Badge>
                 )}
@@ -96,7 +114,7 @@ export function ApplicationReviewCard({
           </Flex>
           <Box style={{ flexShrink: 0 }}>
             <Badge color={statusToken.color} variant="soft" size="2" radius="full">
-              {statusToken.label}
+              {statusText}
             </Badge>
           </Box>
         </Flex>
@@ -112,7 +130,7 @@ export function ApplicationReviewCard({
             <MetaItem>
               <Clock size={14} aria-hidden style={{ flexShrink: 0 }} />
               <Text size="2" color="gray" highContrast>
-                Applied {submittedAt}
+                {labels.applied(submittedAt)}
               </Text>
             </MetaItem>
           )}
@@ -144,7 +162,7 @@ export function ApplicationReviewCard({
                 size="2"
                 disabled={sendBookingRequestDisabled}
               >
-                Send booking request
+                {labels.sendBookingRequest}
               </Button>
             </Flex>
           </>

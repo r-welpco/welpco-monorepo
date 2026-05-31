@@ -35,6 +35,7 @@ import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
 import { ApiClientError } from "@/lib/api/client";
 import { MIN_BOOKING_DURATION_MINUTES } from "@/lib/booking/booking-pricing";
+import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 
 type WizardStep = 1 | 2;
 
@@ -66,6 +67,7 @@ function deriveJobDescription(
 
 export default function NewJobPageClient() {
   const router = useRouter();
+  const labels = useMarketplaceLabels();
   const { user } = useAuthStore();
   const bookable = useBookableAction();
   const createJob = useCreateJobPosting();
@@ -176,7 +178,7 @@ export default function NewJobPageClient() {
           ? e.message
           : e instanceof Error
             ? e.message
-            : "Failed to post job.",
+            : labels.new.submitFailed,
       );
     }
   }, [
@@ -201,18 +203,19 @@ export default function NewJobPageClient() {
       <Flex direction="column" gap="5">
         <Box>
           <Heading size="7" mb="1">
-            Post a job
+            {labels.new.title}
           </Heading>
           <Text size="3" color="gray" highContrast>
-            Step {step} of 2 — {step === 1 ? "Category" : "Job details"}
+            {labels.new.stepOf(
+              step,
+              step === 1 ? labels.new.stepCategory : labels.new.stepDetails,
+            )}
           </Text>
         </Box>
 
         {!profileComplete && (
           <Callout.Root color="amber" variant="surface">
-            <Callout.Text>
-              Complete your profile in Settings before posting a job.
-            </Callout.Text>
+            <Callout.Text>{labels.new.profileIncomplete}</Callout.Text>
           </Callout.Root>
         )}
 
@@ -227,10 +230,10 @@ export default function NewJobPageClient() {
             <Flex direction="column" gap="4">
               <Box>
                 <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>
-                  Category
+                  {labels.new.category}
                 </Text>
                 <Select value={categoryId || undefined} onValueChange={(v) => { setCategoryId(v); setSubcategoryId(""); }}>
-                  <SelectTrigger placeholder="Select category" />
+                  <SelectTrigger placeholder={labels.new.selectCategory} />
                   <SelectContent>
                     {parentCategories.map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -240,14 +243,14 @@ export default function NewJobPageClient() {
               </Box>
               <Box>
                 <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>
-                  Subcategory
+                  {labels.new.subcategory}
                 </Text>
                 <Select
                   value={subcategoryId || undefined}
                   onValueChange={setSubcategoryId}
                   disabled={!categoryId}
                 >
-                  <SelectTrigger placeholder="Select subcategory" />
+                  <SelectTrigger placeholder={labels.new.selectSubcategory} />
                   <SelectContent>
                     {subcategories.map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -257,7 +260,7 @@ export default function NewJobPageClient() {
               </Box>
               <Flex justify="end">
                 <Button disabled={!canContinueStep1} onClick={() => setStep(2)}>
-                  Continue
+                  {labels.new.continue}
                 </Button>
               </Flex>
             </Flex>
@@ -267,10 +270,10 @@ export default function NewJobPageClient() {
             <Flex direction="column" gap="4">
               <Box>
                 <Heading as="h2" size="4" mb="3" trim="start">
-                  About this job
+                  {labels.new.aboutJob}
                 </Heading>
                 <Box>
-                  <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>Title</Text>
+                  <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>{labels.new.titleLabel}</Text>
                   <TextField.Root value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
                 </Box>
               </Box>
@@ -278,7 +281,7 @@ export default function NewJobPageClient() {
               {visibleQuestions.length > 0 && (
                 <Box>
                   <Heading as="h2" size="4" mb="3" trim="start">
-                    Service questions
+                    {labels.new.serviceQuestions}
                   </Heading>
                   <Flex direction="column" gap="4">
                     {visibleQuestions.map((sq) => (
@@ -295,36 +298,36 @@ export default function NewJobPageClient() {
                 </Box>
               )}
               {!serviceQuestions?.length && (
-                <Text size="2" color="gray">No additional questions for this service.</Text>
+                <Text size="2" color="gray">{labels.new.noServiceQuestions}</Text>
               )}
 
               <Box>
                 <Heading as="h2" size="4" mb="3" trim="start">
-                  When
+                  {labels.new.when}
                 </Heading>
                 <Flex direction="column" gap="4">
                   <Box>
-                    <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>Date</Text>
+                    <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>{labels.new.date}</Text>
                     <TextField.Root type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
                   </Box>
                   <Flex gap="3" wrap="wrap">
                     <Box flexGrow="1">
-                      <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>Start time</Text>
+                      <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>{labels.new.startTime}</Text>
                       <TextField.Root type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
                     </Box>
                     <Box flexGrow="1">
-                      <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>End time</Text>
+                      <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>{labels.new.endTime}</Text>
                       <TextField.Root type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
                     </Box>
                   </Flex>
                   {startTime && endTime && durationMinutes === null && (
                     <Text size="1" color={SEMANTIC_COLOR.danger}>
-                      End time must be after start time.
+                      {labels.new.endAfterStart}
                     </Text>
                   )}
                   {durationMinutes != null && durationMinutes < MIN_BOOKING_DURATION_MINUTES && (
                     <Text size="1" color={SEMANTIC_COLOR.danger}>
-                      Jobs must be at least 1 hour long.
+                      {labels.new.minDuration}
                     </Text>
                   )}
                 </Flex>
@@ -332,18 +335,18 @@ export default function NewJobPageClient() {
 
               {locationAddress && (
                 <Callout.Root color="gray" variant="surface">
-                  <Callout.Text>Service location: {locationAddress}</Callout.Text>
+                  <Callout.Text>{labels.new.serviceLocation(locationAddress)}</Callout.Text>
                 </Callout.Root>
               )}
 
               <Flex justify="between">
-                <Button variant="soft" onClick={() => setStep(1)}>Back</Button>
+                <Button variant="soft" onClick={() => setStep(1)}>{labels.new.back}</Button>
                 <Button
                   color={SEMANTIC_COLOR.primary}
                   disabled={!canSubmit || createJob.isPending}
                   onClick={handleSubmit}
                 >
-                  {createJob.isPending ? "Posting…" : "Post job"}
+                  {createJob.isPending ? labels.new.posting : labels.new.postJob}
                 </Button>
               </Flex>
             </Flex>

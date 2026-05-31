@@ -995,6 +995,12 @@ export default function BookingDetailClient({
           </Box>
         </Flex>
 
+        {isWelper && booking.status === "payment_released" && (
+          <Callout.Root color={SEMANTIC_COLOR.info} variant="surface">
+            <Callout.Text>{welperDetail.paymentReleasedPayoutNote}</Callout.Text>
+          </Callout.Root>
+        )}
+
         {/* Horizontal timeline */}
         <Card size="4" variant="surface">
           <Flex direction="column" gap="3">
@@ -1050,6 +1056,11 @@ export default function BookingDetailClient({
                   {isWelper ? welperDetail.quickActionsHint : "Accept, check in, check out, or cancel this booking."}
                 </Text>
               </Flex>
+              {isWelper && actions.includes("check-in") && (
+                <Callout.Root color={SEMANTIC_COLOR.info} variant="surface">
+                  <Callout.Text>{welperDetail.checkInLateHint}</Callout.Text>
+                </Callout.Root>
+              )}
               <Flex gap="3" justify="end" wrap="wrap">
                 {actions.includes("decline") && isWelper && (
                   <Button

@@ -27,6 +27,7 @@ import styles from "./booking-wizard.module.css";
 import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import { publicWelperDisplayName } from "@/lib/display-name";
 import { useCreateBooking, useServiceQuestions } from "@/lib/hooks/use-bookings";
+import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useBookingHandoff } from "@/lib/hooks/use-job-posting";
 import { useCustomerProfile } from "@/lib/hooks/use-profile";
 import { useAuthStore } from "@/stores/authStore";
@@ -99,6 +100,7 @@ export default function NewBookingPageClient({
   applicationId,
 }: NewBookingPageClientProps) {
   const router = useRouter();
+  const marketplaceLabels = useMarketplaceLabels();
   const { user } = useAuthStore();
   const { data: handoff, isLoading: handoffLoading } = useBookingHandoff(jobId, applicationId);
   const welperId = welperIdProp ?? handoff?.welperId;
@@ -591,16 +593,14 @@ export default function NewBookingPageClient({
           </Heading>
           <Text as="p" size="2" color="gray">
             {isMarketplaceHandoff && handoff?.jobTitle
-              ? `Review and send booking request for "${handoff.jobTitle}"`
+              ? marketplaceLabels.bookingHandoff.pageSubtitle(handoff.jobTitle)
               : `Schedule a booking with ${displayName}`}
           </Text>
         </Box>
 
         {isMarketplaceHandoff && handoff?.jobTitle && (
           <Callout.Root color={SEMANTIC_COLOR.info} variant="surface">
-            <Callout.Text>
-              This booking is linked to your marketplace job. Confirm the details below, then send the request.
-            </Callout.Text>
+            <Callout.Text>{marketplaceLabels.bookingHandoff.linkedCallout}</Callout.Text>
           </Callout.Root>
         )}
 

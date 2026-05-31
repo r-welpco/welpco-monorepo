@@ -399,12 +399,30 @@
         {
           "type": "subsection",
           "id": "8.5",
-          "title": "Annulation",
+          "title": "Politique d'annulation",
           "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Les Welpers et les clients peuvent annuler un service sans frais jusqu'à 24 heures avant l'heure prévue du service."
+            },
+            {
+              "type": "paragraph",
+              "text": "Si le client annule moins de 24 heures avant l'heure prévue du service :"
+            },
             {
               "type": "list",
               "items": [
-                "Vous pouvez annuler votre abonnement ou vos services payants à tout moment en suivant les instructions sur le Site. Les annulations prennent effet à la fin de la période d'abonnement en cours."
+                "Une heure de rémunération sera retenue par Welpco afin de payer le Welper."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Si le Welper annule moins de 24 heures avant l'heure prévue du service :"
+            },
+            {
+              "type": "list",
+              "items": [
+                "Welpco effectuera un remboursement complet au client."
               ]
             }
           ]
@@ -415,10 +433,52 @@
           "title": "Politique de remboursement",
           "blocks": [
             {
+              "type": "paragraph",
+              "text": "Si un client ne reçoit pas le service qu'il a payé en raison de l'annulation ou de l'absence du Welper, le client recevra un remboursement complet."
+            },
+            {
+              "type": "paragraph",
+              "text": "Si le client n'est pas satisfait du service reçu, il peut communiquer directement avec nous via l'application ou le site web et soumettre sa plainte en fournissant toute preuve nécessaire, notamment :"
+            },
+            {
               "type": "list",
               "items": [
-                "Sauf disposition contraire de la loi ou indication spécifique lors de l'achat, les frais payés ne sont pas remboursables. En cas de litige concernant un paiement, veuillez contacter notre service client."
+                "Des photos du résultat du service reçu."
               ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Welpco évaluera alors la plainte et communiquera sa décision au client, qui pourra inclure l'une des mesures suivantes :"
+            },
+            {
+              "type": "list",
+              "items": [
+                "Un crédit applicable à une transaction future;",
+                "La désignation par Welpco d'un autre Welper pour compléter ou refaire le service sans frais pour le client."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Dans tous les cas, les clients peuvent attribuer une note et laisser un avis sur les Welpers une fois le travail terminé. Ces avis seront visibles par tous les clients."
+            },
+            {
+              "type": "paragraph",
+              "text": "De la même façon, les Welpers peuvent attribuer une note et laisser un avis basé sur leur expérience avec les clients."
+            },
+            {
+              "type": "paragraph",
+              "text": "Si le Welper se présente à l'heure prévue et que le service exige la présence du client, mais que celui-ci est absent, le service sera annulé si le client ne communique pas son absence ou son retard au Welper. Dans ce cas :"
+            },
+            {
+              "type": "list",
+              "items": [
+                "Une heure de rémunération sera conservée afin de payer le Welper;",
+                "Le reste du paiement sera remboursé au client."
+              ]
+            },
+            {
+              "type": "paragraph",
+              "text": "Il s'agit d'un processus transparent visant à favoriser une expérience positive tant pour les clients que pour les Welpers."
             }
           ]
         }
