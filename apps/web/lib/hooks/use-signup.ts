@@ -108,25 +108,22 @@ export function useBeginSignup() {
 
       const signInResult = await signIn("credentials", {
         email: params.email,
-        password: params.password,
-        preferredLocale: params.preferredLocale ?? "en",
+        signupBootstrap: "true",
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
         redirect: false,
       });
 
-      // Seed the JWT with tokens from begin (authoritative) so API calls work
-      // even if credentials sign-in races or the login round-trip is slow.
+      if (signInResult?.error) {
+        throw new Error(signInResult.error);
+      }
+
+      // Keep tokens from begin authoritative for the JWT callback.
       await updateSession({
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       });
       clearTokenCache();
-
-      if (signInResult?.error) {
-        console.warn(
-          "Auto sign-in after signup failed; session tokens were applied from begin response.",
-          signInResult.error,
-        );
-      }
 
       return response;
     },

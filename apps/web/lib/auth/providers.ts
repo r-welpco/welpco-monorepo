@@ -1,7 +1,10 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import type { SignupStateDto } from "@welpco/types";
 import { loginSchema } from "@/lib/validations/auth";
 import { apiClient } from "@/lib/api/client";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export const authProviders: NextAuthConfig["providers"] = [
   Credentials({
@@ -10,8 +13,51 @@ export const authProviders: NextAuthConfig["providers"] = [
       email: { label: "Email", type: "email" },
       password: { label: "Password", type: "password" },
       preferredLocale: { label: "Locale", type: "text" },
+      /** Set after POST /auth/signup/begin — avoids a redundant POST /auth/login. */
+      signupBootstrap: { label: "Signup bootstrap", type: "text" },
+      accessToken: { label: "Access token", type: "text" },
+      refreshToken: { label: "Refresh token", type: "text" },
     },
     async authorize(credentials) {
+      const bootstrapAccessToken = credentials?.accessToken;
+      const bootstrapRefreshToken = credentials?.refreshToken;
+      if (
+        credentials?.signupBootstrap === "true" &&
+        typeof bootstrapAccessToken === "string" &&
+        typeof bootstrapRefreshToken === "string"
+      ) {
+        try {
+          const stateRes = await fetch(`${API_URL}/api/auth/signup/state`, {
+            headers: {
+              Authorization: `Bearer ${bootstrapAccessToken}`,
+              "Content-Type": "application/json",
+            },
+          });
+          if (!stateRes.ok) {
+            return null;
+          }
+          const state = (await stateRes.json()) as SignupStateDto;
+          const role = state.selectedRole === "welper" ? "welper" : "customer";
+          return {
+            id: state.userId,
+            email: state.email,
+            name: state.email.split("@")[0],
+            role,
+            image: null,
+            accessToken: bootstrapAccessToken,
+            refreshToken: bootstrapRefreshToken,
+            accountType: role === "welper" ? "Welper" : "Customer",
+            status: "PENDING",
+            emailVerified: state.emailVerified,
+            onboardingCompleted: false,
+            signupCompleted: state.signupCompleted,
+            platformAccessEnabled: state.platformAccessEnabled,
+          };
+        } catch {
+          return null;
+        }
+      }
+
       const validatedFields = loginSchema.safeParse(credentials);
       if (!validatedFields.success) {
         return null;

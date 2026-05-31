@@ -49,8 +49,9 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @UseGuards(RateLimitGuard)
-  @RateLimit({ ttl: 900, limit: 5, keyGenerator: (req) => `login:${req.body?.email || req.ip}` })
+  // Brute-force protection is handled by AccountLockoutService (failed attempts
+  // only). A request-count cap here also blocked legitimate signup, which calls
+  // POST /login once after every successful signup/begin (including idempotent resume).
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User login' })
   @ApiBody({ type: LoginDto })

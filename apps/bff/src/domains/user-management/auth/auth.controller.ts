@@ -56,8 +56,6 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  @UseGuards(RateLimitGuard)
-  @RateLimit({ ttl: 900, limit: 5, keyGenerator: (req) => `login:${req.body?.email || req.ip}` })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login user' })
   @ApiBody({ type: LoginDto })
