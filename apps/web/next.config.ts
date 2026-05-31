@@ -16,6 +16,20 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+      {
+        source: "/offline.html",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
+      {
         source: "/(.*)",
         headers: [
           { key: "X-Content-Type-Options", value: "nosniff" },
@@ -38,6 +52,8 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://*.amazonaws.com",
               "font-src 'self'",
+              "manifest-src 'self'",
+              "worker-src 'self'",
               "connect-src 'self' https://api.stripe.com https://*.amazonaws.com " +
                 (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"),
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
