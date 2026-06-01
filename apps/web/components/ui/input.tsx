@@ -14,7 +14,8 @@ const Input = React.forwardRef<
   React.ElementRef<typeof TextField.Root>,
   InputProps
 >(({ label, error, size = "2", id, ...props }, ref) => {
-  const inputId = id || React.useId();
+  const generatedId = React.useId();
+  const inputId = id || generatedId;
   
   return (
     <Flex direction="column" gap="1">

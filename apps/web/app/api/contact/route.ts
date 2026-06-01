@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
-  createSmtpTransport,
   getContactAckHtml,
   getContactAckSubject,
   getContactNotificationHtml,
@@ -40,23 +39,16 @@ export async function POST(request: Request) {
   const formData = { role, name, email, phone, message };
 
   try {
-    const transport = createSmtpTransport();
-    await sendMail(
-      {
-        to: inbox,
-        subject: getContactNotificationSubject(formData),
-        html: getContactNotificationHtml(formData, locale, publicAppUrl),
-      },
-      transport,
-    );
-    await sendMail(
-      {
-        to: email,
-        subject: getContactAckSubject(locale),
-        html: getContactAckHtml(name, locale, publicAppUrl),
-      },
-      transport,
-    );
+    await sendMail({
+      to: inbox,
+      subject: getContactNotificationSubject(formData),
+      html: getContactNotificationHtml(formData, locale, publicAppUrl),
+    });
+    await sendMail({
+      to: email,
+      subject: getContactAckSubject(locale),
+      html: getContactAckHtml(name, locale, publicAppUrl),
+    });
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[contact] send failed", err);

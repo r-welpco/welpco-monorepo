@@ -35,7 +35,7 @@ export class EmailService {
 
   constructor(private configService: ConfigService) {
     const isProduction = process.env.NODE_ENV === 'production';
-    const resendApiKey = this.configService.get<string>('RESEND_API_KEY');
+    const resendApiKey = this.configService.get<string>('RESEND_API_KEY')?.trim();
     const smtpHost = this.configService.get<string>('SMTP_HOST');
     const smtpPort = this.configService.get<number>('SMTP_PORT');
     const smtpUser = this.configService.get<string>('SMTP_USER') || '';
@@ -76,7 +76,9 @@ export class EmailService {
       'http://localhost:8081';
 
     if (this.deliveryMode === 'resend') {
-      this.logger.log('Email service configured: Resend HTTP API');
+      this.logger.log(
+        `Email service configured: Resend HTTP API (${isProduction ? 'production' : 'development'})`,
+      );
     } else {
       const { host, port } = this.mailConfig;
       this.logger.log(

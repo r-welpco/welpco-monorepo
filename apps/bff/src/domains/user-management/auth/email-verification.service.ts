@@ -60,7 +60,7 @@ export class EmailVerificationService {
     const user = await userRepo.findOne({ where: { id: userId } });
     if (user) {
       try {
-        // Send email directly via EmailService (uses MailHog in development)
+        // Send email via EmailService (Resend when RESEND_API_KEY is set, else SMTP/MailHog)
         await this.emailService.sendVerificationEmail(
           user.email,
           token,
