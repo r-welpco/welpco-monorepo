@@ -1,37 +1,31 @@
 "use client";
 
-import { Card } from "@welpco/ui/card";
+import { Card } from "@radix-ui/themes";
 import { Button } from "@welpco/ui/button";
 import { Flex } from "@welpco/ui/flex";
 import { Box } from "@welpco/ui/box";
 import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
-import { ScrollArea } from "@welpco/ui/scroll-area";
 import { Separator } from "@welpco/ui/separator";
-import { SegmentedControl } from "@welpco/ui/segmented-control";
+import { Switch } from "@welpco/ui/switch";
 import { Badge } from "@welpco/ui/badge";
 import { Skeleton } from "@welpco/ui/skeleton";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { Bell } from "lucide-react";
 import { NotificationCard, type NotificationCardProps } from "./notification-card";
-import { useState } from "react";
-
-export type NotificationFilter = "all" | "unread" | "read";
+import { useState, type CSSProperties } from "react";
 
 export type NotificationCenterLabels = {
   title: string;
   subtitle?: string;
   markAllRead: string;
+  clearAll: string;
+  showAll: string;
   unreadAria: (count: number) => string;
-  filterAll: string;
-  filterUnread: string;
-  filterRead: string;
   emptyAllTitle: string;
   emptyUnreadTitle: string;
-  emptyReadTitle: string;
   emptyAllDescription: string;
   emptyUnreadDescription: string;
-  emptyReadDescription: string;
 };
 
 export interface NotificationCenterProps {
@@ -41,27 +35,16 @@ export interface NotificationCenterProps {
   /** When true, uses smaller height for dropdown/popover (e.g. maxHeight ~480px) */
   compact?: boolean;
   onMarkAllRead?: () => void;
+  onClearAll?: () => void;
+  clearing?: boolean;
   onNotificationAction?: (id: string) => void;
   onMarkRead?: (id: string) => void;
   labels?: NotificationCenterLabels;
 }
 
-const DEFAULT_EMPTY_DESCRIPTIONS: Record<NotificationFilter, string> = {
-  all: "When you get notifications, they'll show up here.",
-  unread: "You're all caught up.",
-  read: "Once you mark notifications as read, they'll show up here.",
-};
-
-const DEFAULT_EMPTY_HEADLINES: Record<NotificationFilter, string> = {
-  all: "No notifications yet",
-  unread: "No unread notifications",
-  read: "No read notifications",
-};
-
 /**
  * Notification list — used both as a full page (`compact={false}`) and as a
- * popover content (`compact`). Filter via SegmentedControl, each row is a
- * NotificationCard. Empty state follows bible §17.3 with role-specific copy.
+ * popover content (`compact`). Unread-only by default; toggle shows all.
  */
 export function NotificationCenter({
   notifications,
@@ -69,100 +52,147 @@ export function NotificationCenter({
   loading,
   compact,
   onMarkAllRead,
+  onClearAll,
+  clearing,
   onNotificationAction,
   onMarkRead,
   labels,
 }: NotificationCenterProps) {
-  const [filter, setFilter] = useState<NotificationFilter>("all");
+  const [showAll, setShowAll] = useState(false);
 
-  const emptyHeadlines: Record<NotificationFilter, string> = {
-    all: labels?.emptyAllTitle ?? DEFAULT_EMPTY_HEADLINES.all,
-    unread: labels?.emptyUnreadTitle ?? DEFAULT_EMPTY_HEADLINES.unread,
-    read: labels?.emptyReadTitle ?? DEFAULT_EMPTY_HEADLINES.read,
+  const shellStyle: CSSProperties = compact
+    ? {
+        width: "100%",
+        maxWidth: "100%",
+        height: "100%",
+        minHeight: 0,
+        display: "grid",
+        gridTemplateRows: "auto minmax(0, 1fr)",
+        overflow: "hidden",
+      }
+    : {
+        width: "100%",
+        maxWidth: "600px",
+        height: "700px",
+        display: "grid",
+        gridTemplateRows: "auto minmax(0, 1fr)",
+        overflow: "hidden",
+      };
+
+  const chromePadding = compact
+    ? { px: "4" as const, pt: "4" as const, pb: "3" as const }
+    : { px: "5" as const, pt: "5" as const, pb: "4" as const };
+
+  const listScrollStyle: CSSProperties = {
+    minHeight: 0,
+    overflowY: "auto",
+    overflowX: "hidden",
+    WebkitOverflowScrolling: "touch",
+    overscrollBehavior: "contain",
+    touchAction: "pan-y",
   };
-  const emptyDescriptions: Record<NotificationFilter, string> = {
-    all: labels?.emptyAllDescription ?? DEFAULT_EMPTY_DESCRIPTIONS.all,
-    unread: labels?.emptyUnreadDescription ?? DEFAULT_EMPTY_DESCRIPTIONS.unread,
-    read: labels?.emptyReadDescription ?? DEFAULT_EMPTY_DESCRIPTIONS.read,
-  };
 
-  const cardStyle = compact
-    ? { width: "100%", maxWidth: "100%", height: "min(70vh, 340px)" }
-    : { width: "100%", maxWidth: "600px", height: "700px" };
+  const filteredNotifications = showAll
+    ? notifications
+    : notifications.filter((n) => !n.isRead);
 
-  const filteredNotifications =
-    filter === "all"
-      ? notifications
-      : filter === "unread"
-        ? notifications.filter((n) => !n.isRead)
-        : notifications.filter((n) => n.isRead);
-
-  // Day 13: only show the empty state when we've actually finished loading.
-  // Previously `showEmpty` was true while `loading && notifications.length === 0`
-  // which double-rendered the skeleton AND the empty card simultaneously.
   const showEmpty = !loading && filteredNotifications.length === 0;
+  const emptyTitle = showAll
+    ? (labels?.emptyAllTitle ?? "No notifications yet")
+    : (labels?.emptyUnreadTitle ?? "No unread notifications");
+  const emptyDescription = showAll
+    ? (labels?.emptyAllDescription ?? "When you get notifications, they'll show up here.")
+    : (labels?.emptyUnreadDescription ?? "You're all caught up.");
+
+  const showAllSwitchId = compact ? "notifications-show-all-compact" : "notifications-show-all";
+
+  const stopScrollBubble = (event: React.SyntheticEvent) => {
+    event.stopPropagation();
+  };
 
   return (
-    <Card size={compact ? "2" : "4"} variant="surface" style={cardStyle}>
-      <Flex direction="column" gap={compact ? "3" : "4"} height="100%">
-        {/* Header */}
-        <Box px={compact ? "1" : undefined} pt={compact ? "1" : undefined}>
-          <Flex justify="between" align="center" gap="2">
-            <Flex gap="2" align="center">
-              <Heading size={compact ? "4" : "6"} mb="0" trim="start">
-                {labels?.title ?? "Notifications"}
-              </Heading>
-              {unreadCount > 0 && (
-                <Badge
-                  color={SEMANTIC_COLOR.danger}
-                  variant="solid"
-                  size="1"
-                  radius="full"
-                  highContrast
-                  aria-label={labels?.unreadAria(unreadCount) ?? `${unreadCount} unread`}
-                >
-                  {unreadCount}
-                </Badge>
+    <Card size={compact ? "2" : "4"} variant="surface" style={shellStyle}>
+        <Box {...chromePadding}>
+          <Flex direction="column" gap={compact ? "4" : "5"}>
+            <Flex justify="between" align="center" gap="3" wrap="wrap">
+              <Flex gap="2" align="center" style={{ minWidth: 0 }}>
+                <Heading size={compact ? "4" : "6"} mb="0" trim="start">
+                  {labels?.title ?? "Notifications"}
+                </Heading>
+                {unreadCount > 0 && (
+                  <Badge
+                    color={SEMANTIC_COLOR.danger}
+                    variant="solid"
+                    size="1"
+                    radius="full"
+                    highContrast
+                    aria-label={labels?.unreadAria(unreadCount) ?? `${unreadCount} unread`}
+                  >
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Flex>
+              {(onMarkAllRead || onClearAll) && (
+                <Flex gap="2" wrap="wrap" justify="end" style={{ flexShrink: 0 }}>
+                  {unreadCount > 0 && onMarkAllRead ? (
+                    <Button
+                      variant="ghost"
+                      size={compact ? "1" : "2"}
+                      color="gray"
+                      disabled={clearing}
+                      onClick={onMarkAllRead}
+                    >
+                      {labels?.markAllRead ?? "Mark all read"}
+                    </Button>
+                  ) : null}
+                  {notifications.length > 0 && onClearAll ? (
+                    <Button
+                      variant="ghost"
+                      size={compact ? "1" : "2"}
+                      color="gray"
+                      disabled={clearing}
+                      onClick={onClearAll}
+                    >
+                      {labels?.clearAll ?? "Clear all"}
+                    </Button>
+                  ) : null}
+                </Flex>
               )}
             </Flex>
-            {unreadCount > 0 && onMarkAllRead && (
-              <Button
-                variant="ghost"
-                size={compact ? "1" : "2"}
-                color="gray"
-                onClick={onMarkAllRead}
-              >
-                {labels?.markAllRead ?? "Mark all read"}
-              </Button>
-            )}
+
+            {!compact ? (
+              <Text size="2" color="gray" highContrast>
+                {labels?.subtitle ?? "Stay updated on bookings, payments, and messages."}
+              </Text>
+            ) : null}
+
+            <Flex align="center" justify="between" gap="4">
+              <Text as="label" size="2" htmlFor={showAllSwitchId} style={{ cursor: "pointer" }}>
+                {labels?.showAll ?? "Show all notifications"}
+              </Text>
+              <Switch
+                id={showAllSwitchId}
+                size={compact ? "2" : "2"}
+                checked={showAll}
+                onCheckedChange={(checked) => setShowAll(Boolean(checked))}
+                aria-label={labels?.showAll ?? "Show all notifications"}
+              />
+            </Flex>
           </Flex>
-          {!compact ? (
-            <Text size="2" color="gray" highContrast mt="1">
-              {labels?.subtitle ?? "Stay updated on bookings, payments, and messages."}
-            </Text>
-          ) : null}
+
+          <Separator size="4" my={compact ? "3" : "4"} />
         </Box>
 
-        {/* Filter */}
-        <SegmentedControl.Root
-          value={filter}
-          onValueChange={(value) => setFilter(value as NotificationFilter)}
-          size={compact ? "1" : "2"}
+        <Box
+          style={listScrollStyle}
+          onWheel={stopScrollBubble}
+          onTouchMove={stopScrollBubble}
         >
-          <SegmentedControl.Item value="all">{labels?.filterAll ?? "All"}</SegmentedControl.Item>
-          <SegmentedControl.Item value="unread">{labels?.filterUnread ?? "Unread"}</SegmentedControl.Item>
-          <SegmentedControl.Item value="read">{labels?.filterRead ?? "Read"}</SegmentedControl.Item>
-        </SegmentedControl.Root>
-
-        <Separator size="4" />
-
-        <ScrollArea style={{ flex: 1, minHeight: 0 }}>
-          <Flex direction="column" gap={compact ? "2" : "3"} p="1">
-            {/* Loading */}
+          <Flex direction="column" gap={compact ? "2" : "3"} px={compact ? "4" : "5"} pb={compact ? "4" : "5"} pt="1">
             {loading && notifications.length === 0 && (
               <>
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Card key={i} size="2" variant="surface">
+                  <Card key={i} size="2">
                     <Flex gap="3" align="start">
                       <Skeleton width="32px" height="32px" style={{ borderRadius: "9999px" }} />
                       <Box style={{ flex: 1, minWidth: 0 }}>
@@ -176,7 +206,6 @@ export function NotificationCenter({
               </>
             )}
 
-            {/* Empty */}
             {showEmpty && (
               <Flex direction="column" align="center" gap="3" py={compact ? "5" : "7"}>
                 <Flex
@@ -194,16 +223,15 @@ export function NotificationCenter({
                 </Flex>
                 <Box>
                   <Heading size="4" mb="1" align="center" trim="start">
-                    {emptyHeadlines[filter]}
+                    {emptyTitle}
                   </Heading>
                   <Text size="2" color="gray" highContrast align="center" as="p">
-                    {emptyDescriptions[filter]}
+                    {emptyDescription}
                   </Text>
                 </Box>
               </Flex>
             )}
 
-            {/* List */}
             {!loading &&
               filteredNotifications.length > 0 &&
               filteredNotifications.map((notification) => (
@@ -216,8 +244,7 @@ export function NotificationCenter({
                 />
               ))}
           </Flex>
-        </ScrollArea>
-      </Flex>
+        </Box>
     </Card>
   );
 }

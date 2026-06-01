@@ -60,6 +60,10 @@ export class NotificationsService {
     await this.notificationService.markAllAsRead(userId);
   }
 
+  async clearAll(userId: string): Promise<void> {
+    await this.notificationService.clearAllNotifications(userId);
+  }
+
   async getPreferences(userId: string) {
     const list = await this.notificationService.getPreferences(userId);
     return list.map((p) => ({

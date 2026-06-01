@@ -89,6 +89,17 @@ export class NotificationsController {
     await this.notificationsService.markAllAsRead(user.userId);
   }
 
+  @Post('clear-all')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete all notifications for the current user' })
+  @ApiResponse({ status: 200, description: 'All notifications cleared' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async clearAll(@CurrentUser() user: CurrentUserData) {
+    await this.notificationsService.clearAll(user.userId);
+  }
+
   @Get('preferences')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')

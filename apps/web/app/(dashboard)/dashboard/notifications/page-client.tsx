@@ -11,6 +11,7 @@ import {
   useUnreadCount,
   useMarkAsRead,
   useMarkAllAsRead,
+  useClearAllNotifications,
 } from "@/lib/hooks/use-notifications";
 import type { NotificationItem } from "@/lib/services/notification-service";
 import { formatDistanceToNow } from "date-fns";
@@ -70,6 +71,7 @@ export default function NotificationsPageClient() {
   const { data: unreadData } = useUnreadCount();
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
+  const clearAll = useClearAllNotifications();
 
   const notifications = useMemo(
     () =>
@@ -85,16 +87,13 @@ export default function NotificationsPageClient() {
         title: notificationLabels.title,
         subtitle: notificationLabels.subtitle,
         markAllRead: notificationLabels.markAllRead,
+        clearAll: notificationLabels.clearAll,
         unreadAria: notificationLabels.unreadCount,
-        filterAll: notificationLabels.filterAll,
-        filterUnread: notificationLabels.filterUnread,
-        filterRead: notificationLabels.filterRead,
+        showAll: notificationLabels.showAll,
         emptyAllTitle: notificationLabels.emptyAllTitle,
         emptyUnreadTitle: notificationLabels.emptyUnreadTitle,
-        emptyReadTitle: notificationLabels.emptyReadTitle,
         emptyAllDescription: notificationLabels.emptyAllDescription,
         emptyUnreadDescription: notificationLabels.emptyUnreadDescription,
-        emptyReadDescription: notificationLabels.emptyReadDescription,
       }
     : undefined;
 
@@ -121,6 +120,13 @@ export default function NotificationsPageClient() {
     markAllAsRead.mutate();
   }, [markAllAsRead]);
 
+  const handleClearAll = useCallback(() => {
+    clearAll.mutate();
+  }, [clearAll]);
+
+  const listCount = notifications.length;
+  const actionsBusy = markAllAsRead.isPending || clearAll.isPending;
+
   return (
     <Container size="3" px={{ initial: "4", sm: "6" }}>
       <Flex direction="column" align="center">
@@ -128,7 +134,9 @@ export default function NotificationsPageClient() {
           notifications={notifications}
           unreadCount={unreadCount}
           loading={isLoading}
+          clearing={actionsBusy}
           onMarkAllRead={unreadCount > 0 ? handleMarkAllRead : undefined}
+          onClearAll={listCount > 0 ? handleClearAll : undefined}
           onNotificationAction={handleNotificationAction}
           onMarkRead={handleMarkRead}
           labels={centerLabels}

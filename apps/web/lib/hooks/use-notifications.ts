@@ -5,6 +5,7 @@ import {
   getUnreadCount,
   markAsRead as markAsReadApi,
   markAllAsRead as markAllAsReadApi,
+  clearAllNotifications as clearAllNotificationsApi,
   getNotificationPreferences,
   updateNotificationPreferences as updateNotificationPreferencesApi,
   type NotificationListParams,
@@ -69,6 +70,16 @@ export function useMarkAllAsRead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => markAllAsReadApi(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+}
+
+export function useClearAllNotifications() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => clearAllNotificationsApi(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },

@@ -68,6 +68,10 @@ export async function markAllAsRead(): Promise<void> {
   return apiClient.post<void>("/api/notifications/read-all");
 }
 
+export async function clearAllNotifications(): Promise<void> {
+  return apiClient.post<void>("/api/notifications/clear-all");
+}
+
 export async function getNotificationPreferences(): Promise<NotificationPreferenceItem[]> {
   return apiClient.get<NotificationPreferenceItem[]>("/api/notifications/preferences");
 }

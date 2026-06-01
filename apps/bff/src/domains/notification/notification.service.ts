@@ -325,6 +325,11 @@ export class NotificationService {
     );
   }
 
+  /** Removes all in-app notifications for the user; preferences are unchanged. */
+  async clearAllNotifications(userId: string): Promise<void> {
+    await this.notificationRepo.delete({ userId });
+  }
+
   async getPreferences(userId: string): Promise<NotificationPreference[]> {
     const categories = Object.values(NotificationCategory);
 

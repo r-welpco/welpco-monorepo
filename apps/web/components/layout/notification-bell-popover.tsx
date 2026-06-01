@@ -20,6 +20,7 @@ import {
   useUnreadCount,
   useMarkAsRead,
   useMarkAllAsRead,
+  useClearAllNotifications,
 } from "@/lib/hooks/use-notifications";
 import type { NotificationItem } from "@/lib/services/notification-service";
 
@@ -83,6 +84,7 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
   });
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
+  const clearAll = useClearAllNotifications();
 
   const notificationCount = unreadData?.count ?? 0;
   const notifications = useMemo(
@@ -102,16 +104,13 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
         title: notificationLabels.title,
         subtitle: notificationLabels.subtitle,
         markAllRead: notificationLabels.markAllRead,
+        clearAll: notificationLabels.clearAll,
         unreadAria: notificationLabels.unreadCount,
-        filterAll: notificationLabels.filterAll,
-        filterUnread: notificationLabels.filterUnread,
-        filterRead: notificationLabels.filterRead,
+        showAll: notificationLabels.showAll,
         emptyAllTitle: notificationLabels.emptyAllTitle,
         emptyUnreadTitle: notificationLabels.emptyUnreadTitle,
-        emptyReadTitle: notificationLabels.emptyReadTitle,
         emptyAllDescription: notificationLabels.emptyAllDescription,
         emptyUnreadDescription: notificationLabels.emptyUnreadDescription,
-        emptyReadDescription: notificationLabels.emptyReadDescription,
       }
     : undefined;
 
@@ -138,6 +137,13 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
     markAllAsRead.mutate();
   }, [markAllAsRead]);
 
+  const handleClearAll = useCallback(() => {
+    clearAll.mutate();
+  }, [clearAll]);
+
+  const listCount = notifications.length;
+  const actionsBusy = markAllAsRead.isPending || clearAll.isPending;
+
   return (
     <Box style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
       <Popover open={open} onOpenChange={setOpen}>
@@ -158,17 +164,37 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
             <Bell size={20} />
           </IconButton>
         </PopoverTrigger>
-        <PopoverContent style={{ padding: 0, width: 560 }}>
-          <NotificationCenter
-            notifications={notifications}
-            unreadCount={notificationCount}
-            loading={notificationsLoading}
-            onMarkAllRead={notificationCount > 0 ? handleMarkAllRead : undefined}
-            onNotificationAction={handleNotificationAction}
-            onMarkRead={handleMarkRead}
-            labels={centerLabels}
-            compact
-          />
+        <PopoverContent
+          side="bottom"
+          align="end"
+          collisionPadding={12}
+          style={{
+            padding: 0,
+            width: 560,
+            height: "min(80vh, 480px)",
+            maxHeight:
+              "min(480px, var(--radix-popover-content-available-height, var(--radix-popper-available-height, 80vh)))",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+          }}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onWheel={(e) => e.stopPropagation()}
+        >
+          <Box style={{ flex: 1, minHeight: 0, height: "100%", overflow: "hidden" }}>
+            <NotificationCenter
+              notifications={notifications}
+              unreadCount={notificationCount}
+              loading={notificationsLoading}
+              clearing={actionsBusy}
+              onMarkAllRead={notificationCount > 0 ? handleMarkAllRead : undefined}
+              onClearAll={listCount > 0 ? handleClearAll : undefined}
+              onNotificationAction={handleNotificationAction}
+              onMarkRead={handleMarkRead}
+              labels={centerLabels}
+              compact
+            />
+          </Box>
         </PopoverContent>
       </Popover>
       {notificationCount > 0 && (

@@ -802,19 +802,16 @@ export function useDashboardNotificationLabels() {
     title: t("title"),
     subtitle: t("subtitle"),
     markAllRead: t("markAllRead"),
+    clearAll: t("clearAll"),
     unreadCount: (count: number) => t("unreadCount", { count }),
     bellAria: t("bellAria"),
     bellUnreadAria: (count: number) => t("bellUnreadAria", { count }),
     view: t("view"),
-    filterAll: t("filterAll"),
-    filterUnread: t("filterUnread"),
-    filterRead: t("filterRead"),
+    showAll: t("showAll"),
     emptyAllTitle: t("emptyAllTitle"),
     emptyUnreadTitle: t("emptyUnreadTitle"),
-    emptyReadTitle: t("emptyReadTitle"),
     emptyAllDescription: t("emptyAllDescription"),
     emptyUnreadDescription: t("emptyUnreadDescription"),
-    emptyReadDescription: t("emptyReadDescription"),
   };
 }
 

@@ -1936,19 +1936,16 @@
       "title": "Notifications",
       "subtitle": "Stay updated on bookings, payments, and messages.",
       "markAllRead": "Mark all read",
+      "clearAll": "Clear all",
       "unreadCount": "{count} unread",
       "bellAria": "Notifications",
       "bellUnreadAria": "Notifications ({count} unread)",
       "view": "View",
-      "filterAll": "All",
-      "filterUnread": "Unread",
-      "filterRead": "Read",
+      "showAll": "Show all notifications",
       "emptyAllTitle": "No notifications yet",
       "emptyUnreadTitle": "No unread notifications",
-      "emptyReadTitle": "No read notifications",
       "emptyAllDescription": "When you get notifications, they'll show up here.",
-      "emptyUnreadDescription": "You're all caught up.",
-      "emptyReadDescription": "Once you mark notifications as read, they'll show up here."
+      "emptyUnreadDescription": "You're all caught up."
     },
     "emailVerification": {
       "title": "Verify your email",
