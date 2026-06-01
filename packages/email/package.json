@@ -20,7 +20,8 @@
     "smoke:mailhog": "tsx scripts/smoke-mailhog.ts"
   },
   "dependencies": {
-    "nodemailer": "^7.0.12"
+    "nodemailer": "^7.0.12",
+    "resend": "^6.12.4"
   },
   "devDependencies": {
     "@types/nodemailer": "^6.4.16",
