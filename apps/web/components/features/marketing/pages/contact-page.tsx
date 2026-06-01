@@ -3,6 +3,10 @@
 import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Field } from "./field";
+import {
+  HoneypotField,
+  TurnstileWidget,
+} from "@/components/security/turnstile-widget";
 
 /**
  * ContactPage — contact form with role chips + response-time card.
@@ -19,10 +23,22 @@ export function ContactPage() {
   const [type, setType] = useState(roles[0] ?? "");
   const [state, setState] = useState<SubmitState>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (state === "submitting") return;
+    if (turnstileEnabled && !turnstileToken) {
+      setState("error");
+      setErrorMsg(
+        locale === "fr"
+          ? "Veuillez terminer la verification humaine."
+          : "Complete the human verification challenge.",
+      );
+      return;
+    }
 
     const form = e.currentTarget;
     const data = new FormData(form);
@@ -32,6 +48,8 @@ export function ContactPage() {
       email: String(data.get("email") ?? ""),
       phone: String(data.get("phone") ?? ""),
       message: String(data.get("message") ?? ""),
+      website: String(data.get("website") ?? ""),
+      turnstileToken: turnstileToken ?? undefined,
       locale: locale === "fr" ? "fr" : "en",
     };
 
@@ -49,9 +67,12 @@ export function ContactPage() {
         throw new Error(data?.error ?? `Contact API responded ${res.status}`);
       }
       setState("success");
+      setTurnstileToken(null);
+      setTurnstileResetKey((key) => key + 1);
       form.reset();
       setType(roles[0] ?? "");
     } catch (err) {
+      setTurnstileResetKey((key) => key + 1);
       setErrorMsg(err instanceof Error ? err.message : t("form.error"));
       setState("error");
     }
@@ -115,6 +136,7 @@ export function ContactPage() {
             }
             style={{ padding: 40, display: "grid", gap: 20 }}
           >
+            <HoneypotField />
             <div className="eyebrow">{t("form.eyebrow")}</div>
             <Field
               name="name"
@@ -176,6 +198,11 @@ export function ContactPage() {
               placeholder={t("form.messagePlaceholder")}
               textarea
               required
+            />
+            <TurnstileWidget
+              action="contact"
+              resetKey={turnstileResetKey}
+              onToken={setTurnstileToken}
             />
             <div
               style={{

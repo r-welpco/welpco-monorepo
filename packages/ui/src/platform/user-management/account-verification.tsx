@@ -29,7 +29,7 @@ export interface AccountVerificationProps {
   error?: string;
   labels?: AccountVerificationLabels;
   onSubmit?: (values: AccountVerificationValues) => void | Promise<void>;
-  onResend?: () => void | Promise<void>;
+  onResend?: (values: Pick<AccountVerificationValues, "website">) => void | Promise<void>;
 }
 
 function formatLabel(template: string, vars: Record<string, string | number>): string {
@@ -45,6 +45,7 @@ function createSchema(labels: AccountVerificationLabels) {
       .string()
       .regex(/^[0-9]{6}$/, labels.validation.codeInvalid)
       .trim(),
+    website: z.string().max(200).optional(),
   });
 }
 
@@ -64,7 +65,7 @@ export function AccountVerification({
 
   const form = useForm<AccountVerificationValues>({
     resolver: zodResolver(schema),
-    defaultValues: { code: "" },
+    defaultValues: { code: "", website: "" },
   });
 
   const [otpValues, setOtpValues] = useState<string[]>(["", "", "", "", "", ""]);
@@ -152,6 +153,27 @@ export function AccountVerification({
         )}
 
         <form onSubmit={handleSubmit}>
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: "-10000px",
+              top: "auto",
+              width: 1,
+              height: 1,
+              overflow: "hidden",
+            }}
+          >
+            <label htmlFor="verification-website">Leave this field blank</label>
+            <input
+              id="verification-website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              {...form.register("website")}
+            />
+          </div>
+
           <Box mb="3">
             <Text as="label" size="2" weight="bold" mb="1">
               {labels.codeLabel}
@@ -221,7 +243,7 @@ export function AccountVerification({
               color="gray"
               size="3"
               disabled={loading}
-              onClick={onResend}
+              onClick={() => void onResend?.({ website: form.getValues("website") })}
               style={{ width: "100%", flex: 1, minWidth: 0 }}
             >
               {labels.resendCode}

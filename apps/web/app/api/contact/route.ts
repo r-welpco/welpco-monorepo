@@ -7,6 +7,7 @@ import {
   getContactNotificationSubject,
   sendMail,
 } from "@welpco/email";
+import { verifyHumanRequest } from "@/lib/security/human-verification";
 
 const ContactSchema = z.object({
   role: z.string().min(1, "Role is required"),
@@ -14,6 +15,8 @@ const ContactSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
   message: z.string().min(1, "Message is required").max(5000),
+  turnstileToken: z.string().optional(),
+  website: z.string().optional(),
   locale: z.enum(["en", "fr"]).optional(),
 });
 
@@ -31,7 +34,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  const { role, name, email, phone, message, locale: localeInput } = parsed.data;
+  const {
+    role,
+    name,
+    email,
+    phone,
+    message,
+    turnstileToken,
+    website,
+    locale: localeInput,
+  } = parsed.data;
+  const human = await verifyHumanRequest(
+    { turnstileToken, website },
+    { action: "contact" },
+  );
+  if (!human.ok) {
+    return NextResponse.json({ error: human.error }, { status: human.status });
+  }
+
   const locale = localeInput ?? "en";
   const publicAppUrl = process.env.PUBLIC_APP_URL;
   const inbox = process.env.CONTACT_INBOX ?? "support@welpco.com";

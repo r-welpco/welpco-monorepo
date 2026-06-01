@@ -13,7 +13,11 @@ import { Text } from "@welpco/ui/text";
 import { FORM_SPACING } from "@welpco/ui/tokens";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
-import { EmailPasswordStep } from "@welpco/ui/platform/user-management";
+import {
+  EmailPasswordStep,
+  type EmailPasswordStepValues,
+} from "@welpco/ui/platform/user-management";
+import { TurnstileWidget } from "@/components/security/turnstile-widget";
 import { getRegisterEscapeTarget, stepNameToSlug } from "./step-name-utils";
 import { WelperRegisterEscape } from "./welper-register-escape";
 import { RegisterResumeShell } from "./register-resume-shell";
@@ -42,6 +46,9 @@ export default function RegisterPageClient() {
   } = useSignupState();
 
   const [error, setError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
   useEffect(() => {
     if (status === "loading" || !canResumeSignup) return;
@@ -65,14 +72,21 @@ export default function RegisterPageClient() {
     router.replace("/register/finish");
   }, [status, canResumeSignup, isPending, state, router, nextRaw]);
 
-  const handleBegin = async (values: { email: string; password: string }) => {
+  const handleBegin = async (values: EmailPasswordStepValues) => {
     setError(null);
+    if (turnstileEnabled && !turnstileToken) {
+      setError("Complete the human verification challenge.");
+      return;
+    }
+
     try {
       await beginSignup.mutateAsync({
         ...values,
         preferredLocale: localeFromUseLocale(uiLocale),
+        turnstileToken: turnstileToken ?? undefined,
       });
     } catch (err) {
+      setTurnstileResetKey((key) => key + 1);
       if (err instanceof ApiClientError && err.code === "ACCOUNT_EXISTS") {
         setError(t("errors.accountExists"));
         return;
@@ -132,12 +146,19 @@ export default function RegisterPageClient() {
   }
 
   return (
-    <EmailPasswordStep
-      labels={labels}
-      loading={beginSignup.isPending}
-      error={error}
-      onSubmit={handleBegin}
-      onSignIn={() => router.push(withNext("/login", nextRaw))}
-    />
+    <Flex direction="column" gap="3" align="center">
+      <EmailPasswordStep
+        labels={labels}
+        loading={beginSignup.isPending}
+        error={error}
+        onSubmit={handleBegin}
+        onSignIn={() => router.push(withNext("/login", nextRaw))}
+      />
+      <TurnstileWidget
+        action="signup_begin"
+        resetKey={turnstileResetKey}
+        onToken={setTurnstileToken}
+      />
+    </Flex>
   );
 }

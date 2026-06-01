@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useSession } from "next-auth/react";
 import { EmailVerificationRequiredError } from "@/lib/api/client";
-import { useResendVerification } from "@/lib/hooks/use-resend-verification";
+import { useResendVerification, type ResendVerificationHuman } from "@/lib/hooks/use-resend-verification";
 
 /**
  * Day 15 — Phase 3 of the signup ↔ onboarding merge.
@@ -44,8 +44,8 @@ export function useBookableAction() {
     [],
   );
 
-  const handleResend = useCallback(async () => {
-    await resend.mutateAsync();
+  const handleResend = useCallback(async (human?: ResendVerificationHuman) => {
+    await resend.mutateAsync(human);
     setDialogOpen(false);
   }, [resend]);
 

@@ -143,10 +143,16 @@ export async function verifyAccount(data: VerificationData): Promise<{ success: 
   }
 }
 
-export async function resendVerificationCode(email: string): Promise<void> {
+export async function resendVerificationCode(
+  _email: string,
+  human?: { turnstileToken?: string; website?: string },
+): Promise<void> {
   try {
     // Backend requires authentication for resend verification
-    await apiClient.post("/api/auth/resend-verification-email");
+    await apiClient.post("/api/auth/resend-verification-email", {
+      turnstileToken: human?.turnstileToken,
+      website: human?.website,
+    });
   } catch (error: any) {
     if (error.statusCode === 400) {
       throw new Error("Email is already verified");
@@ -173,6 +179,8 @@ export async function requestPasswordReset(data: PasswordResetData): Promise<voi
       {
         email: data.email,
         ...(data.preferredLocale ? { preferredLocale: data.preferredLocale } : {}),
+        ...(data.turnstileToken ? { turnstileToken: data.turnstileToken } : {}),
+        ...(data.website ? { website: data.website } : {}),
       },
       { skipAuth: true }
     );

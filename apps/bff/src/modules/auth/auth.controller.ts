@@ -37,16 +37,21 @@ import {
   NotificationPrefsStepDto,
   OptionalProfileStepDto,
   UpdatePreferredLocaleDto,
+  HumanVerificationDto,
 } from './dto';
 import { JwtAuthGuard } from '../../common/auth/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserData } from '../../common/auth/decorators/current-user.decorator';
 import { RateLimitGuard } from '../../domains/user-management/auth/guards/rate-limit.guard';
 import { RateLimit } from '../../domains/user-management/auth/decorators/rate-limit.decorator';
+import { HumanVerificationService } from '../../common/human-verification/human-verification.service';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly humanVerification: HumanVerificationService,
+  ) {}
 
   @Post('login')
   // Brute-force protection is handled by AccountLockoutService (failed attempts
@@ -72,6 +77,11 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 429, description: 'Too many requests' })
   async register(@Body() registerDto: RegisterDto) {
+    await this.humanVerification.assertVerified({
+      token: registerDto.turnstileToken,
+      honeypot: registerDto.website,
+      action: 'register',
+    });
     return this.authService.register(registerDto);
   }
 
@@ -95,13 +105,26 @@ export class AuthController {
   }
 
   @Post('resend-verification-email')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RateLimitGuard)
+  @RateLimit({
+    ttl: 900,
+    limit: 3,
+    keyGenerator: (req) => `resend-verification:${req.user?.userId || req.ip}`,
+  })
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Resend verification email' })
   @ApiResponse({ status: 200, description: 'Verification email sent' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async resendVerificationEmail(@CurrentUser() user: CurrentUserData) {
+  async resendVerificationEmail(
+    @CurrentUser() user: CurrentUserData,
+    @Body() dto: HumanVerificationDto = {},
+  ) {
+    await this.humanVerification.assertVerified({
+      token: dto.turnstileToken,
+      honeypot: dto.website,
+      action: 'resend_verification',
+    });
     return this.authService.resendVerificationEmail(user.userId);
   }
 
@@ -134,6 +157,11 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Password reset email sent' })
   @ApiResponse({ status: 429, description: 'Too many requests' })
   async requestResetPassword(@Body() requestResetPasswordDto: RequestResetPasswordDto) {
+    await this.humanVerification.assertVerified({
+      token: requestResetPasswordDto.turnstileToken,
+      honeypot: requestResetPasswordDto.website,
+      action: 'password_reset',
+    });
     return this.authService.requestResetPassword(requestResetPasswordDto);
   }
 
@@ -225,6 +253,11 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'Account already exists (code: ACCOUNT_EXISTS)' })
   @ApiResponse({ status: 429, description: 'Too many requests' })
   async beginSignup(@Body() dto: BeginSignupDto) {
+    await this.humanVerification.assertVerified({
+      token: dto.turnstileToken,
+      honeypot: dto.website,
+      action: 'signup_begin',
+    });
     return this.authService.beginSignup(dto);
   }
 

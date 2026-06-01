@@ -46,6 +46,7 @@ function createSchema(labels: AccountRecoveryFormLabels) {
     email: z.string().email(labels.validation.emailInvalid),
     recoveryMethod: z.enum(["email", "security_questions"]),
     securityAnswer: z.string().optional(),
+    website: z.string().max(200).optional(),
   });
 }
 
@@ -112,6 +113,27 @@ export function AccountRecoveryForm({
         )}
 
         <form onSubmit={handleSubmit}>
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: "-10000px",
+              top: "auto",
+              width: 1,
+              height: 1,
+              overflow: "hidden",
+            }}
+          >
+            <label htmlFor="recovery-website">Leave this field blank</label>
+            <input
+              id="recovery-website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              {...form.register("website")}
+            />
+          </div>
+
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="recovery-email" mb={FORM_SPACING.labelGap}>
               {labels.email}

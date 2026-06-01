@@ -4,6 +4,8 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin();
 
+const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
+
 const nextConfig: NextConfig = {
   turbopack: {
     // Monorepo root so Next.js uses pnpm-lock.yaml and avoids multiple-lockfile warning
@@ -48,15 +50,16 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
+              `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com ${TURNSTILE_ORIGIN}`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://*.amazonaws.com",
               "font-src 'self'",
               "manifest-src 'self'",
               "worker-src 'self'",
               "connect-src 'self' https://api.stripe.com https://*.amazonaws.com " +
+                `${TURNSTILE_ORIGIN} ` +
                 (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"),
-              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+              `frame-src 'self' https://js.stripe.com https://hooks.stripe.com ${TURNSTILE_ORIGIN}`,
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

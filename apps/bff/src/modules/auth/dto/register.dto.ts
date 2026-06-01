@@ -1,5 +1,5 @@
 import { ApiProperty, ApiSchema } from '@nestjs/swagger';
-import { IsEmail, IsString, IsEnum, IsOptional } from 'class-validator';
+import { IsEmail, IsString, IsEnum, IsOptional, MaxLength } from 'class-validator';
 import { PreferredLocaleOptionalDto } from './preferred-locale.dto';
 
 export enum AccountType {
@@ -40,4 +40,14 @@ export class RegisterDto extends PreferredLocaleOptionalDto {
   @IsOptional()
   @IsString()
   referralCode?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4096)
+  turnstileToken?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  website?: string;
 }

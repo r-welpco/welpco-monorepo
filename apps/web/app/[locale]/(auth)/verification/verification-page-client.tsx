@@ -18,6 +18,7 @@ import type { AccountVerificationValues } from "@welpco/ui/platform/user-managem
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 import { useAccountVerificationLabels } from "@/lib/i18n/use-auth-labels";
 import { WELPER_SETUP_CHECKLIST_KEY } from "@/lib/hooks/use-signup";
+import { TurnstileWidget } from "@/components/security/turnstile-widget";
 
 export default function VerificationPageClient() {
   const router = useAppRouter();
@@ -30,6 +31,9 @@ export default function VerificationPageClient() {
   const registrationData = useUserStore((state) => state.registrationData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
+  const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
   const sessionEmail = session?.user?.email?.trim() ?? "";
   const email =
@@ -74,14 +78,22 @@ export default function VerificationPageClient() {
     }
   };
 
-  const handleResend = async () => {
+  const handleResend = async (values?: Pick<AccountVerificationValues, "website">) => {
     if (!email) return;
 
     setError(null);
+    if (turnstileEnabled && !turnstileToken) {
+      setError("Complete the human verification challenge.");
+      return;
+    }
 
     try {
-      await resendVerificationCode(email);
+      await resendVerificationCode(email, {
+        turnstileToken: turnstileToken ?? undefined,
+        website: values?.website,
+      });
     } catch (err) {
+      setTurnstileResetKey((key) => key + 1);
       setError(err instanceof Error ? err.message : t("errors.resendFailed"));
     }
   };
@@ -113,14 +125,21 @@ export default function VerificationPageClient() {
 
   return (
     <AuthBackground>
-      <AccountVerification
-        labels={labels}
-        email={email}
-        loading={loading}
-        error={error || undefined}
-        onSubmit={handleSubmit}
-        onResend={handleResend}
-      />
+      <Flex direction="column" gap="3" align="center">
+        <AccountVerification
+          labels={labels}
+          email={email}
+          loading={loading}
+          error={error || undefined}
+          onSubmit={handleSubmit}
+          onResend={handleResend}
+        />
+        <TurnstileWidget
+          action="resend_verification"
+          resetKey={turnstileResetKey}
+          onToken={setTurnstileToken}
+        />
+      </Flex>
     </AuthBackground>
   );
 }

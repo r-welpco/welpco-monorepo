@@ -41,6 +41,7 @@ import { SIGNUP_STEP_CARD_STYLE } from "./types";
 export interface EmailPasswordStepValues {
   email: string;
   password: string;
+  website?: string;
 }
 
 export interface EmailPasswordStepProps {
@@ -65,6 +66,7 @@ function createSchema(labels: EmailPasswordStepLabels) {
       .string()
       .min(8, labels.validation.passwordMinLength)
       .max(128, labels.validation.passwordMaxLength),
+    website: z.string().max(200).optional(),
   });
 }
 
@@ -148,6 +150,27 @@ export function EmailPasswordStep({
         )}
 
         <form onSubmit={handleSubmit} noValidate>
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: "-10000px",
+              top: "auto",
+              width: 1,
+              height: 1,
+              overflow: "hidden",
+            }}
+          >
+            <label htmlFor="signup-website">Leave this field blank</label>
+            <input
+              id="signup-website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              {...form.register("website")}
+            />
+          </div>
+
           <Box mb={FORM_SPACING.fieldGap}>
             <Text
               as="label"

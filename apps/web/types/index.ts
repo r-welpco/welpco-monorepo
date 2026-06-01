@@ -276,6 +276,8 @@ export interface VerificationData {
 export interface PasswordResetData {
   email: string;
   preferredLocale?: "en" | "fr";
+  turnstileToken?: string;
+  website?: string;
 }
 
 export interface OnboardingData {

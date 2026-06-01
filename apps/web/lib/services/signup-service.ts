@@ -23,6 +23,8 @@ export interface BeginSignupParams {
   password: string;
   /** UI language at signup — stored for transactional email (en | fr). */
   preferredLocale?: "en" | "fr";
+  turnstileToken?: string;
+  website?: string;
 }
 
 export interface SelectRoleStepParams {

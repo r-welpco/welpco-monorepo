@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength, MaxLength } from 'class-validator';
+import { IsEmail, IsString, MinLength, MaxLength, IsOptional } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { PreferredLocaleOptionalDto } from './preferred-locale.dto';
 
@@ -35,4 +35,14 @@ export class BeginSignupDto extends PreferredLocaleOptionalDto {
   @MinLength(8, { message: 'password must be at least 8 characters' })
   @MaxLength(128, { message: 'password must be at most 128 characters' })
   password!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4096)
+  turnstileToken?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  website?: string;
 }

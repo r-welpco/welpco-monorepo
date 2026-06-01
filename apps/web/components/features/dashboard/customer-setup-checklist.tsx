@@ -201,6 +201,7 @@ function SetupTaskRow({
   const t = useTranslations("dashboard.setup");
   const resend = useResendVerification();
   const [resendNote, setResendNote] = useState<string | null>(null);
+  const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
   const Icon = task.completed ? CheckCircle2 : Circle;
   const iconColor = task.completed ? "var(--green-9)" : "var(--amber-9)";
 
@@ -238,24 +239,32 @@ function SetupTaskRow({
           <Flex gap="2" wrap="wrap" justify="end">
             {task.id === "emailVerification" ? (
               <>
-                <Button
-                  size="1"
-                  variant="soft"
-                  color={SEMANTIC_COLOR.primary}
-                  disabled={resend.isPending}
-                  onClick={() => {
-                    setResendNote(null);
-                    void resend.mutateAsync().then(
-                      () => setResendNote(t("resendSent")),
-                      (err: unknown) =>
-                        setResendNote(
-                          err instanceof Error ? err.message : t("resendFailed"),
-                        ),
-                    );
-                  }}
-                >
-                  {resend.isPending ? t("resendSending") : t("resendVerification")}
-                </Button>
+                {turnstileEnabled && sessionEmail ? (
+                  <Button size="1" variant="soft" color={SEMANTIC_COLOR.primary} asChild>
+                    <Link href={taskActionHref(task, locale, sessionEmail)}>
+                      {t("resendVerification")}
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    size="1"
+                    variant="soft"
+                    color={SEMANTIC_COLOR.primary}
+                    disabled={resend.isPending}
+                    onClick={() => {
+                      setResendNote(null);
+                      void resend.mutateAsync().then(
+                        () => setResendNote(t("resendSent")),
+                        (err: unknown) =>
+                          setResendNote(
+                            err instanceof Error ? err.message : t("resendFailed"),
+                          ),
+                      );
+                    }}
+                  >
+                    {resend.isPending ? t("resendSending") : t("resendVerification")}
+                  </Button>
+                )}
                 <Button size="1" variant="soft" asChild>
                   <Link href={taskActionHref(task, locale, sessionEmail)}>
                     {t("verifyEmail")}

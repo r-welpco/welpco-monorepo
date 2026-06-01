@@ -1,5 +1,5 @@
 import { ApiProperty, ApiSchema } from '@nestjs/swagger';
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsString, IsOptional, MaxLength } from 'class-validator';
 import { PreferredLocaleOptionalDto } from './preferred-locale.dto';
 import { IsStrongPassword } from '../../../domains/user-management/auth/validators/password.validator';
 
@@ -11,6 +11,16 @@ export class RequestResetPasswordDto extends PreferredLocaleOptionalDto {
   })
   @IsEmail({}, { message: 'Invalid email format' })
   email: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4096)
+  turnstileToken?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  website?: string;
 }
 
 @ApiSchema({ name: 'BffAuthConfirmResetPasswordDto' })
