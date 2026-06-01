@@ -38,6 +38,10 @@ export interface WelperBackgroundCheckStepProps {
   onBack?: () => void;
   /** Parent sets true while syncing Stripe return (confirm-return). */
   confirmingReturn?: boolean;
+  /** When set, shows a button to resend the screening invite email after payment. */
+  onResendInviteEmail?: () => void | Promise<void>;
+  resendInviteEmailLoading?: boolean;
+  resendInviteEmailSent?: boolean;
 }
 
 function formatCad(cents: number): string {
@@ -74,6 +78,9 @@ export function WelperBackgroundCheckStep({
   onContinue,
   onBack,
   confirmingReturn,
+  onResendInviteEmail,
+  resendInviteEmailLoading,
+  resendInviteEmailSent,
 }: WelperBackgroundCheckStepProps) {
   const labels = labelsProp ?? DEFAULT_WELPER_BACKGROUND_CHECK_LABELS;
   const isDashboard = variant === "dashboard";
@@ -89,7 +96,9 @@ export function WelperBackgroundCheckStep({
     (filled && "paid" in filled && (filled as { paid?: boolean }).paid === true);
 
   const chargeCents = promoEnabled ? promoPriceCents : listPriceCents;
-  const busy = loading || confirmingReturn || pricingLoading;
+  const busy = loading || confirmingReturn || pricingLoading || resendInviteEmailLoading;
+  const showResendInviteEmail =
+    paid && !adminApproved && Boolean(onResendInviteEmail);
 
   const handleContinue = useCallback(async () => {
     await onContinue();
@@ -167,6 +176,11 @@ export function WelperBackgroundCheckStep({
             <Callout.Root color="blue" variant="surface">
               <Callout.Text>{labels.certnEmailInvite}</Callout.Text>
             </Callout.Root>
+            {resendInviteEmailSent ? (
+              <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
+                <Callout.Text>{labels.resendInviteEmailSent}</Callout.Text>
+              </Callout.Root>
+            ) : null}
             {isDashboard && adminApproved && backgroundCheckApprovedMessage ? (
               <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
                 <Callout.Text>{backgroundCheckApprovedMessage}</Callout.Text>
@@ -195,12 +209,37 @@ export function WelperBackgroundCheckStep({
                   })}
             </Button>
           ) : !isDashboard ? (
+            <>
+              <Button
+                size="3"
+                onClick={() => void handleContinue()}
+                disabled={busy || !signupStepComplete}
+              >
+                {labels.continue}
+              </Button>
+              {showResendInviteEmail ? (
+                <Button
+                  size="2"
+                  variant="soft"
+                  onClick={() => void onResendInviteEmail?.()}
+                  disabled={busy}
+                >
+                  {resendInviteEmailLoading
+                    ? labels.resendInviteEmailSending
+                    : labels.resendInviteEmail}
+                </Button>
+              ) : null}
+            </>
+          ) : showResendInviteEmail ? (
             <Button
               size="3"
-              onClick={() => void handleContinue()}
-              disabled={busy || !signupStepComplete}
+              variant="soft"
+              onClick={() => void onResendInviteEmail?.()}
+              disabled={busy}
             >
-              {labels.continue}
+              {resendInviteEmailLoading
+                ? labels.resendInviteEmailSending
+                : labels.resendInviteEmail}
             </Button>
           ) : null}
           {onBack ? (

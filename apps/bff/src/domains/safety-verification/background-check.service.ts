@@ -203,6 +203,70 @@ export class BackgroundCheckService {
     await this.onPaymentSucceeded(order.id);
   }
 
+  /** Re-send the screening invite email when the applicant did not receive the first message. */
+  async resendInviteEmail(userId: string): Promise<void> {
+    await this.assertAdultWelper(userId);
+    const order = await this.orderRepo.findOne({ where: { userId } });
+    if (!order || order.paymentStatus !== BackgroundCheckPaymentStatus.PAID) {
+      throw new BadRequestException('Background check fee must be paid before resending the invite');
+    }
+
+    const verification = await this.verificationRepo.findOne({ where: { userId } });
+    if (verification?.backgroundCheckStatus === BackgroundCheckStatus.PASSED) {
+      return;
+    }
+    if (order.certnStatus === BackgroundCheckCertnStatus.PASSED) {
+      return;
+    }
+
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const welper = await this.welperProfileRepo.findOne({
+      where: { welperId: userId },
+    });
+    if (!user || !welper?.firstName) {
+      throw new BadRequestException(
+        'We need your name from the identity step before we can resend the screening email',
+      );
+    }
+
+    const inviteNeverSent =
+      order.certnStatus === BackgroundCheckCertnStatus.NOT_STARTED ||
+      order.failureReason?.startsWith('certn_invite_failed') ||
+      order.failureReason === 'background_check_email_failed' ||
+      order.failureReason === 'missing_background_check_url';
+
+    if (inviteNeverSent) {
+      order.failureReason = null;
+      await this.orderRepo.save(order);
+      await this.onPaymentSucceeded(order.id);
+      return;
+    }
+
+    const locale = emailLocaleForUser(user);
+    const applicantUrl =
+      sanitizeCertnApplicantUrl(order.certnApplicantUrl) ??
+      this.resolveManualApplicantUrl(locale);
+    if (!applicantUrl) {
+      throw new BadRequestException(
+        'No screening link is available to resend. Check your inbox and spam folder, or contact support.',
+      );
+    }
+
+    try {
+      await this.emailService.sendBackgroundCheckInviteEmail(user.email, applicantUrl, {
+        locale,
+        firstName: welper.firstName,
+      });
+      order.failureReason = null;
+      await this.orderRepo.save(order);
+      this.logger.log(`Background check invite email resent to ${user.email}`);
+    } catch (err) {
+      const message = (err as Error).message;
+      this.logger.error(`Background check email resend failed for order ${order.id}: ${message}`);
+      throw new BadRequestException('We could not resend the screening email. Try again in a moment.');
+    }
+  }
+
   async getFilledData(userId: string) {
     const pricing = await this.pricingService.getPricing();
     const order = await this.orderRepo.findOne({ where: { userId } });

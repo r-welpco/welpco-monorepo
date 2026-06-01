@@ -425,6 +425,9 @@ export interface WelperBackgroundCheckStepLabels extends SignupCommonLabels {
   openCertnVerification: string;
   certnLinkReady: string;
   certnEmailInvite: string;
+  resendInviteEmail: string;
+  resendInviteEmailSending: string;
+  resendInviteEmailSent: string;
   footer: string;
   continue: string;
   paymentReceivedPrefix: string;
@@ -453,6 +456,10 @@ export const DEFAULT_WELPER_BACKGROUND_CHECK_LABELS: WelperBackgroundCheckStepLa
       "Complete your background check on Certn using the button below. You can continue signup while screening is in progress.",
     certnEmailInvite:
       "We sent a Certn screening link to your signup email. Open that message to complete your background check.",
+    resendInviteEmail: "Resend screening email",
+    resendInviteEmailSending: "Sending…",
+    resendInviteEmailSent:
+      "Email sent — check your inbox and spam folder for the screening link.",
     footer:
       "Results are usually ready within a few business days. You can finish signup while your check is processing; search and bookings unlock once you are cleared.",
     continue: "Continue",

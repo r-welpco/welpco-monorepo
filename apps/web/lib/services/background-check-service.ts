@@ -60,3 +60,9 @@ export async function retryBackgroundCheckCertnInvite(): Promise<BackgroundCheck
     "/api/verification/background-check/retry-invite",
   );
 }
+
+export async function resendBackgroundCheckInviteEmail(): Promise<BackgroundCheckStatusResponse> {
+  return apiClient.post<BackgroundCheckStatusResponse>(
+    "/api/verification/background-check/resend-invite-email",
+  );
+}

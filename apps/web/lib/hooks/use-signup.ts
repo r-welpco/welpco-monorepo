@@ -38,6 +38,7 @@ import {
   confirmBackgroundCheckReturn,
   createBackgroundCheckCheckoutSession,
   getBackgroundCheckStatus,
+  resendBackgroundCheckInviteEmail,
 } from "@/lib/services/background-check-service";
 import {
   createStripeConnectAccountLink,
@@ -219,6 +220,16 @@ export function useConfirmBackgroundCheckReturn() {
       queryClient.invalidateQueries({ queryKey: BACKGROUND_CHECK_STATUS_KEY });
       queryClient.invalidateQueries({ queryKey: SIGNUP_STATE_KEY });
       queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+    },
+  });
+}
+
+export function useResendBackgroundCheckInviteEmail() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: resendBackgroundCheckInviteEmail,
+    onSuccess: (data) => {
+      queryClient.setQueryData(BACKGROUND_CHECK_STATUS_KEY, data);
     },
   });
 }

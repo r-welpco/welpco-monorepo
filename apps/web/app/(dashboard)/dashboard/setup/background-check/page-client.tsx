@@ -17,6 +17,7 @@ import {
   useCompleteWelperBackgroundCheckStep,
   useConfirmBackgroundCheckReturn,
   useCreateBackgroundCheckCheckout,
+  useResendBackgroundCheckInviteEmail,
   useSignupState,
 } from "@/lib/hooks/use-signup";
 import type { SignupStateLite } from "@welpco/ui/platform/user-management";
@@ -40,7 +41,9 @@ export default function BackgroundCheckSetupPageClient() {
   const createBgCheckout = useCreateBackgroundCheckCheckout();
   const confirmBgReturn = useConfirmBackgroundCheckReturn();
   const completeStep = useCompleteWelperBackgroundCheckStep();
+  const resendInviteEmail = useResendBackgroundCheckInviteEmail();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [resendInviteEmailSent, setResendInviteEmailSent] = useState(false);
   const confirmedStripeSessionRef = useRef<string | null>(null);
 
   const liteState = {
@@ -91,7 +94,8 @@ export default function BackgroundCheckSetupPageClient() {
           loading={
             createBgCheckout.isPending ||
             confirmBgReturn.isPending ||
-            completeStep.isPending
+            completeStep.isPending ||
+            resendInviteEmail.isPending
           }
           pricingLoading={bgCheckStatus.isPending && !filledBg}
           error={
@@ -100,6 +104,7 @@ export default function BackgroundCheckSetupPageClient() {
             createBgCheckout.error?.message ??
             confirmBgReturn.error?.message ??
             completeStep.error?.message ??
+            resendInviteEmail.error?.message ??
             null
           }
           listPriceCents={bg?.pricing.listPriceCents ?? filledBg?.listPriceCents}
@@ -109,6 +114,15 @@ export default function BackgroundCheckSetupPageClient() {
           failureReason={bg?.failureReason ?? null}
           signupStepComplete={bg?.signupStepComplete ?? false}
           confirmingReturn={confirmBgReturn.isPending}
+          resendInviteEmailLoading={resendInviteEmail.isPending}
+          resendInviteEmailSent={resendInviteEmailSent}
+          onResendInviteEmail={() => {
+            setSubmitError(null);
+            setResendInviteEmailSent(false);
+            void resendInviteEmail.mutateAsync().then(() => {
+              setResendInviteEmailSent(true);
+            });
+          }}
           onPay={() => {
             void createBgCheckout.mutateAsync(localeForStripe).then(({ url }) => {
               window.location.href = url;

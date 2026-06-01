@@ -88,4 +88,16 @@ export class VerificationController {
     await this.backgroundCheckService.retryCertnInvite(user.userId);
     return this.backgroundCheckService.getStatus(user.userId);
   }
+
+  @Post('resend-invite-email')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Resend background check screening invite email to the welper',
+  })
+  async resendInviteEmail(@CurrentUser() user: CurrentUserData) {
+    await this.backgroundCheckService.resendInviteEmail(user.userId);
+    return this.backgroundCheckService.getStatus(user.userId);
+  }
 }
