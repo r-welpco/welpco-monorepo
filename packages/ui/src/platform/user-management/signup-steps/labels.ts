@@ -152,6 +152,11 @@ export interface IdentityStepLabels extends SignupCommonLabels {
   phonePlaceholder: string;
   dateOfBirth: string;
   dobHint: string;
+  minorWelperModal: {
+    title: string;
+    description: string;
+    close: string;
+  };
   tosPrefix: string;
   tosLink: string;
   privacyPrefix: string;
@@ -168,6 +173,7 @@ export interface IdentityStepLabels extends SignupCommonLabels {
     dobRequired: string;
     dobInvalid: string;
     dobMinAge: string;
+    dobTooYoung: string;
     tosRequired: string;
     privacyRequired: string;
   };
@@ -184,7 +190,13 @@ export const DEFAULT_IDENTITY_LABELS: IdentityStepLabels = {
   countryPlaceholder: "Country",
   phonePlaceholder: "416 555 1234",
   dateOfBirth: "Date of birth",
-  dobHint: "You must be at least 13.",
+  dobHint: "You must be at least 18 to sign up.",
+  minorWelperModal: {
+    title: "Minor Welper sign-up coming soon",
+    description:
+      "Guardian-managed accounts for Welpers aged 14–17 are almost ready. Check back in a couple of days — we'll let you know when you can sign up.",
+    close: "Got it",
+  },
   tosPrefix: "I agree to the",
   tosLink: "Terms of Service",
   privacyPrefix: "I've read the",
@@ -209,7 +221,8 @@ export const DEFAULT_IDENTITY_LABELS: IdentityStepLabels = {
     phoneInvalid: "Enter a valid phone number for the selected country",
     dobRequired: "Date of birth is required",
     dobInvalid: "Enter a valid date",
-    dobMinAge: "You must be at least 13 to sign up",
+    dobMinAge: "You must be at least 18 to sign up",
+    dobTooYoung: "You must be at least 14 years old to sign up as a Welper",
     tosRequired: "Accept the Terms of Service to continue",
     privacyRequired: "Accept the Privacy Policy to continue",
   },

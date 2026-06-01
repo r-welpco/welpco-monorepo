@@ -910,7 +910,12 @@
           "countryPlaceholder": "Pays",
           "phonePlaceholder": "416 555 1234",
           "dateOfBirth": "Date de naissance",
-          "dobHint": "Vous devez avoir au moins 13 ans.",
+          "dobHint": "Vous devez avoir au moins 18 ans pour vous inscrire.",
+          "minorWelperModal": {
+            "title": "Inscription Welper mineur bientôt disponible",
+            "description": "Les comptes gérés par un tuteur pour les Welpers de 14 à 17 ans arrivent très bientôt. Revenez dans quelques jours — nous vous préviendrons dès que l'inscription sera ouverte.",
+            "close": "Compris"
+          },
           "tosPrefix": "J'accepte les",
           "tosLink": "Conditions d'utilisation",
           "privacyPrefix": "J'ai lu la",
@@ -935,7 +940,8 @@
             "phoneInvalid": "Entrez un numéro valide pour le pays sélectionné",
             "dobRequired": "La date de naissance est requise",
             "dobInvalid": "Entrez une date valide",
-            "dobMinAge": "Vous devez avoir au moins 13 ans pour vous inscrire",
+            "dobMinAge": "Vous devez avoir au moins 18 ans pour vous inscrire",
+            "dobTooYoung": "Vous devez avoir au moins 14 ans pour vous inscrire comme Welper",
             "tosRequired": "Acceptez les Conditions d'utilisation pour continuer",
             "privacyRequired": "Acceptez la Politique de confidentialité pour continuer"
           }

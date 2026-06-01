@@ -34,7 +34,7 @@ export interface IdentityStepParams {
   lastName: string;
   /** International-format string. Validated server-side via libphonenumber-js. */
   phone: string;
-  /** ISO 8601 date (YYYY-MM-DD); user must be at least 13. */
+  /** ISO 8601 date (YYYY-MM-DD); user must be at least 18. */
   dateOfBirth: string;
   /** ISO datetime captured at form submit time. */
   tosAcceptedAt: string;

@@ -21,9 +21,8 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
  * The phone is accepted as a free-form string (E.164 ideal but national
  * format with country hint also accepted) and validated via
  * `parsePhoneNumberFromString().isValid()`. The orchestrator parses again
- * and persists the structured `PhoneNumber` shape. dateOfBirth gates a
- * minimum age of 13 (COPPA-aligned); the guardian flow lives elsewhere
- * and is out of scope for Phase 1.
+ * and persists the structured `PhoneNumber` shape. dateOfBirth requires
+ * users to be at least 18 years old.
  */
 @ValidatorConstraint({ name: 'isValidPhoneE164', async: false })
 class IsValidPhoneE164Constraint implements ValidatorConstraintInterface {
@@ -38,24 +37,21 @@ class IsValidPhoneE164Constraint implements ValidatorConstraintInterface {
   }
 }
 
-@ValidatorConstraint({ name: 'isAtLeast13YearsAgo', async: false })
-class IsAtLeast13YearsAgoConstraint implements ValidatorConstraintInterface {
+@ValidatorConstraint({ name: 'isAtLeast18YearsAgo', async: false })
+class IsAtLeast18YearsAgoConstraint implements ValidatorConstraintInterface {
   validate(value: unknown): boolean {
     if (typeof value !== 'string') return false;
     const dob = new Date(value);
     if (Number.isNaN(dob.getTime())) return false;
-    // Compute age in years (rounded down). The wizard's COPPA gate is 13;
-    // a minor + guardian-account flow already exists separately and is not
-    // in scope for the wizard's identity step.
     const now = new Date();
     let age = now.getFullYear() - dob.getFullYear();
     const m = now.getMonth() - dob.getMonth();
     if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
-    return age >= 13;
+    return age >= 18;
   }
 
   defaultMessage(_args: ValidationArguments): string {
-    return 'You must be at least 13 years old to sign up';
+    return 'You must be at least 18 years old to sign up';
   }
 }
 
@@ -94,11 +90,11 @@ export class IdentityStepDto {
   phone!: string;
 
   @ApiProperty({
-    description: 'Date of birth (ISO 8601 date). Must be at least 13 years ago.',
+    description: 'Date of birth (ISO 8601 date). Must be at least 18 years ago.',
     example: '1995-06-12',
   })
   @IsDateString({}, { message: 'dateOfBirth must be an ISO date string' })
-  @Validate(IsAtLeast13YearsAgoConstraint)
+  @Validate(IsAtLeast18YearsAgoConstraint)
   dateOfBirth!: string;
 
   @ApiProperty({

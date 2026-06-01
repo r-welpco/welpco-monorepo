@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
@@ -21,6 +21,7 @@ import {
 } from "@welpco/ui/select";
 import { Text } from "@welpco/ui/text";
 import { TextField } from "@welpco/ui/text-field";
+import { Dialog, DialogContent } from "@welpco/ui/dialog";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
   DEFAULT_IDENTITY_LABELS,
@@ -34,7 +35,7 @@ import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite 
  * Captures identity fields shared by both customer and welper roles:
  *   - first name + last name
  *   - phone (validated client-side via libphonenumber-js; the BFF re-validates)
- *   - date of birth (≥ 13)
+ *   - date of birth (18+ for customers and Welpers; 14–17 Welpers see a coming-soon modal)
  *   - ToS + Privacy Policy acceptance (both required)
  *
  * Mobile-first single-task layout. Required-field markers per bible §16.3.
@@ -58,14 +59,14 @@ const SUPPORTED_COUNTRY_CODES = [
 
 type CountryCode = (typeof SUPPORTED_COUNTRY_CODES)[number];
 
-function isAtLeast13(dobIso: string): boolean {
+function calculateAge(dobIso: string): number | null {
   const dob = new Date(dobIso);
-  if (Number.isNaN(dob.getTime())) return false;
+  if (Number.isNaN(dob.getTime())) return null;
   const now = new Date();
   let age = now.getFullYear() - dob.getFullYear();
   const m = now.getMonth() - dob.getMonth();
   if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
-  return age >= 13;
+  return age;
 }
 
 function createSchema(labels: IdentityStepLabels) {
@@ -85,8 +86,7 @@ function createSchema(labels: IdentityStepLabels) {
     dateOfBirth: z
       .string()
       .min(1, labels.validation.dobRequired)
-      .refine((v) => !Number.isNaN(new Date(v).getTime()), labels.validation.dobInvalid)
-      .refine(isAtLeast13, labels.validation.dobMinAge),
+      .refine((v) => !Number.isNaN(new Date(v).getTime()), labels.validation.dobInvalid),
     acceptTos: z.boolean().refine((v) => v === true, {
       message: labels.validation.tosRequired,
     }),
@@ -135,6 +135,8 @@ export function IdentityStep({
 }: IdentityStepProps) {
   const labels = labelsProp ?? DEFAULT_IDENTITY_LABELS;
   const schema = useMemo(() => createSchema(labels), [labels]);
+  const [minorModalOpen, setMinorModalOpen] = useState(false);
+  const selectedRole = state.selectedRole;
 
   const filled = state.filledData.identity;
   const parsedExisting = filled?.phone
@@ -172,6 +174,37 @@ export function IdentityStep({
       });
       return;
     }
+
+    const age = calculateAge(values.dateOfBirth);
+    if (age === null) {
+      form.setError("dateOfBirth", {
+        type: "manual",
+        message: labels.validation.dobInvalid,
+      });
+      return;
+    }
+
+    if (selectedRole === "welper" && age >= 14 && age < 18) {
+      setMinorModalOpen(true);
+      return;
+    }
+
+    if (selectedRole === "welper" && age < 14) {
+      form.setError("dateOfBirth", {
+        type: "manual",
+        message: labels.validation.dobTooYoung,
+      });
+      return;
+    }
+
+    if (age < 18) {
+      form.setError("dateOfBirth", {
+        type: "manual",
+        message: labels.validation.dobMinAge,
+      });
+      return;
+    }
+
     const now = new Date().toISOString();
     await onSubmit({
       firstName: values.firstName,
@@ -184,7 +217,25 @@ export function IdentityStep({
   });
 
   return (
-    <Card
+    <>
+      <Dialog open={minorModalOpen} onOpenChange={setMinorModalOpen}>
+        <DialogContent
+          title={labels.minorWelperModal.title}
+          description={labels.minorWelperModal.description}
+        >
+          <Flex justify="end" mt="4">
+            <Button
+              type="button"
+              color={SEMANTIC_COLOR.primary}
+              onClick={() => setMinorModalOpen(false)}
+            >
+              {labels.minorWelperModal.close}
+            </Button>
+          </Flex>
+        </DialogContent>
+      </Dialog>
+
+      <Card
       size="4"
       variant="surface"
       style={SIGNUP_STEP_CARD_STYLE}
@@ -492,5 +543,6 @@ export function IdentityStep({
         </form>
       </Flex>
     </Card>
+    </>
   );
 }
