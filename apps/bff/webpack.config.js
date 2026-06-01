@@ -1,5 +1,13 @@
 const nodeExternals = require('webpack-node-externals');
 
+/** Keep native/SDK deps external when @welpco/email is bundled into the serverless artifact. */
+function externalizeSdkRequest({ request }, callback) {
+  if (request === 'resend' || (typeof request === 'string' && request.startsWith('resend/'))) {
+    return callback(null, `commonjs ${request}`);
+  }
+  callback();
+}
+
 /**
  * Nest defaults externalize all node_modules. On Vercel, workspace packages
  * (@welpco/*) must be bundled — otherwise runtime resolves package.json "main"
@@ -11,5 +19,6 @@ module.exports = (options) => ({
     nodeExternals({
       allowlist: [/^@welpco\//],
     }),
+    externalizeSdkRequest,
   ],
 });

@@ -4,15 +4,16 @@ import { AuthService } from './auth.service';
 import { UserManagementDomainModule } from '../../domains/user-management/user-management.module';
 import { ProfileManagementDomainModule } from '../../domains/profile-management/profile-management.module';
 import { RateLimitGuard } from '../../domains/user-management/auth/guards/rate-limit.guard';
-import { HumanVerificationService } from '../../common/human-verification/human-verification.service';
+import { HumanVerificationModule } from '../../common/human-verification/human-verification.module';
 
 @Module({
   imports: [
     UserManagementDomainModule,
     ProfileManagementDomainModule,
+    HumanVerificationModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, RateLimitGuard, HumanVerificationService],
+  providers: [AuthService, RateLimitGuard],
   exports: [AuthService],
 })
 export class AuthModule {}

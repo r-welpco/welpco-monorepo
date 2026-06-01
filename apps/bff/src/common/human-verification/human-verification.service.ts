@@ -5,6 +5,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { fetchJson } from '../http/fetch-json';
 
 interface TurnstileVerifyResponse {
   success: boolean;
@@ -56,12 +57,12 @@ export class HumanVerificationService {
 
     let data: TurnstileVerifyResponse;
     try {
-      const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      const response = await fetchJson('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body,
       });
-      data = (await response.json()) as TurnstileVerifyResponse;
+      data = await response.json<TurnstileVerifyResponse>();
     } catch (err) {
       this.logger.warn(
         `Turnstile verification request failed: ${err instanceof Error ? err.message : String(err)}`,
