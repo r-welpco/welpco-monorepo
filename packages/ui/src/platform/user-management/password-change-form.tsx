@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
-import { TextField } from "@welpco/ui/text-field";
+import { PasswordField } from "@welpco/ui/password-field";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
@@ -110,9 +110,8 @@ export function PasswordChangeForm({
               {labels?.currentPassword ?? "Current password"}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
-            <TextField.Root
+            <PasswordField
               id="current-password"
-              type="password"
               placeholder="Enter current password"
               autoComplete="current-password"
               disabled={loading}
@@ -132,9 +131,8 @@ export function PasswordChangeForm({
               {labels?.newPassword ?? "New password"}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
-            <TextField.Root
+            <PasswordField
               id="new-password"
-              type="password"
               placeholder="Enter new password"
               autoComplete="new-password"
               disabled={loading}
@@ -165,9 +163,8 @@ export function PasswordChangeForm({
               {labels?.confirmPassword ?? "Confirm new password"}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
-            <TextField.Root
+            <PasswordField
               id="confirm-password"
-              type="password"
               placeholder="Confirm new password"
               autoComplete="new-password"
               disabled={loading}

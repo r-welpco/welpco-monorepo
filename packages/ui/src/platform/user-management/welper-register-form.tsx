@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
+import { PasswordField } from "@welpco/ui/password-field";
 import { TextField } from "@welpco/ui/text-field";
 import { Checkbox } from "@welpco/ui/checkbox";
 import { Box } from "@welpco/ui/box";
@@ -161,10 +162,9 @@ export function WelperRegisterForm({
               Password
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
-            <TextField.Root
+            <PasswordField
               id="welper-password"
               placeholder="••••••••"
-              type="password"
               autoComplete="new-password"
               disabled={loading}
               size="2"
@@ -189,10 +189,9 @@ export function WelperRegisterForm({
               Confirm password
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
-            <TextField.Root
+            <PasswordField
               id="welper-confirm"
               placeholder="••••••••"
-              type="password"
               autoComplete="new-password"
               disabled={loading}
               size="2"

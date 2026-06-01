@@ -13,6 +13,7 @@ import { Text } from "@welpco/ui/text";
 import { Box } from "@welpco/ui/box";
 import { Heading } from "@welpco/ui/heading";
 import { Link } from "@welpco/ui/link";
+import { PasswordField } from "@welpco/ui/password-field";
 import { TextField } from "@welpco/ui/text-field";
 
 export function LoginForm() {
@@ -108,10 +109,10 @@ export function LoginForm() {
             Forgot password?
           </Link>
         </Flex>
-        <TextField.Root
+        <PasswordField
           id="password-field"
           placeholder="Enter your password"
-          type="password"
+          autoComplete="current-password"
           {...register("password")}
         />
         {errors.password && (

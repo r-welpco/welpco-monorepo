@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { TextField, Text, Flex } from "@radix-ui/themes";
+import { Text, Flex } from "@radix-ui/themes";
 import { Label } from "@radix-ui/react-label";
+import { PasswordField } from "@welpco/ui/password-field";
+import { TextField } from "@welpco/ui/text-field";
 
 export interface InputProps
   extends React.ComponentPropsWithoutRef<typeof TextField.Root> {
@@ -39,15 +41,27 @@ const Input = React.forwardRef<
           </Text>
         </Label>
       )}
-      <TextField.Root
-        ref={ref}
-        id={inputId}
-        size={size}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={errorId}
-        aria-required={props.required ? true : undefined}
-        {...props}
-      />
+      {props.type === "password" ? (
+        <PasswordField
+          ref={ref}
+          id={inputId}
+          size={size}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={errorId}
+          aria-required={props.required ? true : undefined}
+          {...props}
+        />
+      ) : (
+        <TextField.Root
+          ref={ref}
+          id={inputId}
+          size={size}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={errorId}
+          aria-required={props.required ? true : undefined}
+          {...props}
+        />
+      )}
       {error && (
         <Text size="1" color="red" id={errorId} role="alert">
           {error}

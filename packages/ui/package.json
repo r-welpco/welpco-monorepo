@@ -38,6 +38,10 @@
       "types": "./dist/text-field.d.ts",
       "default": "./dist/text-field.js"
     },
+    "./password-field": {
+      "types": "./dist/password-field.d.ts",
+      "default": "./dist/password-field.js"
+    },
     "./text-area": {
       "types": "./dist/text-area.d.ts",
       "default": "./dist/text-area.js"

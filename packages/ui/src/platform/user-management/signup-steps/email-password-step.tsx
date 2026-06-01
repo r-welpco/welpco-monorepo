@@ -13,6 +13,7 @@ import { Heading } from "@welpco/ui/heading";
 import { Link } from "@welpco/ui/link";
 import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
+import { PasswordField } from "@welpco/ui/password-field";
 import { TextField } from "@welpco/ui/text-field";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
@@ -202,9 +203,8 @@ export function EmailPasswordStep({
                 {labels.requiredMarker}
               </Text>
             </Text>
-            <TextField.Root
+            <PasswordField
               id="signup-password"
-              type="password"
               placeholder={labels.passwordPlaceholder}
               autoComplete="new-password"
               disabled={loading}

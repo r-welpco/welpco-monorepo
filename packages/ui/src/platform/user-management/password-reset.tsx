@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
+import { PasswordField } from "@welpco/ui/password-field";
 import { TextField } from "@welpco/ui/text-field";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
@@ -126,9 +127,8 @@ export function PasswordReset({
                 {labels.requiredMarker}
               </Text>
             </Text>
-            <TextField.Root
+            <PasswordField
               id="reset-password"
-              type="password"
               placeholder={labels.passwordPlaceholder}
               autoComplete="new-password"
               size="2"
@@ -156,9 +156,8 @@ export function PasswordReset({
                 {labels.requiredMarker}
               </Text>
             </Text>
-            <TextField.Root
+            <PasswordField
               id="reset-confirm"
-              type="password"
               placeholder={labels.passwordPlaceholder}
               autoComplete="new-password"
               size="2"

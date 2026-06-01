@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
+import { PasswordField } from "@welpco/ui/password-field";
 import { TextField } from "@welpco/ui/text-field";
 import { Checkbox } from "@welpco/ui/checkbox";
 import { Box } from "@welpco/ui/box";
@@ -131,10 +132,9 @@ export function LoginForm({
                 </Link>
               )}
             </Flex>
-            <TextField.Root
+            <PasswordField
               id="login-password"
               placeholder={labels.passwordPlaceholder}
-              type="password"
               autoComplete="current-password"
               size="2"
               aria-required="true"
