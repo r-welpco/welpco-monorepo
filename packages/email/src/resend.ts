@@ -33,20 +33,25 @@ export async function sendMailViaResend(
   const from = resolveFrom(options, config);
   const text = options.text ?? options.html.replace(/<[^>]*>/g, "");
 
-  const response = await fetch(RESEND_API_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to: [options.to],
-      subject: options.subject,
-      html: options.html,
-      text,
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(RESEND_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [options.to],
+        subject: options.subject,
+        html: options.html,
+        text,
+      }),
+    });
+  } catch (error) {
+    throw formatFetchError(error);
+  }
 
   const body = await response.text();
   if (!response.ok) {
@@ -54,6 +59,20 @@ export async function sendMailViaResend(
   }
 
   return JSON.parse(body) as { id: string };
+}
+
+function formatFetchError(error: unknown): Error {
+  if (!(error instanceof Error)) {
+    return new Error(String(error));
+  }
+  const cause = error.cause as NodeJS.ErrnoException | undefined;
+  if (cause?.code || cause?.message) {
+    return new Error(
+      `Resend HTTP request failed (${cause.code ?? "network"}): ${cause.message ?? error.message}`,
+      { cause: error },
+    );
+  }
+  return error;
 }
 
 export function hasResendApiKey(config?: ResendConfig): boolean {
