@@ -1,7 +1,7 @@
 import {
   Injectable,
   Logger,
-  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -52,8 +52,9 @@ export class PasswordResetService {
     email: string,
     options?: { preferredLocale?: UserPreferredLocale },
   ): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
     const user = await this.userRepository.findOne({
-      where: { email },
+      where: { email: normalizedEmail },
     });
 
     // Unknown email → return early, but only AFTER the DB roundtrip so the
@@ -73,11 +74,11 @@ export class PasswordResetService {
     // a real account from a single attacker), but enforced silently. The
     // caller never sees a "you've hit the rate limit" error because that error
     // alone would tell them the account exists.
-    const rateLimitKey = `password-reset:rate-limit:${email}`;
+    const rateLimitKey = `password-reset:rate-limit:${normalizedEmail}`;
     const requestCount = await this.cacheService.get<number>(rateLimitKey) || 0;
     if (requestCount >= this.MAX_REQUESTS_PER_HOUR) {
       this.logger.warn(
-        `Password reset rate-limit reached for ${email}; suppressing email send (response stays uniform).`,
+        `Password reset rate-limit reached for ${normalizedEmail}; suppressing email send (response stays uniform).`,
       );
       return;
     }
@@ -131,7 +132,7 @@ export class PasswordResetService {
     const userId = await this.cacheService.get<string>(tokenKey);
 
     if (!userId) {
-      throw new NotFoundException('Invalid or expired password reset token');
+      throw new BadRequestException('Invalid or expired password reset token');
     }
 
     // Get user
@@ -140,7 +141,7 @@ export class PasswordResetService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new BadRequestException('Invalid or expired password reset token');
     }
 
     // Hash new password

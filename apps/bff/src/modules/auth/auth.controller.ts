@@ -121,10 +121,18 @@ export class AuthController {
   }
 
   @Post('reset-password')
+  @UseGuards(RateLimitGuard)
+  @RateLimit({
+    ttl: 3600,
+    limit: 3,
+    keyGenerator: (req) =>
+      `password-reset:${(req.body?.email || '').toLowerCase().trim() || req.ip}`,
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request password reset' })
   @ApiBody({ type: RequestResetPasswordDto })
   @ApiResponse({ status: 200, description: 'Password reset email sent' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async requestResetPassword(@Body() requestResetPasswordDto: RequestResetPasswordDto) {
     return this.authService.requestResetPassword(requestResetPasswordDto);
   }

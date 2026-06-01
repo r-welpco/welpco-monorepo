@@ -713,6 +713,7 @@
       "newToWelpco": "Nouveau sur Welpco?",
       "createAccount": "Créer un compte",
       "verifiedBanner": "Votre courriel est vérifié. Connectez-vous pour continuer.",
+      "passwordResetBanner": "Votre mot de passe a été mis à jour. Connectez-vous avec votre nouveau mot de passe.",
       "alreadySignedInTitle": "Vous êtes déjà connecté",
       "alreadySignedInHint": "Continuez ci-dessous, ou déconnectez-vous pour utiliser un autre compte.",
       "signedInAs": "Connecté en tant que {email}",
@@ -1152,7 +1153,7 @@
       "submitting": "Mise à jour…",
       "invalidLinkTitle": "Ce lien de réinitialisation ne fonctionne pas",
       "invalidLinkDescription": "Le lien est peut-être expiré ou déjà utilisé. Demandez une nouvelle réinitialisation.",
-      "invalidLinkCallout": "Les liens sont valides 30 minutes après leur émission.",
+      "invalidLinkCallout": "Les liens sont valides 15 minutes après leur émission.",
       "requestNewLink": "Demander un nouveau lien",
       "successTitle": "Votre mot de passe est défini",
       "successRedirecting": "Redirection vers la connexion…",
@@ -1160,6 +1161,7 @@
       "validation": {
         "emailInvalid": "Entrez un courriel valide",
         "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
+        "passwordStrength": "Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial",
         "confirmPasswordMinLength": "Confirmez votre mot de passe",
         "passwordsMustMatch": "Les mots de passe doivent correspondre"
       },

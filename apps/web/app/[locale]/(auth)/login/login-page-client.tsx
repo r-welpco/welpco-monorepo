@@ -30,6 +30,7 @@ export default function LoginPageClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showVerifiedMessage, setShowVerifiedMessage] = useState(false);
+  const [showPasswordResetMessage, setShowPasswordResetMessage] = useState(false);
   const verifiedEmail = searchParams.get("email");
   const nextRaw = searchParams.get("next");
   const nextPath = useMemo(() => safeNextPath(nextRaw, "/dashboard"), [nextRaw]);
@@ -39,6 +40,9 @@ export default function LoginPageClient() {
   useEffect(() => {
     if (searchParams.get("verified") === "true") {
       setShowVerifiedMessage(true);
+    }
+    if (searchParams.get("passwordReset") === "success") {
+      setShowPasswordResetMessage(true);
     }
   }, [searchParams]);
 
@@ -156,7 +160,14 @@ export default function LoginPageClient() {
   return (
     <AuthBackground>
       <Flex direction="column" align="center" gap="4" width="100%">
-        {showVerifiedMessage && !alreadySignedIn ? (
+        {showPasswordResetMessage && !alreadySignedIn ? (
+          <Box width="100%" maxWidth="480px">
+            <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
+              <Callout.Text>{t("passwordResetBanner")}</Callout.Text>
+            </Callout.Root>
+          </Box>
+        ) : null}
+        {showVerifiedMessage && !showPasswordResetMessage && !alreadySignedIn ? (
           <Box width="100%" maxWidth="480px">
             <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
               <Callout.Text>{t("verifiedBanner")}</Callout.Text>

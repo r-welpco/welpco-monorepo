@@ -11,6 +11,7 @@ import { requestPasswordReset } from "@/lib/services/user-service";
 import { useUserStore } from "@/stores/userStore";
 import type { AccountRecoveryValues } from "@welpco/ui/platform/user-management";
 import { withNext } from "@/lib/auth/safe-next";
+import { useForgotPasswordLabels } from "@/lib/i18n/use-auth-labels";
 
 function ForgotPasswordPageClient() {
   const router = useAppRouter();
@@ -18,6 +19,7 @@ function ForgotPasswordPageClient() {
   const nextRaw = searchParams.get("next");
   const uiLocale = useLocale();
   const t = useTranslations("auth.forgotPassword");
+  const formLabels = useForgotPasswordLabels();
   const setPasswordResetEmail = useUserStore((state) => state.setPasswordResetEmail);
   const setPasswordResetSent = useUserStore((state) => state.setPasswordResetSent);
   const [loading, setLoading] = useState(false);
@@ -53,6 +55,7 @@ function ForgotPasswordPageClient() {
       <AccountRecoveryForm
         title={t("title")}
         description={t("description")}
+        labels={formLabels}
         hideRecoveryMethod
         loading={loading}
         error={error || undefined}

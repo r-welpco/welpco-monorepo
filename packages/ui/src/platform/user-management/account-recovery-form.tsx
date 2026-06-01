@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { TextField } from "@welpco/ui/text-field";
@@ -13,6 +14,12 @@ import { Callout } from "@welpco/ui/callout";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import {
+  DEFAULT_ACCOUNT_RECOVERY_LABELS,
+  type AccountRecoveryFormLabels,
+} from "./signup-steps/labels";
+
+export type { AccountRecoveryFormLabels } from "./signup-steps/labels";
 
 export interface AccountRecoveryFormProps {
   loading?: boolean;
@@ -31,15 +38,18 @@ export interface AccountRecoveryFormProps {
   hideRecoveryMethod?: boolean;
   /** Optional success state — replaces the form when truthy. */
   successMessage?: string;
+  labels?: AccountRecoveryFormLabels;
 }
 
-const schema = z.object({
-  email: z.string().email("Enter a valid email"),
-  recoveryMethod: z.enum(["email", "security_questions"]),
-  securityAnswer: z.string().optional(),
-});
+function createSchema(labels: AccountRecoveryFormLabels) {
+  return z.object({
+    email: z.string().email(labels.validation.emailInvalid),
+    recoveryMethod: z.enum(["email", "security_questions"]),
+    securityAnswer: z.string().optional(),
+  });
+}
 
-export type AccountRecoveryValues = z.infer<typeof schema>;
+export type AccountRecoveryValues = z.infer<ReturnType<typeof createSchema>>;
 
 export function AccountRecoveryForm({
   loading,
@@ -50,7 +60,11 @@ export function AccountRecoveryForm({
   description,
   hideRecoveryMethod,
   successMessage,
+  labels: labelsProp,
 }: AccountRecoveryFormProps) {
+  const labels = labelsProp ?? DEFAULT_ACCOUNT_RECOVERY_LABELS;
+  const schema = useMemo(() => createSchema(labels), [labels]);
+
   const form = useForm<AccountRecoveryValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -100,12 +114,12 @@ export function AccountRecoveryForm({
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="recovery-email" mb={FORM_SPACING.labelGap}>
-              Email address
+              {labels.email}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
               id="recovery-email"
-              placeholder="you@example.com"
+              placeholder={labels.emailPlaceholder}
               autoComplete="email"
               disabled={loading}
               size="2"
@@ -197,7 +211,7 @@ export function AccountRecoveryForm({
                 onClick={onCancel}
                 style={{ width: "100%", flex: 1, minWidth: 0 }}
               >
-                Cancel
+                {labels.cancel}
               </Button>
             )}
             <Button
@@ -208,10 +222,10 @@ export function AccountRecoveryForm({
               style={{ width: "100%", flex: 1, minWidth: 0 }}
             >
               {loading
-                ? "Sending..."
+                ? labels.sending
                 : hideRecoveryMethod
-                  ? "Send reset link"
-                  : "Recover account"}
+                  ? labels.sendResetLink
+                  : labels.recoverAccount}
             </Button>
           </Flex>
         </form>
@@ -219,4 +233,3 @@ export function AccountRecoveryForm({
     </Card>
   );
 }
-

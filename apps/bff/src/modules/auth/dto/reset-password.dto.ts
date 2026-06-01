@@ -1,6 +1,7 @@
 import { ApiProperty, ApiSchema } from '@nestjs/swagger';
-import { IsEmail, IsString, IsOptional } from 'class-validator';
+import { IsEmail, IsString } from 'class-validator';
 import { PreferredLocaleOptionalDto } from './preferred-locale.dto';
+import { IsStrongPassword } from '../../../domains/user-management/auth/validators/password.validator';
 
 @ApiSchema({ name: 'BffAuthRequestResetPasswordDto' })
 export class RequestResetPasswordDto extends PreferredLocaleOptionalDto {
@@ -31,8 +32,10 @@ export class ConfirmResetPasswordDto {
   @ApiProperty({
     description: 'New password',
     example: 'NewSecurePassword123!',
+    minLength: 8,
   })
   @IsString()
+  @IsStrongPassword()
   newPassword: string;
 }
 
@@ -48,7 +51,9 @@ export class ChangePasswordDto {
   @ApiProperty({
     description: 'New password',
     example: 'NewSecurePassword123!',
+    minLength: 8,
   })
   @IsString()
+  @IsStrongPassword()
   newPassword: string;
 }

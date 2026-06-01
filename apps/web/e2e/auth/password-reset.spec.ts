@@ -1,124 +1,62 @@
 import { test, expect } from '@playwright/test';
 import {
   generateTestEmail,
-  waitForNavigation,
+  waitForFormReady,
   getErrorMessage,
   hasSuccessMessage,
-  waitForFormReady,
 } from '../helpers/test-helpers';
 
 test.describe('Password Reset Flow', () => {
-  test('should request password reset successfully', async ({ page }) => {
+  test('should request password reset link with email only', async ({ page }) => {
     const email = generateTestEmail('reset');
-    const newPassword = 'NewPassword123!';
 
     await page.goto('/forgot-password');
     await waitForFormReady(page);
 
-    // Fill email using getByLabel or fallback to ID
-    try {
-      await page.getByLabel(/email/i).fill(email);
-    } catch {
-      await page.fill('#reset-email', email);
-    }
+    await page.locator('#recovery-email').fill(email);
 
-    // Fill new password
-    try {
-      await page.getByLabel(/new password/i).fill(newPassword);
-    } catch {
-      await page.fill('#reset-password', newPassword);
-    }
+    const responsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/auth/reset-password') &&
+        response.request().method() === 'POST',
+      { timeout: 15000 },
+    );
 
-    // Fill confirm password
-    try {
-      await page.getByLabel(/confirm password/i).fill(newPassword);
-    } catch {
-      await page.fill('#reset-confirm', newPassword);
-    }
-
-    // Submit form - button text is "Update password"
-    const responsePromise = page.waitForResponse((response) => 
-      response.url().includes('/api/auth/reset-password') && response.request().method() === 'POST'
-    , { timeout: 15000 });
-    
-    await page.getByRole('button', { name: /update password/i }).click();
+    await page.getByRole('button', { name: /send reset link/i }).click();
 
     const response = await responsePromise;
     const status = response.status();
-    // 2xx = success; 404 = endpoint not implemented; 400/429 = rate limit or "too many requests"
-    const acceptedStatuses = [200, 201, 404, 400, 429];
+    const acceptedStatuses = [200, 201, 400, 429];
     expect(acceptedStatuses).toContain(status);
 
     if (status === 200 || status === 201) {
       const success = await hasSuccessMessage(page);
-      const successText = page.getByText(/reset.*sent|email.*sent|check.*email|success/i).first();
-      expect(success || (await successText.isVisible({ timeout: 2000 }).catch(() => false))).toBe(true);
+      const successText = page
+        .getByText(/reset link|check your inbox|account exists/i)
+        .first();
+      expect(
+        success || (await successText.isVisible({ timeout: 3000 }).catch(() => false)),
+      ).toBe(true);
     }
-    // For 400/429/404 we only assert the request completed and UI shows form or error (no throw)
   });
 
-  test('should show error for invalid email format', async ({ page }) => {
+  test('should show error for invalid email format on forgot password', async ({ page }) => {
     await page.goto('/forgot-password');
     await waitForFormReady(page);
 
-    // Fill invalid email - but also need to fill passwords to trigger email validation
-    try {
-      await page.getByLabel(/email/i).fill('invalid-email');
-    } catch {
-      await page.fill('#reset-email', 'invalid-email');
-    }
+    await page.locator('#recovery-email').fill('invalid-email');
+    await page.getByRole('button', { name: /send reset link/i }).click();
 
-    // Fill passwords to satisfy form requirements
-    const password = 'TestPassword123!';
-    try {
-      await page.getByLabel(/new password/i).fill(password);
-    } catch {
-      await page.fill('#reset-password', password);
-    }
+    await page.waitForTimeout(500);
 
-    try {
-      await page.getByLabel(/confirm password/i).fill(password);
-    } catch {
-      await page.fill('#reset-confirm', password);
-    }
-    
-    // Try to submit - validation should prevent submission
-    await page.getByRole('button', { name: /update password/i }).click();
+    const emailError = page.locator('#recovery-email').locator('..').getByRole('alert');
+    const hasValidationError =
+      (await emailError.count()) > 0 &&
+      (await emailError.first().isVisible().catch(() => false));
 
-    // Wait for validation to trigger
-    await page.waitForTimeout(1500);
-
-    // Should show validation error for email
-    const emailError = page.locator('#reset-email').locator('xpath=following-sibling::*//text[color="red"][size="1"]').first();
-    
-    let foundEmailError = false;
-    if (await emailError.count() > 0 && await emailError.isVisible({ timeout: 1000 }).catch(() => false)) {
-      const errorText = await emailError.textContent();
-      if (errorText && errorText.match(/email|valid|format|Enter a valid/i)) {
-        foundEmailError = true;
-        expect(errorText).toMatch(/email|valid|format|Enter a valid/i);
-      }
-    }
-    
-    // Fallback: check all error messages
-    if (!foundEmailError) {
-      const allErrors = page.locator('[color="red"][size="1"]');
-      const errorCount = await allErrors.count();
-      for (let i = 0; i < errorCount; i++) {
-        const error = allErrors.nth(i);
-        if (await error.isVisible({ timeout: 500 }).catch(() => false)) {
-          const text = await error.textContent();
-          if (text && text.match(/email|valid|format|Enter a valid/i)) {
-            foundEmailError = true;
-            expect(text).toMatch(/email|valid|format|Enter a valid/i);
-            break;
-          }
-        }
-      }
-    }
-    
-    // If no email error found, at least verify form didn't submit
-    if (!foundEmailError) {
+    if (hasValidationError) {
+      await expect(emailError.first()).toContainText(/email|valid/i);
+    } else {
       expect(page.url()).toContain('/forgot-password');
     }
   });
@@ -127,96 +65,73 @@ test.describe('Password Reset Flow', () => {
     await page.goto('/forgot-password');
     await waitForFormReady(page);
 
-    // The PasswordReset component doesn't have a back link in the UI package
-    // But the page might have one, or we can just test navigation directly
-    // For now, let's just navigate directly to test the flow
-    await page.goto('/login');
-    
-    // Should be on login page
+    await page.getByRole('button', { name: /cancel/i }).click();
+    await page.waitForURL(/login/);
     expect(page.url()).toContain('login');
   });
 
-  test('should validate password strength on reset', async ({ page }) => {
-    const email = generateTestEmail('weak-password');
-    
-    await page.goto('/forgot-password');
+  test('should show invalid link state without token', async ({ page }) => {
+    await page.goto('/reset-password');
     await waitForFormReady(page);
 
-    // Fill email
-    try {
-      await page.getByLabel(/email/i).fill(email);
-    } catch {
-      await page.fill('#reset-email', email);
-    }
+    await expect(page.getByText(/reset link won't work|won't work/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /request a new link/i })).toBeVisible();
+  });
 
-    // Try with weak password
-    try {
-      await page.getByLabel(/new password/i).fill('weak');
-    } catch {
-      await page.fill('#reset-password', 'weak');
-    }
+  test('should validate password strength on reset page', async ({ page }) => {
+    const email = generateTestEmail('weak-password');
+    const token = '00000000-0000-4000-8000-000000000001';
 
-    try {
-      await page.getByLabel(/confirm password/i).fill('weak');
-    } catch {
-      await page.fill('#reset-confirm', 'weak');
-    }
+    await page.goto(`/reset-password?token=${token}&email=${encodeURIComponent(email)}`);
+    await waitForFormReady(page);
 
+    await page.locator('#reset-password').fill('weak');
+    await page.locator('#reset-confirm').fill('weak');
     await page.getByRole('button', { name: /update password/i }).click();
 
-    // Wait for validation
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
 
-    // Should show validation error
     const errorMessage = await getErrorMessage(page);
-    if (!errorMessage) {
-      // Check if form submission was prevented
-      expect(page.url()).toContain('/forgot-password');
+    const passwordError = page.locator('#reset-password').locator('..').getByRole('alert');
+    const hasFieldError =
+      (await passwordError.count()) > 0 &&
+      (await passwordError.first().isVisible().catch(() => false));
+
+    if (errorMessage) {
+      expect(errorMessage).toMatch(/password|strength|characters|uppercase|special/i);
+    } else if (hasFieldError) {
+      await expect(passwordError.first()).toContainText(/password|strength|characters/i);
     } else {
-      expect(errorMessage).toMatch(/password|strength|characters/i);
+      expect(page.url()).toContain('/reset-password');
     }
   });
 
-  test('should validate password confirmation match', async ({ page }) => {
+  test('should validate password confirmation match on reset page', async ({ page }) => {
     const email = generateTestEmail('mismatch');
+    const token = '00000000-0000-4000-8000-000000000002';
     const password = 'TestPassword123!';
-    
-    await page.goto('/forgot-password');
+
+    await page.goto(`/reset-password?token=${token}&email=${encodeURIComponent(email)}`);
     await waitForFormReady(page);
 
-    // Fill email
-    try {
-      await page.getByLabel(/email/i).fill(email);
-    } catch {
-      await page.fill('#reset-email', email);
-    }
-
-    // Fill password
-    try {
-      await page.getByLabel(/new password/i).fill(password);
-    } catch {
-      await page.fill('#reset-password', password);
-    }
-
-    // Fill different confirm password
-    try {
-      await page.getByLabel(/confirm password/i).fill('DifferentPassword123!');
-    } catch {
-      await page.fill('#reset-confirm', 'DifferentPassword123!');
-    }
-
+    await page.locator('#reset-password').fill(password);
+    await page.locator('#reset-confirm').fill('DifferentPassword123!');
     await page.getByRole('button', { name: /update password/i }).click();
 
-    // Wait for validation
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
 
-    // Should show validation error
     const errorMessage = await getErrorMessage(page);
-    if (!errorMessage) {
-      // Check if form submission was prevented
-      expect(page.url()).toContain('/forgot-password');
-    } else {
+    const confirmError = page.locator('#reset-confirm').locator('..').getByRole('alert');
+    const hasFieldError =
+      (await confirmError.count()) > 0 &&
+      (await confirmError.first().isVisible().catch(() => false));
+
+    if (errorMessage) {
       expect(errorMessage).toMatch(/match|confirm|same/i);
+    } else if (hasFieldError) {
+      await expect(confirmError.first()).toContainText(/match|confirm|same/i);
+    } else {
+      expect(page.url()).toContain('/reset-password');
     }
   });
 });

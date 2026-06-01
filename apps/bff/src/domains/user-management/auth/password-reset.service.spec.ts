@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { PasswordResetService } from './password-reset.service';
 import { UserAccount } from '../entities/user-account.entity';
 import { CacheService } from '../cache/cache.service';
@@ -70,7 +70,7 @@ describe('PasswordResetService', () => {
       cacheService.increment.mockResolvedValue(1);
       eventPublisher.publishPasswordResetRequested.mockResolvedValue();
 
-      await service.requestPasswordReset('test@example.com');
+      await service.requestPasswordReset('  Test@Example.com  ');
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { email: 'test@example.com' },
@@ -137,21 +137,21 @@ describe('PasswordResetService', () => {
       expect(eventPublisher.publishPasswordResetCompleted).toHaveBeenCalled();
     });
 
-    it('should throw NotFoundException for invalid token', async () => {
+    it('should throw BadRequestException for invalid token', async () => {
       cacheService.get.mockResolvedValue(null);
 
       await expect(
         service.confirmPasswordReset('invalid-token', 'NewPassword123!'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw NotFoundException if user not found', async () => {
+    it('should throw BadRequestException if user not found', async () => {
       cacheService.get.mockResolvedValue('user-1');
       userRepository.findOne.mockResolvedValue(null);
 
       await expect(
         service.confirmPasswordReset('valid-token', 'NewPassword123!'),
-      ).rejects.toThrow(NotFoundException);
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

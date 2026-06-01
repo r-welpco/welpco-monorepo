@@ -45,7 +45,7 @@ export default function ResetPasswordPageClient() {
       setSuccess(true);
 
       setTimeout(() => {
-        router.push(withNext("/login?verified=true", nextRaw));
+        router.push(withNext("/login?passwordReset=success", nextRaw));
       }, 1500);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("errors.resetFailed"));

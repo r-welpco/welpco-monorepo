@@ -201,8 +201,11 @@ export async function resetPassword(
       { skipAuth: true }
     );
   } catch (error: any) {
-    if (error.statusCode === 400) {
+    if (error.statusCode === 400 || error.statusCode === 404) {
       throw new Error("Invalid or expired reset token");
+    }
+    if (error.statusCode === 429) {
+      throw new Error("Too many attempts. Please try again later.");
     }
     throw new Error(error.message || "Failed to reset password");
   }

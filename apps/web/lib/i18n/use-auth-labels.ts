@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useAuthMessages, useAuthRegisterStep } from "@/lib/i18n/auth-message-templates";
 import type {
+  AccountRecoveryFormLabels,
   AccountVerificationLabels,
   EmailPasswordStepLabels,
   IdentityStepLabels,
@@ -330,6 +331,22 @@ export function useWelperPayoutStepLabels(): WelperPayoutStepLabels {
   };
 }
 
+export function useForgotPasswordLabels(): AccountRecoveryFormLabels {
+  const tc = useTranslations("auth.common");
+  const t = useTranslations("auth.forgotPassword");
+  return {
+    email: t("email"),
+    emailPlaceholder: tc("emailPlaceholder"),
+    cancel: tc("cancel"),
+    sendResetLink: t("submit"),
+    sending: t("submitting"),
+    recoverAccount: t("submit"),
+    validation: {
+      emailInvalid: t("validation.emailInvalid"),
+    },
+  };
+}
+
 export function usePasswordResetLabels(): PasswordResetLabels {
   const tc = useTranslations("auth.common");
   const t = useTranslations("auth.resetPassword");
@@ -348,6 +365,7 @@ export function usePasswordResetLabels(): PasswordResetLabels {
     validation: {
       emailInvalid: t("validation.emailInvalid"),
       passwordMinLength: t("validation.passwordMinLength"),
+      passwordStrength: t("validation.passwordStrength"),
       confirmPasswordMinLength: t("validation.confirmPasswordMinLength"),
       passwordsMustMatch: t("validation.passwordsMustMatch"),
     },

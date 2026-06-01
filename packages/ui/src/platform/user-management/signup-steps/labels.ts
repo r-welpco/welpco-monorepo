@@ -562,6 +562,10 @@ export const DEFAULT_OPTIONAL_PROFILE_LABELS: OptionalProfileStepLabels = {
   finishSignup: "Finish signup",
 };
 
+/** Matches BFF `IsStrongPassword` and web `auth.ts` password rules. */
+export const STRONG_PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+
 export interface PasswordResetLabels {
   title: string;
   description: string;
@@ -577,8 +581,21 @@ export interface PasswordResetLabels {
   validation: {
     emailInvalid: string;
     passwordMinLength: string;
+    passwordStrength: string;
     confirmPasswordMinLength: string;
     passwordsMustMatch: string;
+  };
+}
+
+export interface AccountRecoveryFormLabels {
+  email: string;
+  emailPlaceholder: string;
+  cancel: string;
+  sendResetLink: string;
+  sending: string;
+  recoverAccount: string;
+  validation: {
+    emailInvalid: string;
   };
 }
 
@@ -597,8 +614,22 @@ export const DEFAULT_PASSWORD_RESET_LABELS: PasswordResetLabels = {
   validation: {
     emailInvalid: "Enter a valid email",
     passwordMinLength: "Password must be at least 8 characters",
+    passwordStrength:
+      "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
     confirmPasswordMinLength: "Confirm your password",
     passwordsMustMatch: "Passwords must match",
+  },
+};
+
+export const DEFAULT_ACCOUNT_RECOVERY_LABELS: AccountRecoveryFormLabels = {
+  email: "Email address",
+  emailPlaceholder: "you@example.com",
+  cancel: "Cancel",
+  sendResetLink: "Send reset link",
+  sending: "Sending...",
+  recoverAccount: "Recover account",
+  validation: {
+    emailInvalid: "Enter a valid email",
   },
 };
 

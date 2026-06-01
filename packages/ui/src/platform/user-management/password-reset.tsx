@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
   DEFAULT_PASSWORD_RESET_LABELS,
+  STRONG_PASSWORD_REGEX,
   type PasswordResetLabels,
 } from "./signup-steps/labels";
 
@@ -33,7 +34,10 @@ function createSchema(labels: PasswordResetLabels) {
   return z
     .object({
       email: z.string().email(labels.validation.emailInvalid),
-      newPassword: z.string().min(8, labels.validation.passwordMinLength),
+      newPassword: z
+        .string()
+        .min(8, labels.validation.passwordMinLength)
+        .regex(STRONG_PASSWORD_REGEX, labels.validation.passwordStrength),
       confirmPassword: z.string().min(8, labels.validation.confirmPasswordMinLength),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {

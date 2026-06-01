@@ -714,6 +714,7 @@
       "newToWelpco": "New to Welpco?",
       "createAccount": "Create an account",
       "verifiedBanner": "Your email is verified. Sign in to continue.",
+      "passwordResetBanner": "Your password was updated. Sign in with your new password.",
       "alreadySignedInTitle": "You're already signed in",
       "alreadySignedInHint": "Continue below, or sign out to use a different account.",
       "signedInAs": "Signed in as {email}",
@@ -1153,7 +1154,7 @@
       "submitting": "Updating...",
       "invalidLinkTitle": "This reset link won't work",
       "invalidLinkDescription": "The link may be expired or already used. Request a new password reset and we'll send a fresh link.",
-      "invalidLinkCallout": "Reset links are valid for 30 minutes after they're issued.",
+      "invalidLinkCallout": "Reset links are valid for 15 minutes after they're issued.",
       "requestNewLink": "Request a new link",
       "successTitle": "Your password is set",
       "successRedirecting": "Taking you to sign in…",
@@ -1161,6 +1162,7 @@
       "validation": {
         "emailInvalid": "Enter a valid email",
         "passwordMinLength": "Password must be at least 8 characters",
+        "passwordStrength": "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
         "confirmPasswordMinLength": "Confirm your password",
         "passwordsMustMatch": "Passwords must match"
       },
