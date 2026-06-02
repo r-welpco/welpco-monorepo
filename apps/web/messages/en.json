@@ -1407,7 +1407,6 @@
       "entityPet": "Pet details",
       "entityDefault": "Enter details…"
     },
-    "_serviceQuestionCopy": "BFF CMS question labels: EN from API; FR in messages/service-question-copy.fr.json (see scripts/build-service-question-copy-fr.mjs)",
     "bookings": {
       "title": "Bookings",
       "subtitle": "Manage incoming booking requests and jobs.",

@@ -1,7 +1,8 @@
 "use client";
 
-import { useLocale, useMessages } from "next-intl";
+import { useLocale } from "next-intl";
 import type { ServiceQuestion } from "@/lib/services/booking-service";
+import frServiceQuestionCopy from "@/messages/service-question-copy.fr.json";
 
 /** CMS question copy keyed by exact English strings from BFF (temporary until questionKey + BFF locale). */
 export type ServiceQuestionCopyMaps = {
@@ -20,6 +21,8 @@ export type ServiceQuestionCopy = {
     question: ServiceQuestion["question"],
   ) => ServiceQuestion["question"];
 };
+
+const FR_MAPS = frServiceQuestionCopy as ServiceQuestionCopyMaps;
 
 function pick(
   english: string | null | undefined,
@@ -70,16 +73,13 @@ export function createServiceQuestionCopy(
   };
 }
 
-export function getServiceQuestionCopyMaps(
-  messages: unknown,
+export function getServiceQuestionCopyMapsForLocale(
+  locale: string,
 ): ServiceQuestionCopyMaps | undefined {
-  const dashboard = (messages as { dashboard?: { serviceQuestionCopy?: ServiceQuestionCopyMaps } })
-    ?.dashboard;
-  return dashboard?.serviceQuestionCopy;
+  return locale === "fr" ? FR_MAPS : undefined;
 }
 
 export function useServiceQuestionCopy(): ServiceQuestionCopy {
   const locale = useLocale();
-  const messages = useMessages();
-  return createServiceQuestionCopy(locale, getServiceQuestionCopyMaps(messages));
+  return createServiceQuestionCopy(locale, getServiceQuestionCopyMapsForLocale(locale));
 }

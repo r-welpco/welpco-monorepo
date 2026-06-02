@@ -16,16 +16,6 @@ export function resolveLocaleFromCookie(
 export async function loadMessages(
   locale: Locale,
 ): Promise<AbstractIntlMessages> {
-  const messages = (await import(`../../messages/${locale}.json`)).default as Record<
-    string,
-    unknown
-  >;
-  if (locale === "fr") {
-    const serviceQuestionCopy = (
-      await import("../../messages/service-question-copy.fr.json")
-    ).default;
-    const dashboard = (messages.dashboard ?? {}) as Record<string, unknown>;
-    messages.dashboard = { ...dashboard, serviceQuestionCopy };
-  }
+  const messages = (await import(`../../messages/${locale}.json`)).default;
   return messages as AbstractIntlMessages;
 }
