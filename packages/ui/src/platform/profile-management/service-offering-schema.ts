@@ -36,7 +36,7 @@ const DEFAULT_VALIDATION_LABELS: ServiceOfferingValidationLabels = {
   stateRequired: "Province or state is required",
   postalRequired: "Postal code is required",
   radiusMin: "Radius must be at least 1 km",
-  radiusMax: "Radius must be at most 10,000 km",
+  radiusMax: "Radius must be at most 100,000 km",
 };
 
 export function createServiceAreaSchema(v: ServiceOfferingValidationLabels) {

@@ -968,7 +968,7 @@
             "cityRequired": "City is required.",
             "provinceRequired": "Province / state is required.",
             "postalRequired": "Postal code is required so we can place you on the map.",
-            "radiusRange": "Choose a radius between 1 and 10,000 km."
+            "radiusRange": "Choose a radius between 1 and 100,000 km."
           },
           "selector": {
             "centerAddress": "Center address",
@@ -1777,7 +1777,7 @@
             "stateRequired": "Province or state is required",
             "postalRequired": "Postal code is required",
             "radiusMin": "Radius must be at least 1 km",
-            "radiusMax": "Radius must be at most 10,000 km"
+            "radiusMax": "Radius must be at most 100,000 km"
           },
           "serviceAreaSelector": {
             "overrideDescription": "Use default service area or define a custom area for this service.",

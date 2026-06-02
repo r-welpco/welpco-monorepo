@@ -1,7 +1,7 @@
 import type { ServiceArea } from "./service-area-selector";
 
 export const SERVICE_AREA_RADIUS_KM_MIN = 1;
-export const SERVICE_AREA_RADIUS_KM_MAX = 10000;
+export const SERVICE_AREA_RADIUS_KM_MAX = 100000;
 export const SERVICE_AREA_RADIUS_KM_DEFAULT = 25;
 
 const MILES_TO_KM = 1.60934;

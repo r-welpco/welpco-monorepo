@@ -299,7 +299,7 @@ export const DEFAULT_WELPER_SERVICE_AREA_LABELS: WelperServiceAreaStepLabels = {
     cityRequired: "City is required.",
     provinceRequired: "Province / state is required.",
     postalRequired: "Postal code is required so we can place you on the map.",
-    radiusRange: "Choose a radius between 1 and 10,000 km.",
+    radiusRange: "Choose a radius between 1 and 100,000 km.",
   },
   selector: DEFAULT_WELPER_SERVICE_AREA_SELECTOR,
   address: DEFAULT_WELPER_SERVICE_AREA_ADDRESS,
