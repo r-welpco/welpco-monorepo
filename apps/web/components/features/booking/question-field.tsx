@@ -13,6 +13,7 @@ import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import type { ServiceQuestion } from "@/lib/services/booking-service";
 import { matchesQuestionType } from "@/lib/services/service-questions-utils";
 import type { QuestionFieldLabels } from "@/lib/i18n/question-field-labels";
+import { useServiceQuestionCopy } from "@/lib/i18n/service-question-copy";
 
 function RequiredMarker() {
   return (
@@ -30,7 +31,9 @@ export interface QuestionFieldProps {
 }
 
 export function QuestionField({ sq, value, onChange, labels }: QuestionFieldProps) {
-  const { question, isRequired } = sq;
+  const copy = useServiceQuestionCopy();
+  const { question: rawQuestion, isRequired } = sq;
+  const question = copy.translateQuestion(rawQuestion);
   const fieldId = `q-${question.id}`;
   const labelId = `${fieldId}-label`;
   const helpId = question.helpText ? `${fieldId}-help` : undefined;

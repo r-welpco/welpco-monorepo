@@ -96,6 +96,7 @@ import {
 } from "@/lib/i18n/dispute-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
+import { useServiceQuestionCopy } from "@/lib/i18n/service-question-copy";
 import { formatOfferingCategoryLabel } from "@/lib/utils/category-utils";
 import styles from "./booking-detail.module.css";
 
@@ -394,6 +395,7 @@ export default function BookingDetailClient({
   const disputeFormCategories = useDisputeFormCategoryLabels();
   const disputeStatusLabel = useDisputeStatusLabel();
   const customerPreviewLabels = useCustomerPreviewLabels();
+  const serviceQuestionCopy = useServiceQuestionCopy();
   const commonLabels = useDashboardCommonLabels();
   const bookingStatusLabel = useBookingStatusLabel();
   const dateFnsLocale = useDateFnsLocale();
@@ -622,7 +624,10 @@ export default function BookingDetailClient({
 
   const bookingAnswerRows = useMemo(() => {
     if (!booking?.answers) return [];
-    const labelMap = buildAnswerLabelMap(serviceQuestionsForAnswers ?? []);
+    const labelMap = buildAnswerLabelMap(
+      serviceQuestionsForAnswers ?? [],
+      serviceQuestionCopy,
+    );
     return Object.entries(booking.answers).map(([questionId, value]) => {
       const meta = labelMap.get(questionId);
       return {
@@ -631,7 +636,12 @@ export default function BookingDetailClient({
         displayValue: meta ? meta.format(value) : String(value),
       };
     });
-  }, [booking?.answers, serviceQuestionsForAnswers, welperDetail.additionalDetail]);
+  }, [
+    booking?.answers,
+    serviceQuestionsForAnswers,
+    serviceQuestionCopy,
+    welperDetail.additionalDetail,
+  ]);
 
   const handleBack = useCallback(() => {
     router.push("/dashboard/bookings");

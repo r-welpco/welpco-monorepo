@@ -8,6 +8,8 @@
     "start": "next start -p 8081",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
+    "i18n:audit-service-questions": "node scripts/audit-service-question-copy.mjs",
+    "i18n:build-service-questions": "node scripts/build-service-question-copy-fr.mjs",
     "test:e2e": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test",
     "test:e2e:install": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright install chromium",
     "test:e2e:personalization": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test e2e/personalization/personalization.spec.ts --reporter=list",

@@ -15,6 +15,7 @@ import { useServiceQuestions } from "@/lib/hooks/use-bookings";
 import { buildAnswerDisplayRows } from "@/lib/services/service-questions-utils";
 import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
+import { useServiceQuestionCopy } from "@/lib/i18n/service-question-copy";
 
 function formatScheduleDate(date: string, locale: string): string {
   const parsed = new Date(`${date}T12:00:00`);
@@ -66,6 +67,7 @@ export function JobPostingReviewSummary({
   const locale = useLocale();
   const labels = useMarketplaceLabels();
   const categoryDisplayName = useCategoryDisplayName();
+  const serviceQuestionCopy = useServiceQuestionCopy();
   const {
     data: serviceQuestions,
     isLoading: questionsLoading,
@@ -73,8 +75,11 @@ export function JobPostingReviewSummary({
   } = useServiceQuestions(serviceQuestionCategoryId);
 
   const answerRows = useMemo(
-    () => buildAnswerDisplayRows(serviceQuestions ?? [], answers),
-    [answers, serviceQuestions],
+    () =>
+      buildAnswerDisplayRows(serviceQuestions ?? [], answers, {
+        copy: serviceQuestionCopy,
+      }),
+    [answers, serviceQuestions, serviceQuestionCopy],
   );
 
   const rawServiceLabel = subcategoryLabel ?? categoryLabel;

@@ -3,6 +3,7 @@ import type {
   ServiceQuestionType,
   ServiceQuestionValidation,
 } from "./booking-service";
+import type { ServiceQuestionCopy } from "@/lib/i18n/service-question-copy";
 
 const TYPE_MAP: Record<string, ServiceQuestionType> = {
   text: "TEXT",
@@ -210,13 +211,20 @@ export function buildBookingAnswersPayload(
 export function formatAnswerDisplayValue(
   question: ServiceQuestion["question"],
   value: string | number | boolean,
+  copy?: ServiceQuestionCopy,
 ): string {
-  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "boolean") {
+    return value
+      ? (copy?.translateOptionLabel("Yes") ?? "Yes")
+      : (copy?.translateOptionLabel("No") ?? "No");
+  }
   if (matchesQuestionType(question.type, "CHOICE") && question.options) {
     const opt = question.options.find(
       (o) => o.value === String(value) || o.value === value,
     );
-    if (opt) return opt.label;
+    if (opt) {
+      return copy?.translateOptionLabel(opt.label) ?? opt.label;
+    }
   }
   return String(value);
 }
@@ -238,8 +246,9 @@ export function resolveStoredAnswer(
 export function buildAnswerDisplayRows(
   serviceQuestions: ServiceQuestion[],
   answers: Record<string, string | number | boolean>,
-  options?: { hideScheduleDuplicates?: boolean },
+  options?: { hideScheduleDuplicates?: boolean; copy?: ServiceQuestionCopy },
 ): Array<{ key: string; label: string; displayValue: string }> {
+  const copy = options?.copy;
   const visible = getVisibleServiceQuestions(serviceQuestions, answers, {
     hideScheduleDuplicates: options?.hideScheduleDuplicates ?? true,
   });
@@ -250,8 +259,8 @@ export function buildAnswerDisplayRows(
       if (value === undefined) return null;
       return {
         key: sq.question.id,
-        label: sq.question.label,
-        displayValue: formatAnswerDisplayValue(sq.question, value),
+        label: copy?.translateLabel(sq.question.label) ?? sq.question.label,
+        displayValue: formatAnswerDisplayValue(sq.question, value, copy),
       };
     })
     .filter((row): row is { key: string; label: string; displayValue: string } => row !== null);
@@ -259,6 +268,7 @@ export function buildAnswerDisplayRows(
 
 export function buildAnswerLabelMap(
   serviceQuestions: ServiceQuestion[],
+  copy?: ServiceQuestionCopy,
 ): Map<string, { label: string; format: (value: string | number | boolean) => string }> {
   const map = new Map<
     string,
@@ -266,8 +276,8 @@ export function buildAnswerLabelMap(
   >();
   for (const sq of serviceQuestions) {
     map.set(sq.question.id, {
-      label: sq.question.label,
-      format: (v) => formatAnswerDisplayValue(sq.question, v),
+      label: copy?.translateLabel(sq.question.label) ?? sq.question.label,
+      format: (v) => formatAnswerDisplayValue(sq.question, v, copy),
     });
   }
   return map;
