@@ -884,7 +884,7 @@ export function useWelperBookingDetailLabels() {
     receiptExtraChargeHint: t("receiptExtraChargeHint"),
     receiptTotal: (amount: string) => t("receiptTotal", { amount }),
     peopleTitle: t("peopleTitle"),
-    customer: t("customer"),
+    customer: t("customerLabel"),
     welper: t("welper"),
     you: t("you"),
     pricingTitle: t("pricingTitle"),
