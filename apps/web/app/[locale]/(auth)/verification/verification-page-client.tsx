@@ -17,7 +17,7 @@ import { useUserStore } from "@/stores/userStore";
 import type { AccountVerificationValues } from "@welpco/ui/platform/user-management";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 import { useAccountVerificationLabels } from "@/lib/i18n/use-auth-labels";
-import { WELPER_SETUP_CHECKLIST_KEY } from "@/lib/hooks/use-signup";
+import { invalidateSetupChecklists } from "@/lib/hooks/use-signup";
 import { TurnstileWidget } from "@/components/security/turnstile-widget";
 
 export default function VerificationPageClient() {
@@ -62,7 +62,7 @@ export default function VerificationPageClient() {
         },
       });
 
-      await queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+      await invalidateSetupChecklists(queryClient);
 
       const signupDone =
         session?.user?.signupCompleted ??

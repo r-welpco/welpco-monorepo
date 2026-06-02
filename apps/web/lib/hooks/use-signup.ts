@@ -1,3 +1,4 @@
+import type { QueryClient } from "@tanstack/react-query";
 import {
   keepPreviousData,
   useMutation,
@@ -148,7 +149,7 @@ function useStepMutation<TParams>(
       // keep refetches honest if other tabs mutate.
       queryClient.setQueryData<SignupStateDto>(SIGNUP_STATE_KEY, state);
       queryClient.invalidateQueries({ queryKey: SIGNUP_STATE_KEY });
-      queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+      queryClient.invalidateQueries({ queryKey: SETUP_CHECKLIST_KEY_PREFIX });
     },
   });
 }
@@ -186,7 +187,21 @@ export function useCompleteWelperBackgroundCheckStep() {
 }
 
 const BACKGROUND_CHECK_STATUS_KEY = ["verification", "background-check", "status"] as const;
-export const WELPER_SETUP_CHECKLIST_KEY = ["profiles", "me", "setup-checklist"] as const;
+
+export const SETUP_CHECKLIST_KEY_PREFIX = ["profiles", "me", "setup-checklist"] as const;
+
+/** Role-scoped cache key (customer vs welper use different BFF payloads). */
+export function setupChecklistQueryKey(role: "customer" | "welper") {
+  return [...SETUP_CHECKLIST_KEY_PREFIX, role] as const;
+}
+
+/** Invalidate every setup-checklist query (customer + welper). */
+export function invalidateSetupChecklists(queryClient: QueryClient) {
+  return queryClient.invalidateQueries({ queryKey: SETUP_CHECKLIST_KEY_PREFIX });
+}
+
+/** @deprecated Prefer {@link invalidateSetupChecklists} — prefix matches all roles. */
+export const WELPER_SETUP_CHECKLIST_KEY = SETUP_CHECKLIST_KEY_PREFIX;
 
 export function useBackgroundCheckStatus(enabled = true) {
   const canCallApi = useHasApiSession();
@@ -219,7 +234,7 @@ export function useConfirmBackgroundCheckReturn() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BACKGROUND_CHECK_STATUS_KEY });
       queryClient.invalidateQueries({ queryKey: SIGNUP_STATE_KEY });
-      queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+      queryClient.invalidateQueries({ queryKey: SETUP_CHECKLIST_KEY_PREFIX });
     },
   });
 }
@@ -259,7 +274,7 @@ export function useSyncStripeConnect() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: STRIPE_CONNECT_STATUS_KEY });
       queryClient.invalidateQueries({ queryKey: SIGNUP_STATE_KEY });
-      queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+      queryClient.invalidateQueries({ queryKey: SETUP_CHECKLIST_KEY_PREFIX });
     },
   });
 }
@@ -289,29 +304,40 @@ export function useCompleteOptionalProfileStep() {
 export function useWelperSetupChecklist(enabled = true) {
   const canCallApi = useHasApiSession();
   return useQuery({
-    queryKey: WELPER_SETUP_CHECKLIST_KEY,
+    queryKey: setupChecklistQueryKey("welper"),
     queryFn: getWelperSetupChecklist,
     enabled: canCallApi && enabled,
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+    placeholderData: keepPreviousData,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data || data.setupComplete) return false;
+      return 30_000;
+    },
   });
 }
 
 export function useCustomerSetupChecklist(enabled = true) {
   const canCallApi = useHasApiSession();
   return useQuery({
-    queryKey: WELPER_SETUP_CHECKLIST_KEY,
+    queryKey: setupChecklistQueryKey("customer"),
     queryFn: getCustomerSetupChecklist,
     enabled: canCallApi && enabled,
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+    placeholderData: keepPreviousData,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data || data.setupComplete) return false;
+      return 30_000;
+    },
   });
 }
 
 export function useInvalidateWelperSetupChecklist() {
   const queryClient = useQueryClient();
-  return () =>
-    queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+  return () => invalidateSetupChecklists(queryClient);
 }
 
 export function useFinishSignup() {

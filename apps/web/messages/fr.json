@@ -1270,6 +1270,11 @@
       "resendFailed": "Impossible de renvoyer le courriel. Réessayez dans un instant.",
       "allCompleteDiscoverable": "Configuration terminée — vous êtes visible dans la recherche.",
       "allCompletePendingBg": "Configuration terminée — vous serez visible après approbation de la vérification.",
+      "header": {
+        "title": "Terminer la configuration",
+        "subtitle": "{done} sur {total} étapes — complétez le reste pour réserver",
+        "aria": "Liste de configuration, {count, plural, one {# étape restante} other {# étapes restantes}}"
+      },
       "backgroundCheck": {
         "pageTitle": "Vérification des antécédents",
         "pageSubtitle": "Payez les frais et complétez Certn pour travailler comme Welper.",

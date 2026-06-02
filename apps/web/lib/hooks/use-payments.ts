@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import { invalidateSetupChecklists } from "@/lib/hooks/use-signup";
 import {
   createSetupIntent,
   listPaymentMethods,
@@ -36,6 +37,7 @@ export function useSetDefaultPaymentMethod() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentMethods"] });
       queryClient.invalidateQueries({ queryKey: ["customerProfile"] });
+      void invalidateSetupChecklists(queryClient);
     },
   });
 }
@@ -47,6 +49,7 @@ export function useDetachPaymentMethod() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["paymentMethods"] });
       queryClient.invalidateQueries({ queryKey: ["customerProfile"] });
+      void invalidateSetupChecklists(queryClient);
     },
   });
 }

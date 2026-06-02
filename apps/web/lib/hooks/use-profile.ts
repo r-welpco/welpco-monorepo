@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { WELPER_SETUP_CHECKLIST_KEY } from "@/lib/hooks/use-signup";
+import { invalidateSetupChecklists } from "@/lib/hooks/use-signup";
 import {
   getCustomerProfile,
   getWelperProfile,
@@ -48,6 +48,7 @@ export function useUpdateCustomerProfile() {
       updateCustomerProfile(userId, data),
     onSuccess: (data, variables) => {
       queryClient.setQueryData(["customerProfile", variables.userId], data);
+      void invalidateSetupChecklists(queryClient);
     },
   });
 }
@@ -71,7 +72,7 @@ export function useUpdateWelperProfile() {
       updateWelperProfile(userId, data),
     onSuccess: (data, variables) => {
       queryClient.setQueryData(["welperProfile", variables.userId], data);
-      void queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+      void invalidateSetupChecklists(queryClient);
     },
   });
 }
@@ -160,7 +161,7 @@ export function useCreateServiceOffering() {
       createServiceOffering(welperId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["serviceOfferings", variables.welperId] });
-      void queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+      void invalidateSetupChecklists(queryClient);
     },
   });
 }
@@ -173,7 +174,7 @@ export function useUpdateServiceOffering() {
       updateServiceOffering(offeringId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["serviceOfferings"] });
-      void queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+      void invalidateSetupChecklists(queryClient);
     },
   });
 }
@@ -185,7 +186,7 @@ export function useDeleteServiceOffering() {
     mutationFn: (offeringId: string) => deleteServiceOffering(offeringId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["serviceOfferings"] });
-      void queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+      void invalidateSetupChecklists(queryClient);
     },
   });
 }
@@ -218,6 +219,7 @@ export function useUpdateAvailability(welperId: string) {
       updateAvailability(welperId, schedule),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["availability", welperId] });
+      void invalidateSetupChecklists(queryClient);
     },
   });
 }

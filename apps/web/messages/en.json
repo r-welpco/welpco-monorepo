@@ -1271,6 +1271,11 @@
       "resendFailed": "We couldn't resend the email. Try again in a moment.",
       "allCompleteDiscoverable": "Setup complete — you're visible in customer search.",
       "allCompletePendingBg": "Setup complete — we'll show you in search once your background check is approved.",
+      "header": {
+        "title": "Finish setup",
+        "subtitle": "{done} of {total} steps done — complete the rest to start booking",
+        "aria": "Setup checklist, {count, plural, one {# step remaining} other {# steps remaining}}"
+      },
       "backgroundCheck": {
         "pageTitle": "Background check",
         "pageSubtitle": "Pay the screening fee and complete Certn to work as a Welper.",

@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { verificationHref } from "@/lib/auth/verification-href";
-import { resolveAppHref } from "@/lib/i18n/dashboard-navigation";
 import { useTranslations, useLocale } from "next-intl";
 import type { Locale } from "@/i18n/routing";
 import { Box } from "@welpco/ui/box";
@@ -15,54 +13,21 @@ import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { CheckCircle2, Circle, CircleDashed } from "lucide-react";
-import type { WelperSetupTaskDto, WelperSetupTaskId } from "@welpco/types";
+import type { WelperSetupTaskDto } from "@welpco/types";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
+import {
+  WELPER_SETUP_TASK_LABEL_KEYS,
+  welperTaskActionHref,
+} from "@/lib/dashboard/setup-checklist-navigation";
 import { useResendVerification } from "@/lib/hooks/use-resend-verification";
 import { useBackgroundCheckStatus, useWelperSetupChecklist } from "@/lib/hooks/use-signup";
 import type { BackgroundCheckStatusResponse } from "@/lib/services/background-check-service";
-
-const SETUP_TASK_LABEL_KEYS = {
-  emailVerification: "taskLabels.emailVerification",
-  welperServiceArea: "taskLabels.welperServiceArea",
-  welperOffering: "taskLabels.welperOffering",
-  welperAvailability: "taskLabels.welperAvailability",
-  welperBackgroundCheck: "taskLabels.welperBackgroundCheck",
-  welperPayout: "taskLabels.welperPayout",
-  optionalProfile: "taskLabels.optionalProfile",
-} as const satisfies Record<
-  WelperSetupTaskId,
-  `taskLabels.${WelperSetupTaskId}`
->;
 
 function setupTaskLabel(
   task: WelperSetupTaskDto,
   t: ReturnType<typeof useTranslations<"dashboard.setup">>,
 ): string {
-  return t(SETUP_TASK_LABEL_KEYS[task.id]);
-}
-
-const PROFILE_SETUP_TAB_HREFS: Partial<Record<WelperSetupTaskId, string>> = {
-  welperServiceArea: "/dashboard/profile?tab=serviceArea",
-  welperOffering: "/dashboard/profile?tab=offerings",
-  welperAvailability: "/dashboard/profile?tab=availability",
-  welperBackgroundCheck: "/dashboard/profile?tab=backgroundCheck",
-  welperPayout: "/dashboard/profile?tab=payout",
-  optionalProfile: "/dashboard/profile?tab=profile",
-};
-
-function taskActionHref(
-  task: WelperSetupTaskDto,
-  locale: Locale,
-  sessionEmail?: string,
-): string {
-  if (task.id === "emailVerification" && sessionEmail) {
-    return resolveAppHref(verificationHref(sessionEmail, "/dashboard"), locale);
-  }
-  const profileTab = PROFILE_SETUP_TAB_HREFS[task.id];
-  if (profileTab) {
-    return profileTab;
-  }
-  return resolveAppHref(task.href, locale);
+  return t(WELPER_SETUP_TASK_LABEL_KEYS[task.id]);
 }
 
 function isBackgroundCheckLinkSent(bg: BackgroundCheckStatusResponse | undefined): boolean {
@@ -95,10 +60,10 @@ interface WelperSetupChecklistProps {
 export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistProps) {
   const t = useTranslations("dashboard.setup");
   const locale = useLocale() as Locale;
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const sessionRole = session?.user?.role;
   const isWelperSession = sessionRole === "welper";
-  const { data: raw, isLoading, isError, refetch } = useWelperSetupChecklist(
+  const { data: raw, isPending, isError, refetch } = useWelperSetupChecklist(
     isWelperSession,
   );
 
@@ -115,7 +80,7 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
     [raw, emailVerified],
   );
 
-  if (!isWelperSession) {
+  if (sessionStatus === "authenticated" && !isWelperSession) {
     return (
       <Text size="2" color="gray">
         {t("loading")}
@@ -123,7 +88,7 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
     );
   }
 
-  if (isLoading) {
+  if (isPending && !raw) {
     return (
       <Text size="2" color="gray">
         {t("loading")}
@@ -177,7 +142,7 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
           </Callout.Text>
           {nextTask ? (
             <Button size="2" color={SEMANTIC_COLOR.warning} variant="soft" asChild>
-              <Link href={taskActionHref(nextTask, locale, session?.user?.email ?? undefined)}>
+              <Link href={welperTaskActionHref(nextTask, locale, session?.user?.email ?? undefined)}>
                 {t("continueSetup")}
               </Link>
             </Button>
@@ -288,7 +253,7 @@ function SetupTaskRow({
               <>
                 {turnstileEnabled && sessionEmail ? (
                   <Button size="1" variant="soft" color={SEMANTIC_COLOR.primary} asChild>
-                    <Link href={taskActionHref(task, locale, sessionEmail)}>
+                    <Link href={welperTaskActionHref(task, locale, sessionEmail)}>
                       {t("resendVerification")}
                     </Link>
                   </Button>
@@ -313,14 +278,14 @@ function SetupTaskRow({
                   </Button>
                 )}
                 <Button size="1" variant="soft" asChild>
-                  <Link href={taskActionHref(task, locale, sessionEmail)}>
+                  <Link href={welperTaskActionHref(task, locale, sessionEmail)}>
                     {t("verifyEmail")}
                   </Link>
                 </Button>
               </>
             ) : (
               <Button size="1" variant="soft" asChild>
-                <Link href={taskActionHref(task, locale, sessionEmail)}>{t("open")}</Link>
+                <Link href={welperTaskActionHref(task, locale, sessionEmail)}>{t("open")}</Link>
               </Button>
             )}
           </Flex>

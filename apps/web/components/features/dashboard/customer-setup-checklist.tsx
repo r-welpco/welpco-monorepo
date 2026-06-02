@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { verificationHref } from "@/lib/auth/verification-href";
-import { resolveAppHref } from "@/lib/i18n/dashboard-navigation";
 import { useTranslations, useLocale } from "next-intl";
 import type { Locale } from "@/i18n/routing";
 import { Box } from "@welpco/ui/box";
@@ -15,21 +13,14 @@ import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { CheckCircle2, Circle } from "lucide-react";
-import type { CustomerSetupTaskDto, CustomerSetupTaskId } from "@welpco/types";
+import type { CustomerSetupTaskDto } from "@welpco/types";
 import { normalizeCustomerSetupChecklist } from "@/lib/dashboard/normalize-customer-setup-checklist";
+import {
+  CUSTOMER_SETUP_TASK_LABEL_KEYS,
+  customerTaskActionHref,
+} from "@/lib/dashboard/setup-checklist-navigation";
 import { useResendVerification } from "@/lib/hooks/use-resend-verification";
 import { useCustomerSetupChecklist } from "@/lib/hooks/use-signup";
-
-const SETUP_TASK_LABEL_KEYS = {
-  emailVerification: "taskLabels.emailVerification",
-  optionalProfile: "taskLabels.customerHomeAddress",
-  customerPayment: "taskLabels.customerPayment",
-} as const;
-
-const TASK_HREFS: Partial<Record<CustomerSetupTaskId, string>> = {
-  optionalProfile: "/dashboard/profile?tab=profile",
-  customerPayment: "/dashboard/settings?tab=payment",
-};
 
 function setupTaskLabel(
   task: CustomerSetupTaskDto,
@@ -38,20 +29,8 @@ function setupTaskLabel(
   if (task.id === "optionalProfile") {
     return t("taskLabels.customerHomeAddress");
   }
-  return t(SETUP_TASK_LABEL_KEYS[task.id]);
-}
-
-function taskActionHref(
-  task: CustomerSetupTaskDto,
-  locale: Locale,
-  sessionEmail?: string,
-): string {
-  if (task.id === "emailVerification" && sessionEmail) {
-    return resolveAppHref(verificationHref(sessionEmail, "/dashboard"), locale);
-  }
-  const href = TASK_HREFS[task.id];
-  if (href) return href;
-  return resolveAppHref(task.href, locale);
+  const key = CUSTOMER_SETUP_TASK_LABEL_KEYS[task.id];
+  return key ? t(key as "taskLabels.emailVerification") : task.label;
 }
 
 interface CustomerSetupChecklistProps {
@@ -61,10 +40,10 @@ interface CustomerSetupChecklistProps {
 export function CustomerSetupChecklist({ variant = "full" }: CustomerSetupChecklistProps) {
   const t = useTranslations("dashboard.setup");
   const locale = useLocale() as Locale;
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const sessionRole = session?.user?.role;
   const isCustomerSession = sessionRole === "customer";
-  const { data: raw, isLoading, isError, refetch } = useCustomerSetupChecklist(
+  const { data: raw, isPending, isError, refetch } = useCustomerSetupChecklist(
     isCustomerSession,
   );
 
@@ -80,7 +59,7 @@ export function CustomerSetupChecklist({ variant = "full" }: CustomerSetupCheckl
     [raw, emailVerified],
   );
 
-  if (!isCustomerSession) {
+  if (sessionStatus === "authenticated" && !isCustomerSession) {
     return (
       <Text size="2" color="gray">
         {t("loading")}
@@ -88,7 +67,7 @@ export function CustomerSetupChecklist({ variant = "full" }: CustomerSetupCheckl
     );
   }
 
-  if (isLoading) {
+  if (isPending && !raw) {
     return (
       <Text size="2" color="gray">
         {t("loading")}
@@ -138,7 +117,7 @@ export function CustomerSetupChecklist({ variant = "full" }: CustomerSetupCheckl
           </Callout.Text>
           {nextTask ? (
             <Button size="2" color={SEMANTIC_COLOR.warning} variant="soft" asChild>
-              <Link href={taskActionHref(nextTask, locale, session?.user?.email ?? undefined)}>
+              <Link href={customerTaskActionHref(nextTask, locale, session?.user?.email ?? undefined)}>
                 {t("continueSetup")}
               </Link>
             </Button>
@@ -241,7 +220,7 @@ function SetupTaskRow({
               <>
                 {turnstileEnabled && sessionEmail ? (
                   <Button size="1" variant="soft" color={SEMANTIC_COLOR.primary} asChild>
-                    <Link href={taskActionHref(task, locale, sessionEmail)}>
+                    <Link href={customerTaskActionHref(task, locale, sessionEmail)}>
                       {t("resendVerification")}
                     </Link>
                   </Button>
@@ -266,14 +245,14 @@ function SetupTaskRow({
                   </Button>
                 )}
                 <Button size="1" variant="soft" asChild>
-                  <Link href={taskActionHref(task, locale, sessionEmail)}>
+                  <Link href={customerTaskActionHref(task, locale, sessionEmail)}>
                     {t("verifyEmail")}
                   </Link>
                 </Button>
               </>
             ) : (
               <Button size="1" variant="soft" asChild>
-                <Link href={taskActionHref(task, locale, sessionEmail)}>{t("open")}</Link>
+                <Link href={customerTaskActionHref(task, locale, sessionEmail)}>{t("open")}</Link>
               </Button>
             )}
           </Flex>

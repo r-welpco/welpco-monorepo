@@ -3,12 +3,15 @@
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Popover, PopoverTrigger, PopoverContent } from "@welpco/ui/popover";
-import { IconButton } from "@welpco/ui/icon-button";
 import { Badge } from "@welpco/ui/badge";
 import { Box } from "@welpco/ui/box";
 import { NotificationCenter } from "@welpco/ui/platform/notification";
 import type { NotificationCardProps } from "@welpco/ui/platform/notification";
 import { Bell } from "lucide-react";
+import {
+  DashboardHeaderIconTrigger,
+  DASHBOARD_HEADER_GLYPH_SIZE,
+} from "@/components/layout/dashboard-header-icon-trigger";
 import { formatDistanceToNow } from "date-fns";
 import type { Locale } from "date-fns";
 import { useDashboardNotificationLabels } from "@/lib/i18n/use-dashboard-labels";
@@ -140,17 +143,15 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
     <Box style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger>
-          <IconButton
-            variant="ghost"
-            size="3"
+          <DashboardHeaderIconTrigger
             aria-label={
               notificationCount > 0
                 ? notificationLabels.bellUnreadAria(notificationCount)
                 : notificationLabels.bellAria
             }
           >
-            <Bell size={20} />
-          </IconButton>
+            <Bell size={DASHBOARD_HEADER_GLYPH_SIZE} />
+          </DashboardHeaderIconTrigger>
         </PopoverTrigger>
         <PopoverContent
           side="bottom"

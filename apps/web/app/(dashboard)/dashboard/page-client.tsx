@@ -67,7 +67,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
   const bookingsRole =
     userRole === "customer" ? "customer" : userRole === "welper" ? "welper" : null;
 
-  const { data: welperSetup, isLoading: welperSetupLoading } = useWelperSetupChecklist(
+  const { data: welperSetup, isPending: welperSetupPending } = useWelperSetupChecklist(
     userRole === "welper",
   );
 
@@ -82,7 +82,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     [welperSetup, session?.user?.emailVerified],
   );
 
-  const { data: customerSetup, isLoading: customerSetupLoading } = useCustomerSetupChecklist(
+  const { data: customerSetup, isPending: customerSetupPending } = useCustomerSetupChecklist(
     userRole === "customer",
   );
 
@@ -99,13 +99,13 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
 
   const customerSetupIncomplete =
     userRole === "customer" &&
-    (customerSetupLoading ||
+    ((customerSetupPending && !customerSetup) ||
       !normalizedCustomerSetup ||
       !normalizedCustomerSetup.setupComplete);
 
   const welperSetupIncomplete =
     userRole === "welper" &&
-    (welperSetupLoading ||
+    ((welperSetupPending && !welperSetup) ||
       !normalizedWelperSetup ||
       !normalizedWelperSetup.setupComplete);
 

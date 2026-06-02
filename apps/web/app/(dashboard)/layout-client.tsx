@@ -13,6 +13,7 @@ import { useCustomerProfile, useWelperProfile } from "@/lib/hooks/use-profile";
 import { AuthBackgroundSVG } from "@/components/features/personalization/auth-background-svg";
 import { useUnreadCount } from "@/lib/hooks/use-notifications";
 import { NotificationBellPopover } from "@/components/layout/notification-bell-popover";
+import { SetupChecklistPopover } from "@/components/layout/setup-checklist-popover";
 import {
   useCustomerNavLabels,
   useWelperNavLabels,
@@ -114,9 +115,17 @@ export default function DashboardLayoutClient({
     await performClientSignOut({ callbackUrl: "/", queryClient });
   }, [queryClient]);
 
-  const notificationSlot = useMemo(
-    () => <NotificationBellPopover badgeColor={userRole === "welper" ? "green" : "blue"} />,
-    [userRole]
+  const headerActionsSlot = useMemo(
+    () => (
+      <Flex align="center" gap="3" mr="2">
+        <SetupChecklistPopover
+          role={userRole === "welper" ? "welper" : "customer"}
+          badgeColor={userRole === "welper" ? "green" : "blue"}
+        />
+        <NotificationBellPopover badgeColor={userRole === "welper" ? "green" : "blue"} />
+      </Flex>
+    ),
+    [userRole],
   );
 
   const tabStripStyle = useMemo(
@@ -173,7 +182,7 @@ export default function DashboardLayoutClient({
         }
       : undefined,
     notificationCount,
-    notificationSlot,
+    notificationSlot: headerActionsSlot,
     onTabChange: handleTabChange,
     onThemeChange: handleThemeChange,
     locale,

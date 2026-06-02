@@ -17,7 +17,7 @@ import {
 } from "@/lib/i18n/use-auth-labels";
 import { useDashboardCommonLabels } from "@/lib/i18n/use-dashboard-labels";
 import {
-  WELPER_SETUP_CHECKLIST_KEY,
+  invalidateSetupChecklists,
   useBackgroundCheckStatus,
   useConfirmBackgroundCheckReturn,
   useCreateBackgroundCheckCheckout,
@@ -31,7 +31,7 @@ import {
 function useInvalidateSetupChecklist() {
   const queryClient = useQueryClient();
   return () => {
-    void queryClient.invalidateQueries({ queryKey: WELPER_SETUP_CHECKLIST_KEY });
+    void invalidateSetupChecklists(queryClient);
     void queryClient.invalidateQueries({ queryKey: ["signup", "state"] });
   };
 }

@@ -19,6 +19,7 @@ import {
   useDetachPaymentMethod,
 } from "@/lib/hooks/use-payments";
 import { completeSetupIntent } from "@/lib/services/payment-service";
+import { invalidateSetupChecklists } from "@/lib/hooks/use-signup";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
 import { EmailVerificationRequiredError } from "@/lib/api/client";
@@ -155,6 +156,7 @@ export function CustomerPaymentSettings({
     setClientSecret(null);
     void refetch();
     void queryClient.invalidateQueries({ queryKey: ["customerProfile"] });
+    void invalidateSetupChecklists(queryClient);
   }, [refetch, queryClient]);
 
   if (!publishableKey || !stripePromise) {
