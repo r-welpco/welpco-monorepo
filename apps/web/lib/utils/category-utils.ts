@@ -47,6 +47,42 @@ export function transformCategoriesToOptions(
   return options;
 }
 
+const CATEGORY_OPTION_SEP = " · ";
+
+/** Localize a flat or composite ("Parent · Sub") category option label. */
+export function localizeCategoryOptionLabel(
+  displayName: (englishName: string) => string,
+  optionName: string,
+): string {
+  if (!optionName.includes(CATEGORY_OPTION_SEP)) {
+    return displayName(optionName);
+  }
+  const [parent, child] = optionName.split(CATEGORY_OPTION_SEP).map((part) => part.trim());
+  return `${displayName(parent)}${CATEGORY_OPTION_SEP}${displayName(child)}`;
+}
+
+/** Localized service offering line (subcategory · parent or single category). */
+export function formatOfferingCategoryLabel(
+  offering: { categoryName: string; parentCategoryName?: string | null },
+  displayName: (englishName: string) => string,
+): string {
+  if (offering.parentCategoryName) {
+    return `${displayName(offering.categoryName)}${CATEGORY_OPTION_SEP}${displayName(offering.parentCategoryName)}`;
+  }
+  return displayName(offering.categoryName);
+}
+
+/** Apply taxonomy display names to sidebar/select category options. */
+export function localizeCategoryOptions(
+  options: Array<{ id: string; name: string }>,
+  displayName: (englishName: string) => string,
+): Array<{ id: string; name: string }> {
+  return options.map((option) => ({
+    id: option.id,
+    name: localizeCategoryOptionLabel(displayName, option.name),
+  }));
+}
+
 /**
  * Validate if a categoryId exists in the category options.
  * 

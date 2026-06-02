@@ -32,7 +32,13 @@ const ServiceSelectionDialog = dynamic(
 import { useSearchServices, useDiscoveryCategories, usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import { reverseGeocode } from "@/lib/services/geocode.service";
 import { ApiClientError } from "@/lib/api/client";
-import { transformCategoriesToOptions, validateCategoryId } from "@/lib/utils/category-utils";
+import {
+  localizeCategoryOptions,
+  transformCategoriesToOptions,
+  validateCategoryId,
+} from "@/lib/utils/category-utils";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
+import { localizeWelperDialogProfile } from "@/lib/utils/localize-welper-dialog-profile";
 import type { SearchResultItem } from "@/types";
 import { maskCustomerWelperName, publicWelperDisplayName } from "@/lib/display-name";
 import {
@@ -115,6 +121,7 @@ export default function DashboardSearchPageClient() {
   const router = useRouter();
   const marketplaceLabels = useMarketplaceLabels();
   const searchLabels = useSearchLabels();
+  const categoryDisplayName = useCategoryDisplayName();
   const availabilityLabels = useWelperAvailabilityDisplayLabels();
   const locale = useLocale();
   const searchParams = useSearchParams();
@@ -164,16 +171,24 @@ export default function DashboardSearchPageClient() {
     !!profileDialogWelperId
   );
   const profileDialogProfile = useMemo(
-    () => mapToWelperProfileDialogProfile(profileDialogData ?? null),
-    [profileDialogData]
+    () =>
+      localizeWelperDialogProfile(
+        mapToWelperProfileDialogProfile(profileDialogData ?? null),
+        categoryDisplayName,
+      ),
+    [profileDialogData, categoryDisplayName],
   );
 
   const [serviceSelectionWelperId, setServiceSelectionWelperId] = useState<string | null>(null);
   const { data: serviceSelectionProfileData, isLoading: serviceSelectionProfileLoading } =
     usePublicWelperProfile(serviceSelectionWelperId ?? undefined, !!serviceSelectionWelperId);
   const serviceSelectionProfile = useMemo(
-    () => mapToWelperProfileDialogProfile(serviceSelectionProfileData ?? null),
-    [serviceSelectionProfileData]
+    () =>
+      localizeWelperDialogProfile(
+        mapToWelperProfileDialogProfile(serviceSelectionProfileData ?? null),
+        categoryDisplayName,
+      ),
+    [serviceSelectionProfileData, categoryDisplayName],
   );
 
   const params = useMemo(
@@ -337,7 +352,14 @@ export default function DashboardSearchPageClient() {
 
   // Category options: parents plus subcategories (subcategories shown as "Parent · Sub" so users can filter by subcategory)
   // Optimized with utility function to avoid multiple filter passes
-  const categoryOptions = useMemo(() => transformCategoriesToOptions(categoriesData), [categoriesData]);
+  const categoryOptions = useMemo(
+    () =>
+      localizeCategoryOptions(
+        transformCategoriesToOptions(categoriesData),
+        categoryDisplayName,
+      ),
+    [categoriesData, categoryDisplayName],
+  );
 
   // Validate categoryId: if not in categoryOptions, clear it
   const validCategoryId = useMemo(
@@ -437,8 +459,11 @@ export default function DashboardSearchPageClient() {
     return categoriesData
       .filter((c: { parentId?: string | null }) => !c.parentId)
       .slice(0, 10)
-      .map((c: { id: string; name: string }) => ({ id: c.id, label: c.name }));
-  }, [categoriesData]);
+      .map((c: { id: string; name: string }) => ({
+        id: c.id,
+        label: categoryDisplayName(c.name),
+      }));
+  }, [categoriesData, categoryDisplayName]);
 
   const cardItems = useMemo(() => {
     if (!data?.items) return [];
@@ -450,7 +475,7 @@ export default function DashboardSearchPageClient() {
       hourlyRate: item.hourlyRate,
       rating: item.rating ?? 0,
       reviews: item.reviewCount ?? 0,
-      specialties: item.categories,
+      specialties: item.categories.map(categoryDisplayName),
       imageUrl: item.profilePhotoUrl ?? undefined,
       verified: item.verified === true,
       weeklyAvailability: item.weeklyAvailability,
@@ -459,7 +484,14 @@ export default function DashboardSearchPageClient() {
       onView: () => openProfileDialog(item.welperId),
       onBook: () => openServiceSelection(item.welperId),
     }));
-  }, [data?.items, availabilityLabels, locale, openProfileDialog, openServiceSelection]);
+  }, [
+    data?.items,
+    availabilityLabels,
+    locale,
+    categoryDisplayName,
+    openProfileDialog,
+    openServiceSelection,
+  ]);
 
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / DEFAULT_LIMIT) || 1;
@@ -502,6 +534,7 @@ export default function DashboardSearchPageClient() {
       onKeywordChange={handleKeywordChange}
       showRadius={false}
       layout="panel"
+      labels={searchLabels.filters}
     />
   );
 
@@ -516,6 +549,7 @@ export default function DashboardSearchPageClient() {
             loading={profileDialogLoading}
             availabilityLabels={availabilityLabels}
             availabilityLocale={locale}
+            labels={searchLabels.profileDialog}
             onBook={() => {
               if (profileDialogWelperId) openServiceSelection(profileDialogWelperId);
             }}
@@ -525,6 +559,7 @@ export default function DashboardSearchPageClient() {
             onOpenChange={(open) => !open && closeServiceSelection()}
             profile={serviceSelectionProfile}
             loading={serviceSelectionProfileLoading}
+            labels={searchLabels.serviceDialog}
             onSelect={handleServiceSelect}
           />
           <Box>
@@ -545,6 +580,7 @@ export default function DashboardSearchPageClient() {
               onSearch={handlePostalSubmit}
               onCategorySelect={(id) => handleCategoryChange(id)}
               title={searchLabels.heroTitle}
+              labels={searchLabels.hero}
               categories={heroCategories}
               loading={isLoading}
               onUseMyLocation={handleUseMyLocation}
@@ -638,6 +674,7 @@ export default function DashboardSearchPageClient() {
                     onViewModeChange={(mode) => startTransition(() => setViewMode(mode))}
                     showViewToggle
                     loading={isLoading || isPending}
+                    labels={searchLabels.toolbar}
                   />
                 </Flex>
 
@@ -655,6 +692,10 @@ export default function DashboardSearchPageClient() {
                     onRetry={() => refetch()}
                     resultsHeading={searchLabels.resultsHeading}
                     emptyMessage=""
+                    labels={{
+                      ...searchLabels.resultsList,
+                      card: searchLabels.card,
+                    }}
                   />
                 ) : (
                   <Grid
@@ -676,6 +717,7 @@ export default function DashboardSearchPageClient() {
                         weeklyAvailability={item.weeklyAvailability}
                         availabilityLabels={item.availabilityLabels}
                         availabilityLocale={item.availabilityLocale}
+                        labels={searchLabels.card}
                         onView={item.onView}
                         onBook={item.onBook}
                       />

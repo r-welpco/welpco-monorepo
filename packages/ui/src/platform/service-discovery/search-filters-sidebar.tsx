@@ -17,6 +17,29 @@ export interface SearchFiltersSidebarState {
   rating: "any" | "4" | "4.5" | "5";
 }
 
+export interface SearchFiltersSidebarLabels {
+  title?: string;
+  clearAllAria?: string;
+  clear?: string;
+  compactHint?: string;
+  serviceCategory?: string;
+  serviceCategoryAria?: string;
+  anyCategory?: string;
+  keyword?: string;
+  keywordPlaceholder?: string;
+  withinKm?: string;
+  radiusAria?: string;
+  anyDistance?: string;
+  priceRange?: string;
+  priceAria?: string;
+  anyPrice?: string;
+  pricePerHour?: (range: string) => string;
+  minRating?: string;
+  ratingAria?: string;
+  anyRating?: string;
+  starsPlus?: (rating: string) => string;
+}
+
 export interface SearchFiltersSidebarProps {
   value: SearchFiltersSidebarState;
   onChange?: (value: SearchFiltersSidebarState) => void;
@@ -40,6 +63,7 @@ export interface SearchFiltersSidebarProps {
   layout?: "stack" | "panel";
   /** When true, card fills container height (e.g. when paired with Search hero in a row). */
   fullHeight?: boolean;
+  labels?: SearchFiltersSidebarLabels;
 }
 
 const priceOptions: SearchFiltersSidebarState["priceRange"][] = [
@@ -75,7 +99,9 @@ export function SearchFiltersSidebar({
   compact = false,
   layout = "stack",
   fullHeight = false,
+  labels: labelsProp,
 }: SearchFiltersSidebarProps) {
+  const l = labelsProp;
   const update = (patch: Partial<SearchFiltersSidebarState>) => {
     onChange?.({ ...value, ...patch });
   };
@@ -130,16 +156,19 @@ export function SearchFiltersSidebar({
         style={fieldAlign}
       >
         <Text as="label" size="2" weight="bold" htmlFor="sidebar-category">
-          Service category
+          {l?.serviceCategory ?? "Service category"}
         </Text>
         <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
           <Select
             value={categoryId ?? FILTER_ANY}
             onValueChange={(v) => onCategoryChange(v === FILTER_ANY ? undefined : v)}
           >
-            <SelectTrigger id="sidebar-category" aria-label="Service category" />
+            <SelectTrigger
+              id="sidebar-category"
+              aria-label={l?.serviceCategoryAria ?? "Service category"}
+            />
             <SelectContent>
-              <SelectItem value={FILTER_ANY}>Any category</SelectItem>
+              <SelectItem value={FILTER_ANY}>{l?.anyCategory ?? "Any category"}</SelectItem>
               {categoryOptions.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}
@@ -156,12 +185,12 @@ export function SearchFiltersSidebar({
     fieldNodes.push(
       <Flex key="keyword" direction="column" gap="1">
         <Text as="label" size="2" weight="bold" htmlFor="sidebar-keyword">
-          Keyword (optional)
+          {l?.keyword ?? "Keyword (optional)"}
         </Text>
         <Input
           id="sidebar-keyword"
           type="text"
-          placeholder="e.g. pet care, tutoring"
+          placeholder={l?.keywordPlaceholder ?? "e.g. pet care, tutoring"}
           value={localKeyword}
           onChange={(e) => setLocalKeyword(e.target.value)}
         />
@@ -181,16 +210,16 @@ export function SearchFiltersSidebar({
         style={fieldAlign}
       >
         <Text as="label" size="2" weight="bold" htmlFor="sidebar-radius">
-          Within (km)
+          {l?.withinKm ?? "Within (km)"}
         </Text>
         <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
           <Select
             value={radiusKm !== undefined ? String(radiusKm) : "__any__"}
             onValueChange={(v) => onRadiusChange(v === "__any__" ? undefined : parseInt(v, 10))}
           >
-            <SelectTrigger id="sidebar-radius" aria-label="Radius in km" />
+            <SelectTrigger id="sidebar-radius" aria-label={l?.radiusAria ?? "Radius in km"} />
             <SelectContent>
-              <SelectItem value="__any__">Any distance</SelectItem>
+              <SelectItem value="__any__">{l?.anyDistance ?? "Any distance"}</SelectItem>
               {radiusOptions.map((opt) => (
                 <SelectItem key={opt.value} value={String(opt.value)}>
                   {opt.label}
@@ -214,18 +243,20 @@ export function SearchFiltersSidebar({
       style={fieldAlign}
     >
       <Text as="label" size="2" weight="bold" htmlFor="sidebar-price">
-        Price range
+        {l?.priceRange ?? "Price range"}
       </Text>
       <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
         <Select
           value={value.priceRange}
           onValueChange={(v) => update({ priceRange: v as SearchFiltersSidebarState["priceRange"] })}
         >
-          <SelectTrigger id="sidebar-price" aria-label="Price range" />
+          <SelectTrigger id="sidebar-price" aria-label={l?.priceAria ?? "Price range"} />
           <SelectContent>
             {priceOptions.map((opt) => (
               <SelectItem key={opt} value={opt}>
-                {opt === "any" ? "Any price" : `$${opt}/hr`}
+                {opt === "any"
+                  ? (l?.anyPrice ?? "Any price")
+                  : (l?.pricePerHour ? l.pricePerHour(opt) : `$${opt}/hr`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -245,18 +276,20 @@ export function SearchFiltersSidebar({
       style={fieldAlign}
     >
       <Text as="label" size="2" weight="bold" htmlFor="sidebar-rating">
-        Min. rating
+        {l?.minRating ?? "Min. rating"}
       </Text>
       <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
         <Select
           value={value.rating}
           onValueChange={(v) => update({ rating: v as SearchFiltersSidebarState["rating"] })}
         >
-          <SelectTrigger id="sidebar-rating" aria-label="Minimum rating" />
+          <SelectTrigger id="sidebar-rating" aria-label={l?.ratingAria ?? "Minimum rating"} />
           <SelectContent>
             {ratingOptions.map((opt) => (
               <SelectItem key={opt} value={opt}>
-                {opt === "any" ? "Any rating" : `${opt}+ stars`}
+                {opt === "any"
+                  ? (l?.anyRating ?? "Any rating")
+                  : (l?.starsPlus ? l.starsPlus(opt) : `${opt}+ stars`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -284,7 +317,7 @@ export function SearchFiltersSidebar({
         <Box>
           <Flex justify="between" align="center" mb={compact ? "1" : "2"}>
             <Heading size="6" trim="start">
-              Filters
+              {l?.title ?? "Filters"}
             </Heading>
             {hasActiveFilters && onReset && (
               <Button
@@ -292,18 +325,18 @@ export function SearchFiltersSidebar({
                 color="gray"
                 size="1"
                 onClick={onReset}
-                aria-label="Clear all filters"
+                aria-label={l?.clearAllAria ?? "Clear all filters"}
               >
                 <Flex align="center" gap="1">
                   <X size={14} />
-                  <Text size="1">Clear</Text>
+                  <Text size="1">{l?.clear ?? "Clear"}</Text>
                 </Flex>
               </Button>
             )}
           </Flex>
           {compact && (
             <Text size="1" color="gray" highContrast mt="1">
-              Category, price, rating
+              {l?.compactHint ?? "Category, price, rating"}
             </Text>
           )}
         </Box>

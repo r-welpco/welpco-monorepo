@@ -10,6 +10,22 @@ import { LayoutList, LayoutGrid } from "lucide-react";
 
 export type SearchResultsViewMode = "list" | "grid";
 
+export interface SearchResultsToolbarLabels {
+  loading?: string;
+  noResults?: string;
+  showingRange?: (start: number, end: number, total: number) => string;
+  welper?: string;
+  welpers?: string;
+  sortBy?: string;
+  sortAria?: string;
+  sortRelevance?: string;
+  sortPrice?: string;
+  sortDistance?: string;
+  view?: string;
+  listViewAria?: string;
+  gridViewAria?: string;
+}
+
 export interface SearchResultsToolbarProps {
   /** Total number of results */
   total: number;
@@ -29,6 +45,7 @@ export interface SearchResultsToolbarProps {
   showViewToggle?: boolean;
   /** Loading: hide or disable controls */
   loading?: boolean;
+  labels?: SearchResultsToolbarLabels;
 }
 
 export function SearchResultsToolbar({
@@ -42,7 +59,9 @@ export function SearchResultsToolbar({
   onViewModeChange,
   showViewToggle = true,
   loading = false,
+  labels: labelsProp,
 }: SearchResultsToolbarProps) {
+  const l = labelsProp;
   const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, total);
   const totalPages = Math.ceil(total / pageSize) || 1;
@@ -57,13 +76,15 @@ export function SearchResultsToolbar({
     >
       <Text size="3" weight="medium">
         {loading ? (
-          "Loading…"
+          (l?.loading ?? "Loading…")
         ) : total === 0 ? (
-          "No results"
+          (l?.noResults ?? "No results")
+        ) : l?.showingRange ? (
+          l.showingRange(start, end, total)
         ) : (
           <>
             Showing <Text as="span" weight="bold">{start}–{end}</Text> of <Text as="span" weight="bold">{total}</Text>{" "}
-            {total === 1 ? "Welper" : "Welpers"}
+            {total === 1 ? (l?.welper ?? "Welper") : (l?.welpers ?? "Welpers")}
           </>
         )}
       </Text>
@@ -72,7 +93,7 @@ export function SearchResultsToolbar({
         {onSortChange && (
           <Flex align="center" gap="3">
             <Text as="label" size="2" weight="bold" htmlFor="search-sort">
-              Sort by
+              {l?.sortBy ?? "Sort by"}
             </Text>
             <Box style={{ minWidth: 160 }}>
               <Select
@@ -80,11 +101,13 @@ export function SearchResultsToolbar({
                 onValueChange={(v) => onSortChange(v as "relevance" | "price" | "distance")}
                 disabled={loading}
               >
-                <SelectTrigger id="search-sort" aria-label="Sort results" />
+                <SelectTrigger id="search-sort" aria-label={l?.sortAria ?? "Sort results"} />
                 <SelectContent>
-                  <SelectItem value="relevance">Relevance</SelectItem>
-                  <SelectItem value="price">Price: low to high</SelectItem>
-                  {showSortDistance && <SelectItem value="distance">Distance</SelectItem>}
+                  <SelectItem value="relevance">{l?.sortRelevance ?? "Relevance"}</SelectItem>
+                  <SelectItem value="price">{l?.sortPrice ?? "Price: low to high"}</SelectItem>
+                  {showSortDistance && (
+                    <SelectItem value="distance">{l?.sortDistance ?? "Distance"}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </Box>
@@ -94,7 +117,7 @@ export function SearchResultsToolbar({
         {showViewToggle && onViewModeChange && (
           <Flex align="center" gap="2">
             <Text size="2" weight="bold">
-              View
+              {l?.view ?? "View"}
             </Text>
             <Flex align="center" gap="2">
               <Button
@@ -102,7 +125,7 @@ export function SearchResultsToolbar({
                 color={viewMode === "list" ? SEMANTIC_COLOR.primary : "gray"}
                 size="2"
                 onClick={() => onViewModeChange("list")}
-                aria-label="List view"
+                aria-label={l?.listViewAria ?? "List view"}
                 aria-pressed={viewMode === "list"}
               >
                 <LayoutList size={18} />
@@ -112,7 +135,7 @@ export function SearchResultsToolbar({
                 color={viewMode === "grid" ? SEMANTIC_COLOR.primary : "gray"}
                 size="2"
                 onClick={() => onViewModeChange("grid")}
-                aria-label="Grid view"
+                aria-label={l?.gridViewAria ?? "Grid view"}
                 aria-pressed={viewMode === "grid"}
               >
                 <LayoutGrid size={18} />

@@ -10,7 +10,18 @@ import { Box } from "@welpco/ui/box";
 import { Heading } from "@welpco/ui/heading";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { SearchEmptyState } from "./search-empty-state";
-import { WelperProfileCard, WelperProfileCardProps } from "./welper-profile-card";
+import {
+  WelperProfileCard,
+  type WelperProfileCardLabels,
+  type WelperProfileCardProps,
+} from "./welper-profile-card";
+
+export interface SearchResultsListLabels {
+  tryAgain?: string;
+  emptyTitle?: string;
+  welpersFound?: (count: number) => string;
+  card?: WelperProfileCardLabels;
+}
 
 export interface SearchResultsListProps {
   items: WelperProfileCardProps[];
@@ -20,6 +31,7 @@ export interface SearchResultsListProps {
   /** Optional heading when there are results (e.g. "Welpers near you") */
   resultsHeading?: string;
   onRetry?: () => void;
+  labels?: SearchResultsListLabels;
 }
 
 export function SearchResultsList({
@@ -29,7 +41,9 @@ export function SearchResultsList({
   emptyMessage = "No Welpers match your search or filters. Try adjusting your criteria or browse by category.",
   resultsHeading,
   onRetry,
+  labels: labelsProp,
 }: SearchResultsListProps) {
+  const l = labelsProp;
   if (loading) {
     return (
       <Flex direction="column" gap="5" style={{ width: "100%", minWidth: 0 }}>
@@ -56,7 +70,7 @@ export function SearchResultsList({
         {onRetry && (
           <Box mt="3">
             <Button onClick={onRetry} color={SEMANTIC_COLOR.primary} size="2">
-              Try again
+              {l?.tryAgain ?? "Try again"}
             </Button>
           </Box>
         )}
@@ -67,7 +81,7 @@ export function SearchResultsList({
   if (items.length === 0) {
     return (
       <SearchEmptyState
-        title="No results yet"
+        title={l?.emptyTitle ?? "No results yet"}
         description={emptyMessage}
       />
     );
@@ -81,7 +95,9 @@ export function SearchResultsList({
             {resultsHeading}
           </Heading>
           <Text size="2" color="gray" highContrast>
-            {items.length} {items.length === 1 ? "Welper" : "Welpers"} found
+            {l?.welpersFound
+              ? l.welpersFound(items.length)
+              : `${items.length} ${items.length === 1 ? "Welper" : "Welpers"} found`}
           </Text>
         </Box>
       )}
@@ -90,6 +106,7 @@ export function SearchResultsList({
           <WelperProfileCard
             key={item.welperId ?? `${item.name}-${item.title}`}
             {...item}
+            labels={l?.card}
             fullWidth
           />
         ))}

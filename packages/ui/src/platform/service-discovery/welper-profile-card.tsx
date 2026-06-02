@@ -17,6 +17,13 @@ import type {
   WeeklyAvailabilitySummary,
 } from "./weekly-availability-utils";
 
+export interface WelperProfileCardLabels {
+  noReviewsYet?: string;
+  ratedAria?: (rating: number, reviews: number) => string;
+  viewProfile?: string;
+  bookNow?: string;
+}
+
 export interface WelperProfileCardProps {
   /** Unique id for the welper (used as React key in lists). */
   welperId?: string;
@@ -38,6 +45,7 @@ export interface WelperProfileCardProps {
   fullWidth?: boolean;
   onView?: () => void;
   onBook?: () => void;
+  labels?: WelperProfileCardLabels;
 }
 
 /**
@@ -62,7 +70,9 @@ export function WelperProfileCard({
   fullWidth = false,
   onView,
   onBook,
+  labels: labelsProp,
 }: WelperProfileCardProps) {
+  const l = labelsProp;
   // Bible §22.6: zero reviews ≠ zero stars. Only render the star line when
   // the welper has at least one real review backing the number.
   const hasRating =
@@ -130,7 +140,15 @@ export function WelperProfileCard({
               </Text>
             </Flex>
             {hasRating ? (
-              <Flex align="center" gap="1" aria-label={`Rated ${rating!.toFixed(1)} out of 5 from ${reviews} ${reviews === 1 ? "review" : "reviews"}`}>
+              <Flex
+                align="center"
+                gap="1"
+                aria-label={
+                  l?.ratedAria
+                    ? l.ratedAria(rating!, reviews!)
+                    : `Rated ${rating!.toFixed(1)} out of 5 from ${reviews} ${reviews === 1 ? "review" : "reviews"}`
+                }
+              >
                 <Star
                   size={14}
                   aria-hidden="true"
@@ -151,7 +169,7 @@ export function WelperProfileCard({
               </Flex>
             ) : (
               <Text size="1" color="gray" highContrast>
-                No reviews yet
+                {l?.noReviewsYet ?? "No reviews yet"}
               </Text>
             )}
           </Flex>
@@ -182,7 +200,7 @@ export function WelperProfileCard({
           <Flex gap="2" justify="end" wrap="wrap">
             {onView && (
               <Button onClick={onView} variant="soft" color="gray" size="2">
-                View profile
+                {l?.viewProfile ?? "View profile"}
               </Button>
             )}
             {onBook && (
@@ -192,7 +210,7 @@ export function WelperProfileCard({
                 size="2"
                 variant="solid"
               >
-                Book now
+                {l?.bookNow ?? "Book now"}
               </Button>
             )}
           </Flex>

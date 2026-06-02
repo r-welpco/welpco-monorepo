@@ -13,6 +13,17 @@ import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import type { WelperProfileDialogOffering, WelperProfileDialogProfile } from "./welper-profile-dialog";
 import { customerWelperDisplayName } from "./customer-welper-display-name";
 
+export interface ServiceSelectionDialogLabels {
+  loading?: string;
+  title?: string;
+  description?: (name: string) => string;
+  servicesAvailable?: (count: number) => string;
+  noServices?: string;
+  bookThisService?: string;
+  loadFailed?: string;
+  experienceYears?: (years: number) => string;
+}
+
 export interface ServiceSelectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -20,6 +31,7 @@ export interface ServiceSelectionDialogProps {
   loading?: boolean;
   /** Called when user selects a service; parent should navigate to booking page and close. */
   onSelect: (offering: WelperProfileDialogOffering) => void;
+  labels?: ServiceSelectionDialogLabels;
 }
 
 export function ServiceSelectionDialog({
@@ -28,7 +40,9 @@ export function ServiceSelectionDialog({
   profile,
   loading = false,
   onSelect,
+  labels: labelsProp,
 }: ServiceSelectionDialogProps) {
+  const l = labelsProp;
   const displayName = customerWelperDisplayName(profile);
 
   const offerings = profile?.serviceOfferings ?? [];
@@ -36,8 +50,14 @@ export function ServiceSelectionDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        title={loading ? "Loading…" : "Book a service"}
-        description={loading ? undefined : `Choose a service to book with ${displayName}`}
+        title={loading ? (l?.loading ?? "Loading…") : (l?.title ?? "Book a service")}
+        description={
+          loading
+            ? undefined
+            : l?.description
+              ? l.description(displayName)
+              : `Choose a service to book with ${displayName}`
+        }
       >
         <Flex direction="column" gap="6" style={{ maxHeight: "70vh", overflowY: "auto" }}>
           {loading ? (
@@ -66,7 +86,9 @@ export function ServiceSelectionDialog({
                     {displayName}
                   </Text>
                   <Text size="1" color="gray" highContrast>
-                    {offerings.length} service{offerings.length !== 1 ? "s" : ""} available
+                    {l?.servicesAvailable
+                      ? l.servicesAvailable(offerings.length)
+                      : `${offerings.length} service${offerings.length !== 1 ? "s" : ""} available`}
                   </Text>
                 </Box>
               </Flex>
@@ -74,7 +96,7 @@ export function ServiceSelectionDialog({
               <Flex direction="column" gap="5">
                 {offerings.length === 0 ? (
                   <Text size="2" color="gray" highContrast>
-                    No services available to book.
+                    {l?.noServices ?? "No services available to book."}
                   </Text>
                 ) : (
                   offerings.map((offering) => (
@@ -137,7 +159,9 @@ export function ServiceSelectionDialog({
                               </Text>
                               {offering.experienceYears != null && offering.experienceYears > 0 && (
                                 <Text size="1" color="gray" highContrast>
-                                  {offering.experienceYears} yr exp.
+                                  {l?.experienceYears
+                                    ? l.experienceYears(offering.experienceYears)
+                                    : `${offering.experienceYears} yr exp.`}
                                 </Text>
                               )}
                             </Flex>
@@ -152,7 +176,7 @@ export function ServiceSelectionDialog({
                                 onSelect(offering);
                               }}
                             >
-                              Book this service
+                              {l?.bookThisService ?? "Book this service"}
                             </Button>
                           </Flex>
                         </Flex>
@@ -166,7 +190,7 @@ export function ServiceSelectionDialog({
 
           {!loading && !profile ? (
             <Text size="2" color="gray" highContrast>
-              Could not load profile.
+              {l?.loadFailed ?? "Could not load profile."}
             </Text>
           ) : null}
         </Flex>

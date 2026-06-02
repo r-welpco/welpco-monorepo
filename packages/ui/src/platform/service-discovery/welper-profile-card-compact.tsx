@@ -15,6 +15,13 @@ import type {
   WeeklyAvailabilitySummary,
 } from "./weekly-availability-utils";
 
+export interface WelperProfileCardCompactLabels {
+  noReviewsYet?: string;
+  ratedAria?: (rating: number, reviews: number) => string;
+  view?: string;
+  book?: string;
+}
+
 export interface WelperProfileCardCompactProps {
   name: string;
   title: string;
@@ -32,6 +39,7 @@ export interface WelperProfileCardCompactProps {
   availabilityLocale?: string;
   onView?: () => void;
   onBook?: () => void;
+  labels?: WelperProfileCardCompactLabels;
 }
 
 export function WelperProfileCardCompact({
@@ -48,7 +56,9 @@ export function WelperProfileCardCompact({
   availabilityLocale,
   onView,
   onBook,
+  labels: labelsProp,
 }: WelperProfileCardCompactProps) {
+  const l = labelsProp;
   // Bible §22.6: a welper with zero reviews is NOT a 0-star welper.
   // Render the rating only when at least one review exists; otherwise show
   // a neutral "No reviews yet" line so the card doesn't lie about a fresh
@@ -90,7 +100,15 @@ export function WelperProfileCardCompact({
               </Text>
             </Heading>
             {hasRating ? (
-              <Flex align="center" gap="1" aria-label={`Rated ${rating!.toFixed(1)} out of 5 from ${reviews} ${reviews === 1 ? "review" : "reviews"}`}>
+              <Flex
+                align="center"
+                gap="1"
+                aria-label={
+                  l?.ratedAria
+                    ? l.ratedAria(rating!, reviews!)
+                    : `Rated ${rating!.toFixed(1)} out of 5 from ${reviews} ${reviews === 1 ? "review" : "reviews"}`
+                }
+              >
                 <Text size="2" weight="bold">
                   {rating!.toFixed(1)}
                 </Text>
@@ -103,7 +121,7 @@ export function WelperProfileCardCompact({
               </Flex>
             ) : (
               <Text size="1" color="gray" highContrast>
-                No reviews yet
+                {l?.noReviewsYet ?? "No reviews yet"}
               </Text>
             )}
           </Flex>
@@ -120,12 +138,12 @@ export function WelperProfileCardCompact({
           <Flex gap="2" justify="end" wrap="wrap">
             {onView ? (
               <Button onClick={onView} variant="soft" color="gray" size="2">
-                View
+                {l?.view ?? "View"}
               </Button>
             ) : null}
             {onBook ? (
               <Button onClick={onBook} variant="solid" color={SEMANTIC_COLOR.primary} size="2">
-                Book
+                {l?.book ?? "Book"}
               </Button>
             ) : null}
           </Flex>

@@ -43,6 +43,19 @@ export interface WelperProfileDialogProfile {
   weeklyAvailability?: WeeklyAvailabilitySummary | null;
 }
 
+export interface WelperProfileDialogLabels {
+  loading?: string;
+  description?: string;
+  noBio?: string;
+  services?: string;
+  bookThisService?: string;
+  noServicesListed?: string;
+  close?: string;
+  bookNow?: string;
+  loadFailed?: string;
+  experienceYears?: (years: number) => string;
+}
+
 export interface WelperProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -53,6 +66,7 @@ export interface WelperProfileDialogProps {
   onBook?: (offering?: WelperProfileDialogOffering) => void;
   availabilityLabels?: WeeklyAvailabilityDisplayLabels;
   availabilityLocale?: string;
+  labels?: WelperProfileDialogLabels;
 }
 
 /**
@@ -67,7 +81,9 @@ export function WelperProfileDialog({
   onBook,
   availabilityLabels,
   availabilityLocale,
+  labels: labelsProp,
 }: WelperProfileDialogProps) {
+  const l = labelsProp;
   const displayName = customerWelperDisplayName(profile);
 
   const hasOfferings =
@@ -76,8 +92,8 @@ export function WelperProfileDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        title={loading ? "Loading…" : displayName}
-        description={loading ? undefined : "Welper profile and services"}
+        title={loading ? (l?.loading ?? "Loading…") : displayName}
+        description={loading ? undefined : (l?.description ?? "Welper profile and services")}
       >
         <Flex direction="column" gap="4" style={{ maxHeight: "70vh", overflowY: "auto" }}>
           {loading && (
@@ -113,7 +129,7 @@ export function WelperProfileDialog({
                     {displayName}
                   </Heading>
                   <Text size="2" color="gray" highContrast>
-                    {profile.bio || "No bio provided."}
+                    {profile.bio || (l?.noBio ?? "No bio provided.")}
                   </Text>
                 </Box>
               </Flex>
@@ -131,7 +147,7 @@ export function WelperProfileDialog({
                   <Separator size="4" />
                   <Box>
                     <Heading as="h3" size="3" mb="3">
-                      Services
+                      {l?.services ?? "Services"}
                     </Heading>
                     <Flex direction="column" gap="3">
                       {profile.serviceOfferings.map((offering) => (
@@ -168,7 +184,9 @@ export function WelperProfileDialog({
                                 </Flex>
                                 {offering.experienceYears != null && (
                                   <Text size="1" color="gray" highContrast>
-                                    {offering.experienceYears}+ yrs exp
+                                    {l?.experienceYears
+                                      ? l.experienceYears(offering.experienceYears)
+                                      : `${offering.experienceYears}+ yrs exp`}
                                   </Text>
                                 )}
                               </Flex>
@@ -185,7 +203,7 @@ export function WelperProfileDialog({
                                   color={SEMANTIC_COLOR.primary}
                                   onClick={() => onBook(offering)}
                                 >
-                                  Book this service
+                                  {l?.bookThisService ?? "Book this service"}
                                 </Button>
                               </Flex>
                             )}
@@ -201,7 +219,7 @@ export function WelperProfileDialog({
                 <>
                   <Separator size="4" />
                   <Text size="2" color="gray" highContrast>
-                    No services listed.
+                    {l?.noServicesListed ?? "No services listed."}
                   </Text>
                 </>
               )}
@@ -215,7 +233,7 @@ export function WelperProfileDialog({
                   size="2"
                   onClick={() => onOpenChange(false)}
                 >
-                  Close
+                  {l?.close ?? "Close"}
                 </Button>
                 {onBook && hasOfferings && (
                   <Button
@@ -223,7 +241,7 @@ export function WelperProfileDialog({
                     color={SEMANTIC_COLOR.primary}
                     onClick={() => onBook()}
                   >
-                    Book now
+                    {l?.bookNow ?? "Book now"}
                   </Button>
                 )}
               </Flex>
@@ -233,7 +251,7 @@ export function WelperProfileDialog({
           {!loading && !profile && (
             <Flex direction="column" gap="3">
               <Text size="2" color="gray" highContrast>
-                Could not load profile.
+                {l?.loadFailed ?? "Could not load profile."}
               </Text>
               <Flex justify="end">
                 <Button
@@ -242,7 +260,7 @@ export function WelperProfileDialog({
                   size="2"
                   onClick={() => onOpenChange(false)}
                 >
-                  Close
+                  {l?.close ?? "Close"}
                 </Button>
               </Flex>
             </Flex>

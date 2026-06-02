@@ -34,6 +34,8 @@ import {
   useMarketplaceLabels,
   useWelperAvailabilityDisplayLabels,
 } from "@/lib/i18n/use-dashboard-labels";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
+import { formatOfferingCategoryLabel } from "@/lib/utils/category-utils";
 import { useBookingHandoff } from "@/lib/hooks/use-job-posting";
 import { useCustomerProfile } from "@/lib/hooks/use-profile";
 import { useAuthStore } from "@/stores/authStore";
@@ -71,13 +73,11 @@ function formatDuration(minutes: number): string {
   return `${h}h ${m}m`;
 }
 
-const currencyFormatter = new Intl.NumberFormat("en-CA", {
-  style: "currency",
-  currency: "CAD",
-});
-
-function formatCurrency(amount: number): string {
-  return currencyFormatter.format(amount);
+function formatCurrency(amount: number, locale: string): string {
+  return new Intl.NumberFormat(locale === "fr" ? "fr-CA" : "en-CA", {
+    style: "currency",
+    currency: "CAD",
+  }).format(amount);
 }
 
 // ─── Required-field marker ───────────────────────────────────────────────
@@ -109,6 +109,7 @@ export default function NewBookingPageClient({
   const marketplaceLabels = useMarketplaceLabels();
   const bookingLabels = useBookingNewLabels();
   const availabilityLabels = useWelperAvailabilityDisplayLabels();
+  const categoryDisplayName = useCategoryDisplayName();
   const locale = useLocale();
   const { user } = useAuthStore();
   const { data: handoff, isLoading: handoffLoading } = useBookingHandoff(jobId, applicationId);
@@ -180,10 +181,15 @@ export default function NewBookingPageClient({
 
   const questionCategoryOptions = useMemo(() => {
     if (!selectedOffering) return [];
-    return selectedOffering.subcategories && selectedOffering.subcategories.length > 0
-      ? selectedOffering.subcategories
-      : [{ id: selectedOffering.serviceCategoryId, name: selectedOffering.categoryName }];
-  }, [selectedOffering]);
+    const options =
+      selectedOffering.subcategories && selectedOffering.subcategories.length > 0
+        ? selectedOffering.subcategories
+        : [{ id: selectedOffering.serviceCategoryId, name: selectedOffering.categoryName }];
+    return options.map((option) => ({
+      ...option,
+      name: categoryDisplayName(option.name),
+    }));
+  }, [selectedOffering, categoryDisplayName]);
 
   const offeringSubcategoryCount = selectedOffering?.subcategories?.length ?? 0;
   const showServiceTypeField = offeringSubcategoryCount > 0;
@@ -521,7 +527,7 @@ export default function NewBookingPageClient({
               <Text size="2" color="gray">
                 {bookingLabels.summaryRate}
               </Text>
-              <Text size="2">{formatCurrency(selectedOffering.hourlyRate)}/hr</Text>
+              <Text size="2">{formatCurrency(selectedOffering.hourlyRate, locale)}/hr</Text>
             </Flex>
             <Flex justify="between" align="center">
               <Text size="2" color="gray">
@@ -529,7 +535,7 @@ export default function NewBookingPageClient({
               </Text>
               <Text size="4" weight="bold" color={SEMANTIC_COLOR.primary}>
                 {oneHourHoldSubtotal !== null
-                  ? bookingLabels.summaryHoldAmount(formatCurrency(oneHourHoldSubtotal))
+                  ? bookingLabels.summaryHoldAmount(formatCurrency(oneHourHoldSubtotal, locale))
                   : "—"}
               </Text>
             </Flex>
@@ -544,7 +550,9 @@ export default function NewBookingPageClient({
                     {bookingLabels.summaryEstimatedJob(formatDuration(durationMinutes))}
                   </Text>
                   <Text size="2" weight="medium">
-                    {bookingLabels.summaryEstimatedBeforeTax(formatCurrency(estimatedJobSubtotal))}
+                    {bookingLabels.summaryEstimatedBeforeTax(
+                      formatCurrency(estimatedJobSubtotal, locale),
+                    )}
                   </Text>
                 </Flex>
                 <Text size="1" color="gray" highContrast as="p">
@@ -658,13 +666,10 @@ export default function NewBookingPageClient({
                   <Card size="1" variant="surface">
                     <Flex align="center" gap="3" wrap="wrap">
                       <Text size="2" weight="medium">
-                        {selectedOffering.categoryName}
-                        {selectedOffering.parentCategoryName
-                          ? ` · ${selectedOffering.parentCategoryName}`
-                          : ""}
+                        {formatOfferingCategoryLabel(selectedOffering, categoryDisplayName)}
                       </Text>
                       <Text size="2" color="gray" ml="auto">
-                        {formatCurrency(selectedOffering.hourlyRate)}/hr
+                        {formatCurrency(selectedOffering.hourlyRate, locale)}/hr
                       </Text>
                     </Flex>
                   </Card>
@@ -686,10 +691,9 @@ export default function NewBookingPageClient({
                     <SelectContent>
                       {profile.serviceOfferings.map((o) => (
                         <SelectItem key={o.id} value={o.id}>
-                          {o.categoryName}
-                          {o.parentCategoryName ? ` · ${o.parentCategoryName}` : ""}
+                          {formatOfferingCategoryLabel(o, categoryDisplayName)}
                           {" — "}
-                          {formatCurrency(o.hourlyRate)}/hr
+                          {formatCurrency(o.hourlyRate, locale)}/hr
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1072,7 +1076,7 @@ export default function NewBookingPageClient({
               {bookingLabels.mobileHoldLabel}
             </Text>
             <Text size="3" weight="bold" color={SEMANTIC_COLOR.primary}>
-              {oneHourHoldSubtotal !== null ? formatCurrency(oneHourHoldSubtotal) : "—"}
+              {oneHourHoldSubtotal !== null ? formatCurrency(oneHourHoldSubtotal, locale) : "—"}
             </Text>
           </Flex>
           <Button

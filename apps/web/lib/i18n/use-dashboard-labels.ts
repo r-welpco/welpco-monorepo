@@ -834,6 +834,10 @@ export function useWelperBookingDetailLabels() {
     overviewTitle: t("overviewTitle"),
     serviceFallback: (id: string) => t("serviceFallback", { id }),
     scheduleTbd: t("scheduleTbd"),
+    scheduleTitle: t("scheduleTitle"),
+    scheduleDate: t("scheduleDate"),
+    scheduleTimeWindow: t("scheduleTimeWindow"),
+    durationLabel: t("durationLabel"),
     peopleTitle: t("peopleTitle"),
     customer: t("customer"),
     welper: t("welper"),
@@ -954,7 +958,15 @@ export function useCustomerBookingDetailLabels() {
 }
 
 export function useSearchLabels() {
+  const locale = useLocale();
   const t = useTranslations("dashboard.search");
+  const hero = useTranslations("dashboard.search.hero");
+  const filters = useTranslations("dashboard.search.filters");
+  const toolbar = useTranslations("dashboard.search.toolbar");
+  const card = useTranslations("dashboard.search.card");
+  const profileDialog = useTranslations("dashboard.search.profileDialog");
+  const serviceDialog = useTranslations("dashboard.search.serviceDialog");
+  const resultsList = useTranslations("dashboard.search.resultsList");
   return {
     pageTitle: t("pageTitle"),
     pageSubtitle: t("pageSubtitle"),
@@ -982,6 +994,94 @@ export function useSearchLabels() {
     emptyDescription: t("emptyDescription"),
     clearSearchFilters: t("clearSearchFilters"),
     browseCategories: t("browseCategories"),
+    hero: {
+      description: hero("description"),
+      placeholder: hero("placeholder"),
+      postalAria: hero("postalAria"),
+      searching: hero("searching"),
+      search: hero("search"),
+      detecting: hero("detecting"),
+      useMyLocation: hero("useMyLocation"),
+      browseByCategory: hero("browseByCategory"),
+      searchInCategoryAria: (category: string) => hero("searchInCategoryAria", { category }),
+      welpersCountAria: (count: number) => hero("welpersCountAria", { count }),
+    },
+    filters: {
+      title: filters("title"),
+      clearAllAria: filters("clearAllAria"),
+      clear: filters("clear"),
+      compactHint: filters("compactHint"),
+      serviceCategory: filters("serviceCategory"),
+      serviceCategoryAria: filters("serviceCategoryAria"),
+      anyCategory: filters("anyCategory"),
+      keyword: filters("keyword"),
+      keywordPlaceholder: filters("keywordPlaceholder"),
+      withinKm: filters("withinKm"),
+      radiusAria: filters("radiusAria"),
+      anyDistance: filters("anyDistance"),
+      priceRange: filters("priceRange"),
+      priceAria: filters("priceAria"),
+      anyPrice: filters("anyPrice"),
+      pricePerHour: (range: string) =>
+        filters("pricePerHour", {
+          range: locale === "fr" ? range : `$${range}`,
+        }),
+      minRating: filters("minRating"),
+      ratingAria: filters("ratingAria"),
+      anyRating: filters("anyRating"),
+      starsPlus: (rating: string) => filters("starsPlus", { rating }),
+    },
+    toolbar: {
+      loading: toolbar("loading"),
+      noResults: toolbar("noResults"),
+      showingRange: (start: number, end: number, total: number) =>
+        toolbar("showingRange", { start, end, total }),
+      welper: toolbar("welper"),
+      welpers: toolbar("welpers"),
+      sortBy: toolbar("sortBy"),
+      sortAria: toolbar("sortAria"),
+      sortRelevance: toolbar("sortRelevance"),
+      sortPrice: toolbar("sortPrice"),
+      sortDistance: toolbar("sortDistance"),
+      view: toolbar("view"),
+      listViewAria: toolbar("listViewAria"),
+      gridViewAria: toolbar("gridViewAria"),
+    },
+    card: {
+      noReviewsYet: card("noReviewsYet"),
+      ratedAria: (rating: number, count: number) => card("ratedAria", { rating, count }),
+      view: card("view"),
+      viewProfile: card("viewProfile"),
+      book: card("book"),
+      bookNow: card("bookNow"),
+    },
+    profileDialog: {
+      loading: profileDialog("loading"),
+      description: profileDialog("description"),
+      noBio: profileDialog("noBio"),
+      services: profileDialog("services"),
+      bookThisService: profileDialog("bookThisService"),
+      noServicesListed: profileDialog("noServicesListed"),
+      close: profileDialog("close"),
+      bookNow: profileDialog("bookNow"),
+      loadFailed: profileDialog("loadFailed"),
+      experienceYears: (years: number) => profileDialog("experienceYears", { years }),
+    },
+    serviceDialog: {
+      loading: serviceDialog("loading"),
+      title: serviceDialog("title"),
+      description: (name: string) => serviceDialog("description", { name }),
+      servicesAvailable: (count: number) => serviceDialog("servicesAvailable", { count }),
+      noServices: serviceDialog("noServices"),
+      bookThisService: serviceDialog("bookThisService"),
+      loadFailed: serviceDialog("loadFailed"),
+      experienceYears: (years: number) => serviceDialog("experienceYears", { years }),
+    },
+    resultsList: {
+      tryAgain: resultsList("tryAgain"),
+      emptyTitle: resultsList("emptyTitle"),
+      welpersFound: (count: number) => resultsList("welpersFound", { count }),
+    },
   };
 }
 

@@ -18,6 +18,20 @@ export interface SearchHeroCategory {
   count?: number;
 }
 
+export interface SearchHeroLabels {
+  description?: string;
+  placeholder?: string;
+  postalAria?: string;
+  searchAria?: string;
+  searching?: string;
+  search?: string;
+  detecting?: string;
+  useMyLocation?: string;
+  browseByCategory?: string;
+  searchInCategoryAria?: (category: string) => string;
+  welpersCountAria?: (count: number) => string;
+}
+
 export interface SearchHeroProps {
   /** Controlled query (e.g. from URL) */
   value?: string;
@@ -47,6 +61,7 @@ export interface SearchHeroProps {
   locationError?: string | null;
   /** For mode="location": true while resolving location. */
   locationLoading?: boolean;
+  labels?: SearchHeroLabels;
 }
 
 const LOCATION_PLACEHOLDER = "Enter postal code (e.g. H2X 1Y4)";
@@ -78,10 +93,14 @@ export function SearchHero({
   onUseMyLocation,
   locationError = null,
   locationLoading = false,
+  labels: labelsProp,
 }: SearchHeroProps) {
   const isLocationMode = mode === "location";
-  const resolvedPlaceholder = placeholder ?? (isLocationMode ? LOCATION_PLACEHOLDER : KEYWORD_PLACEHOLDER);
-  const resolvedDescription = description ?? (isLocationMode ? LOCATION_DESCRIPTION : KEYWORD_DESCRIPTION);
+  const resolvedPlaceholder =
+    placeholder ?? labelsProp?.placeholder ?? (isLocationMode ? LOCATION_PLACEHOLDER : KEYWORD_PLACEHOLDER);
+  const resolvedDescription =
+    description ?? labelsProp?.description ?? (isLocationMode ? LOCATION_DESCRIPTION : KEYWORD_DESCRIPTION);
+  const l = labelsProp;
 
   const [localQuery, setLocalQuery] = useState(controlledValue ?? "");
   const isControlled = controlledValue !== undefined;
@@ -140,7 +159,11 @@ export function SearchHero({
                   onChange={handleChange}
                   size="3"
                   disabled={loading}
-                  aria-label={isLocationMode ? "Postal code" : "Search services or Welpers"}
+                  aria-label={
+                    isLocationMode
+                      ? (l?.postalAria ?? "Postal code")
+                      : (l?.searchAria ?? "Search services or Welpers")
+                  }
                   aria-live={ariaLive}
                 >
                   <TextField.Slot>
@@ -155,7 +178,7 @@ export function SearchHero({
                   color={SEMANTIC_COLOR.primary}
                   disabled={loading || !query.trim()}
                 >
-                  {loading ? "Searching…" : "Search"}
+                  {loading ? (l?.searching ?? "Searching…") : (l?.search ?? "Search")}
                 </Button>
                 {isLocationMode && onUseMyLocation && (
                   <Button
@@ -168,7 +191,11 @@ export function SearchHero({
                   >
                     <Flex align="center" gap="2">
                       <MapPin size={16} aria-hidden="true" />
-                      <span>{locationLoading ? "Detecting…" : "Use my location"}</span>
+                      <span>
+                        {locationLoading
+                          ? (l?.detecting ?? "Detecting…")
+                          : (l?.useMyLocation ?? "Use my location")}
+                      </span>
                     </Flex>
                   </Button>
                 )}
@@ -191,7 +218,7 @@ export function SearchHero({
         {categories.length > 0 && (
           <Box>
             <Text as="p" size="2" weight="bold" mb="2" id="category-pills-label">
-              Browse by category
+              {l?.browseByCategory ?? "Browse by category"}
             </Text>
             <Flex gap="2" wrap="wrap" role="group" aria-labelledby="category-pills-label">
               {categories.map((cat) => (
@@ -205,11 +232,26 @@ export function SearchHero({
                   onClick={() =>
                     onCategorySelect ? onCategorySelect(cat.id) : runSearch(cat.label)
                   }
-                  aria-label={`Search in ${cat.label} category`}
+                  aria-label={
+                    l?.searchInCategoryAria
+                      ? l.searchInCategoryAria(cat.label)
+                      : `Search in ${cat.label} category`
+                  }
                 >
                   {cat.label}
                   {cat.count !== undefined && cat.count > 0 && (
-                    <Text as="span" ml="2" size="1" color="gray" highContrast aria-label={`${cat.count} welpers`}>
+                    <Text
+                      as="span"
+                      ml="2"
+                      size="1"
+                      color="gray"
+                      highContrast
+                      aria-label={
+                        l?.welpersCountAria
+                          ? l.welpersCountAria(cat.count)
+                          : `${cat.count} welpers`
+                      }
+                    >
                       {cat.count}
                     </Text>
                   )}

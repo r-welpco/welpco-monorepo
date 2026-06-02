@@ -92,6 +92,8 @@ import {
 } from "@/lib/i18n/use-dashboard-labels";
 import { useDisputeFormCategoryLabels } from "@/lib/i18n/dispute-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
+import { formatOfferingCategoryLabel } from "@/lib/utils/category-utils";
 import styles from "./booking-detail.module.css";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -404,6 +406,7 @@ export default function BookingDetailClient({
   const bookingStatusLabel = useBookingStatusLabel();
   const dateFnsLocale = useDateFnsLocale();
   const dateLocale = dateFnsLocale;
+  const categoryDisplayName = useCategoryDisplayName();
 
   const timelineLabel = useCallback(
     (key: TimelineKey) => welperDetail.timelineLabels[key],
@@ -575,10 +578,8 @@ export default function BookingDetailClient({
 
   const serviceOfferingName = useMemo(() => {
     if (!bookingOffering) return null;
-    return bookingOffering.parentCategoryName
-      ? `${bookingOffering.categoryName} · ${bookingOffering.parentCategoryName}`
-      : bookingOffering.categoryName;
-  }, [bookingOffering]);
+    return formatOfferingCategoryLabel(bookingOffering, categoryDisplayName);
+  }, [bookingOffering, categoryDisplayName]);
 
   const questionCategoryIds = useMemo(() => {
     if (!bookingOffering) return [];
@@ -1201,7 +1202,7 @@ export default function BookingDetailClient({
                       />
                       <Text size="2">
                         {user?.id === booking.customerId
-                          ? "You"
+                          ? welperDetail.you
                           : customerDisplayFirstName ??
                             `#${booking.customerId.slice(-8).toUpperCase()}`}
                       </Text>
@@ -1238,7 +1239,7 @@ export default function BookingDetailClient({
                 <Separator size="4" />
                 <Flex direction="column" gap="3">
                   <Heading as="h3" size="3" mb="1">
-                    Schedule
+                    {welperDetail.scheduleTitle}
                   </Heading>
                   <Flex gap="6" wrap="wrap">
                     {booking.scheduledDate && (
@@ -1246,7 +1247,7 @@ export default function BookingDetailClient({
                         <Flex align="center" gap="2">
                           <Calendar size={14} color="var(--gray-9)" aria-hidden />
                           <Text size="1" color="gray" weight="medium">
-                            Date
+                            {welperDetail.scheduleDate}
                           </Text>
                         </Flex>
                         <Text size="2">{formatDate(booking.scheduledDate)}</Text>
@@ -1257,7 +1258,7 @@ export default function BookingDetailClient({
                         <Flex align="center" gap="2">
                           <Clock size={14} color="var(--gray-9)" aria-hidden />
                           <Text size="1" color="gray" weight="medium">
-                            Time window
+                            {welperDetail.scheduleTimeWindow}
                           </Text>
                         </Flex>
                         <Text size="2">
@@ -1283,7 +1284,7 @@ export default function BookingDetailClient({
                 {booking.durationMinutes != null && (
                   <Flex direction="column" gap="1" minWidth="120px">
                     <Text size="1" color="gray" weight="medium">
-                      Duration
+                      {welperDetail.durationLabel}
                     </Text>
                     <Text size="3" weight="medium">
                       {formatDuration(booking.durationMinutes)}
