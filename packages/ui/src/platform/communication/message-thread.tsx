@@ -27,6 +27,8 @@ export interface MessageThreadProps {
   composerDisabled?: boolean;
   onSendMessage?: (message: string) => void | Promise<void>;
   onAttachment?: () => void;
+  /** Composer input placeholder (e.g. i18n from the host app). */
+  composerPlaceholder?: string;
 }
 
 /**
@@ -44,6 +46,7 @@ export function MessageThread({
   composerDisabled,
   onSendMessage,
   onAttachment,
+  composerPlaceholder,
 }: MessageThreadProps) {
   const isEmpty = !loading && messages.length === 0;
   const isLoading = loading && messages.length === 0;
@@ -159,6 +162,7 @@ export function MessageThread({
             loading={loading}
             sending={sending}
             disabled={composerDisabled}
+            placeholder={composerPlaceholder}
           />
         </Box>
       </Flex>

@@ -16,14 +16,6 @@ import { buildAnswerDisplayRows } from "@/lib/services/service-questions-utils";
 import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
-}
-
 function formatScheduleDate(date: string, locale: string): string {
   const parsed = new Date(`${date}T12:00:00`);
   if (Number.isNaN(parsed.getTime())) return date;
@@ -122,7 +114,7 @@ export function JobPostingReviewSummary({
             {formatScheduleDate(scheduledDate, locale)}
           </Text>
           <Text size="2" color="gray" highContrast>
-            {`${scheduledStartTime} – ${scheduledEndTime} (${formatDuration(durationMinutes)})`}
+            {`${scheduledStartTime} – ${scheduledEndTime} (${labels.reviewSummary.formatDuration(durationMinutes)})`}
           </Text>
         </Box>
 

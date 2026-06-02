@@ -91,9 +91,11 @@ function SettingsPageContent() {
     title: settingsFormLabels.emailTitle,
     description: settingsFormLabels.emailDescription,
     emailLabel: settingsFormLabels.emailLabel,
+    emailPlaceholder: settingsFormLabels.emailPlaceholder,
     hint: settingsFormLabels.emailHint,
     submit: settingsFormLabels.emailSubmit,
     submitting: settingsFormLabels.emailSubmitting,
+    validation: settingsFormLabels.emailValidation,
   };
   const passwordFormLabels = {
     title: settingsFormLabels.passwordTitle,
@@ -101,8 +103,37 @@ function SettingsPageContent() {
     currentPassword: settingsFormLabels.passwordCurrent,
     newPassword: settingsFormLabels.passwordNew,
     confirmPassword: settingsFormLabels.passwordConfirm,
+    currentPasswordPlaceholder: settingsFormLabels.passwordCurrentPlaceholder,
+    newPasswordPlaceholder: settingsFormLabels.passwordNewPlaceholder,
+    confirmPasswordPlaceholder: settingsFormLabels.passwordConfirmPlaceholder,
+    passwordStrength: settingsFormLabels.passwordStrength,
+    passwordStrengthWeak: settingsFormLabels.passwordStrengthWeak,
+    passwordStrengthMedium: settingsFormLabels.passwordStrengthMedium,
+    passwordStrengthStrong: settingsFormLabels.passwordStrengthStrong,
     submit: settingsFormLabels.passwordSubmit,
     submitting: settingsFormLabels.passwordSubmitting,
+    validation: settingsFormLabels.passwordValidation,
+  };
+  const accountDeletionLabels = {
+    title: settingsFormLabels.deleteTitle,
+    description: settingsFormLabels.deleteDescription,
+    whatHappensTitle: settingsFormLabels.deleteWhatHappensTitle,
+    bulletSignedOut: settingsFormLabels.deleteBulletSignedOut,
+    bulletBookings: settingsFormLabels.deleteBulletBookings,
+    bulletMessages: settingsFormLabels.deleteBulletMessages,
+    bulletReviews: settingsFormLabels.deleteBulletReviews,
+    supportNote: settingsFormLabels.deleteSupportNote,
+    reasonLabel: settingsFormLabels.deleteReasonLabel,
+    reasonPlaceholder: settingsFormLabels.deleteReasonPlaceholder,
+    feedbackLabel: settingsFormLabels.deleteFeedbackLabel,
+    feedbackPlaceholder: settingsFormLabels.deleteFeedbackPlaceholder,
+    confirmLabel: settingsFormLabels.deleteConfirmLabel,
+    confirmPlaceholder: settingsFormLabels.deleteConfirmPlaceholder,
+    submit: settingsFormLabels.deleteSubmit,
+    submitting: settingsFormLabels.deleteSubmitting,
+    cancel: settingsFormLabels.deleteCancel,
+    reasons: settingsFormLabels.deleteReasons,
+    validation: settingsFormLabels.deleteValidation,
   };
   const allowedTabs = useMemo(
     () => visibleSettingsTabs(!!isCustomer),
@@ -295,6 +326,7 @@ function SettingsPageContent() {
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <DialogContentRaw maxWidth="640px">
             <AccountDeletionForm
+              labels={accountDeletionLabels}
               loading={isLoading}
               onSubmit={async () => {
                 await handleDeleteAccount();

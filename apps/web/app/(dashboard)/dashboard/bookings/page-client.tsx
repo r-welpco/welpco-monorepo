@@ -497,20 +497,14 @@ export default function BookingsPageClient() {
                   )}
                   {booking.durationMinutes != null && booking.durationMinutes > 0 && (
                     <Text size="2" color="gray">
-                      {booking.durationMinutes < 60
-                        ? `${booking.durationMinutes} min`
-                        : `${Math.floor(booking.durationMinutes / 60)}h${
-                            booking.durationMinutes % 60
-                              ? ` ${booking.durationMinutes % 60}m`
-                              : ""
-                          }`}
+                      {welperLabels.formatDuration(booking.durationMinutes)}
                     </Text>
                   )}
                   {booking.totalPrice != null && (
                     <Flex align="center" gap="2">
                       <DollarSign size={14} color="var(--gray-9)" />
                       <Text size="2" color="gray">
-                        ${booking.totalPrice.toFixed(2)}
+                        {welperLabels.formatCurrency(booking.totalPrice)}
                       </Text>
                     </Flex>
                   )}
@@ -540,9 +534,7 @@ export default function BookingsPageClient() {
                 )}
 
                 <Text size="1" color="gray">
-                  {isWelper
-                    ? welperLabels.created(formatDateSafe(booking.createdAt, dateLocale))
-                    : `Created ${formatDateSafe(booking.createdAt, dateLocale)}`}
+                  {welperLabels.created(formatDateSafe(booking.createdAt, dateLocale))}
                 </Text>
 
                 {(booking.availableActions?.length ?? 0) > 0 && (

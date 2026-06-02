@@ -412,6 +412,7 @@ export function useBookingStatusLabel() {
 }
 
 export function useWelperBookingsLabels() {
+  const locale = useLocale();
   const t = useTranslations("dashboard.bookings");
   const statusLabel = useBookingStatusLabel();
 
@@ -439,6 +440,18 @@ export function useWelperBookingsLabels() {
     emptyFiltered: (status: string) =>
       t("emptyFiltered", { status: statusLabel(status) }),
     created: (date: string) => t("created", { date }),
+    formatDuration: (minutes: number) => {
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      if (h === 0) return t("durationMinutes", { minutes: m });
+      if (m === 0) return t("durationHours", { hours: h });
+      return t("durationHoursMinutes", { hours: h, minutes: m });
+    },
+    formatCurrency: (amount: number) =>
+      new Intl.NumberFormat(locale === "fr" ? "fr-CA" : "en-CA", {
+        style: "currency",
+        currency: "CAD",
+      }).format(amount),
     decline: t("decline"),
     accept: t("accept"),
     cancelBooking: t("cancelBooking"),
@@ -520,6 +533,7 @@ export function useMessagesLabels(isWelper: boolean) {
     viewBooking: t("viewBooking"),
     messagingClosed: t("messagingClosed"),
     sendFailed: t("sendFailed"),
+    composerPlaceholder: t("composerPlaceholder"),
   };
   return base;
 }
@@ -554,6 +568,7 @@ export function useWelperMessagesLabels() {
     viewBooking: t("viewBooking"),
     messagingClosed: t("messagingClosed"),
     sendFailed: t("sendFailed"),
+    composerPlaceholder: t("composerPlaceholder"),
   };
 }
 
@@ -590,6 +605,8 @@ export function useCustomerProfileLabels() {
         stateProvince: af("stateProvince"),
         zipPostalCode: af("zipPostalCode"),
         streetPlaceholder: af("streetPlaceholder"),
+        cityPlaceholder: af("cityPlaceholder"),
+        zipPlaceholder: af("zipPlaceholder"),
         provincePlaceholder: af("provincePlaceholder"),
         country: af("country"),
       },
@@ -627,6 +644,13 @@ export function useCustomerProfileLabels() {
 export function useBookingNewLabels() {
   const t = useTranslations("dashboard.bookingNew");
   return {
+    formatDuration: (minutes: number) => {
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      if (h === 0) return t("durationMinutes", { minutes: m });
+      if (m === 0) return t("durationHours", { hours: h });
+      return t("durationHoursMinutes", { hours: h, minutes: m });
+    },
     title: t("title"),
     scheduleWith: (name: string) => t("scheduleWith", { name }),
     profileLoadFailed: t("profileLoadFailed"),
@@ -727,6 +751,9 @@ export function useWelperProfileFormLabels() {
     firstName: t("firstName"),
     lastName: t("lastName"),
     phone: t("phone"),
+    firstNamePlaceholder: t("firstNamePlaceholder"),
+    lastNamePlaceholder: t("lastNamePlaceholder"),
+    phonePlaceholder: t("phonePlaceholder"),
     bio: t("bio"),
     bioPlaceholder: t("bioPlaceholder"),
     charCount: (count: number) => t("charCount", { count }),
@@ -809,7 +836,13 @@ export function useProfilePhotoUploadLabels(): ProfilePhotoUploadLabels {
 }
 
 export function useWelperBookingDetailLabels() {
+  const locale = useLocale();
   const t = useTranslations("dashboard.bookingsDetail");
+  const cadLocale = locale === "fr" ? "fr-CA" : "en-CA";
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat(cadLocale, { style: "currency", currency: "CAD" }).format(
+      amount,
+    );
   return {
     backToBookings: t("backToBookings"),
     bookingTitle: (id: string) => t("bookingTitle", { id }),
@@ -838,6 +871,18 @@ export function useWelperBookingDetailLabels() {
     scheduleDate: t("scheduleDate"),
     scheduleTimeWindow: t("scheduleTimeWindow"),
     durationLabel: t("durationLabel"),
+    formatDuration: (minutes: number) => {
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      if (h === 0) return t("durationMinutes", { minutes: m });
+      if (m === 0) return t("durationHours", { hours: h });
+      return t("durationHoursMinutes", { hours: h, minutes: m });
+    },
+    formatCurrency,
+    ratePerHour: (rate: string) => t("ratePerHour", { rate }),
+    receiptOriginalHold: (amount: string) => t("receiptOriginalHold", { amount }),
+    receiptExtraChargeHint: t("receiptExtraChargeHint"),
+    receiptTotal: (amount: string) => t("receiptTotal", { amount }),
     peopleTitle: t("peopleTitle"),
     customer: t("customer"),
     welper: t("welper"),
@@ -908,6 +953,55 @@ export function useWelperBookingDetailLabels() {
     previewUnavailable: t("previewUnavailable"),
     additionalDetail: t("additionalDetail"),
     receiptDraftLoadFailed: t("receiptDraftLoadFailed"),
+    disputeForm: {
+      subjectLabel: t("disputeForm.subjectLabel"),
+      subjectPlaceholder: t("disputeForm.subjectPlaceholder"),
+      categoryLabel: t("disputeForm.categoryLabel"),
+      descriptionLabel: t("disputeForm.descriptionLabel"),
+      descriptionPlaceholder: t("disputeForm.descriptionPlaceholder"),
+      safetyBold: t("disputeForm.safetyBold"),
+      safetyRest: t("disputeForm.safetyRest"),
+      submit: t("disputeForm.submit"),
+      submitting: t("disputeForm.submitting"),
+      validation: {
+        subjectMin: t("disputeForm.validation.subjectMin"),
+        subjectMax: (max: number) => t("disputeForm.validation.subjectMax", { max }),
+        descriptionMax: (max: number) =>
+          t("disputeForm.validation.descriptionMax", { max }),
+      },
+      evidence: {
+        title: t("disputeForm.evidence.title"),
+        description: (maxFiles: number, maxSizeMb: number) =>
+          t("disputeForm.evidence.description", { maxFiles, maxSizeMb }),
+        attach: (count: number, max: number) =>
+          t("disputeForm.evidence.attach", { count, max }),
+        limitReached: (count: number, max: number) =>
+          t("disputeForm.evidence.limitReached", { count, max }),
+        uploading: t("disputeForm.evidence.uploading"),
+        attached: t("disputeForm.evidence.attached"),
+        uploadFailed: t("disputeForm.evidence.uploadFailed"),
+        removeAria: (fileName: string) =>
+          t("disputeForm.evidence.removeAria", { fileName }),
+        maxFilesError: (max: number) => t("disputeForm.evidence.maxFilesError", { max }),
+        oversizedError: (maxMb: number, fileName: string, fileSize: string) =>
+          t("disputeForm.evidence.oversizedError", { maxMb, name: fileName, size: fileSize }),
+      },
+    },
+    ratingForm: {
+      ratingLabel: t("ratingForm.ratingLabel"),
+      commentLabel: t("ratingForm.commentLabel"),
+      commentPlaceholder: t("ratingForm.commentPlaceholder"),
+      starAria: (count: number) => t("ratingForm.starAria", { count }),
+      starAriaPlural: (count: number) => t("ratingForm.starAriaPlural", { count }),
+      charactersLeft: (count: number) => t("ratingForm.charactersLeft", { count }),
+      submit: t("ratingForm.submit"),
+      submitting: t("ratingForm.submitting"),
+      validation: {
+        ratingRequired: t("ratingForm.validation.ratingRequired"),
+        commentMin: t("ratingForm.validation.commentMin"),
+        commentMax: (max: number) => t("ratingForm.validation.commentMax", { max }),
+      },
+    },
   };
 }
 
@@ -1323,31 +1417,78 @@ export function usePersonalizationSettingsLabels(): PersonalizationAppearanceLab
 
 export function useDashboardSettingsFormLabels() {
   const t = useTranslations("dashboard.settingsForms");
+  const deleteReasonKeys = [
+    "no_longer_need",
+    "better_alternative",
+    "privacy",
+    "too_expensive",
+    "technical",
+    "other",
+  ] as const;
   return {
     emailTitle: t("emailTitle"),
     emailDescription: t("emailDescription"),
     emailHint: t("emailHint"),
     emailLabel: t("emailLabel"),
+    emailPlaceholder: t("emailPlaceholder"),
     emailSubmit: t("emailSubmit"),
     emailSubmitting: t("emailSubmitting"),
+    emailValidation: {
+      emailInvalid: t("emailValidationInvalid"),
+    },
     passwordTitle: t("passwordTitle"),
     passwordDescription: t("passwordDescription"),
     passwordCurrent: t("passwordCurrent"),
     passwordNew: t("passwordNew"),
     passwordConfirm: t("passwordConfirm"),
+    passwordCurrentPlaceholder: t("passwordCurrentPlaceholder"),
+    passwordNewPlaceholder: t("passwordNewPlaceholder"),
+    passwordConfirmPlaceholder: t("passwordConfirmPlaceholder"),
+    passwordStrength: (label: string) => t("passwordStrength", { label }),
+    passwordStrengthWeak: t("passwordStrengthWeak"),
+    passwordStrengthMedium: t("passwordStrengthMedium"),
+    passwordStrengthStrong: t("passwordStrengthStrong"),
     passwordSubmit: t("passwordSubmit"),
     passwordSubmitting: t("passwordSubmitting"),
+    passwordValidation: {
+      currentRequired: t("passwordValidation.currentRequired"),
+      newMin: t("passwordValidation.newMin"),
+      confirmMin: t("passwordValidation.confirmMin"),
+      mismatch: t("passwordValidation.mismatch"),
+      sameAsCurrent: t("passwordValidation.sameAsCurrent"),
+    },
     personalizationTitle: t("personalizationTitle"),
     personalizationDescription: t("personalizationDescription"),
     themeMode: t("themeMode"),
+    themeModePlaceholder: t("themeModePlaceholder"),
     translucentTheme: t("translucentTheme"),
     translucentThemeHint: t("translucentThemeHint"),
     background: t("background"),
+    backgroundPlaceholder: t("backgroundPlaceholder"),
     deleteTitle: t("deleteTitle"),
     deleteDescription: t("deleteDescription"),
+    deleteWhatHappensTitle: t("deleteWhatHappensTitle"),
+    deleteBulletSignedOut: t("deleteBulletSignedOut"),
+    deleteBulletBookings: t("deleteBulletBookings"),
+    deleteBulletMessages: t("deleteBulletMessages"),
+    deleteBulletReviews: t("deleteBulletReviews"),
+    deleteSupportNote: t("deleteSupportNote"),
+    deleteReasonLabel: t("deleteReasonLabel"),
+    deleteReasonPlaceholder: t("deleteReasonPlaceholder"),
+    deleteFeedbackLabel: t("deleteFeedbackLabel"),
+    deleteFeedbackPlaceholder: t("deleteFeedbackPlaceholder"),
     deleteConfirmLabel: t("deleteConfirmLabel"),
+    deleteConfirmPlaceholder: t("deleteConfirmPlaceholder"),
     deleteSubmit: t("deleteSubmit"),
+    deleteSubmitting: t("deleteSubmitting"),
     deleteCancel: t("deleteCancel"),
+    deleteValidation: {
+      feedbackMax: t("deleteValidationFeedbackMax"),
+    },
+    deleteReasons: deleteReasonKeys.map((key) => ({
+      value: key,
+      label: t(`deleteReasons.${key}`),
+    })),
   };
 }
 
@@ -1506,6 +1647,13 @@ export function useMarketplaceLabels() {
     reviewSummary: {
       jobDetails: t("reviewSummary.jobDetails"),
       schedule: t("reviewSummary.schedule"),
+      formatDuration: (minutes: number) => {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        if (h === 0) return t("reviewSummary.durationMinutes", { minutes: m });
+        if (m === 0) return t("reviewSummary.durationHours", { hours: h });
+        return t("reviewSummary.durationHoursMinutes", { hours: h, minutes: m });
+      },
       location: t("reviewSummary.location"),
       serviceQuestions: t("reviewSummary.serviceQuestions"),
       questionsLoadFailed: t("reviewSummary.questionsLoadFailed"),
@@ -1531,6 +1679,12 @@ export function useMarketplaceLabels() {
       verified: t("applicationReview.verified"),
       applied: (date: string) => t("applicationReview.applied", { date }),
       sendBookingRequest: t("applicationReview.sendBookingRequest"),
+      hourlyRate: (rate: number) =>
+        t("applicationReview.hourlyRate", {
+          rate: locale === "fr" ? rate : `$${rate}`,
+        }),
+      emptyDescription: t("applicationReview.emptyDescription"),
+      tryAgain: t("applicationReview.tryAgain"),
       statusLabel: (status: "pending" | "accepted" | "rejected" | "withdrawn") =>
         t(`applicationReview.status.${status}`),
     },

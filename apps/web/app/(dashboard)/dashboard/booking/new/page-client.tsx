@@ -43,6 +43,7 @@ import { ApiClientError } from "@/lib/api/client";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
 import { QuestionField } from "@/components/features/booking/question-field";
+import { useQuestionFieldLabels } from "@/lib/i18n/question-field-labels";
 import {
   areRequiredServiceQuestionsAnswered,
   buildBookingAnswersPayload,
@@ -63,14 +64,6 @@ function parseTimeToMinutes(time: string): number | null {
   const m = parseInt(parts[1]!, 10);
   if (Number.isNaN(h) || Number.isNaN(m)) return null;
   return h * 60 + m;
-}
-
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
 }
 
 function formatCurrency(amount: number, locale: string): string {
@@ -108,6 +101,7 @@ export default function NewBookingPageClient({
   const router = useRouter();
   const marketplaceLabels = useMarketplaceLabels();
   const bookingLabels = useBookingNewLabels();
+  const questionFieldLabels = useQuestionFieldLabels();
   const availabilityLabels = useWelperAvailabilityDisplayLabels();
   const categoryDisplayName = useCategoryDisplayName();
   const locale = useLocale();
@@ -547,7 +541,7 @@ export default function NewBookingPageClient({
                 <Separator size="4" my="1" />
                 <Flex justify="between">
                   <Text size="2" color="gray">
-                    {bookingLabels.summaryEstimatedJob(formatDuration(durationMinutes))}
+                    {bookingLabels.summaryEstimatedJob(bookingLabels.formatDuration(durationMinutes))}
                   </Text>
                   <Text size="2" weight="medium">
                     {bookingLabels.summaryEstimatedBeforeTax(
@@ -810,6 +804,7 @@ export default function NewBookingPageClient({
                       <QuestionField
                         key={sq.id}
                         sq={sq}
+                        labels={questionFieldLabels}
                         value={answers[sq.question.id]}
                         onChange={(val) =>
                           setAnswers((prev) => ({ ...prev, [sq.question.id]: val }))

@@ -10,12 +10,13 @@ import { Box } from "@welpco/ui/box";
 import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
   EvidenceUpload,
   type EvidenceUploadItem,
+  type EvidenceUploadLabels,
 } from "./evidence-upload";
 
 /** BFF caps (apps/bff/.../dto/create-dispute.dto.ts):
@@ -79,30 +80,87 @@ function resolveCategoryLabels(
     : DISPUTE_CATEGORY_LABELS_CUSTOMER;
 }
 
-const schema = z.object({
-  subject: z
-    .string()
-    .min(5, "Add a short summary — at least 5 characters.")
-    .max(
-      DISPUTE_SUBJECT_MAX_LENGTH,
-      `Subject can be up to ${DISPUTE_SUBJECT_MAX_LENGTH} characters.`,
-    ),
-  category: z.enum(DISPUTE_CATEGORIES),
-  description: z
-    .string()
-    .max(
-      DISPUTE_DESCRIPTION_MAX_LENGTH,
-      `Description can be up to ${DISPUTE_DESCRIPTION_MAX_LENGTH} characters.`,
-    )
-    .optional(),
-});
+function createSchema(v: DisputeFormLabels["validation"]) {
+  return z.object({
+    subject: z
+      .string()
+      .min(5, v.subjectMin)
+      .max(DISPUTE_SUBJECT_MAX_LENGTH, v.subjectMax(DISPUTE_SUBJECT_MAX_LENGTH)),
+    category: z.enum(DISPUTE_CATEGORIES),
+    description: z
+      .string()
+      .max(
+        DISPUTE_DESCRIPTION_MAX_LENGTH,
+        v.descriptionMax(DISPUTE_DESCRIPTION_MAX_LENGTH),
+      )
+      .optional(),
+  });
+}
 
-export type DisputeFormValues = z.infer<typeof schema>;
+export type DisputeFormValues = z.infer<ReturnType<typeof createSchema>>;
 
 export interface DisputeFormSubmitPayload extends DisputeFormValues {
   /** Successfully-uploaded evidence references; empty when nothing attached. */
   evidence: EvidenceUploadItem[];
 }
+
+/** @deprecated Use DisputeFormLabels */
+export interface DisputeFormCopy {
+  subjectPlaceholder?: string;
+  descriptionPlaceholder?: string;
+}
+
+export interface DisputeFormLabels {
+  subjectLabel: string;
+  subjectPlaceholder: string;
+  categoryLabel: string;
+  descriptionLabel: string;
+  descriptionPlaceholder: string;
+  safetyBold: string;
+  safetyRest: string;
+  submit: string;
+  submitting: string;
+  validation: {
+    subjectMin: string;
+    subjectMax: (max: number) => string;
+    descriptionMax: (max: number) => string;
+  };
+  evidence: EvidenceUploadLabels;
+}
+
+const DEFAULT_DISPUTE_LABELS: DisputeFormLabels = {
+  subjectLabel: "Subject",
+  subjectPlaceholder: "A short summary of what went wrong",
+  categoryLabel: "What kind of problem?",
+  descriptionLabel: "What happened",
+  descriptionPlaceholder:
+    "Tell us what happened, when, and how it affected you. The more specific, the faster we can help.",
+  safetyBold: "If you're in immediate danger, call 911 first.",
+  safetyRest:
+    "We respond to safety reports within 4 hours and may contact you directly.",
+  submit: "Send report",
+  submitting: "Sending…",
+  validation: {
+    subjectMin: "Add a short summary — at least 5 characters.",
+    subjectMax: (max) => `Subject can be up to ${max} characters.`,
+    descriptionMax: (max) => `Description can be up to ${max} characters.`,
+  },
+  evidence: {
+    title: "Evidence (optional)",
+    description: (maxFiles, maxSizeMb) =>
+      `Attach photos, screenshots, or PDFs that show what happened. Up to ${maxFiles} files, ${maxSizeMb} MB each. You can submit without attachments — we'll still review your report.`,
+    attach: (count, max) => `Attach files (${count}/${max})`,
+    limitReached: (count, max) => `Limit reached (${count}/${max})`,
+    uploading: "Uploading…",
+    attached: "Attached",
+    uploadFailed: "Upload failed",
+    removeAria: (fileName) => `Remove ${fileName}`,
+    maxFilesError: (max) =>
+      `You can attach up to ${max} files. Remove some to add more.`,
+    oversizedError: (maxMb, fileName, fileSize) =>
+      `Each file must be smaller than ${maxMb} MB. "${fileName}" is ${fileSize}.`,
+  },
+};
 
 export interface DisputeFormProps {
   defaultValues?: Partial<DisputeFormValues>;
@@ -112,6 +170,10 @@ export interface DisputeFormProps {
   reporterRole?: DisputeReporterRole;
   /** Override category labels (e.g. i18n from the host app). */
   categoryLabels?: Record<DisputeFormCategory, string>;
+  /** Full form copy (e.g. i18n from the host app). */
+  labels?: DisputeFormLabels;
+  /** @deprecated Use labels instead */
+  copy?: DisputeFormCopy;
   /**
    * DISPUTES-001 (Day 16): when supplied, the form mounts `<EvidenceUpload>`
    * inline and routes per-file PUT uploads through this handler. Each
@@ -129,9 +191,24 @@ export function DisputeForm({
   error,
   reporterRole = "customer",
   categoryLabels,
+  labels: labelsProp,
+  copy,
   uploadEvidence,
   onSubmit,
 }: DisputeFormProps) {
+  const labels = useMemo((): DisputeFormLabels => {
+    const base = labelsProp ?? DEFAULT_DISPUTE_LABELS;
+    if (!copy) return base;
+    return {
+      ...base,
+      subjectPlaceholder: copy.subjectPlaceholder ?? base.subjectPlaceholder,
+      descriptionPlaceholder:
+        copy.descriptionPlaceholder ?? base.descriptionPlaceholder,
+    };
+  }, [labelsProp, copy]);
+
+  const schema = useMemo(() => createSchema(labels.validation), [labels.validation]);
+
   const form = useForm<DisputeFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -148,7 +225,7 @@ export function DisputeForm({
   });
 
   const selectedCategory = form.watch("category");
-  const labels = resolveCategoryLabels(reporterRole, categoryLabels);
+  const categoryDisplay = resolveCategoryLabels(reporterRole, categoryLabels);
 
   return (
     <Flex direction="column" gap="5" style={{ width: "100%" }}>
@@ -169,12 +246,12 @@ export function DisputeForm({
               mb={FORM_SPACING.labelGap}
               style={{ display: "block" }}
             >
-              Subject
+              {labels.subjectLabel}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
               id="dispute-subject"
-              placeholder="A short summary of what went wrong"
+              placeholder={labels.subjectPlaceholder}
               size="3"
               disabled={loading}
               aria-required="true"
@@ -198,7 +275,7 @@ export function DisputeForm({
               mb={FORM_SPACING.labelGap}
               style={{ display: "block" }}
             >
-              What kind of problem?
+              {labels.categoryLabel}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <Select
@@ -218,7 +295,7 @@ export function DisputeForm({
               <SelectContent>
                 {DISPUTE_CATEGORIES.map((cat) => (
                   <SelectItem key={cat} value={cat}>
-                    {labels[cat]}
+                    {categoryDisplay[cat]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -234,10 +311,9 @@ export function DisputeForm({
             <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="note">
               <Callout.Text>
                 <Text as="span" weight="bold">
-                  If you&rsquo;re in immediate danger, call 911 first.
+                  {labels.safetyBold}
                 </Text>{" "}
-                We respond to safety reports within 4 hours and may contact
-                you directly.
+                {labels.safetyRest}
               </Callout.Text>
             </Callout.Root>
           )}
@@ -251,11 +327,11 @@ export function DisputeForm({
               mb={FORM_SPACING.labelGap}
               style={{ display: "block" }}
             >
-              What happened
+              {labels.descriptionLabel}
             </Text>
             <TextArea
               id="dispute-description"
-              placeholder="Tell us what happened, when, and how it affected you. The more specific, the faster we can help."
+              placeholder={labels.descriptionPlaceholder}
               rows={6}
               size="3"
               disabled={loading}
@@ -275,6 +351,7 @@ export function DisputeForm({
               uploadFile={uploadEvidence}
               onUploaded={setEvidence}
               disabled={loading}
+              labels={labels.evidence}
             />
           )}
 
@@ -285,7 +362,7 @@ export function DisputeForm({
             disabled={loading}
             mt={FORM_SPACING.submitGap}
           >
-            {loading ? "Sending…" : "Send report"}
+            {loading ? labels.submitting : labels.submit}
           </Button>
         </form>
       </Flex>

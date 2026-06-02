@@ -12,39 +12,100 @@ import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useState } from "react";
+
+export type AccountDeletionReason = {
+  value: string;
+  label: string;
+};
+
+export type AccountDeletionFormLabels = {
+  title: string;
+  description: string;
+  whatHappensTitle: string;
+  bulletSignedOut: string;
+  bulletBookings: string;
+  bulletMessages: string;
+  bulletReviews: string;
+  supportNote: string;
+  reasonLabel: string;
+  reasonPlaceholder: string;
+  feedbackLabel: string;
+  feedbackPlaceholder: string;
+  confirmLabel: string;
+  confirmPlaceholder: string;
+  submit: string;
+  submitting: string;
+  cancel: string;
+  reasons: AccountDeletionReason[];
+  validation: {
+    feedbackMax: string;
+  };
+};
 
 export interface AccountDeletionFormProps {
   loading?: boolean;
   error?: string;
   onSubmit?: (values: AccountDeletionValues) => void | Promise<void>;
   onCancel?: () => void;
+  labels?: AccountDeletionFormLabels;
 }
 
-const schema = z.object({
-  reason: z.string().optional(),
-  feedback: z.string().max(500, "Feedback must be less than 500 characters").optional(),
-});
+function createSchema(v: AccountDeletionFormLabels["validation"]) {
+  return z.object({
+    reason: z.string().optional(),
+    feedback: z.string().max(500, v.feedbackMax).optional(),
+  });
+}
 
-export type AccountDeletionValues = z.infer<typeof schema>;
+export type AccountDeletionValues = z.infer<ReturnType<typeof createSchema>>;
 
-const deletionReasons = [
-  "No longer need the service",
-  "Found a better alternative",
-  "Privacy concerns",
-  "Too expensive",
-  "Technical issues",
-  "Other",
+const DEFAULT_REASONS: AccountDeletionReason[] = [
+  { value: "no_longer_need", label: "No longer need the service" },
+  { value: "better_alternative", label: "Found a better alternative" },
+  { value: "privacy", label: "Privacy concerns" },
+  { value: "too_expensive", label: "Too expensive" },
+  { value: "technical", label: "Technical issues" },
+  { value: "other", label: "Other" },
 ];
+
+const DEFAULT_LABELS: AccountDeletionFormLabels = {
+  title: "Delete account",
+  description:
+    "We'll deactivate your account and sign you out. To restore it, contact support.",
+  whatHappensTitle: "What happens when you delete",
+  bulletSignedOut: "You're signed out and your profile is hidden from search.",
+  bulletBookings: "Active bookings stay on the calendar — cancel or hand them off first.",
+  bulletMessages: "Conversations stay on the other person's side of the thread.",
+  bulletReviews: "Reviews you've left or received remain attached to those bookings.",
+  supportNote:
+    "You can reach out to support to restore your account or request full data removal.",
+  reasonLabel: "Reason for deletion (optional)",
+  reasonPlaceholder: "Select a reason",
+  feedbackLabel: "Additional feedback (optional)",
+  feedbackPlaceholder: "Tell us how we can improve...",
+  confirmLabel: 'Type "DELETE" to confirm',
+  confirmPlaceholder: "DELETE",
+  submit: "Delete my account",
+  submitting: "Deleting…",
+  cancel: "Cancel",
+  reasons: DEFAULT_REASONS,
+  validation: {
+    feedbackMax: "Feedback must be less than 500 characters",
+  },
+};
 
 export function AccountDeletionForm({
   loading,
   error,
   onSubmit,
   onCancel,
+  labels: labelsProp,
 }: AccountDeletionFormProps) {
+  const labels = labelsProp ?? DEFAULT_LABELS;
+  const schema = useMemo(() => createSchema(labels.validation), [labels.validation]);
   const [confirmText, setConfirmText] = useState("");
   const form = useForm<AccountDeletionValues>({
     resolver: zodResolver(schema),
@@ -69,28 +130,28 @@ export function AccountDeletionForm({
       <Flex direction="column" gap="5">
         <Box>
           <Heading size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            Delete account
+            {labels.title}
           </Heading>
           <Text size="2" color="gray">
-            We&apos;ll deactivate your account and sign you out. To restore it, contact support.
+            {labels.description}
           </Text>
         </Box>
 
         <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
           <Callout.Text>
             <Text weight="bold" mb="2">
-              What happens when you delete
+              {labels.whatHappensTitle}
             </Text>
             <Flex direction="column" gap="1" mt="2" asChild>
               <ul>
-                <li>• You&apos;re signed out and your profile is hidden from search.</li>
-                <li>• Active bookings stay on the calendar — cancel or hand them off first.</li>
-                <li>• Conversations stay on the other person&apos;s side of the thread.</li>
-                <li>• Reviews you&apos;ve left or received remain attached to those bookings.</li>
+                <li>• {labels.bulletSignedOut}</li>
+                <li>• {labels.bulletBookings}</li>
+                <li>• {labels.bulletMessages}</li>
+                <li>• {labels.bulletReviews}</li>
               </ul>
             </Flex>
             <Text size="2" mt="2">
-              You can reach out to support to restore your account or request full data removal.
+              {labels.supportNote}
             </Text>
           </Callout.Text>
         </Callout.Root>
@@ -104,7 +165,7 @@ export function AccountDeletionForm({
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="reason" mb={FORM_SPACING.labelGap}>
-              Reason for deletion (optional)
+              {labels.reasonLabel}
             </Text>
             <Select
               onValueChange={(value) => form.setValue("reason", value)}
@@ -113,13 +174,13 @@ export function AccountDeletionForm({
             >
               <SelectTrigger
                 id="reason"
-                aria-label="Reason for deletion (optional)"
-                placeholder="Select a reason"
+                aria-label={labels.reasonLabel}
+                placeholder={labels.reasonPlaceholder}
               />
               <SelectContent>
-                {deletionReasons.map((reason) => (
-                  <SelectItem key={reason} value={reason}>
-                    {reason}
+                {labels.reasons.map((reason) => (
+                  <SelectItem key={reason.value} value={reason.value}>
+                    {reason.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -128,12 +189,12 @@ export function AccountDeletionForm({
 
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="feedback" mb={FORM_SPACING.labelGap}>
-              Additional feedback (optional)
+              {labels.feedbackLabel}
             </Text>
             <TextArea
               id="feedback"
               rows={4}
-              placeholder="Tell us how we can improve..."
+              placeholder={labels.feedbackPlaceholder}
               disabled={loading}
               size="2"
               {...form.register("feedback")}
@@ -147,12 +208,12 @@ export function AccountDeletionForm({
 
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="confirm-delete" mb={FORM_SPACING.labelGap}>
-              Type &quot;DELETE&quot; to confirm
+              {labels.confirmLabel}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
               id="confirm-delete"
-              placeholder="DELETE"
+              placeholder={labels.confirmPlaceholder}
               disabled={loading}
               size="2"
               aria-required="true"
@@ -177,7 +238,7 @@ export function AccountDeletionForm({
                 onClick={onCancel}
                 style={{ flex: 1, width: "100%", minWidth: 0 }}
               >
-                Cancel
+                {labels.cancel}
               </Button>
             )}
             <Button
@@ -187,7 +248,7 @@ export function AccountDeletionForm({
               disabled={loading || !isConfirmValid}
               style={{ flex: 1, width: "100%", minWidth: 0 }}
             >
-              {loading ? "Deleting…" : "Delete my account"}
+              {loading ? labels.submitting : labels.submit}
             </Button>
           </Flex>
         </form>
@@ -195,4 +256,3 @@ export function AccountDeletionForm({
     </Card>
   );
 }
-

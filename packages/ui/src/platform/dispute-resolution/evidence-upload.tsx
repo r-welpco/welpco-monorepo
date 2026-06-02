@@ -41,11 +41,41 @@ export interface EvidenceUploadItem {
   id?: string;
 }
 
+export interface EvidenceUploadLabels {
+  title: string;
+  description: (maxFiles: number, maxSizeMb: number) => string;
+  attach: (count: number, max: number) => string;
+  limitReached: (count: number, max: number) => string;
+  uploading: string;
+  attached: string;
+  uploadFailed: string;
+  removeAria: (fileName: string) => string;
+  maxFilesError: (max: number) => string;
+  oversizedError: (maxMb: number, fileName: string, fileSize: string) => string;
+}
+
+const DEFAULT_EVIDENCE_LABELS: EvidenceUploadLabels = {
+  title: "Evidence (optional)",
+  description: (maxFiles, maxSizeMb) =>
+    `Attach photos, screenshots, or PDFs that show what happened. Up to ${maxFiles} files, ${maxSizeMb} MB each. You can submit without attachments — we'll still review your report.`,
+  attach: (count, max) => `Attach files (${count}/${max})`,
+  limitReached: (count, max) => `Limit reached (${count}/${max})`,
+  uploading: "Uploading…",
+  attached: "Attached",
+  uploadFailed: "Upload failed",
+  removeAria: (fileName) => `Remove ${fileName}`,
+  maxFilesError: (max) =>
+    `You can attach up to ${max} files. Remove some to add more.`,
+  oversizedError: (maxMb, fileName, fileSize) =>
+    `Each file must be smaller than ${maxMb} MB. "${fileName}" is ${fileSize}.`,
+};
+
 export interface EvidenceUploadProps {
   files?: EvidenceFile[];
   maxFiles?: number;
   maxSizeMB?: number;
   acceptedTypes?: string[];
+  labels?: EvidenceUploadLabels;
   /**
    * DISPUTES-001 (Day 16): when supplied, the component performs the S3
    * upload itself — calls the handler per accepted file, awaits the resulting
@@ -79,14 +109,14 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function statusLabel(file: EvidenceFile): string {
+function statusLabel(file: EvidenceFile, labels: EvidenceUploadLabels): string {
   switch (file.status) {
     case "uploading":
-      return "Uploading…";
+      return labels.uploading;
     case "error":
-      return file.error ?? "Upload failed";
+      return file.error ?? labels.uploadFailed;
     case "uploaded":
-      return "Attached";
+      return labels.attached;
     default:
       return formatFileSize(file.size);
   }
@@ -119,7 +149,9 @@ export function EvidenceUpload({
   onFilesChange,
   onRemove,
   disabled = false,
+  labels: labelsProp,
 }: EvidenceUploadProps) {
+  const labels = labelsProp ?? DEFAULT_EVIDENCE_LABELS;
   const inputId = useId();
   const [internalFiles, setInternalFiles] = useState<EvidenceFile[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -154,9 +186,7 @@ export function EvidenceUpload({
       setError(null);
 
       if (files.length + selectedFiles.length > maxFiles) {
-        setError(
-          `You can attach up to ${maxFiles} files. Remove some to add more.`,
-        );
+        setError(labels.maxFilesError(maxFiles));
         target.value = "";
         return;
       }
@@ -166,7 +196,7 @@ export function EvidenceUpload({
       );
       if (oversized) {
         setError(
-          `Each file must be smaller than ${maxSizeMB} MB. "${oversized.name}" is ${formatFileSize(oversized.size)}.`,
+          labels.oversizedError(maxSizeMB, oversized.name, formatFileSize(oversized.size)),
         );
         target.value = "";
         return;
@@ -209,7 +239,7 @@ export function EvidenceUpload({
             );
           } catch (e) {
             const message =
-              e instanceof Error ? e.message : "Upload failed";
+              e instanceof Error ? e.message : labels.uploadFailed;
             working = working.map((row) =>
               row.id === rowId ? { ...row, status: "error", error: message } : row,
             );
@@ -218,7 +248,7 @@ export function EvidenceUpload({
         }),
       );
     },
-    [files, maxFiles, maxSizeMB, updateFiles, uploadFile],
+    [files, maxFiles, maxSizeMB, updateFiles, uploadFile, labels],
   );
 
   const handleRemove = useCallback(
@@ -235,12 +265,10 @@ export function EvidenceUpload({
       <Flex direction="column" gap="3">
         <Box>
           <Heading size="4" mb="1" trim="start">
-            Evidence (optional)
+            {labels.title}
           </Heading>
           <Text size="2" color="gray" highContrast>
-            Attach photos, screenshots, or PDFs that show what happened. Up to{" "}
-            {maxFiles} files, {maxSizeMB} MB each. You can submit without
-            attachments — we&rsquo;ll still review your report.
+            {labels.description(maxFiles, maxSizeMB)}
           </Text>
         </Box>
 
@@ -272,8 +300,8 @@ export function EvidenceUpload({
                 <Box ml="2" asChild>
                   <span>
                     {isAtLimit
-                      ? `Limit reached (${files.length}/${maxFiles})`
-                      : `Attach files (${files.length}/${maxFiles})`}
+                      ? labels.limitReached(files.length, maxFiles)
+                      : labels.attach(files.length, maxFiles)}
                   </span>
                 </Box>
               </span>
@@ -324,7 +352,7 @@ export function EvidenceUpload({
                                 highContrast={!isError}
                                 as="div"
                               >
-                                {statusLabel(file)}
+                                {statusLabel(file, labels)}
                                 {file.status === "uploaded"
                                   ? ` · ${formatFileSize(file.size)}`
                                   : null}
@@ -337,7 +365,7 @@ export function EvidenceUpload({
                             color="gray"
                             size="1"
                             onClick={() => handleRemove(file.id)}
-                            aria-label={`Remove ${file.name}`}
+                            aria-label={labels.removeAria(file.name)}
                             disabled={disabled}
                           >
                             <X aria-hidden="true" size={16} />

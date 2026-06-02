@@ -108,6 +108,8 @@ export function useIdentityStepLabels(): IdentityStepLabels {
     description: t("description"),
     firstName: t("firstName"),
     lastName: t("lastName"),
+    firstNamePlaceholder: t("firstNamePlaceholder"),
+    lastNamePlaceholder: t("lastNamePlaceholder"),
     phone: t("phone"),
     countryPlaceholder: t("countryPlaceholder"),
     phonePlaceholder: t("phonePlaceholder"),

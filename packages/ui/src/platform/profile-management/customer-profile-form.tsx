@@ -62,6 +62,8 @@ const DEFAULT_LABELS: CustomerProfileFormLabels = {
     stateProvince: "Province",
     zipPostalCode: "Postal code",
     streetPlaceholder: "123 Main Street",
+    cityPlaceholder: "Toronto",
+    zipPlaceholder: "M5H 1A1",
     provincePlaceholder: "Select province",
     country: "Country",
   },

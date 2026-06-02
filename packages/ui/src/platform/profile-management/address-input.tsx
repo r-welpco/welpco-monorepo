@@ -26,6 +26,8 @@ export interface AddressInputLabels {
   stateProvince: string;
   zipPostalCode: string;
   streetPlaceholder: string;
+  cityPlaceholder?: string;
+  zipPlaceholder?: string;
   provincePlaceholder?: string;
   country?: string;
 }
@@ -36,6 +38,8 @@ const DEFAULT_ADDRESS_INPUT_LABELS: AddressInputLabels = {
   stateProvince: "Province",
   zipPostalCode: "Postal code",
   streetPlaceholder: "123 Main Street",
+  cityPlaceholder: "Toronto",
+  zipPlaceholder: "M5H 1A1",
   provincePlaceholder: "Select province",
   country: "Country",
 };
@@ -133,7 +137,7 @@ export function AddressInput({
           </Text>
           <TextField.Root
             id="address-city"
-            placeholder="Toronto"
+            placeholder={labels.cityPlaceholder ?? DEFAULT_ADDRESS_INPUT_LABELS.cityPlaceholder}
             autoComplete="address-level2"
             size="2"
             disabled={loading}
@@ -197,7 +201,7 @@ export function AddressInput({
           </Text>
           <TextField.Root
             id="address-zip"
-            placeholder="M5H 1A1"
+            placeholder={labels.zipPlaceholder ?? DEFAULT_ADDRESS_INPUT_LABELS.zipPlaceholder}
             autoComplete="postal-code"
             size="2"
             disabled={loading}

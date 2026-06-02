@@ -10,6 +10,7 @@ import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -19,8 +20,22 @@ export type PasswordChangeFormLabels = {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
+  currentPasswordPlaceholder: string;
+  newPasswordPlaceholder: string;
+  confirmPasswordPlaceholder: string;
+  passwordStrength: (label: string) => string;
+  passwordStrengthWeak: string;
+  passwordStrengthMedium: string;
+  passwordStrengthStrong: string;
   submit: string;
   submitting?: string;
+  validation: {
+    currentRequired: string;
+    newMin: string;
+    confirmMin: string;
+    mismatch: string;
+    sameAsCurrent: string;
+  };
 };
 
 export interface PasswordChangeFormProps {
@@ -31,30 +46,59 @@ export interface PasswordChangeFormProps {
   labels?: PasswordChangeFormLabels;
 }
 
-const schema = z
-  .object({
-    currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Confirm your password"),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords must match",
-    path: ["confirmPassword"],
-  })
-  .refine((data) => data.currentPassword !== data.newPassword, {
-    message: "New password must be different from current password",
-    path: ["newPassword"],
-  });
+function createSchema(v: PasswordChangeFormLabels["validation"]) {
+  return z
+    .object({
+      currentPassword: z.string().min(1, v.currentRequired),
+      newPassword: z.string().min(8, v.newMin),
+      confirmPassword: z.string().min(8, v.confirmMin),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: v.mismatch,
+      path: ["confirmPassword"],
+    })
+    .refine((data) => data.currentPassword !== data.newPassword, {
+      message: v.sameAsCurrent,
+      path: ["newPassword"],
+    });
+}
 
-export type PasswordChangeValues = z.infer<typeof schema>;
+export type PasswordChangeValues = z.infer<ReturnType<typeof createSchema>>;
+
+const DEFAULT_LABELS: PasswordChangeFormLabels = {
+  title: "Change password",
+  description: "Update your password to keep your account secure.",
+  currentPassword: "Current password",
+  newPassword: "New password",
+  confirmPassword: "Confirm new password",
+  currentPasswordPlaceholder: "Enter current password",
+  newPasswordPlaceholder: "Enter new password",
+  confirmPasswordPlaceholder: "Confirm new password",
+  passwordStrength: (label) => `Password strength: ${label}`,
+  passwordStrengthWeak: "Weak",
+  passwordStrengthMedium: "Medium",
+  passwordStrengthStrong: "Strong",
+  submit: "Update password",
+  submitting: "Updating...",
+  validation: {
+    currentRequired: "Current password is required",
+    newMin: "Password must be at least 8 characters",
+    confirmMin: "Confirm your password",
+    mismatch: "Passwords must match",
+    sameAsCurrent: "New password must be different from current password",
+  },
+};
 
 export function PasswordChangeForm({
   defaultValues,
   loading,
   error,
   onSubmit,
-  labels,
+  labels: labelsProp,
 }: PasswordChangeFormProps) {
+  const labels = labelsProp ?? DEFAULT_LABELS;
+  const schema = useMemo(() => createSchema(labels.validation), [labels.validation]);
+
   const form = useForm<PasswordChangeValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -72,12 +116,12 @@ export function PasswordChangeForm({
   const newPassword = form.watch("newPassword");
   const getPasswordStrength = (password: string) => {
     if (password.length === 0) return { strength: 0, label: "", color: "gray" };
-    if (password.length < 8) return { strength: 1, label: "Weak", color: "red" };
-    if (password.length < 12) return { strength: 2, label: "Medium", color: "amber" };
+    if (password.length < 8) return { strength: 1, label: labels.passwordStrengthWeak, color: "red" };
+    if (password.length < 12) return { strength: 2, label: labels.passwordStrengthMedium, color: "amber" };
     if (/[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password)) {
-      return { strength: 3, label: "Strong", color: "green" };
+      return { strength: 3, label: labels.passwordStrengthStrong, color: "green" };
     }
-    return { strength: 2, label: "Medium", color: "amber" };
+    return { strength: 2, label: labels.passwordStrengthMedium, color: "amber" };
   };
 
   const passwordStrength = getPasswordStrength(newPassword);
@@ -91,10 +135,10 @@ export function PasswordChangeForm({
       <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
         <Box>
           <Heading size="6" trim="start" mb={FORM_SPACING.titleGap}>
-            {labels?.title ?? "Change password"}
+            {labels.title}
           </Heading>
           <Text size="2" color="gray">
-            {labels?.description ?? "Update your password to keep your account secure."}
+            {labels.description}
           </Text>
         </Box>
 
@@ -107,12 +151,12 @@ export function PasswordChangeForm({
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="current-password" mb={FORM_SPACING.labelGap}>
-              {labels?.currentPassword ?? "Current password"}
+              {labels.currentPassword}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <PasswordField
               id="current-password"
-              placeholder="Enter current password"
+              placeholder={labels.currentPasswordPlaceholder}
               autoComplete="current-password"
               disabled={loading}
               size="2"
@@ -128,12 +172,12 @@ export function PasswordChangeForm({
 
           <Box mb={FORM_SPACING.fieldGap}>
             <Text as="label" size="2" weight="bold" htmlFor="new-password" mb={FORM_SPACING.labelGap}>
-              {labels?.newPassword ?? "New password"}
+              {labels.newPassword}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <PasswordField
               id="new-password"
-              placeholder="Enter new password"
+              placeholder={labels.newPasswordPlaceholder}
               autoComplete="new-password"
               disabled={loading}
               size="2"
@@ -142,7 +186,7 @@ export function PasswordChangeForm({
             />
             {newPassword && passwordStrength.label && (
               <Text size="1" color={passwordStrength.color as "red" | "amber" | "green" | "gray"} mt={FORM_SPACING.helperGap}>
-                Password strength: {passwordStrength.label}
+                {labels.passwordStrength(passwordStrength.label)}
               </Text>
             )}
             {form.formState.errors.newPassword && (
@@ -160,12 +204,12 @@ export function PasswordChangeForm({
               htmlFor="confirm-password"
               mb={FORM_SPACING.labelGap}
             >
-              {labels?.confirmPassword ?? "Confirm new password"}
+              {labels.confirmPassword}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <PasswordField
               id="confirm-password"
-              placeholder="Confirm new password"
+              placeholder={labels.confirmPasswordPlaceholder}
               autoComplete="new-password"
               disabled={loading}
               size="2"
@@ -186,11 +230,10 @@ export function PasswordChangeForm({
             disabled={loading}
             mt={FORM_SPACING.submitGap}
           >
-            {loading ? (labels?.submitting ?? "Updating...") : (labels?.submit ?? "Update password")}
+            {loading ? (labels.submitting ?? "Updating...") : labels.submit}
           </Button>
         </form>
       </Flex>
     </Card>
   );
 }
-

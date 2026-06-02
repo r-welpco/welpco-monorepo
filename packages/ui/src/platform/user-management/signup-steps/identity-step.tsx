@@ -273,7 +273,7 @@ export function IdentityStep({
               </Text>
               <TextField.Root
                 id="signup-first-name"
-                placeholder="Jordan"
+                placeholder={labels.firstNamePlaceholder}
                 autoComplete="given-name"
                 disabled={loading}
                 size="2"
@@ -309,7 +309,7 @@ export function IdentityStep({
               </Text>
               <TextField.Root
                 id="signup-last-name"
-                placeholder="Lee"
+                placeholder={labels.lastNamePlaceholder}
                 autoComplete="family-name"
                 disabled={loading}
                 size="2"

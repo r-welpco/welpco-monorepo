@@ -19,7 +19,7 @@ import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useDispute, useWithdrawDispute } from "@/lib/hooks/use-disputes";
 import { useUser } from "@/stores/authStore";
 import { useDisputeLabels } from "@/lib/i18n/use-dashboard-labels";
-import { useDisputeCategoryLabel } from "@/lib/i18n/dispute-labels";
+import { useDisputeCategoryLabel, useDisputeStatusLabel } from "@/lib/i18n/dispute-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 
 const WITHDRAWABLE_STATUSES = new Set(["open", "in-review"]);
@@ -34,6 +34,7 @@ export default function DisputeDetailPageClient({
   const labels = useDisputeLabels();
   const d = labels.detail;
   const formatCategory = useDisputeCategoryLabel();
+  const disputeStatusLabel = useDisputeStatusLabel();
   const dateLocale = useDateFnsLocale();
   const { data: dispute, isLoading, isError, error } = useDispute(disputeId);
   const user = useUser();
@@ -112,7 +113,10 @@ export default function DisputeDetailPageClient({
                       {dispute.subject}
                     </Heading>
                     <Flex align="center" gap="2" wrap="wrap" aria-live="polite">
-                      <DisputeStatusBadge status={dispute.status} />
+                      <DisputeStatusBadge
+                        status={dispute.status}
+                        label={disputeStatusLabel(dispute.status)}
+                      />
                       <Text size="2" color="gray" highContrast>
                         {formatCategory(dispute.category)} &middot;{" "}
                         {d.reportedAt(reportedDate)}

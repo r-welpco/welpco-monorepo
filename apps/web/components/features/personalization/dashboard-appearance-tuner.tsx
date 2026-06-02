@@ -28,6 +28,7 @@ import {
 } from "@/stores/personalizationStore";
 import { backgrounds } from "@/lib/personalization/backgrounds";
 import { useResolvedThemeAppearance } from "@/lib/hooks/use-resolved-theme-appearance";
+import { useDashboardSettingsFormLabels } from "@/lib/i18n/use-dashboard-labels";
 
 function pct(value: number, digits = 0) {
   return `${(value * 100).toFixed(digits)}%`;
@@ -72,6 +73,7 @@ function SliderRow({
 }
 
 export function DashboardAppearanceTuner() {
+  const settingsFormLabels = useDashboardSettingsFormLabels();
   const appearance = useResolvedThemeAppearance();
 
   const panelOpen = useAppearanceTunerStore((s) => s.panelOpen);
@@ -159,13 +161,13 @@ export function DashboardAppearanceTuner() {
 
               <Box>
                 <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
-                  Theme mode
+                  {settingsFormLabels.themeMode}
                 </Text>
                 <Select
                   value={themeMode}
                   onValueChange={(value) => setThemeMode(value as ThemeMode)}
                 >
-                  <SelectTrigger placeholder="Theme mode" />
+                  <SelectTrigger placeholder={settingsFormLabels.themeModePlaceholder} />
                   <SelectContent>
                     <SelectItem value="light">Light</SelectItem>
                     <SelectItem value="dark">Dark</SelectItem>
@@ -176,10 +178,10 @@ export function DashboardAppearanceTuner() {
 
               <Box>
                 <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
-                  Background preset
+                  {settingsFormLabels.background}
                 </Text>
                 <Select value={backgroundId} onValueChange={setBackground}>
-                  <SelectTrigger placeholder="Background" />
+                  <SelectTrigger placeholder={settingsFormLabels.backgroundPlaceholder} />
                   <SelectContent>
                     {backgrounds.map((bg) => (
                       <SelectItem key={bg.id} value={bg.id}>

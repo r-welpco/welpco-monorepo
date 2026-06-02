@@ -147,6 +147,8 @@ export interface IdentityStepLabels extends SignupCommonLabels {
   description: string;
   firstName: string;
   lastName: string;
+  firstNamePlaceholder: string;
+  lastNamePlaceholder: string;
   phone: string;
   countryPlaceholder: string;
   phonePlaceholder: string;
@@ -186,6 +188,8 @@ export const DEFAULT_IDENTITY_LABELS: IdentityStepLabels = {
     "We use these details to confirm bookings and reach you about your account. They're never shown publicly without your say-so.",
   firstName: "First name",
   lastName: "Last name",
+  firstNamePlaceholder: "Jordan",
+  lastNamePlaceholder: "Lee",
   phone: "Phone",
   countryPlaceholder: "Country",
   phonePlaceholder: "416 555 1234",

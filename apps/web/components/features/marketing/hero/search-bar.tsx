@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 
 /**
  * SearchBar — pill-shaped two-input + submit button.
@@ -20,6 +21,7 @@ interface SearchBarProps {
 
 export function SearchBar({ tone = "light" }: SearchBarProps) {
   const router = useRouter();
+  const t = useTranslations("marketing.home.hero");
   const [q, setQ] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const dark = tone === "dark";
@@ -37,7 +39,7 @@ export function SearchBar({ tone = "light" }: SearchBarProps) {
     <form
       onSubmit={handleSubmit}
       role="search"
-      aria-label="Find a service"
+      aria-label={t("searchAria")}
       data-searchbar
       style={{
         display: "grid",
@@ -62,8 +64,8 @@ export function SearchBar({ tone = "light" }: SearchBarProps) {
           name="q"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="What do you need a hand with?"
-          aria-label="What do you need a hand with?"
+          placeholder={t("searchKeywordPlaceholder")}
+          aria-label={t("searchKeywordPlaceholder")}
           autoComplete="off"
           style={{
             border: "none",
@@ -95,8 +97,8 @@ export function SearchBar({ tone = "light" }: SearchBarProps) {
           name="postalCode"
           value={postalCode}
           onChange={(e) => setPostalCode(e.target.value)}
-          placeholder="Your postal code"
-          aria-label="Your postal code"
+          placeholder={t("searchPostalPlaceholder")}
+          aria-label={t("searchPostalPlaceholder")}
           inputMode="text"
           autoComplete="postal-code"
           maxLength={10}
@@ -113,7 +115,7 @@ export function SearchBar({ tone = "light" }: SearchBarProps) {
         />
       </label>
       <button type="submit" className="btn btn-primary" style={{ padding: "14px 22px" }}>
-        Search
+        {t("searchSubmit")}
       </button>
     </form>
   );

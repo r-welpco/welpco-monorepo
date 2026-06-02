@@ -61,7 +61,11 @@
         "line2": "Des gens de confiance.",
         "subhead": "Connectez-vous à des Welpers de confiance dans votre communauté — garde d'enfants, entretien de pelouse, tutorat, aide technologique et plus.",
         "findHelp": "Trouver de l'aide",
-        "becomeWelper": "Devenir Welper"
+        "becomeWelper": "Devenir Welper",
+        "searchKeywordPlaceholder": "De quoi avez-vous besoin?",
+        "searchPostalPlaceholder": "Votre code postal",
+        "searchSubmit": "Rechercher",
+        "searchAria": "Trouver un service"
       },
       "categories": {
         "eyebrow": "Catégories",
@@ -906,6 +910,8 @@
           "description": "Nous utilisons ces renseignements pour confirmer les réservations et vous joindre au sujet de votre compte. Ils ne sont jamais affichés publiquement sans votre accord.",
           "firstName": "Prénom",
           "lastName": "Nom",
+          "firstNamePlaceholder": "Jordan",
+          "lastNamePlaceholder": "Lee",
           "phone": "Téléphone",
           "countryPlaceholder": "Pays",
           "phonePlaceholder": "416 555 1234",
@@ -1391,6 +1397,15 @@
         }
       }
     },
+    "questionField": {
+      "select": "Sélectionner…",
+      "yes": "Oui",
+      "no": "Non",
+      "entityChild": "Nom et âge de chaque enfant",
+      "entityPerson": "Qui a besoin de soins (nom, âge, notes)",
+      "entityPet": "Détails sur l'animal",
+      "entityDefault": "Entrez les détails…"
+    },
     "bookings": {
       "title": "Réservations",
       "subtitle": "Gérez les demandes de réservation et vos mandats.",
@@ -1403,6 +1418,9 @@
       "emptyAll": "Vous n'avez pas encore de réservation.",
       "emptyFiltered": "Aucune réservation {status}.",
       "created": "Créée le {date}",
+      "durationMinutes": "{minutes} min",
+      "durationHours": "{hours} h",
+      "durationHoursMinutes": "{hours} h {minutes} min",
       "decline": "Refuser",
       "accept": "Accepter",
       "cancelBooking": "Annuler la réservation",
@@ -1618,6 +1636,9 @@
       "reviewSummary": {
         "jobDetails": "Détails de l'offre",
         "schedule": "Horaire",
+        "durationHours": "{hours} h",
+        "durationMinutes": "{minutes} min",
+        "durationHoursMinutes": "{hours} h {minutes} min",
         "location": "Lieu",
         "serviceQuestions": "Questions sur le service",
         "questionsLoadFailed": "Impossible de charger les questions sur le service.",
@@ -1640,6 +1661,9 @@
         "verified": "Vérifié",
         "applied": "Candidature le {date}",
         "sendBookingRequest": "Envoyer une demande de réservation",
+        "hourlyRate": "{rate} $/h",
+        "emptyDescription": "Quand des Welpers postulent, ils apparaîtront ici pour examen.",
+        "tryAgain": "Réessayer",
         "status": {
           "pending": "En attente",
           "accepted": "Sélectionné",
@@ -1681,7 +1705,8 @@
       "threadBooking": "Réservation #{id}",
       "viewBooking": "Voir les détails de la réservation",
       "messagingClosed": "La messagerie n'est plus disponible pour cette réservation. Ouvrez les détails de la réservation si vous devez laisser un avis.",
-      "sendFailed": "Impossible d'envoyer votre message. Réessayez."
+      "sendFailed": "Impossible d'envoyer votre message. Réessayez.",
+      "composerPlaceholder": "Écrire un message…"
     },
     "settings": {
       "title": "Paramètres",
@@ -1759,6 +1784,9 @@
         "phone": "Téléphone",
         "bio": "Biographie",
         "bioPlaceholder": "Décrivez votre expertise, vos certifications et votre approche. Minimum 20 caractères.",
+        "firstNamePlaceholder": "Alex",
+        "lastNamePlaceholder": "Carter",
+        "phonePlaceholder": "+1 (555) 000-0000",
         "charCount": "{count} / 600 caractères",
         "visibility": "Visibilité du profil",
         "visibilityHint": "Les profils publics apparaissent dans la recherche. Les profils privés ne sont visibles que pour les clients avec qui vous avez travaillé.",
@@ -1929,6 +1957,8 @@
             "stateProvince": "Province",
             "zipPostalCode": "Code postal",
             "streetPlaceholder": "123 rue Principale",
+            "cityPlaceholder": "Montréal",
+            "zipPlaceholder": "H2X 1Y4",
             "provincePlaceholder": "Choisir une province",
             "country": "Pays"
           },
@@ -1987,7 +2017,10 @@
       "paymentSettings": "Paramètres de paiement",
       "paymentRequired": "Ajoutez un moyen de paiement enregistré dans Paramètres avant de réserver.",
       "createFailed": "Impossible de créer la réservation. Réessayez.",
-      "mobileHoldLabel": "Retenue carte (1 h)"
+      "mobileHoldLabel": "Retenue carte (1 h)",
+      "durationMinutes": "{minutes} min",
+      "durationHours": "{hours} h",
+      "durationHoursMinutes": "{hours} h {minutes} min"
     },
     "bookingsDetail": {
       "backToBookings": "Retour aux réservations",
@@ -2015,6 +2048,13 @@
       "scheduleDate": "Date",
       "scheduleTimeWindow": "Plage horaire",
       "durationLabel": "Durée",
+      "durationMinutes": "{minutes} min",
+      "durationHours": "{hours} h",
+      "durationHoursMinutes": "{hours} h {minutes} min",
+      "ratePerHour": "{rate} $/h",
+      "receiptOriginalHold": "Retenue initiale sur la carte : {amount}.",
+      "receiptExtraChargeHint": "Si le total est plus élevé, le client pourrait devoir authentifier un montant supplémentaire.",
+      "receiptTotal": "Total du reçu : {amount}",
       "peopleTitle": "Personnes",
       "customer": "Client",
       "welper": "Welper",
@@ -2066,6 +2106,49 @@
       "reviewSkip": "Passer pour l'instant",
       "disputeTitle": "Signaler un problème",
       "disputeDescription": "Nous examinerons votre dossier et vous répondrons dans les 48 heures.",
+      "disputeForm": {
+        "subjectLabel": "Objet",
+        "subjectPlaceholder": "Un bref résumé de ce qui s'est passé",
+        "categoryLabel": "Quel type de problème?",
+        "descriptionLabel": "Ce qui s'est passé",
+        "descriptionPlaceholder": "Dites-nous ce qui s'est passé, quand, et comment cela vous a affecté. Plus c'est précis, plus vite nous pourrons vous aider.",
+        "safetyBold": "Si vous êtes en danger immédiat, composez le 911 d'abord.",
+        "safetyRest": "Nous répondons aux signalements de sécurité dans les 4 heures et pouvons vous contacter directement.",
+        "submit": "Envoyer le signalement",
+        "submitting": "Envoi…",
+        "validation": {
+          "subjectMin": "Ajoutez un bref résumé — au moins 5 caractères.",
+          "subjectMax": "L'objet peut contenir au maximum {max} caractères.",
+          "descriptionMax": "La description peut contenir au maximum {max} caractères."
+        },
+        "evidence": {
+          "title": "Preuves (facultatif)",
+          "description": "Joignez des photos, captures d'écran ou PDF montrant ce qui s'est passé. Jusqu'à {maxFiles} fichiers, {maxSizeMb} Mo chacun. Vous pouvez envoyer sans pièces jointes — nous examinerons quand même votre signalement.",
+          "attach": "Joindre des fichiers ({count}/{max})",
+          "limitReached": "Limite atteinte ({count}/{max})",
+          "uploading": "Téléversement…",
+          "attached": "Joint",
+          "uploadFailed": "Échec du téléversement",
+          "removeAria": "Retirer {fileName}",
+          "maxFilesError": "Vous pouvez joindre jusqu'à {max} fichiers. Retirez-en pour en ajouter.",
+          "oversizedError": "Chaque fichier doit faire moins de {maxMb} Mo. « {name} » fait {size}."
+        }
+      },
+      "ratingForm": {
+        "ratingLabel": "Note",
+        "commentLabel": "Commentaire (facultatif)",
+        "commentPlaceholder": "Parlez-nous de votre expérience…",
+        "starAria": "Noter {count} étoile",
+        "starAriaPlural": "Noter {count} étoiles",
+        "charactersLeft": "{count} caractères restants",
+        "submit": "Envoyer l'avis",
+        "submitting": "Envoi…",
+        "validation": {
+          "ratingRequired": "Veuillez choisir une note",
+          "commentMin": "Le commentaire doit contenir au moins 10 caractères",
+          "commentMax": "Le commentaire doit contenir au maximum {max} caractères"
+        }
+      },
       "disputeCategories": {
         "no_show": "Le client ne s'est pas présenté",
         "quality": "Portée du travail ou attentes",
@@ -2252,6 +2335,14 @@
         "safety": "Sécurité",
         "other": "Autre"
       },
+      "status": {
+        "open": "Ouvert",
+        "in-review": "En cours d'examen",
+        "resolved": "Résolu",
+        "closed": "Fermé",
+        "escalated": "Escaladé",
+        "withdrawn": "Retiré"
+      },
       "detail": {
         "backToReports": "Retour aux signalements",
         "loadingAria": "Chargement du signalement",
@@ -2306,21 +2397,39 @@
       "emailDescription": "Changez le courriel de connexion. Vous devrez vérifier la nouvelle adresse avant que le compte soit pleinement sécurisé.",
       "emailHint": "Votre courriel de connexion change immédiatement. Nous vous demanderons de vérifier la nouvelle adresse depuis l'écran de vérification.",
       "emailLabel": "Adresse courriel",
+      "emailPlaceholder": "vous@exemple.com",
       "emailSubmit": "Mettre à jour le courriel",
       "emailSubmitting": "Mise à jour…",
+      "emailValidationInvalid": "Entrez une adresse courriel valide",
       "passwordTitle": "Changer le mot de passe",
       "passwordDescription": "Utilisez un mot de passe fort que vous n'utilisez nulle part ailleurs.",
       "passwordCurrent": "Mot de passe actuel",
       "passwordNew": "Nouveau mot de passe",
       "passwordConfirm": "Confirmer le nouveau mot de passe",
+      "passwordCurrentPlaceholder": "Entrez le mot de passe actuel",
+      "passwordNewPlaceholder": "Entrez le nouveau mot de passe",
+      "passwordConfirmPlaceholder": "Confirmez le nouveau mot de passe",
+      "passwordStrength": "Force du mot de passe : {label}",
+      "passwordStrengthWeak": "Faible",
+      "passwordStrengthMedium": "Moyenne",
+      "passwordStrengthStrong": "Forte",
       "passwordSubmit": "Mettre à jour le mot de passe",
       "passwordSubmitting": "Mise à jour…",
+      "passwordValidation": {
+        "currentRequired": "Le mot de passe actuel est requis",
+        "newMin": "Le mot de passe doit contenir au moins 8 caractères",
+        "confirmMin": "Confirmez votre mot de passe",
+        "mismatch": "Les mots de passe doivent correspondre",
+        "sameAsCurrent": "Le nouveau mot de passe doit être différent de l'actuel"
+      },
       "personalizationTitle": "Personnalisation",
       "personalizationDescription": "Personnalisez l'apparence et le thème de l'application.",
       "themeMode": "Mode de thème",
+      "themeModePlaceholder": "Mode de thème",
       "translucentTheme": "Panneaux translucides",
       "translucentThemeHint": "Activer les panneaux et arrière-plans translucides",
       "background": "Arrière-plan",
+      "backgroundPlaceholder": "Arrière-plan",
       "appearance": {
         "theme": {
           "light": {
@@ -2364,10 +2473,31 @@
         }
       },
       "deleteTitle": "Supprimer le compte",
-      "deleteDescription": "Supprime définitivement votre compte et vous déconnecte.",
-      "deleteConfirmLabel": "Tapez DELETE pour confirmer",
+      "deleteDescription": "Nous désactivons votre compte et vous déconnectons. Pour le réactiver, contactez le soutien.",
+      "deleteWhatHappensTitle": "Ce qui se passe lors de la suppression",
+      "deleteBulletSignedOut": "Vous êtes déconnecté et votre profil est masqué dans la recherche.",
+      "deleteBulletBookings": "Les réservations actives restent au calendrier — annulez-les ou transférez-les d'abord.",
+      "deleteBulletMessages": "Les conversations restent du côté de l'autre personne.",
+      "deleteBulletReviews": "Les avis que vous avez laissés ou reçus restent liés à ces réservations.",
+      "deleteSupportNote": "Vous pouvez contacter le soutien pour réactiver votre compte ou demander la suppression complète des données.",
+      "deleteReasonLabel": "Raison de la suppression (facultatif)",
+      "deleteReasonPlaceholder": "Choisir une raison",
+      "deleteFeedbackLabel": "Commentaires supplémentaires (facultatif)",
+      "deleteFeedbackPlaceholder": "Dites-nous comment nous pourrions nous améliorer…",
+      "deleteConfirmLabel": "Tapez « DELETE » pour confirmer",
+      "deleteConfirmPlaceholder": "DELETE",
       "deleteSubmit": "Supprimer mon compte",
-      "deleteCancel": "Annuler"
+      "deleteSubmitting": "Suppression…",
+      "deleteCancel": "Annuler",
+      "deleteValidationFeedbackMax": "Les commentaires doivent contenir moins de 500 caractères",
+      "deleteReasons": {
+        "no_longer_need": "Je n'ai plus besoin du service",
+        "better_alternative": "J'ai trouvé une meilleure alternative",
+        "privacy": "Préoccupations de confidentialité",
+        "too_expensive": "Trop cher",
+        "technical": "Problèmes techniques",
+        "other": "Autre"
+      }
     },
     "setupChrome": {
       "back": "← Retour"

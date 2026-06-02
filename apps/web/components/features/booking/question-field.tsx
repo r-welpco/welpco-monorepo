@@ -12,6 +12,7 @@ import {
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import type { ServiceQuestion } from "@/lib/services/booking-service";
 import { matchesQuestionType } from "@/lib/services/service-questions-utils";
+import type { QuestionFieldLabels } from "@/lib/i18n/question-field-labels";
 
 function RequiredMarker() {
   return (
@@ -25,9 +26,10 @@ export interface QuestionFieldProps {
   sq: ServiceQuestion;
   value: string | number | boolean | undefined;
   onChange: (val: string | number | boolean) => void;
+  labels: QuestionFieldLabels;
 }
 
-export function QuestionField({ sq, value, onChange }: QuestionFieldProps) {
+export function QuestionField({ sq, value, onChange, labels }: QuestionFieldProps) {
   const { question, isRequired } = sq;
   const fieldId = `q-${question.id}`;
   const labelId = `${fieldId}-label`;
@@ -37,12 +39,12 @@ export function QuestionField({ sq, value, onChange }: QuestionFieldProps) {
   const entityPlaceholder =
     question.placeholder ??
     (question.entityType === "CHILD"
-      ? "Name and age of each child"
+      ? labels.entityChild
       : question.entityType === "PERSON"
-        ? "Who needs care (name, age, notes)"
+        ? labels.entityPerson
         : question.entityType === "PET"
-          ? "Pet details"
-          : "Enter details…");
+          ? labels.entityPet
+          : labels.entityDefault);
 
   return (
     <Box>
@@ -144,7 +146,7 @@ export function QuestionField({ sq, value, onChange }: QuestionFieldProps) {
             aria-labelledby={labelId}
             aria-required={isRequired || undefined}
             aria-describedby={helpId}
-            placeholder="Select…"
+            placeholder={labels.select}
           />
           <SelectContent>
             {question.options?.map((opt) => (
@@ -168,11 +170,11 @@ export function QuestionField({ sq, value, onChange }: QuestionFieldProps) {
             aria-labelledby={labelId}
             aria-required={isRequired || undefined}
             aria-describedby={helpId}
-            placeholder="Select…"
+            placeholder={labels.select}
           />
           <SelectContent>
-            <SelectItem value="true">Yes</SelectItem>
-            <SelectItem value="false">No</SelectItem>
+            <SelectItem value="true">{labels.yes}</SelectItem>
+            <SelectItem value="false">{labels.no}</SelectItem>
           </SelectContent>
         </Select>
       )}

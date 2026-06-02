@@ -12,13 +12,19 @@ import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { Inbox } from "lucide-react";
 import { ApplicationReviewCard, type ApplicationReviewCardProps } from "./application-review-card";
 
+export interface ApplicationListLabels {
+  emptyDescription?: string;
+  tryAgain?: string;
+  card?: ApplicationReviewCardProps["labels"];
+}
+
 export interface ApplicationListProps {
   items?: ApplicationReviewCardProps[];
   loading?: boolean;
   error?: string;
   emptyMessage?: string;
   onRetry?: () => void;
-  labels?: ApplicationReviewCardProps["labels"];
+  labels?: ApplicationListLabels;
 }
 
 /**
@@ -69,7 +75,7 @@ export function ApplicationList({
           {onRetry && (
             <Flex justify="end">
               <Button onClick={onRetry} variant="soft" color="gray" size="2">
-                Try again
+                {labels?.tryAgain ?? "Try again"}
               </Button>
             </Flex>
           )}
@@ -101,7 +107,8 @@ export function ApplicationList({
               {emptyMessage ?? "No applications yet"}
             </Heading>
             <Text size="2" color="gray" highContrast align="center" as="p">
-              When Welpers apply to your job, they'll show up here for review.
+              {labels?.emptyDescription ??
+                "When Welpers apply to your job, they'll show up here for review."}
             </Text>
           </Box>
         </Flex>
@@ -113,7 +120,11 @@ export function ApplicationList({
   return (
     <Flex direction="column" gap="3">
       {items.map((item, idx) => (
-        <ApplicationReviewCard key={`${item.candidateName}-${idx}`} {...item} labels={labels ?? item.labels} />
+        <ApplicationReviewCard
+          key={`${item.candidateName}-${idx}`}
+          {...item}
+          labels={labels?.card ?? item.labels}
+        />
       ))}
     </Flex>
   );

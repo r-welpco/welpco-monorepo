@@ -18,13 +18,14 @@ import { DisputeStatusBadge } from "@welpco/ui";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useDisputes } from "@/lib/hooks/use-disputes";
 import { useDisputeLabels } from "@/lib/i18n/use-dashboard-labels";
-import { useDisputeCategoryLabel } from "@/lib/i18n/dispute-labels";
+import { useDisputeCategoryLabel, useDisputeStatusLabel } from "@/lib/i18n/dispute-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import { ArrowLeft, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 
 export default function DisputesPageClient() {
   const labels = useDisputeLabels();
   const formatCategory = useDisputeCategoryLabel();
+  const disputeStatusLabel = useDisputeStatusLabel();
   const dateLocale = useDateFnsLocale();
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -126,7 +127,10 @@ export default function DisputesPageClient() {
                               {d.subject}
                             </Text>
                             <Flex align="center" gap="2" wrap="wrap">
-                              <DisputeStatusBadge status={d.status} />
+                              <DisputeStatusBadge
+                                status={d.status}
+                                label={disputeStatusLabel(d.status)}
+                              />
                               <Text size="1" color="gray" highContrast>
                                 {formatCategory(d.category)} &middot;{" "}
                                 {format(new Date(d.createdAt), "PPp", { locale: dateLocale })}

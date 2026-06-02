@@ -61,7 +61,11 @@
         "line2": "Real neighbours.",
         "subhead": "Connect with trusted Welpers in your community — childcare, lawn care, tutoring, tech help, and more.",
         "findHelp": "Find help",
-        "becomeWelper": "Become a Welper"
+        "becomeWelper": "Become a Welper",
+        "searchKeywordPlaceholder": "What do you need a hand with?",
+        "searchPostalPlaceholder": "Your postal code",
+        "searchSubmit": "Search",
+        "searchAria": "Find a service"
       },
       "categories": {
         "eyebrow": "Categories",
@@ -907,6 +911,8 @@
           "description": "We use these details to confirm bookings and reach you about your account. They're never shown publicly without your say-so.",
           "firstName": "First name",
           "lastName": "Last name",
+          "firstNamePlaceholder": "Jordan",
+          "lastNamePlaceholder": "Lee",
           "phone": "Phone",
           "countryPlaceholder": "Country",
           "phonePlaceholder": "416 555 1234",
@@ -1392,6 +1398,15 @@
         }
       }
     },
+    "questionField": {
+      "select": "Select…",
+      "yes": "Yes",
+      "no": "No",
+      "entityChild": "Name and age of each child",
+      "entityPerson": "Who needs care (name, age, notes)",
+      "entityPet": "Pet details",
+      "entityDefault": "Enter details…"
+    },
     "bookings": {
       "title": "Bookings",
       "subtitle": "Manage incoming booking requests and jobs.",
@@ -1404,6 +1419,9 @@
       "emptyAll": "You don't have any bookings yet.",
       "emptyFiltered": "No {status} bookings.",
       "created": "Created {date}",
+      "durationMinutes": "{minutes}m",
+      "durationHours": "{hours}h",
+      "durationHoursMinutes": "{hours}h {minutes}m",
       "decline": "Decline",
       "accept": "Accept",
       "cancelBooking": "Cancel booking",
@@ -1619,6 +1637,9 @@
       "reviewSummary": {
         "jobDetails": "Job details",
         "schedule": "Schedule",
+        "durationHours": "{hours}h",
+        "durationMinutes": "{minutes}m",
+        "durationHoursMinutes": "{hours}h {minutes}m",
         "location": "Location",
         "serviceQuestions": "Service questions",
         "questionsLoadFailed": "Could not load service questions.",
@@ -1641,6 +1662,9 @@
         "verified": "Verified",
         "applied": "Applied {date}",
         "sendBookingRequest": "Send booking request",
+        "hourlyRate": "{rate}/hr",
+        "emptyDescription": "When Welpers apply to your job, they'll show up here for review.",
+        "tryAgain": "Try again",
         "status": {
           "pending": "Pending",
           "accepted": "Selected",
@@ -1682,7 +1706,8 @@
       "threadBooking": "Booking #{id}",
       "viewBooking": "View booking details",
       "messagingClosed": "Messaging is no longer available for this booking. Open booking details if you need to leave a review.",
-      "sendFailed": "We couldn't send your message. Try again in a moment."
+      "sendFailed": "We couldn't send your message. Try again in a moment.",
+      "composerPlaceholder": "Type a message…"
     },
     "settings": {
       "title": "Settings",
@@ -1760,6 +1785,9 @@
         "phone": "Phone",
         "bio": "Bio",
         "bioPlaceholder": "Describe your expertise, certifications, and approach. Minimum 20 characters.",
+        "firstNamePlaceholder": "Alex",
+        "lastNamePlaceholder": "Carter",
+        "phonePlaceholder": "+1 (555) 000-0000",
         "charCount": "{count} / 600 characters",
         "visibility": "Profile visibility",
         "visibilityHint": "Public profiles are visible in search results. Private profiles are only visible to customers you've worked with.",
@@ -1930,6 +1958,8 @@
             "stateProvince": "Province",
             "zipPostalCode": "Postal code",
             "streetPlaceholder": "123 Main Street",
+            "cityPlaceholder": "Toronto",
+            "zipPlaceholder": "M5H 1A1",
             "provincePlaceholder": "Select province",
             "country": "Country"
           },
@@ -1988,7 +2018,10 @@
       "paymentSettings": "Payment settings",
       "paymentRequired": "Add a saved payment method in Settings before booking.",
       "createFailed": "Failed to create booking. Please try again.",
-      "mobileHoldLabel": "Card hold (1 hr)"
+      "mobileHoldLabel": "Card hold (1 hr)",
+      "durationMinutes": "{minutes}m",
+      "durationHours": "{hours}h",
+      "durationHoursMinutes": "{hours}h {minutes}m"
     },
     "bookingsDetail": {
       "backToBookings": "Back to bookings",
@@ -2016,6 +2049,13 @@
       "scheduleDate": "Date",
       "scheduleTimeWindow": "Time window",
       "durationLabel": "Duration",
+      "durationMinutes": "{minutes}m",
+      "durationHours": "{hours}h",
+      "durationHoursMinutes": "{hours}h {minutes}m",
+      "ratePerHour": "{rate}/hr",
+      "receiptOriginalHold": "Original card hold: {amount}.",
+      "receiptExtraChargeHint": "If your total is higher, the customer may need to authenticate an extra charge.",
+      "receiptTotal": "Receipt total: {amount}",
       "peopleTitle": "People",
       "customer": "Customer",
       "welper": "Welper",
@@ -2067,6 +2107,49 @@
       "reviewSkip": "Skip for now",
       "disputeTitle": "Report a problem",
       "disputeDescription": "We'll review your case and get back to you within 48 hours.",
+      "disputeForm": {
+        "subjectLabel": "Subject",
+        "subjectPlaceholder": "A short summary of what went wrong",
+        "categoryLabel": "What kind of problem?",
+        "descriptionLabel": "What happened",
+        "descriptionPlaceholder": "Tell us what happened, when, and how it affected you. The more specific, the faster we can help.",
+        "safetyBold": "If you're in immediate danger, call 911 first.",
+        "safetyRest": "We respond to safety reports within 4 hours and may contact you directly.",
+        "submit": "Send report",
+        "submitting": "Sending…",
+        "validation": {
+          "subjectMin": "Add a short summary — at least 5 characters.",
+          "subjectMax": "Subject can be up to {max} characters.",
+          "descriptionMax": "Description can be up to {max} characters."
+        },
+        "evidence": {
+          "title": "Evidence (optional)",
+          "description": "Attach photos, screenshots, or PDFs that show what happened. Up to {maxFiles} files, {maxSizeMb} MB each. You can submit without attachments — we'll still review your report.",
+          "attach": "Attach files ({count}/{max})",
+          "limitReached": "Limit reached ({count}/{max})",
+          "uploading": "Uploading…",
+          "attached": "Attached",
+          "uploadFailed": "Upload failed",
+          "removeAria": "Remove {fileName}",
+          "maxFilesError": "You can attach up to {max} files. Remove some to add more.",
+          "oversizedError": "Each file must be smaller than {maxMb} MB. \"{name}\" is {size}."
+        }
+      },
+      "ratingForm": {
+        "ratingLabel": "Rating",
+        "commentLabel": "Comment (optional)",
+        "commentPlaceholder": "Tell us about your experience…",
+        "starAria": "Rate {count} star",
+        "starAriaPlural": "Rate {count} stars",
+        "charactersLeft": "{count} characters left",
+        "submit": "Submit review",
+        "submitting": "Submitting…",
+        "validation": {
+          "ratingRequired": "Please select a rating",
+          "commentMin": "Comment must be at least 10 characters",
+          "commentMax": "Comment must be {max} characters or fewer"
+        }
+      },
       "disputeCategories": {
         "no_show": "Customer didn't show up",
         "quality": "Scope or job expectations",
@@ -2253,6 +2336,14 @@
         "safety": "Safety",
         "other": "Other"
       },
+      "status": {
+        "open": "Open",
+        "in-review": "In review",
+        "resolved": "Resolved",
+        "closed": "Closed",
+        "escalated": "Escalated",
+        "withdrawn": "Withdrawn"
+      },
       "detail": {
         "backToReports": "Back to reports",
         "loadingAria": "Loading report",
@@ -2307,21 +2398,39 @@
       "emailDescription": "Change the email you sign in with. You'll need to verify the new address before your account is fully secured.",
       "emailHint": "Your sign-in email changes right away. We'll ask you to verify the new address from the verification screen.",
       "emailLabel": "Email address",
+      "emailPlaceholder": "you@example.com",
       "emailSubmit": "Update email",
       "emailSubmitting": "Updating…",
+      "emailValidationInvalid": "Enter a valid email",
       "passwordTitle": "Change password",
       "passwordDescription": "Use a strong password you don't use anywhere else.",
       "passwordCurrent": "Current password",
       "passwordNew": "New password",
       "passwordConfirm": "Confirm new password",
+      "passwordCurrentPlaceholder": "Enter current password",
+      "passwordNewPlaceholder": "Enter new password",
+      "passwordConfirmPlaceholder": "Confirm new password",
+      "passwordStrength": "Password strength: {label}",
+      "passwordStrengthWeak": "Weak",
+      "passwordStrengthMedium": "Medium",
+      "passwordStrengthStrong": "Strong",
       "passwordSubmit": "Update password",
       "passwordSubmitting": "Updating…",
+      "passwordValidation": {
+        "currentRequired": "Current password is required",
+        "newMin": "Password must be at least 8 characters",
+        "confirmMin": "Confirm your password",
+        "mismatch": "Passwords must match",
+        "sameAsCurrent": "New password must be different from current password"
+      },
       "personalizationTitle": "Personalization",
       "personalizationDescription": "Customize your app appearance and theme.",
       "themeMode": "Theme mode",
+      "themeModePlaceholder": "Theme mode",
       "translucentTheme": "Translucent panels",
       "translucentThemeHint": "Enable translucent panels and backgrounds",
       "background": "Background",
+      "backgroundPlaceholder": "Background",
       "appearance": {
         "theme": {
           "light": {
@@ -2365,10 +2474,31 @@
         }
       },
       "deleteTitle": "Delete account",
-      "deleteDescription": "Permanently remove your account and sign out.",
-      "deleteConfirmLabel": "Type DELETE to confirm",
+      "deleteDescription": "We'll deactivate your account and sign you out. To restore it, contact support.",
+      "deleteWhatHappensTitle": "What happens when you delete",
+      "deleteBulletSignedOut": "You're signed out and your profile is hidden from search.",
+      "deleteBulletBookings": "Active bookings stay on the calendar — cancel or hand them off first.",
+      "deleteBulletMessages": "Conversations stay on the other person's side of the thread.",
+      "deleteBulletReviews": "Reviews you've left or received remain attached to those bookings.",
+      "deleteSupportNote": "You can reach out to support to restore your account or request full data removal.",
+      "deleteReasonLabel": "Reason for deletion (optional)",
+      "deleteReasonPlaceholder": "Select a reason",
+      "deleteFeedbackLabel": "Additional feedback (optional)",
+      "deleteFeedbackPlaceholder": "Tell us how we can improve…",
+      "deleteConfirmLabel": "Type \"DELETE\" to confirm",
+      "deleteConfirmPlaceholder": "DELETE",
       "deleteSubmit": "Delete my account",
-      "deleteCancel": "Cancel"
+      "deleteSubmitting": "Deleting…",
+      "deleteCancel": "Cancel",
+      "deleteValidationFeedbackMax": "Feedback must be less than 500 characters",
+      "deleteReasons": {
+        "no_longer_need": "No longer need the service",
+        "better_alternative": "Found a better alternative",
+        "privacy": "Privacy concerns",
+        "too_expensive": "Too expensive",
+        "technical": "Technical issues",
+        "other": "Other"
+      }
     },
     "setupChrome": {
       "back": "← Back"

@@ -318,6 +318,7 @@ function MessagesThreadPane({
           loading={showThreadLoading}
           sending={sendMessageMutation.isPending}
           composerDisabled={!messagingOpen}
+          composerPlaceholder={welperMsg?.composerPlaceholder}
           onSendMessage={
             messagingOpen
               ? (content) => {

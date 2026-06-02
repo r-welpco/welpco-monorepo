@@ -32,13 +32,15 @@ const statusMap: Record<DisputeStatus, { color: SemanticColor | "neutral"; label
 
 export interface DisputeStatusBadgeProps {
   status: DisputeStatus;
+  /** When set, overrides the built-in English label (for i18n). */
+  label?: string;
 }
 
-export function DisputeStatusBadge({ status }: DisputeStatusBadgeProps) {
+export function DisputeStatusBadge({ status, label }: DisputeStatusBadgeProps) {
   const token = statusMap[status];
   return (
     <Badge color={SEMANTIC_COLOR[token.color]} variant="soft" highContrast>
-      {token.label}
+      {label ?? token.label}
     </Badge>
   );
 }

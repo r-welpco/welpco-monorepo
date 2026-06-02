@@ -54,6 +54,8 @@ export interface JobCardProps {
   location?: string;
   createdAt?: string;
   status: JobStatus;
+  /** Localized job status label (pass from app i18n; falls back to English in JobStatusBadge). */
+  statusLabel?: string;
   description?: string;
   tags?: string[];
   /** Number of applications received — shown to the job owner. */
@@ -240,6 +242,7 @@ export function JobCard({
   location,
   createdAt,
   status,
+  statusLabel,
   description,
   tags = [],
   applicationCount,
@@ -279,7 +282,7 @@ export function JobCard({
         </Heading>
       </Box>
       <Box style={{ flexShrink: 0 }}>
-        <JobStatusBadge status={status} />
+        <JobStatusBadge status={status} label={statusLabel} />
       </Box>
     </Flex>
   );

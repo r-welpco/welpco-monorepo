@@ -23,6 +23,9 @@ export interface WelperProfileFormLabels {
   firstName: string;
   lastName: string;
   phone: string;
+  firstNamePlaceholder: string;
+  lastNamePlaceholder: string;
+  phonePlaceholder: string;
   bio: string;
   bioPlaceholder: string;
   charCount: (count: number) => string;
@@ -75,6 +78,9 @@ export function WelperProfileForm({
     firstName: "First name",
     lastName: "Last name",
     phone: "Phone",
+    firstNamePlaceholder: "Alex",
+    lastNamePlaceholder: "Carter",
+    phonePlaceholder: "+1 (555) 000-0000",
     bio: "Bio",
     bioPlaceholder:
       "Describe your expertise, certifications, and approach. Minimum 20 characters.",
@@ -152,7 +158,7 @@ export function WelperProfileForm({
                 </Text>
                 <TextField.Root
                   id="welper-first-name"
-                  placeholder="Alex"
+                  placeholder={labels.firstNamePlaceholder}
                   autoComplete="given-name"
                   size="2"
                   disabled={loading}
@@ -173,7 +179,7 @@ export function WelperProfileForm({
                 </Text>
                 <TextField.Root
                   id="welper-last-name"
-                  placeholder="Carter"
+                  placeholder={labels.lastNamePlaceholder}
                   autoComplete="family-name"
                   size="2"
                   disabled={loading}
@@ -196,7 +202,7 @@ export function WelperProfileForm({
             </Text>
             <TextField.Root
               id="welper-phone"
-              placeholder="+1 (555) 000-0000"
+              placeholder={labels.phonePlaceholder}
               autoComplete="tel"
               size="2"
               disabled={loading}

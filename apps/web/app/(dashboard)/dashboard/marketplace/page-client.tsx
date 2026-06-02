@@ -132,6 +132,7 @@ export default function MarketplacePageClient() {
           : undefined
       }
       status={job.status as import("@welpco/ui/platform").JobStatus}
+      statusLabel={labels.statusLabel(job.status as import("@welpco/ui/platform").JobStatus)}
       labels={{
         viewDetails: labels.card.viewDetails,
         apply: labels.card.apply,

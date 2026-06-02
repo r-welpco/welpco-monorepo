@@ -60,15 +60,6 @@ function formatScheduleDate(value: string | null | undefined, locale: string): s
   });
 }
 
-function formatDuration(minutes?: number): string {
-  if (!minutes) return "—";
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
-}
-
 function formatDateTime(value: string | null | undefined, locale: string): string | null {
   if (!value) return null;
   const parsed = new Date(value);
@@ -347,7 +338,11 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
               </DataListItem>
               <DataListItem>
                 <DataListLabel minWidth="96px">{labels.detail.duration}</DataListLabel>
-                <DataListValue>{formatDuration(job.durationMinutes)}</DataListValue>
+                <DataListValue>
+                  {job.durationMinutes
+                    ? labels.reviewSummary.formatDuration(job.durationMinutes)
+                    : "—"}
+                </DataListValue>
               </DataListItem>
               {locationLine && (
                 <DataListItem>
@@ -487,7 +482,11 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
               </Card>
             ) : (
               <ApplicationList
-                labels={applicationReviewLabels}
+                labels={{
+                  card: applicationReviewLabels,
+                  emptyDescription: labels.applicationReview.emptyDescription,
+                  tryAgain: labels.applicationReview.tryAgain,
+                }}
                 items={applications.map((app) => ({
                   candidateName: app.welperDisplayName ?? labels.detail.welperFallback,
                   role: job.subcategoryLabel
@@ -495,7 +494,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                     : labels.card.defaultCategory,
                   hourlyRate:
                     app.hourlyRateSnapshot != null
-                      ? `$${app.hourlyRateSnapshot}/hr`
+                      ? labels.applicationReview.hourlyRate(app.hourlyRateSnapshot)
                       : "—",
                   submittedAt: new Date(app.createdAt).toLocaleDateString(locale),
                   proposalMessage: app.proposalMessage,

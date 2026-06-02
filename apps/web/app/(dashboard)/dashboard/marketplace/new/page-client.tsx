@@ -24,6 +24,7 @@ import { useCreateJobPosting } from "@/lib/hooks/use-job-posting";
 import { useCustomerProfile } from "@/lib/hooks/use-profile";
 import { useAuthStore } from "@/stores/authStore";
 import { QuestionField } from "@/components/features/booking/question-field";
+import { useQuestionFieldLabels } from "@/lib/i18n/question-field-labels";
 import {
   areRequiredServiceQuestionsAnswered,
   buildBookingAnswersPayload,
@@ -69,6 +70,7 @@ function deriveJobDescription(
 export default function NewJobPageClient() {
   const router = useRouter();
   const labels = useMarketplaceLabels();
+  const questionFieldLabels = useQuestionFieldLabels();
   const categoryDisplayName = useCategoryDisplayName();
   const { user } = useAuthStore();
   const bookable = useBookableAction();
@@ -294,6 +296,7 @@ export default function NewJobPageClient() {
                       <QuestionField
                         key={sq.id}
                         sq={sq}
+                        labels={questionFieldLabels}
                         value={answers[sq.question.id]}
                         onChange={(val) =>
                           setAnswers((prev) => ({ ...prev, [sq.question.id]: val }))

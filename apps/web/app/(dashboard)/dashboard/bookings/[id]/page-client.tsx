@@ -90,7 +90,10 @@ import {
   useCustomerPreviewLabels,
   useDashboardCommonLabels,
 } from "@/lib/i18n/use-dashboard-labels";
-import { useDisputeFormCategoryLabels } from "@/lib/i18n/dispute-labels";
+import {
+  useDisputeFormCategoryLabels,
+  useDisputeStatusLabel,
+} from "@/lib/i18n/dispute-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import { formatOfferingCategoryLabel } from "@/lib/utils/category-utils";
@@ -118,13 +121,6 @@ function formatDate(dateStr: string | null, locale?: Locale): string {
   } catch {
     return dateStr;
   }
-}
-
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  const remaining = minutes % 60;
-  return remaining > 0 ? `${hours}h ${remaining}m` : `${hours}h`;
 }
 
 function isoToDatetimeLocal(iso: string): string {
@@ -182,11 +178,6 @@ function isImageEvidence(file: ReceiptEvidenceFile): boolean {
   const ext = file.key.slice(dot + 1).toLowerCase();
   return IMAGE_EXTENSIONS.has(ext);
 }
-
-const cadFormatter = new Intl.NumberFormat("en-CA", {
-  style: "currency",
-  currency: "CAD",
-});
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -401,6 +392,7 @@ export default function BookingDetailClient({
   const welperDetail = useWelperBookingDetailLabels();
   const customerDetail = useCustomerBookingDetailLabels();
   const disputeFormCategories = useDisputeFormCategoryLabels();
+  const disputeStatusLabel = useDisputeStatusLabel();
   const customerPreviewLabels = useCustomerPreviewLabels();
   const commonLabels = useDashboardCommonLabels();
   const bookingStatusLabel = useBookingStatusLabel();
@@ -925,9 +917,9 @@ export default function BookingDetailClient({
   const activeConfirm = confirmKind ? confirmConfig[confirmKind] : null;
 
   const formattedTotal =
-    booking.totalPrice != null ? cadFormatter.format(booking.totalPrice) : null;
+    booking.totalPrice != null ? welperDetail.formatCurrency(booking.totalPrice) : null;
   const formattedRate =
-    booking.hourlyRate != null ? cadFormatter.format(booking.hourlyRate) : null;
+    booking.hourlyRate != null ? welperDetail.formatCurrency(booking.hourlyRate) : null;
 
   // ── Main content ───────────────────────────────────────────────────────
 
@@ -1127,7 +1119,7 @@ export default function BookingDetailClient({
                     }`
                   : null}
                 {booking.durationMinutes != null
-                  ? ` · ${formatDuration(booking.durationMinutes)}`
+                  ? ` · ${welperDetail.formatDuration(booking.durationMinutes)}`
                   : null}
               </Text>
             </Box>
@@ -1287,7 +1279,7 @@ export default function BookingDetailClient({
                       {welperDetail.durationLabel}
                     </Text>
                     <Text size="3" weight="medium">
-                      {formatDuration(booking.durationMinutes)}
+                      {welperDetail.formatDuration(booking.durationMinutes)}
                     </Text>
                   </Flex>
                 )}
@@ -1300,7 +1292,7 @@ export default function BookingDetailClient({
                       </Text>
                     </Flex>
                     <Text size="3" weight="medium">
-                      {formattedRate}/hr
+                      {welperDetail.ratePerHour(formattedRate)}
                     </Text>
                   </Flex>
                 )}
@@ -1355,9 +1347,7 @@ export default function BookingDetailClient({
                         {welperDetail.yourReview}
                       </Text>
                       <Text size="2">
-                        {isWelper
-                          ? welperDetail.reviewRating(bookingReview.rating)
-                          : `${bookingReview.rating} out of 5`}
+                        {welperDetail.reviewRating(bookingReview.rating)}
                         {bookingReview.comment?.trim()
                           ? ` · ${
                               bookingReview.comment.trim().length > 120
@@ -1382,7 +1372,10 @@ export default function BookingDetailClient({
                     <Text size="2" color="gray">
                       {welperDetail.reportInProgress}
                     </Text>
-                    <DisputeStatusBadge status={bookingDispute!.status} />
+                    <DisputeStatusBadge
+                      status={bookingDispute!.status}
+                      label={disputeStatusLabel(bookingDispute!.status)}
+                    />
                   </Flex>
                 ) : null}
                 {canDispute && !hasDispute ? (
@@ -1487,7 +1480,9 @@ export default function BookingDetailClient({
                         {welperDetail.rateOnReceipt}
                       </Text>
                       <Text size="2" weight="medium">
-                        {cadFormatter.format(booking.serviceReceipt.hourlyRate)}/hr
+                        {welperDetail.ratePerHour(
+                          welperDetail.formatCurrency(booking.serviceReceipt.hourlyRate),
+                        )}
                       </Text>
                     </Flex>
                   </Flex>
@@ -1499,14 +1494,7 @@ export default function BookingDetailClient({
                       {welperDetail.amountCharged}
                     </Text>
                     <Text size="6" weight="bold" mt="2" as="p">
-                      {(booking.serviceReceipt.totalCents / 100).toLocaleString(
-                        "en-US",
-                        {
-                          style: "currency",
-                          currency: booking.serviceReceipt.currency.toUpperCase(),
-                          currencyDisplay: "code",
-                        },
-                      )}
+                      {welperDetail.formatCurrency(booking.serviceReceipt.totalCents / 100)}
                     </Text>
                   </Box>
 
@@ -1835,12 +1823,16 @@ export default function BookingDetailClient({
                 </Box>
                 {receiptDraft.authorizedHoldCents != null ? (
                   <Text size="2" color="gray">
-                    Original card hold: {cadFormatter.format(receiptDraft.authorizedHoldCents / 100)}.
-                    If your total is higher, the customer may need to authenticate an extra charge.
+                    {welperDetail.receiptOriginalHold(
+                      welperDetail.formatCurrency(receiptDraft.authorizedHoldCents / 100),
+                    )}{" "}
+                    {welperDetail.receiptExtraChargeHint}
                   </Text>
                 ) : null}
                 <Text size="3" weight="bold">
-                  Receipt total: {cadFormatter.format(receiptPreviewCents / 100)}
+                  {welperDetail.receiptTotal(
+                    welperDetail.formatCurrency(receiptPreviewCents / 100),
+                  )}
                 </Text>
                 <Flex gap="3" justify="end" wrap="wrap" mt={FORM_SPACING.submitGap}>
                   <Button
@@ -1848,7 +1840,7 @@ export default function BookingDetailClient({
                     color="gray"
                     onClick={() => setReceiptDialogOpen(false)}
                   >
-                    Cancel
+                    {commonLabels.cancel}
                   </Button>
                   <Button
                     variant="solid"
@@ -1958,6 +1950,7 @@ export default function BookingDetailClient({
                       : customerDetail.reviewDialog.saveChanges
                     : undefined
                 }
+                labels={welperDetail.ratingForm}
                 loading={reviewMutationPending}
                 error={reviewMutationError}
                 onSubmit={async (values) => {
@@ -2018,6 +2011,7 @@ export default function BookingDetailClient({
               categoryLabels={
                 isWelper ? welperDetail.dispute.categories : disputeFormCategories
               }
+              labels={welperDetail.disputeForm}
               loading={createDisputeMutation.isPending}
               uploadEvidence={uploadDisputeEvidence}
               error={
