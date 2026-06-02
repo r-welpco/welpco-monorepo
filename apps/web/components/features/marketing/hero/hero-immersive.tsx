@@ -53,12 +53,14 @@ export function HeroImmersive() {
       <HeroImmersiveFloatingNav headlineFontCss={headlineFamily} />
 
       <div
+        aria-hidden="true"
         style={{
           position: "absolute",
           inset: 0,
           zIndex: 0,
           overflow: "hidden",
           background: "var(--evergreen)",
+          pointerEvents: "none",
         }}
       >
         <HeroVideoMedia />

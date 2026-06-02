@@ -16,7 +16,6 @@ import {
 import type { NotificationItem } from "@/lib/services/notification-service";
 import { formatDistanceToNow } from "date-fns";
 import type { Locale } from "date-fns";
-import { useAuthStore } from "@/stores/authStore";
 import { useDashboardNotificationLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import { normalizeDashboardActionUrl } from "@/lib/i18n/dashboard-navigation";
@@ -61,11 +60,8 @@ function mapToCardProps(
 
 export default function NotificationsPageClient() {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const isWelper = user?.role === "welper";
   const notificationLabels = useDashboardNotificationLabels();
   const dateFnsLocale = useDateFnsLocale();
-  const dateLocale = isWelper ? dateFnsLocale : undefined;
 
   const { data: listData, isLoading } = useNotifications({ limit: 50 });
   const { data: unreadData } = useUnreadCount();
@@ -76,26 +72,26 @@ export default function NotificationsPageClient() {
   const notifications = useMemo(
     () =>
       (listData?.items ?? []).map((item) =>
-        mapToCardProps(item, isWelper ? notificationLabels.view : "View", dateLocale),
+        mapToCardProps(item, notificationLabels.view, dateFnsLocale),
       ),
-    [listData?.items, isWelper, notificationLabels.view, dateLocale],
+    [listData?.items, notificationLabels.view, dateFnsLocale],
   );
   const unreadCount = unreadData?.count ?? 0;
 
-  const centerLabels = isWelper
-    ? {
-        title: notificationLabels.title,
-        subtitle: notificationLabels.subtitle,
-        markAllRead: notificationLabels.markAllRead,
-        clearAll: notificationLabels.clearAll,
-        unreadAria: notificationLabels.unreadCount,
-        showAll: notificationLabels.showAll,
-        emptyAllTitle: notificationLabels.emptyAllTitle,
-        emptyUnreadTitle: notificationLabels.emptyUnreadTitle,
-        emptyAllDescription: notificationLabels.emptyAllDescription,
-        emptyUnreadDescription: notificationLabels.emptyUnreadDescription,
-      }
-    : undefined;
+  const centerLabels = {
+    title: notificationLabels.title,
+    subtitle: notificationLabels.subtitle,
+    markAllRead: notificationLabels.markAllRead,
+    markAsRead: notificationLabels.markAsRead,
+    newBadge: notificationLabels.newBadge,
+    clearAll: notificationLabels.clearAll,
+    unreadAria: notificationLabels.unreadCount,
+    showAll: notificationLabels.showAll,
+    emptyAllTitle: notificationLabels.emptyAllTitle,
+    emptyUnreadTitle: notificationLabels.emptyUnreadTitle,
+    emptyAllDescription: notificationLabels.emptyAllDescription,
+    emptyUnreadDescription: notificationLabels.emptyUnreadDescription,
+  };
 
   const handleNotificationAction = useCallback(
     (id: string) => {

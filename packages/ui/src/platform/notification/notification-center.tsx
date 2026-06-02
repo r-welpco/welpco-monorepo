@@ -26,6 +26,8 @@ export type NotificationCenterLabels = {
   emptyUnreadTitle: string;
   emptyAllDescription: string;
   emptyUnreadDescription: string;
+  markAsRead: string;
+  newBadge: string;
 };
 
 export interface NotificationCenterProps {
@@ -239,6 +241,8 @@ export function NotificationCenter({
                   key={notification.id}
                   {...notification}
                   compact={compact}
+                  markAsReadLabel={labels?.markAsRead ?? "Mark as read"}
+                  newBadgeLabel={labels?.newBadge ?? "New"}
                   onAction={() => onNotificationAction?.(notification.id)}
                   onMarkRead={() => onMarkRead?.(notification.id)}
                 />

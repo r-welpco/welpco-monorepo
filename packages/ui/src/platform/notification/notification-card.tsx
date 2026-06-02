@@ -30,6 +30,8 @@ export interface NotificationCardProps {
   onMarkRead?: () => void;
   /** When true, uses smaller padding and typography (e.g. in header popover) */
   compact?: boolean;
+  markAsReadLabel?: string;
+  newBadgeLabel?: string;
 }
 
 /**
@@ -58,6 +60,8 @@ export function NotificationCard({
   onAction,
   onMarkRead,
   compact,
+  markAsReadLabel = "Mark as read",
+  newBadgeLabel = "New",
 }: NotificationCardProps) {
   const semanticKey = typeColors[type];
   const accent = SEMANTIC_COLOR[semanticKey];
@@ -75,6 +79,8 @@ export function NotificationCard({
           onAction={onAction}
           onMarkRead={onMarkRead}
           compact={compact}
+          markAsReadLabel={markAsReadLabel}
+          newBadgeLabel={newBadgeLabel}
         />
       </Flex>
     </Card>
@@ -91,6 +97,8 @@ function NotificationCardContent({
   onAction,
   onMarkRead,
   compact,
+  markAsReadLabel,
+  newBadgeLabel,
 }: {
   title: string;
   message: string;
@@ -101,6 +109,8 @@ function NotificationCardContent({
   onAction?: () => void;
   onMarkRead?: () => void;
   compact?: boolean;
+  markAsReadLabel: string;
+  newBadgeLabel: string;
 }) {
   const typeColor = accent;
   if (compact) {
@@ -122,7 +132,7 @@ function NotificationCardContent({
             </Heading>
             {!isRead && (
               <Badge color={typeColor} variant="soft" size="1">
-                New
+                {newBadgeLabel}
               </Badge>
             )}
           </Flex>
@@ -145,7 +155,7 @@ function NotificationCardContent({
                   onMarkRead();
                 }}
               >
-                Mark as read
+                {markAsReadLabel}
               </Button>
             )}
             {actionLabel && onAction && (
@@ -179,7 +189,7 @@ function NotificationCardContent({
             </Heading>
             {!isRead && (
               <Badge color={typeColor} variant="soft" size="1">
-                New
+                {newBadgeLabel}
               </Badge>
             )}
           </Flex>
@@ -203,7 +213,7 @@ function NotificationCardContent({
                 onMarkRead();
               }}
             >
-              Mark as read
+              {markAsReadLabel}
             </Button>
           )}
           {actionLabel && onAction && (

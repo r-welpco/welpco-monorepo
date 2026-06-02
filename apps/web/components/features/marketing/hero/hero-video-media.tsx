@@ -20,7 +20,7 @@ export function HeroVideoMedia() {
             "repeating-linear-gradient(135deg, transparent 0 18px, rgba(250,241,229,0.06) 18px 19px)",
         }}
       />
-      <VideoBackground videoUrl="/hero-background.mp4" preload="auto" />
+      <VideoBackground videoUrl="/hero-background.mp4" lazyLoad />
       <HeroVideoTreatment />
     </>
   );

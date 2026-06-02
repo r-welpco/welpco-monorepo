@@ -10,6 +10,7 @@ import { Heading } from "@welpco/ui/heading";
 import { Button } from "@welpco/ui/button";
 import { Card } from "@welpco/ui/card";
 import { Badge } from "@welpco/ui/badge";
+import { Avatar } from "@welpco/ui/avatar";
 import { Callout } from "@welpco/ui/callout";
 import { ActionConfirmDialog } from "@welpco/ui";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
@@ -27,8 +28,10 @@ import {
   Calendar,
   Clock,
   DollarSign,
+  MapPin,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
+import { useTranslations } from "next-intl";
 import { getStatusColor } from "@/lib/constants/booking";
 import {
   useWelperBookingsLabels,
@@ -64,6 +67,22 @@ function formatDateSafe(dateStr: string | null, dateLocale: Locale): string {
   }
 }
 
+function customerDisplayInitials(name: string | null | undefined): string {
+  const trimmed = name?.trim();
+  if (!trimmed) return "?";
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
+  }
+  return trimmed.slice(0, 2).toUpperCase();
+}
+
+function formatBookingAddress(address: Record<string, string> | null | undefined): string | null {
+  if (!address) return null;
+  const line = [address.line1, address.city, address.region].filter(Boolean).join(", ");
+  return line || null;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────
 
 const CUSTOMER_STATUS_TABS: Array<{ label: string; value: BookingStatus | undefined }> = [
@@ -92,6 +111,7 @@ export default function BookingsPageClient() {
   const router = useRouter();
   const { user } = useAuthStore();
   const welperLabels = useWelperBookingsLabels();
+  const tBookings = useTranslations("dashboard.bookings");
   const dateLocale = useDateFnsLocale();
   const [activeTab, setActiveTab] = useState<BookingStatus | undefined>(
     undefined
@@ -382,40 +402,78 @@ export default function BookingsPageClient() {
             containIntrinsicSize: "0 800px",
           }}
         >
-          {bookings.map((booking: BookingItem) => (
+          {bookings.map((booking: BookingItem) => {
+            const customerName =
+              booking.customerFirstName?.trim() ||
+              (isWelper ? welperLabels.customerFallback : tBookings("customerFallback"));
+            const addressLine = formatBookingAddress(booking.address);
+            const viewDetailsLabel = isWelper
+              ? welperLabels.viewDetails
+              : tBookings("viewDetails");
+
+            return (
             <Card
               key={booking.id}
               size="3"
               variant="surface"
-              style={{ cursor: "pointer" }}
-              onClick={() => router.push(`/dashboard/bookings/${booking.id}`)}
             >
               <Flex direction="column" gap="3">
-                {/* Status + Booking ID */}
-                <Flex align="center" justify="between" wrap="wrap" gap="2">
-                  <Flex align="center" gap="3">
-                    <Badge
-                      color={getStatusColor(booking.status)}
-                      variant="soft"
-                      size="2"
-                    >
-                      <Text
-                        size="1"
-                        weight="medium"
-                        style={{ textTransform: "capitalize" }}
-                      >
-                        {isWelper
-                          ? welperLabels.statusLabel(booking.status)
-                          : booking.status.replace(/_/g, " ")}
-                      </Text>
-                    </Badge>
-                    <Text size="2" color="gray">
-                      #{booking.id.slice(-8).toUpperCase()}
-                    </Text>
+                <Flex
+                  align="start"
+                  justify="between"
+                  gap="3"
+                  wrap="wrap"
+                  direction={{ initial: "column", sm: "row" }}
+                >
+                  <Flex align="start" gap="3" style={{ minWidth: 0, flex: 1 }}>
+                    {isWelper && (
+                      <Avatar
+                        size="3"
+                        src={booking.customerPhotoUrl ?? undefined}
+                        fallback={customerDisplayInitials(customerName)}
+                        radius="full"
+                        style={{ flexShrink: 0 }}
+                      />
+                    )}
+                    <Flex direction="column" gap="2" style={{ minWidth: 0, flex: 1 }}>
+                      {isWelper && (
+                        <Text size="3" weight="medium" highContrast>
+                          {customerName}
+                        </Text>
+                      )}
+                      <Flex align="center" gap="3" wrap="wrap">
+                        <Badge
+                          color={getStatusColor(booking.status)}
+                          variant="soft"
+                          size="2"
+                        >
+                          <Text
+                            size="1"
+                            weight="medium"
+                            style={{ textTransform: "capitalize" }}
+                          >
+                            {isWelper
+                              ? welperLabels.statusLabel(booking.status)
+                              : booking.status.replace(/_/g, " ")}
+                          </Text>
+                        </Badge>
+                        <Text size="2" color="gray">
+                          #{booking.id.slice(-8).toUpperCase()}
+                        </Text>
+                      </Flex>
+                    </Flex>
                   </Flex>
+                  <Button
+                    size="2"
+                    variant="outline"
+                    color={SEMANTIC_COLOR.primary}
+                    onClick={() => router.push(`/dashboard/bookings/${booking.id}`)}
+                    style={{ flexShrink: 0 }}
+                  >
+                    {viewDetailsLabel}
+                  </Button>
                 </Flex>
 
-                {/* Schedule & Price Info */}
                 <Flex gap="5" wrap="wrap" align="center">
                   {booking.scheduledDate && (
                     <Flex align="center" gap="2">
@@ -436,6 +494,17 @@ export default function BookingsPageClient() {
                       </Text>
                     </Flex>
                   )}
+                  {booking.durationMinutes != null && booking.durationMinutes > 0 && (
+                    <Text size="2" color="gray">
+                      {booking.durationMinutes < 60
+                        ? `${booking.durationMinutes} min`
+                        : `${Math.floor(booking.durationMinutes / 60)}h${
+                            booking.durationMinutes % 60
+                              ? ` ${booking.durationMinutes % 60}m`
+                              : ""
+                          }`}
+                    </Text>
+                  )}
                   {booking.totalPrice != null && (
                     <Flex align="center" gap="2">
                       <DollarSign size={14} color="var(--gray-9)" />
@@ -444,20 +513,37 @@ export default function BookingsPageClient() {
                       </Text>
                     </Flex>
                   )}
+                  {addressLine && (
+                    <Flex align="center" gap="2" style={{ minWidth: 0, maxWidth: "100%" }}>
+                      <MapPin size={14} color="var(--gray-9)" style={{ flexShrink: 0 }} />
+                      <Text size="2" color="gray" truncate>
+                        {addressLine}
+                      </Text>
+                    </Flex>
+                  )}
                 </Flex>
 
-                {/* Created Date */}
+                {booking.notes?.trim() && (
+                  <Text
+                    size="2"
+                    color="gray"
+                    style={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {booking.notes.trim()}
+                  </Text>
+                )}
+
                 <Text size="1" color="gray">
                   {isWelper
                     ? welperLabels.created(formatDateSafe(booking.createdAt, dateLocale))
                     : `Created ${formatDateSafe(booking.createdAt, dateLocale)}`}
                 </Text>
 
-                {/* Actions (driven by availableActions from the API).
-                    Welper for a PENDING booking gets ONE destructive action
-                    (Decline) — not both Decline + Cancel — to avoid the
-                    duplicate-destructive-action confusion. The customer keeps
-                    Cancel for PENDING (their natural escape hatch). */}
                 {(booking.availableActions?.length ?? 0) > 0 && (
                   <Flex gap="2" justify="end" wrap="wrap" style={{ marginTop: "4px" }}>
                     {isWelper && booking.availableActions?.includes("decline") && (
@@ -501,7 +587,8 @@ export default function BookingsPageClient() {
                 )}
               </Flex>
             </Card>
-          ))}
+            );
+          })}
         </Flex>
       )}
 

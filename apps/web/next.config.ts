@@ -5,6 +5,9 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin();
 
 const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
+/** Dev/preview: @vercel/analytics and @vercel/speed-insights load debug scripts from here (prod uses `/_vercel/*` on same origin). */
+const VERCEL_ANALYTICS_SCRIPT_ORIGIN = "https://va.vercel-scripts.com";
+const VERCEL_ANALYTICS_CONNECT_ORIGIN = "https://vitals.vercel-insights.com";
 
 const nextConfig: NextConfig = {
   turbopack: {
@@ -50,14 +53,14 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com ${TURNSTILE_ORIGIN}`,
+              `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com ${TURNSTILE_ORIGIN} ${VERCEL_ANALYTICS_SCRIPT_ORIGIN}`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://*.amazonaws.com",
               "font-src 'self'",
               "manifest-src 'self'",
               "worker-src 'self'",
               "connect-src 'self' https://api.stripe.com https://*.amazonaws.com " +
-                `${TURNSTILE_ORIGIN} ` +
+                `${TURNSTILE_ORIGIN} ${VERCEL_ANALYTICS_CONNECT_ORIGIN} ` +
                 (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"),
               `frame-src 'self' https://js.stripe.com https://hooks.stripe.com ${TURNSTILE_ORIGIN}`,
               "object-src 'none'",

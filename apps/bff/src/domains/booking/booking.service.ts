@@ -455,13 +455,23 @@ export class BookingService {
   }
 
   private async attachCustomerDisplayInfo(dto: BookingResponseDto): Promise<void> {
-    try {
-      const profile = await this.customerProfileService.findByCustomerId(dto.customerId);
-      dto.customerFirstName = profile.firstName?.trim() || null;
-      dto.customerPhotoUrl = profile.profilePhotoUrl ?? null;
-    } catch {
-      dto.customerFirstName = null;
-      dto.customerPhotoUrl = null;
+    const info = await this.customerProfileService.findDisplayInfoByCustomerId(dto.customerId);
+    dto.customerFirstName = info?.displayName ?? null;
+    dto.customerPhotoUrl = info?.photoUrl ?? null;
+  }
+
+  private async attachCustomerDisplayInfoForList(
+    dtos: BookingResponseDto[],
+    role: 'customer' | 'welper',
+  ): Promise<void> {
+    if (role !== 'welper' || dtos.length === 0) return;
+    const displayByCustomerId = await this.customerProfileService.findDisplayInfoByCustomerIds(
+      dtos.map((d) => d.customerId),
+    );
+    for (const dto of dtos) {
+      const info = displayByCustomerId.get(dto.customerId);
+      dto.customerFirstName = info?.displayName ?? null;
+      dto.customerPhotoUrl = info?.photoUrl ?? null;
     }
   }
 
@@ -724,8 +734,10 @@ export class BookingService {
     const [data, total] = await qb.getManyAndCount();
 
     const userRole = role as 'customer' | 'welper';
+    const dtos = data.map((b) => this.toResponse(b, userId, userRole));
+    await this.attachCustomerDisplayInfoForList(dtos, userRole);
     return {
-      data: data.map((b) => this.toResponse(b, userId, userRole)),
+      data: dtos,
       total,
       page,
       limit,

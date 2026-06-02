@@ -11,7 +11,6 @@ import type { NotificationCardProps } from "@welpco/ui/platform/notification";
 import { Bell } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Locale } from "date-fns";
-import { useAuthStore } from "@/stores/authStore";
 import { useDashboardNotificationLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import { normalizeDashboardActionUrl } from "@/lib/i18n/dashboard-navigation";
@@ -71,11 +70,8 @@ export interface NotificationBellPopoverProps {
  */
 export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBellPopoverProps) {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const isWelper = user?.role === "welper";
   const notificationLabels = useDashboardNotificationLabels();
   const dateFnsLocale = useDateFnsLocale();
-  const dateLocale = isWelper ? dateFnsLocale : undefined;
   const [open, setOpen] = useState(false);
   const { data: unreadData } = useUnreadCount();
   const { data: listData, isLoading: notificationsLoading } = useNotifications({
@@ -90,29 +86,25 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
   const notifications = useMemo(
     () =>
       (listData?.items ?? []).map((item) =>
-        mapToCardProps(
-          item,
-          isWelper ? notificationLabels.view : "View",
-          dateLocale,
-        ),
+        mapToCardProps(item, notificationLabels.view, dateFnsLocale),
       ),
-    [listData?.items, isWelper, notificationLabels.view, dateLocale],
+    [listData?.items, notificationLabels.view, dateFnsLocale],
   );
 
-  const centerLabels = isWelper
-    ? {
-        title: notificationLabels.title,
-        subtitle: notificationLabels.subtitle,
-        markAllRead: notificationLabels.markAllRead,
-        clearAll: notificationLabels.clearAll,
-        unreadAria: notificationLabels.unreadCount,
-        showAll: notificationLabels.showAll,
-        emptyAllTitle: notificationLabels.emptyAllTitle,
-        emptyUnreadTitle: notificationLabels.emptyUnreadTitle,
-        emptyAllDescription: notificationLabels.emptyAllDescription,
-        emptyUnreadDescription: notificationLabels.emptyUnreadDescription,
-      }
-    : undefined;
+  const centerLabels = {
+    title: notificationLabels.title,
+    subtitle: notificationLabels.subtitle,
+    markAllRead: notificationLabels.markAllRead,
+    markAsRead: notificationLabels.markAsRead,
+    newBadge: notificationLabels.newBadge,
+    clearAll: notificationLabels.clearAll,
+    unreadAria: notificationLabels.unreadCount,
+    showAll: notificationLabels.showAll,
+    emptyAllTitle: notificationLabels.emptyAllTitle,
+    emptyUnreadTitle: notificationLabels.emptyUnreadTitle,
+    emptyAllDescription: notificationLabels.emptyAllDescription,
+    emptyUnreadDescription: notificationLabels.emptyUnreadDescription,
+  };
 
   const handleNotificationAction = useCallback(
     (id: string) => {
@@ -153,12 +145,8 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
             size="3"
             aria-label={
               notificationCount > 0
-                ? isWelper
-                  ? notificationLabels.bellUnreadAria(notificationCount)
-                  : `Notifications (${notificationCount} unread)`
-                : isWelper
-                  ? notificationLabels.bellAria
-                  : "Notifications"
+                ? notificationLabels.bellUnreadAria(notificationCount)
+                : notificationLabels.bellAria
             }
           >
             <Bell size={20} />

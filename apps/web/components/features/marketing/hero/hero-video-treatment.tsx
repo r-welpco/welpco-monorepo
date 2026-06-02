@@ -60,6 +60,7 @@ export function HeroVideoTreatment({ values: vProp }: HeroVideoTreatmentProps) {
       {v.grain > 0 ? (
         <div
           aria-hidden
+          data-hero-video-grain
           style={{
             position: "absolute",
             inset: 0,

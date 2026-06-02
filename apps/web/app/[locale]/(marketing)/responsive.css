@@ -428,3 +428,10 @@
   padding-top: 12px;
   border-top: 1px solid var(--line);
 }
+
+/* Immersive hero: lighter grain on small screens (feTurbulence is costly while video plays). */
+@media (max-width: 768px) {
+  .welpco [data-hero="immersive"] [data-hero-video-grain] {
+    opacity: 0.22 !important;
+  }
+}
