@@ -1202,7 +1202,9 @@
   "dashboard": {
     "common": {
       "back": "← Retour",
-      "genericError": "Une erreur s'est produite."
+      "cancel": "Annuler",
+      "genericError": "Une erreur s'est produite.",
+      "turnstileComplete": "Complétez la vérification anti-robot."
     },
     "footer": {
       "heading": "Pied de page de l'application",
@@ -1357,11 +1359,43 @@
         "emptyTitle": "Aucune activité pour l'instant",
         "emptyDescription": "Les mandats et mises à jour s'affichent ici.",
         "completeProfile": "Compléter votre profil"
+      },
+      "customer": {
+        "greeting": "Bon retour, {name}.",
+        "loading": "Chargement du tableau de bord…",
+        "setupIncomplete": "Terminez la configuration de votre compte pour commencer à réserver.",
+        "upcomingBookings": "{count, plural, one {Vous avez # réservation à venir.} other {Vous avez # réservations à venir.}}",
+        "noUpcomingBookings": "Aucune réservation à venir — trouvez un Welper pour commencer.",
+        "statsSectionTitle": "Vos chiffres",
+        "stats": {
+          "activeBookings": "Réservations actives",
+          "bookingsCompleted": "Réservations terminées",
+          "favoriteWelpers": "Welpers favoris"
+        },
+        "statsFootnote": "Les totaux utilisent vos {count} réservations les plus récentes — ouvrez Réservations pour la liste complète.",
+        "activityTitle": "Réservation",
+        "quickActions": {
+          "title": "Actions rapides",
+          "findWelper": "Trouver un Welper",
+          "findWelperDescription": "Parcourir et réserver.",
+          "viewBookings": "Voir les réservations",
+          "viewBookingsDescription": "À venir et passées.",
+          "openMessages": "Ouvrir les messages",
+          "openMessagesDescription": "Échangez avec vos Welpers."
+        },
+        "recentActivity": {
+          "title": "Activité récente",
+          "emptyTitle": "Aucune activité pour l'instant",
+          "emptyDescription": "Les réservations et mises à jour s'affichent ici.",
+          "findWelper": "Trouver un Welper"
+        }
       }
     },
     "bookings": {
       "title": "Réservations",
       "subtitle": "Gérez les demandes de réservation et vos mandats.",
+      "subtitleCustomer": "Gérez vos réservations de services et rendez-vous.",
+      "browseServices": "Parcourir les services",
       "signInRequired": "Connectez-vous pour voir vos réservations.",
       "loadFailed": "Impossible de charger les réservations",
       "genericError": "Une erreur s'est produite. Réessayez.",
@@ -1414,6 +1448,7 @@
         "declineReasonPlaceholder": "p. ex. Conflit d'horaire ce jour-là",
         "cancelTitle": "Annuler cette réservation?",
         "cancelDescription": "Annulez plus de 24 h avant le début : la retenue d'une heure est libérée sans frais. Annulez dans les 24 h précédant le début : cette retenue peut être facturée comme frais d'annulation. Dites-nous pourquoi pour rester équitable.",
+        "cancelDescriptionCustomer": "Annulez plus de 24 h avant le début : la retenue d'une heure sur votre carte est libérée sans frais. Annulez dans les 24 h précédant le début : cette retenue peut être facturée comme frais d'annulation. Dites-nous pourquoi pour rester équitable.",
         "cancelConfirm": "Annuler la réservation",
         "cancelCancel": "Garder la réservation",
         "cancelReasonLabel": "Raison de l'annulation",
@@ -1623,6 +1658,9 @@
     "messages": {
       "title": "Messages",
       "subtitle": "Choisissez une réservation pour discuter avec votre client.",
+      "subtitleCustomer": "Choisissez une réservation pour discuter avec votre Welper.",
+      "conversationsHintCustomer": "Réservations où vous pouvez écrire",
+      "pickFromListCustomer": "Choisissez une réservation dans la liste pour commencer à discuter.",
       "backToBookings": "Retour aux réservations",
       "signInTitle": "Connectez-vous pour lire vos messages",
       "signInDescription": "Les messages sont liés aux réservations. Connectez-vous pour les voir.",
@@ -1651,6 +1689,7 @@
       "signInTitle": "Connectez-vous pour voir les paramètres",
       "signInDescription": "Vos paramètres sont privés. Connectez-vous pour les gérer.",
       "subtitle": "Configurez votre compte, la confidentialité et les notifications.",
+      "loadingAria": "Chargement des paramètres",
       "tabs": {
         "account": "Compte",
         "privacy": "Confidentialité",
@@ -1666,7 +1705,22 @@
       "deleteDescription": "Nous désactiverons votre compte et vous déconnecterons. Les réservations et avis actifs restent liés à ces dossiers. Si quelque chose ne va pas, dites-le-nous avant de partir.",
       "deleteButton": "Supprimer mon compte…",
       "paymentTitle": "Modes de paiement",
-      "paymentDescription": "Ajoutez une carte par défaut pour compléter votre profil et autoriser le paiement après qu'un Welper accepte votre réservation."
+      "paymentDescription": "Ajoutez une carte par défaut pour compléter votre profil et autoriser le paiement après qu'un Welper accepte votre réservation.",
+      "paymentMethods": {
+        "stripeNotConfigured": "Les paiements par carte ne sont pas configurés (NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY manquant). Contactez le support si le problème persiste.",
+        "saveCard": "Enregistrer la carte",
+        "savingCard": "Enregistrement…",
+        "cancel": "Annuler",
+        "couldNotSaveCard": "Impossible d'enregistrer la carte",
+        "cardBrandFallback": "Carte",
+        "defaultBadge": "(par défaut)",
+        "setDefault": "Définir par défaut",
+        "remove": "Supprimer",
+        "removeConfirm": "Supprimer cette carte ?",
+        "addPaymentMethod": "Ajouter un moyen de paiement",
+        "preparing": "Préparation…",
+        "couldNotStartSetup": "Impossible de démarrer l'ajout de carte"
+      }
     },
     "profile": {
       "title": "Profil",
@@ -1829,7 +1883,111 @@
         "statsWithExceptions": "Disponibilités de cette semaine, exceptions incluses.",
         "statsRegularOnly": "Résumé de votre horaire régulier.",
         "dayShort": ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"]
+      },
+      "customer": {
+        "title": "Profil",
+        "subtitle": "Gérez vos informations de profil et vos préférences.",
+        "loadError": "Impossible de charger votre profil. Réessayez dans un instant.",
+        "tabs": {
+          "personal": "Informations personnelles",
+          "favorites": "Favoris"
+        },
+        "favorites": {
+          "unknownWelper": "Welper inconnu",
+          "serviceProvider": "Prestataire de services",
+          "unknownLocation": "Inconnu",
+          "emptyTitle": "Aucun Welper favori pour l'instant",
+          "emptyDescription": "Réservez des services pour constituer votre liste de Welpers favoris et réserver plus vite.",
+          "heading": "Welpers favoris",
+          "headingDescription": "Vos Welpers enregistrés pour une réservation rapide.",
+          "searchPlaceholder": "Rechercher dans les favoris…",
+          "showingCount": "{shown} sur {total} favoris affichés",
+          "noMatchTitle": "Aucun favori ne correspond à votre recherche",
+          "noMatchDescription": "Essayez d'ajuster votre recherche.",
+          "jobsCompleted": "{count} mandats terminés",
+          "lastBooked": "Dernière réservation : {date}",
+          "viewProfile": "Voir le profil",
+          "remove": "Retirer",
+          "quickRebook": "Réserver à nouveau"
+        },
+        "form": {
+          "title": "Profil client",
+          "description": "Quelques informations pour personnaliser votre expérience.",
+          "firstName": "Prénom",
+          "lastName": "Nom",
+          "phone": "Téléphone",
+          "address": "Adresse",
+          "firstNamePlaceholder": "Marie",
+          "lastNamePlaceholder": "Dupont",
+          "phonePlaceholder": "+1 (555) 000-0000",
+          "save": "Enregistrer le profil",
+          "saving": "Enregistrement…",
+          "addressIncomplete": "Veuillez remplir tous les champs d'adresse",
+          "addressFields": {
+            "streetAddress": "Adresse",
+            "city": "Ville",
+            "stateProvince": "Province",
+            "zipPostalCode": "Code postal",
+            "streetPlaceholder": "123 rue Principale",
+            "provincePlaceholder": "Choisir une province",
+            "country": "Pays"
+          },
+          "validation": {
+            "firstNameRequired": "Le prénom est requis",
+            "lastNameRequired": "Le nom est requis",
+            "phoneRequired": "Le numéro de téléphone est requis",
+            "streetRequired": "L'adresse est requise",
+            "cityRequired": "La ville est requise",
+            "provinceRequired": "Choisissez une province",
+            "postalInvalid": "Entrez un code postal canadien valide"
+          }
+        }
       }
+    },
+    "bookingNew": {
+      "title": "Nouvelle réservation",
+      "scheduleWith": "Planifier une réservation avec {name}",
+      "profileLoadFailed": "Impossible de charger le profil de ce Welper. Réessayez ou choisissez un autre Welper.",
+      "backToSearch": "Retour à la recherche",
+      "submitConfirming": "Confirmation…",
+      "submitRequest": "Demander la réservation",
+      "submitContinue": "Continuer",
+      "summaryTitle": "Retenue de paiement",
+      "summaryRate": "Tarif",
+      "summaryHoldLabel": "Retenue (1 heure)",
+      "summaryHoldAmount": "Retenue de {amount}",
+      "summaryTaxNote": "Il s'agit d'une autorisation temporaire — vous n'êtes pas débité maintenant. Les taxes sont incluses lors de la retenue après acceptation par le Welper.",
+      "summaryEstimatedJob": "Estimation du mandat ({duration})",
+      "summaryEstimatedBeforeTax": "{amount} avant taxes",
+      "summaryFinalChargeNote": "Le montant final est basé sur le temps réel après le service, dans la plage choisie.",
+      "summaryPickService": "Choisissez un service pour voir le montant de la retenue.",
+      "beforeConfirmTitle": "Avant de confirmer",
+      "beforeConfirmPolicy": "Chaque réservation couvre au moins une heure de service. Quand le Welper accepte, nous plaçons une retenue d'une heure sur votre carte — ce n'est pas un débit. Vous n'êtes débité qu'après la fin du mandat. Annulez plus de 24 h avant le début : la retenue est libérée sans frais. Annulez dans les 24 h précédant le début : la retenue d'une heure peut être facturée comme frais d'annulation.",
+      "detailsTitle": "Détails de la réservation",
+      "serviceLabel": "Service",
+      "selectService": "Choisir un service…",
+      "chooseServiceFirst": "Choisissez d'abord un service. Les questions pour ce service s'afficheront ici.",
+      "serviceTypeLabel": "Type de service",
+      "selectServiceType": "Choisir un type de service…",
+      "chooseServiceType": "Choisissez un type de service pour charger les bonnes questions.",
+      "serviceQuestionsTitle": "Questions sur le service",
+      "questionsLoadFailed": "Impossible de charger les questions pour ce service. Vérifiez votre connexion et réessayez.",
+      "retry": "Réessayer",
+      "whenTitle": "Quand",
+      "dateLabel": "Date",
+      "startTimeLabel": "Heure de début",
+      "endTimeLabel": "Heure de fin",
+      "endAfterStart": "L'heure de fin doit être après l'heure de début.",
+      "minDuration": "Les réservations doivent durer au moins 1 heure. Allongez la plage horaire.",
+      "maxDuration": "Les réservations ne peuvent pas dépasser 12 heures. Séparez en deux réservations si vous avez besoin de plus de temps.",
+      "notesLabel": "Notes",
+      "notesOptional": "(facultatif)",
+      "notesPlaceholder": "Instructions ou demandes particulières…",
+      "profileGate": "Ajoutez vos informations de profil et un moyen de paiement enregistré avant de confirmer une réservation.",
+      "paymentSettings": "Paramètres de paiement",
+      "paymentRequired": "Ajoutez un moyen de paiement enregistré dans Paramètres avant de réserver.",
+      "createFailed": "Impossible de créer la réservation. Réessayez.",
+      "mobileHoldLabel": "Retenue carte (1 h)"
     },
     "bookingsDetail": {
       "backToBookings": "Retour aux réservations",
@@ -1912,7 +2070,78 @@
         "other": "Autre chose"
       },
       "attachmentFallback": "Pièce jointe",
-      "previewUnavailable": "Aperçu indisponible pour le moment"
+      "previewUnavailable": "Aperçu indisponible pour le moment",
+      "additionalDetail": "Détail supplémentaire",
+      "receiptDraftLoadFailed": "Impossible de charger le brouillon de reçu. Réessayez ou contactez le support si le problème persiste.",
+      "customer": {
+        "notFoundTitle": "Réservation introuvable",
+        "actionsHint": "Écrivez à votre Welper, laissez un avis ou signalez un problème si quelque chose ne va pas.",
+        "messageWelper": "Message au Welper",
+        "reviewWelper": "Laisser un avis",
+        "receiptWrongAmountCallout": "Si le montant ou les horaires semblent incorrects, utilisez Signaler un problème dans Actions ci-dessus.",
+        "locationSectionTitle": "Lieu et demandes",
+        "serviceAddress": "Adresse du service",
+        "serviceQuestions": "Questions sur le service",
+        "cancellationReason": "Raison de l'annulation :",
+        "declineReason": "Raison du refus :",
+        "payment": {
+          "sectionTitle": "Paiement et autorisation",
+          "cardOnFile": "Carte enregistrée",
+          "authorizeHint": "Autorisez le paiement sur votre carte enregistrée (retenue d'une heure — pas de débit tant que le service n'est pas terminé). Si cela s'affiche après l'acceptation du Welper, la retenue automatique a peut-être échoué ; réessayez ou mettez à jour votre carte dans Paramètres.",
+          "authorizing": "Autorisation…",
+          "authorize": "Autoriser le paiement",
+          "holdActive": "Une retenue d'une heure est active sur votre carte (placée à l'acceptation par le Welper). Vous n'êtes pas débité tant que le service n'est pas terminé.",
+          "captureScheduled": " Le débit est prévu après le {date} (en attente de fin de service et délai de litige).",
+          "captured": "Le paiement a été capturé.",
+          "failed": "Le paiement n'a pas pu être effectué. Contactez le support si vous avez besoin d'aide.",
+          "balanceTitle": "Paiement supplémentaire requis",
+          "balanceHint": "Le total du service dépasse la retenue initiale. Authentifiez-vous sur votre carte enregistrée pour payer le solde.",
+          "payBalance": "Payer le solde",
+          "authorizeFailed": "Échec de l'autorisation de paiement",
+          "paymentFailed": "Échec du paiement",
+          "stripeNotConfigured": "Stripe n'est pas configuré.",
+          "paymentUiLoadFailed": "L'interface de paiement n'a pas pu se charger. Vérifiez la configuration Stripe.",
+          "authenticationFailed": "Échec de l'authentification"
+        },
+        "reviewDialog": {
+          "editTitle": "Modifier votre avis",
+          "newTitle": "Évaluer votre Welper",
+          "editDescription": "Mettez à jour votre note ou commentaire si vous devez corriger une erreur.",
+          "newDescription": "Partagez votre expérience avec ce Welper.",
+          "newSubtext": "Votre avis aide d'autres familles à trouver de bons Welpers.",
+          "saveChanges": "Enregistrer les modifications",
+          "skip": "Passer pour l'instant"
+        },
+        "receiptAlreadyConfirmed": "Cette réservation a déjà un reçu confirmé."
+      }
+    },
+    "search": {
+      "pageTitle": "Rechercher des Welpers",
+      "pageSubtitle": "Trouvez le Welper idéal pour vos besoins",
+      "heroTitle": "Trouvez votre Welper",
+      "locationPrompt": "Entrez votre code postal ou utilisez votre position pour trouver des Welpers à proximité.",
+      "geolocationUnsupported": "La géolocalisation n'est pas prise en charge par votre navigateur.",
+      "geocodingUnavailable": "La recherche par position n'est pas disponible pour le moment. Entrez un code postal pour rechercher.",
+      "geocodingUnavailableRetry": "La recherche par position n'est pas disponible pour le moment. Réessayez plus tard.",
+      "postalNotFound": "Code postal introuvable. Essayez-en un autre ou utilisez votre position.",
+      "locationDenied": "Accès à la position refusé ou indisponible.",
+      "addressLookupFailed": "Impossible d'obtenir l'adresse pour votre position.",
+      "toggleFiltersHide": "Masquer les filtres",
+      "toggleFiltersShow": "Afficher les filtres",
+      "filtersActive": "Actifs",
+      "loadError": "Impossible de charger les Welpers pour le moment.",
+      "genericError": "Une erreur s'est produite de notre côté.",
+      "contactSupport": "contacter le support",
+      "tryAgain": "Réessayer",
+      "resultsHeading": "Welpers",
+      "resultsError": "Une erreur s'est produite",
+      "prevPage": "Page précédente",
+      "nextPage": "Page suivante",
+      "pageOf": "Page {page} sur {total}",
+      "emptyTitle": "Aucun Welper trouvé",
+      "emptyDescription": "Ajustez votre recherche ou vos filtres, ou publiez une offre et laissez les Welpers postuler.",
+      "clearSearchFilters": "Effacer recherche et filtres",
+      "browseCategories": "Parcourir les catégories"
     },
     "disputes": {
       "backToBookings": "Retour aux réservations",

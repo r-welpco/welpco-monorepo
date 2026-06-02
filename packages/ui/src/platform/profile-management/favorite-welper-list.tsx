@@ -26,9 +26,43 @@ export interface FavoriteWelper {
   lastBooked?: Date;
 }
 
+export type FavoriteWelperListLabels = {
+  emptyTitle: string;
+  emptyDescription: string;
+  heading: string;
+  headingDescription: string;
+  searchPlaceholder: string;
+  showingCount: (shown: number, total: number) => string;
+  noMatchTitle: string;
+  noMatchDescription: string;
+  jobsCompleted: (count: number) => string;
+  lastBooked: (date: string) => string;
+  viewProfile: string;
+  remove: string;
+  quickRebook: string;
+};
+
+const DEFAULT_LABELS: FavoriteWelperListLabels = {
+  emptyTitle: "No favorite Welpers yet",
+  emptyDescription:
+    "Start booking services to build your list of favorite Welpers for quick rebooking.",
+  heading: "Favorite Welpers",
+  headingDescription: "Your saved Welpers for quick rebooking.",
+  searchPlaceholder: "Search favorites...",
+  showingCount: (shown, total) => `Showing ${shown} of ${total} favorites`,
+  noMatchTitle: "No favorites match your search",
+  noMatchDescription: "Try adjusting your search query.",
+  jobsCompleted: (count) => `${count} jobs completed`,
+  lastBooked: (date) => `Last booked: ${date}`,
+  viewProfile: "View profile",
+  remove: "Remove",
+  quickRebook: "Quick rebook",
+};
+
 export interface FavoriteWelperListProps {
   favorites: FavoriteWelper[];
   loading?: boolean;
+  labels?: FavoriteWelperListLabels;
   onRemove?: (id: string) => void;
   onViewProfile?: (id: string) => void;
   onQuickRebook?: (id: string) => void;
@@ -38,11 +72,13 @@ export interface FavoriteWelperListProps {
 export function FavoriteWelperList({
   favorites,
   loading,
+  labels: labelsProp,
   onRemove,
   onViewProfile,
   onQuickRebook,
   viewMode = "grid",
 }: FavoriteWelperListProps) {
+  const labels = labelsProp ?? DEFAULT_LABELS;
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredFavorites = favorites.filter(
@@ -75,10 +111,10 @@ export function FavoriteWelperList({
           </Flex>
           <Box>
             <Heading size="4" mb="1" align="center">
-              No favorite Welpers yet
+              {labels.emptyTitle}
             </Heading>
             <Text size="2" color="gray" align="center" highContrast>
-              Start booking services to build your list of favorite Welpers for quick rebooking.
+              {labels.emptyDescription}
             </Text>
           </Box>
         </Flex>
@@ -96,10 +132,10 @@ export function FavoriteWelperList({
         <Flex align="center" justify="between" wrap="wrap" gap="3">
           <Box>
             <Heading size="4" mb="1">
-              Favorite Welpers
+              {labels.heading}
             </Heading>
             <Text size="2" color="gray" highContrast>
-              Your saved Welpers for quick rebooking.
+              {labels.headingDescription}
             </Text>
           </Box>
         </Flex>
@@ -107,7 +143,7 @@ export function FavoriteWelperList({
         {/* Search */}
         <Box style={{ width: "100%", maxWidth: "400px" }}>
           <TextField.Root
-            placeholder="Search favorites..."
+            placeholder={labels.searchPlaceholder}
             size="2"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -121,7 +157,7 @@ export function FavoriteWelperList({
 
         {/* Results count */}
         <Text size="2" color="gray" highContrast>
-          Showing {filteredFavorites.length} of {favorites.length} favorites
+          {labels.showingCount(filteredFavorites.length, favorites.length)}
         </Text>
 
         {/* Favorites grid/list */}
@@ -129,10 +165,10 @@ export function FavoriteWelperList({
           <Card size="3" variant="surface">
             <Flex direction="column" align="center" gap="3" p="9">
               <Text size="4" color="gray" align="center" highContrast>
-                No favorites match your search
+                {labels.noMatchTitle}
               </Text>
               <Text size="2" color="gray" align="center" highContrast>
-                Try adjusting your search query.
+                {labels.noMatchDescription}
               </Text>
             </Flex>
           </Card>
@@ -190,12 +226,12 @@ export function FavoriteWelperList({
                         )}
                         {favorite.completedJobs !== undefined && (
                           <Text size="2" color="gray" highContrast>
-                            {favorite.completedJobs} jobs completed
+                            {labels.jobsCompleted(favorite.completedJobs)}
                           </Text>
                         )}
                         {favorite.lastBooked && (
                           <Text size="2" color="gray" highContrast>
-                            Last booked: {favorite.lastBooked.toLocaleDateString()}
+                            {labels.lastBooked(favorite.lastBooked.toLocaleDateString())}
                           </Text>
                         )}
                       </Flex>
@@ -210,7 +246,7 @@ export function FavoriteWelperList({
                         onClick={() => onViewProfile(favorite.id)}
                         disabled={loading}
                       >
-                        View profile
+                        {labels.viewProfile}
                       </Button>
                     )}
                     {onRemove && (
@@ -221,7 +257,7 @@ export function FavoriteWelperList({
                         onClick={() => onRemove(favorite.id)}
                         disabled={loading}
                       >
-                        Remove
+                        {labels.remove}
                       </Button>
                     )}
                     {onQuickRebook && (
@@ -233,7 +269,7 @@ export function FavoriteWelperList({
                       >
                         <Flex align="center" gap="2">
                           <Calendar style={{ width: "16px", height: "16px" }} />
-                          Quick rebook
+                          {labels.quickRebook}
                         </Flex>
                       </Button>
                     )}

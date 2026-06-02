@@ -29,7 +29,11 @@ import styles from "./booking-wizard.module.css";
 import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import { publicWelperDisplayName } from "@/lib/display-name";
 import { useCreateBooking, useServiceQuestions } from "@/lib/hooks/use-bookings";
-import { useMarketplaceLabels, useWelperAvailabilityDisplayLabels } from "@/lib/i18n/use-dashboard-labels";
+import {
+  useBookingNewLabels,
+  useMarketplaceLabels,
+  useWelperAvailabilityDisplayLabels,
+} from "@/lib/i18n/use-dashboard-labels";
 import { useBookingHandoff } from "@/lib/hooks/use-job-posting";
 import { useCustomerProfile } from "@/lib/hooks/use-profile";
 import { useAuthStore } from "@/stores/authStore";
@@ -103,6 +107,7 @@ export default function NewBookingPageClient({
 }: NewBookingPageClientProps) {
   const router = useRouter();
   const marketplaceLabels = useMarketplaceLabels();
+  const bookingLabels = useBookingNewLabels();
   const availabilityLabels = useWelperAvailabilityDisplayLabels();
   const locale = useLocale();
   const { user } = useAuthStore();
@@ -362,11 +367,11 @@ export default function NewBookingPageClient({
       }
     } catch (e) {
       if (e instanceof ApiClientError && e.code === "PAYMENT_METHOD_REQUIRED") {
-        setSubmitError("Add a saved payment method in Settings before booking.");
+        setSubmitError(bookingLabels.paymentRequired);
         return;
       }
       setSubmitError(
-        e instanceof Error ? e.message : "Failed to create booking. Please try again.",
+        e instanceof Error ? e.message : bookingLabels.createFailed,
       );
     }
   }, [
@@ -471,20 +476,17 @@ export default function NewBookingPageClient({
     return pageChrome(
       <Flex direction="column" gap="6">
         <Heading as="h1" size="7">
-          New booking
+          {bookingLabels.title}
         </Heading>
         <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
-          <Callout.Text>
-            We couldn&rsquo;t load this welper&rsquo;s profile. Try again, or pick
-            another welper.
-          </Callout.Text>
+          <Callout.Text>{bookingLabels.profileLoadFailed}</Callout.Text>
         </Callout.Root>
         <Button
           variant="soft"
           size="2"
           onClick={() => router.push("/dashboard/search")}
         >
-          Back to search
+          {bookingLabels.backToSearch}
         </Button>
       </Flex>,
     );
@@ -495,10 +497,10 @@ export default function NewBookingPageClient({
   const today = new Date().toISOString().split("T")[0];
 
   const submitLabel = createBooking.isPending
-    ? "Confirming…"
+    ? bookingLabels.submitConfirming
     : oneHourHoldSubtotal !== null
-      ? "Request booking"
-      : "Continue";
+      ? bookingLabels.submitRequest
+      : bookingLabels.submitContinue;
 
   // Summary panel — rendered inline on desktop (right column) and in the
   // sticky mobile footer. Same content, two placements.
@@ -511,69 +513,59 @@ export default function NewBookingPageClient({
           size="3"
           trim="start"
         >
-          Payment hold
+          {bookingLabels.summaryTitle}
         </Heading>
         {selectedOffering ? (
           <Flex direction="column" gap="2">
             <Flex justify="between">
               <Text size="2" color="gray">
-                Rate
+                {bookingLabels.summaryRate}
               </Text>
               <Text size="2">{formatCurrency(selectedOffering.hourlyRate)}/hr</Text>
             </Flex>
             <Flex justify="between" align="center">
               <Text size="2" color="gray">
-                Hold (1 hour)
+                {bookingLabels.summaryHoldLabel}
               </Text>
               <Text size="4" weight="bold" color={SEMANTIC_COLOR.primary}>
                 {oneHourHoldSubtotal !== null
-                  ? `${formatCurrency(oneHourHoldSubtotal)} hold`
+                  ? bookingLabels.summaryHoldAmount(formatCurrency(oneHourHoldSubtotal))
                   : "—"}
               </Text>
             </Flex>
             <Text size="1" color="gray" highContrast as="p">
-              This is a temporary authorization — you are not charged now. Tax is included when
-              the hold is placed after the welper accepts.
+              {bookingLabels.summaryTaxNote}
             </Text>
             {durationMinutes !== null && estimatedJobSubtotal !== null ? (
               <>
                 <Separator size="4" my="1" />
                 <Flex justify="between">
                   <Text size="2" color="gray">
-                    Estimated job ({formatDuration(durationMinutes)})
+                    {bookingLabels.summaryEstimatedJob(formatDuration(durationMinutes))}
                   </Text>
                   <Text size="2" weight="medium">
-                    {formatCurrency(estimatedJobSubtotal)} before tax
+                    {bookingLabels.summaryEstimatedBeforeTax(formatCurrency(estimatedJobSubtotal))}
                   </Text>
                 </Flex>
                 <Text size="1" color="gray" highContrast as="p">
-                  Final charge is based on actual time after the service, up to your selected
-                  window.
+                  {bookingLabels.summaryFinalChargeNote}
                 </Text>
               </>
             ) : null}
           </Flex>
         ) : (
           <Text size="2" color="gray">
-            Pick a service to see the hold amount.
+            {bookingLabels.summaryPickService}
           </Text>
         )}
 
-        {/* Cancellation + payment-timing policy — bible §22.6 trust
-            contract. The customer must see what they're agreeing to BEFORE
-            they hit "Confirm and pay". Aligned with Wave 3 capture timing
-            (auth at accept, capture at receipt-submit). */}
         <Separator size="4" my="1" />
         <Flex direction="column" gap="1">
           <Text size="1" color="gray" weight="medium">
-            Before you confirm
+            {bookingLabels.beforeConfirmTitle}
           </Text>
           <Text size="1" color="gray" highContrast as="p">
-            Each booking is for at least one hour of service. When the welper accepts, we place a
-            hold for one hour on your card — not a charge. You are only charged after the job is
-            completed. Cancel more than 24 hours before the start time and the hold is released with
-            no fee. Cancel within 24 hours of the start time and the one-hour hold may be charged as
-            a cancellation fee.
+            {bookingLabels.beforeConfirmPolicy}
           </Text>
         </Flex>
       </Flex>
@@ -593,12 +585,12 @@ export default function NewBookingPageClient({
         {/* Page header */}
         <Box>
           <Heading as="h1" size="7" mb="2">
-            New booking
+            {bookingLabels.title}
           </Heading>
           <Text as="p" size="2" color="gray">
             {isMarketplaceHandoff && handoff?.jobTitle
               ? marketplaceLabels.bookingHandoff.pageSubtitle(handoff.jobTitle)
-              : `Schedule a booking with ${displayName}`}
+              : bookingLabels.scheduleWith(displayName)}
           </Text>
         </Box>
 
@@ -646,7 +638,7 @@ export default function NewBookingPageClient({
           <Card size="3" variant="surface">
             <Flex direction="column" gap={FORM_SPACING.sectionGap}>
               <Heading as="h2" size="5" trim="start">
-                Booking details
+                {bookingLabels.detailsTitle}
               </Heading>
 
               {/* Service selection */}
@@ -659,7 +651,7 @@ export default function NewBookingPageClient({
                   mb={FORM_SPACING.labelGap}
                   style={{ display: "block" }}
                 >
-                  Service
+                  {bookingLabels.serviceLabel}
                   <RequiredMarker />
                 </Text>
                 {offeringId && selectedOffering ? (
@@ -689,7 +681,7 @@ export default function NewBookingPageClient({
                     <SelectTrigger
                       aria-labelledby="booking-service-label"
                       aria-required="true"
-                      placeholder="Select a service…"
+                      placeholder={bookingLabels.selectService}
                     />
                     <SelectContent>
                       {profile.serviceOfferings.map((o) => (
@@ -708,7 +700,7 @@ export default function NewBookingPageClient({
               {!selectedOffering && (
                 <Callout.Root color="gray" variant="surface">
                   <Callout.Text>
-                    Choose a service first. The questions for that service will appear here.
+                    {bookingLabels.chooseServiceFirst}
                   </Callout.Text>
                 </Callout.Root>
               )}
@@ -725,7 +717,7 @@ export default function NewBookingPageClient({
                     mb={FORM_SPACING.labelGap}
                     style={{ display: "block" }}
                   >
-                    Service type
+                    {bookingLabels.serviceTypeLabel}
                     {serviceTypeIsReadOnly ? null : <RequiredMarker />}
                   </Text>
                   {serviceTypeIsReadOnly ? (
@@ -754,7 +746,7 @@ export default function NewBookingPageClient({
                       <SelectTrigger
                         aria-labelledby="booking-service-type-label"
                         aria-required="true"
-                        placeholder="Select a service type…"
+                        placeholder={bookingLabels.selectServiceType}
                       />
                       <SelectContent>
                         {questionCategoryOptions.map((option) => (
@@ -771,7 +763,7 @@ export default function NewBookingPageClient({
               {offeringSubcategoryCount > 1 && !serviceCategoryId && (
                 <Callout.Root color="gray" variant="surface">
                   <Callout.Text>
-                    Choose a service type to load the right questions.
+                    {bookingLabels.chooseServiceType}
                   </Callout.Text>
                 </Callout.Root>
               )}
@@ -785,7 +777,7 @@ export default function NewBookingPageClient({
                   displayQuestions.length > 0) && (
                 <Flex direction="column" gap="4">
                   <Heading as="h3" size="5" trim="start">
-                    Service questions
+                    {bookingLabels.serviceQuestionsTitle}
                   </Heading>
                   {serviceQuestionsLoading && (
                     <Flex direction="column" gap="3">
@@ -796,8 +788,7 @@ export default function NewBookingPageClient({
                   {serviceQuestionsError && (
                     <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
                       <Callout.Text>
-                        We couldn&rsquo;t load questions for this service. Check your connection
-                        and try again.
+                        {bookingLabels.questionsLoadFailed}
                       </Callout.Text>
                       <Button
                         variant="soft"
@@ -805,7 +796,7 @@ export default function NewBookingPageClient({
                         mt="2"
                         onClick={() => void refetchServiceQuestions()}
                       >
-                        Retry
+                        {bookingLabels.retry}
                       </Button>
                     </Callout.Root>
                   )}
@@ -826,7 +817,7 @@ export default function NewBookingPageClient({
 
               <Box>
                 <Heading as="h3" size="5" mb="3" trim="start">
-                  When
+                  {bookingLabels.whenTitle}
                 </Heading>
                 <Flex direction="column" gap="4">
                   {/* Date */}
@@ -839,7 +830,7 @@ export default function NewBookingPageClient({
                       mb={FORM_SPACING.labelGap}
                       style={{ display: "block" }}
                     >
-                      Date
+                      {bookingLabels.dateLabel}
                       <RequiredMarker />
                     </Text>
                     <TextField.Root
@@ -867,7 +858,7 @@ export default function NewBookingPageClient({
                         mb={FORM_SPACING.labelGap}
                         style={{ display: "block" }}
                       >
-                        Start time
+                        {bookingLabels.startTimeLabel}
                         <RequiredMarker />
                       </Text>
                       <TextField.Root
@@ -901,7 +892,7 @@ export default function NewBookingPageClient({
                         mb={FORM_SPACING.labelGap}
                         style={{ display: "block" }}
                       >
-                        End time
+                        {bookingLabels.endTimeLabel}
                         <RequiredMarker />
                       </Text>
                       <TextField.Root
@@ -937,7 +928,7 @@ export default function NewBookingPageClient({
                       size="1"
                       color={SEMANTIC_COLOR.danger}
                     >
-                      End time must be after start time.
+                      {bookingLabels.endAfterStart}
                     </Text>
                   )}
                   {durationOutOfBounds === "short" && (
@@ -947,7 +938,7 @@ export default function NewBookingPageClient({
                       size="1"
                       color={SEMANTIC_COLOR.danger}
                     >
-                      Bookings must be at least 1 hour long. Lengthen the time window.
+                      {bookingLabels.minDuration}
                     </Text>
                   )}
                   {durationOutOfBounds === "long" && (
@@ -957,7 +948,7 @@ export default function NewBookingPageClient({
                       size="1"
                       color={SEMANTIC_COLOR.danger}
                     >
-                      Bookings can&rsquo;t be longer than 12 hours. Split into two bookings if you need more time.
+                      {bookingLabels.maxDuration}
                     </Text>
                   )}
                 </Flex>
@@ -973,9 +964,9 @@ export default function NewBookingPageClient({
                     htmlFor="booking-notes"
                     style={{ display: "block" }}
                   >
-                    Notes{" "}
+                    {bookingLabels.notesLabel}{" "}
                     <Text as="span" color="gray" weight="regular">
-                      (optional)
+                      {bookingLabels.notesOptional}
                     </Text>
                   </Text>
                   <Text size="1" color="gray" aria-live="polite">
@@ -986,7 +977,7 @@ export default function NewBookingPageClient({
                   id="booking-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value.slice(0, 2000))}
-                  placeholder="Any special instructions or requests…"
+                  placeholder={bookingLabels.notesPlaceholder}
                   rows={3}
                   maxLength={2000}
                 />
@@ -999,8 +990,7 @@ export default function NewBookingPageClient({
                   <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface">
                     <Flex direction="column" gap="3" align="start">
                       <Callout.Text>
-                        Add your profile details and a saved payment method before
-                        you can confirm a booking.
+                        {bookingLabels.profileGate}
                       </Callout.Text>
                       <Button
                         size="2"
@@ -1008,7 +998,7 @@ export default function NewBookingPageClient({
                         color={SEMANTIC_COLOR.warning}
                         onClick={() => router.push("/dashboard/settings?tab=payment")}
                       >
-                        Payment settings
+                        {bookingLabels.paymentSettings}
                       </Button>
                     </Flex>
                   </Callout.Root>
@@ -1079,7 +1069,7 @@ export default function NewBookingPageClient({
         <Flex direction="column" gap="2">
           <Flex justify="between" align="center">
             <Text size="1" color="gray">
-              Card hold (1 hr)
+              {bookingLabels.mobileHoldLabel}
             </Text>
             <Text size="3" weight="bold" color={SEMANTIC_COLOR.primary}>
               {oneHourHoldSubtotal !== null ? formatCurrency(oneHourHoldSubtotal) : "—"}

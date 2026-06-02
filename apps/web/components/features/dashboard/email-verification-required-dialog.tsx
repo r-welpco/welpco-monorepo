@@ -4,8 +4,10 @@ import { useState } from "react";
 import { ActionConfirmDialog } from "@welpco/ui/platform/feedback";
 import { Flex } from "@welpco/ui/flex";
 import { Text } from "@welpco/ui/text";
-import { useEmailVerificationDialogLabels } from "@/lib/i18n/use-dashboard-labels";
-import { useAuthStore } from "@/stores/authStore";
+import {
+  useDashboardCommonLabels,
+  useEmailVerificationDialogLabels,
+} from "@/lib/i18n/use-dashboard-labels";
 import { TurnstileWidget } from "@/components/security/turnstile-widget";
 import type { ResendVerificationHuman } from "@/lib/hooks/use-resend-verification";
 
@@ -34,18 +36,13 @@ export function EmailVerificationRequiredDialog({
   pending,
   onResend,
 }: EmailVerificationRequiredDialogProps) {
-  const { user } = useAuthStore();
-  const isWelper = user?.role === "welper";
   const labels = useEmailVerificationDialogLabels();
-  const target = email ?? (isWelper ? labels.emailFallback : "your email address");
+  const common = useDashboardCommonLabels();
+  const target = email ?? labels.emailFallback;
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [turnstileError, setTurnstileError] = useState<string | null>(null);
   const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
-
-  const bodyCopy = isWelper
-    ? labels.description(target)
-    : `Click the link we sent to ${target} to keep going. Need a new one? We'll send another.`;
 
   return (
     <ActionConfirmDialog
@@ -58,11 +55,11 @@ export function EmailVerificationRequiredDialog({
         }
         onOpenChange(nextOpen);
       }}
-      title={isWelper ? labels.title : "Verify your email"}
+      title={labels.title}
       description={
         <Flex direction="column" gap="3">
           <Text size="2" color="gray" highContrast as="p">
-            {bodyCopy}
+            {labels.description(target)}
           </Text>
           {turnstileEnabled ? (
             <>
@@ -80,13 +77,13 @@ export function EmailVerificationRequiredDialog({
           ) : null}
         </Flex>
       }
-      confirmLabel={isWelper ? labels.resend : "Resend email"}
-      cancelLabel={isWelper ? labels.close : "Close"}
+      confirmLabel={labels.resend}
+      cancelLabel={labels.close}
       variant="primary"
       pending={pending}
       onConfirm={async () => {
         if (turnstileEnabled && !turnstileToken) {
-          setTurnstileError("Complete the human verification challenge.");
+          setTurnstileError(common.turnstileComplete);
           return;
         }
         setTurnstileError(null);

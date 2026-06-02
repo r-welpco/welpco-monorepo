@@ -27,9 +27,20 @@ type WelperQuickActionLabels = {
   openMessagesDescription: string;
 };
 
+type CustomerQuickActionLabels = {
+  title: string;
+  findWelper: string;
+  findWelperDescription: string;
+  viewBookings: string;
+  viewBookingsDescription: string;
+  openMessages: string;
+  openMessagesDescription: string;
+};
+
 interface QuickActionsProps {
   role: "customer" | "welper";
   welperLabels?: WelperQuickActionLabels;
+  customerLabels?: CustomerQuickActionLabels;
 }
 
 interface ActionTile {
@@ -50,26 +61,26 @@ interface ActionTile {
  * position, which is enough. Equal weight reinforces "these are your three
  * doors", not "here's a CTA + two also-rans".
  */
-export function QuickActions({ role, welperLabels }: QuickActionsProps) {
+export function QuickActions({ role, welperLabels, customerLabels }: QuickActionsProps) {
   const actions: ActionTile[] =
     role === "customer"
       ? [
           {
             href: "/dashboard/search",
-            label: "Find a Welper",
-            description: "Browse and book.",
+            label: customerLabels?.findWelper ?? "Find a Welper",
+            description: customerLabels?.findWelperDescription ?? "Browse and book.",
             icon: Search,
           },
           {
             href: "/dashboard/bookings",
-            label: "View bookings",
-            description: "Upcoming and past.",
+            label: customerLabels?.viewBookings ?? "View bookings",
+            description: customerLabels?.viewBookingsDescription ?? "Upcoming and past.",
             icon: Calendar,
           },
           {
             href: "/dashboard/messages",
-            label: "Open messages",
-            description: "Talk to your Welpers.",
+            label: customerLabels?.openMessages ?? "Open messages",
+            description: customerLabels?.openMessagesDescription ?? "Talk to your Welpers.",
             icon: MessageSquare,
           },
         ]
@@ -95,10 +106,15 @@ export function QuickActions({ role, welperLabels }: QuickActionsProps) {
           },
         ];
 
+  const sectionTitle =
+    role === "welper"
+      ? (welperLabels?.title ?? "Quick actions")
+      : (customerLabels?.title ?? "Quick actions");
+
   return (
     <Box>
       <Heading as="h2" size="5" mb="3" trim="start">
-        {role === "welper" && welperLabels ? welperLabels.title : "Quick actions"}
+        {sectionTitle}
       </Heading>
       <Grid columns={{ initial: "1", sm: "3" }} gap="3">
         {actions.map((action) => {

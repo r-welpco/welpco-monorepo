@@ -68,12 +68,6 @@ export interface DashboardStatsProps {
   welperSectionTitle?: string;
 }
 
-const FALLBACK_CUSTOMER: DashboardStatItem[] = [
-  { title: "Active bookings", value: 0 },
-  { title: "Bookings completed", value: 0 },
-  { title: "Favorite Welpers", value: 0 },
-];
-
 const FALLBACK_WELPER: DashboardStatItem[] = [
   { title: "Active jobs", value: 0 },
   { title: "Total earnings", value: "$0.00" },
@@ -87,7 +81,7 @@ export function DashboardStats({
   footnote,
   welperSectionTitle,
 }: DashboardStatsProps) {
-  const stats = statsProp ?? (role === "customer" ? FALLBACK_CUSTOMER : FALLBACK_WELPER);
+  const stats = statsProp ?? (role === "customer" ? [] : FALLBACK_WELPER);
 
   // Stat tiles render bare on the page (no wrapping section card) so they
   // compete less for attention than the actionable surfaces above them.
@@ -96,7 +90,7 @@ export function DashboardStats({
     <Box aria-busy={loading || undefined} aria-live="polite">
       <Box mb="3">
         <Heading as="h2" size="5" trim="start">
-          {role === "customer" ? "Your activity" : (welperSectionTitle ?? "Your numbers")}
+          {welperSectionTitle ?? "Your numbers"}
         </Heading>
         {footnote ? (
           <Text as="p" size="1" color="gray" mt="1">

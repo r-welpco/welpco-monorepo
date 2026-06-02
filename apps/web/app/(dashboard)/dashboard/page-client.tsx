@@ -29,6 +29,7 @@ import {
 } from "@/lib/dashboard/booking-dashboard";
 import {
   useBookingStatusLabel,
+  useCustomerHomeLabels,
   useWelperHomeLabels,
 } from "@/lib/i18n/use-dashboard-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
@@ -60,6 +61,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
   const { user } = useDashboardUser(serverUser);
   const { data: session } = useSession();
   const welperHome = useWelperHomeLabels();
+  const customerHome = useCustomerHomeLabels();
   const dateFnsLocale = useDateFnsLocale();
   const bookingStatusLabel = useBookingStatusLabel();
 
@@ -130,13 +132,14 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
       return computeCustomerStatsFromBookings(
         bookings,
         favoriteWelpersList?.total ?? 0,
+        customerHome.stats,
       );
     }
     if (userRole === "welper") {
       return computeWelperStatsFromBookings(bookings, welperHome.stats);
     }
     return null;
-  }, [userRole, bookings, favoriteWelpersList?.total, welperHome.stats]);
+  }, [userRole, bookings, favoriteWelpersList?.total, welperHome.stats, customerHome.stats]);
 
   const activities = useMemo(() => {
     if (!bookingsRole) return [];
@@ -150,9 +153,20 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
             formatStatus: bookingStatusLabel,
             dateLocale: dateFnsLocale,
           }
-        : undefined,
+        : {
+            jobTitle: customerHome.activityTitle,
+            formatStatus: bookingStatusLabel,
+            dateLocale: dateFnsLocale,
+          },
     );
-  }, [bookings, bookingsRole, welperHome.activityTitle, bookingStatusLabel, dateFnsLocale]);
+  }, [
+    bookings,
+    bookingsRole,
+    welperHome.activityTitle,
+    customerHome.activityTitle,
+    bookingStatusLabel,
+    dateFnsLocale,
+  ]);
 
   const upcomingCount = useMemo(() => countUpcomingBookings(bookings), [bookings]);
   const pendingForWelper = useMemo(
@@ -165,8 +179,8 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     if (userRole === "welper") {
       return welperHome.statsFootnote(bookings.length);
     }
-    return `Counts use your ${bookings.length} most recent bookings — open Bookings for the full list.`;
-  }, [bookingsResponse, bookings.length, userRole, welperHome]);
+    return customerHome.statsFootnote(bookings.length);
+  }, [bookingsResponse, bookings.length, userRole, welperHome, customerHome]);
 
   const welperShowSetupChecklist = userRole === "welper" && welperSetupIncomplete;
   const customerShowSetupChecklist = userRole === "customer" && customerSetupIncomplete;
@@ -176,7 +190,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
   // "here's what's happening" copy — names a number when there is one.
   const stateLine = useMemo(() => {
     if (bookingsLoading) {
-      return userRole === "welper" ? welperHome.loading : "Loading your dashboard…";
+      return userRole === "welper" ? welperHome.loading : customerHome.loading;
     }
     if (userRole === "welper") {
       if (welperSetupIncomplete && !welperShowSetupChecklist) {
@@ -197,12 +211,12 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
       return welperHome.noJobsNotDiscoverable;
     }
     if (customerSetupIncomplete && !customerShowSetupChecklist) {
-      return "Finish setting up your account to start booking.";
+      return customerHome.setupIncomplete;
     }
     if (upcomingCount > 0) {
-      return `You have ${upcomingCount} upcoming ${upcomingCount === 1 ? "booking" : "bookings"}.`;
+      return customerHome.upcomingBookings(upcomingCount);
     }
-    return "No upcoming bookings — find a Welper to get started.";
+    return customerHome.noUpcomingBookings;
   }, [
     bookingsLoading,
     userRole,
@@ -215,6 +229,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     welperShowSetupChecklist,
     normalizedWelperSetup,
     welperHome,
+    customerHome,
   ]);
 
   const statsLoading = !!bookingsRole && bookingsLoading;
@@ -260,7 +275,9 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
           />
           <Box flexGrow="1" style={{ minWidth: "min(100%, 12rem)" }}>
             <Heading as="h1" size="7" mb="2" trim="start">
-              {welperHome.greeting(greetingName)}
+              {userRole === "welper"
+                ? welperHome.greeting(greetingName)
+                : customerHome.greeting(greetingName)}
             </Heading>
             <Text as="p" size="3" color="gray" highContrast>
               {stateLine}
@@ -281,6 +298,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
             <QuickActions
               role={userRole === "welper" ? "welper" : "customer"}
               welperLabels={userRole === "welper" ? welperHome.quickActions : undefined}
+              customerLabels={userRole === "customer" ? customerHome.quickActions : undefined}
             />
 
             <DashboardStats
@@ -289,7 +307,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
               loading={statsLoading}
               footnote={statsFootnote}
               welperSectionTitle={
-                userRole === "welper" ? welperHome.statsSectionTitle : undefined
+                userRole === "welper" ? welperHome.statsSectionTitle : customerHome.statsSectionTitle
               }
             />
 
@@ -298,7 +316,15 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
               role={userRole === "welper" ? "welper" : "customer"}
               loading={statsLoading}
               welperLabels={
-                userRole === "welper" ? welperHome.recentActivity : undefined
+                userRole === "welper"
+                  ? {
+                      ...welperHome.recentActivity,
+                      emptyCta: welperHome.recentActivity.completeProfile,
+                    }
+                  : {
+                      ...customerHome.recentActivity,
+                      emptyCta: customerHome.recentActivity.findWelper,
+                    }
               }
             />
           </>

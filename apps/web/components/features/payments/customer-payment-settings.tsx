@@ -27,12 +27,52 @@ import { EmailVerificationRequiredError } from "@/lib/api/client";
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
+export type CustomerPaymentMethodActionLabels = {
+  stripeNotConfigured: string;
+  saveCard: string;
+  savingCard: string;
+  cancel: string;
+  couldNotSaveCard: string;
+  cardBrandFallback: string;
+  defaultBadge: string;
+  setDefault: string;
+  remove: string;
+  removeConfirm: string;
+  addPaymentMethod: string;
+  preparing: string;
+  couldNotStartSetup: string;
+};
+
+const DEFAULT_PAYMENT_METHOD_LABELS: CustomerPaymentMethodActionLabels = {
+  stripeNotConfigured:
+    "Card payments are not configured (missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY). Contact support if this persists.",
+  saveCard: "Save card",
+  savingCard: "Saving…",
+  cancel: "Cancel",
+  couldNotSaveCard: "Could not save card",
+  cardBrandFallback: "Card",
+  defaultBadge: "(default)",
+  setDefault: "Set default",
+  remove: "Remove",
+  removeConfirm: "Remove this card?",
+  addPaymentMethod: "Add payment method",
+  preparing: "Preparing…",
+  couldNotStartSetup: "Could not start card setup",
+};
+
+export type CustomerPaymentSettingsLabels = {
+  title?: string;
+  description?: string;
+} & Partial<CustomerPaymentMethodActionLabels>;
+
 function SetupCardForm({
   onSuccess,
   onCancel,
+  labels,
 }: {
   onSuccess: () => void;
   onCancel: () => void;
+  labels: CustomerPaymentMethodActionLabels;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -53,7 +93,7 @@ function SetupCardForm({
     });
     setBusy(false);
     if (error) {
-      setErr(error.message ?? "Could not save card");
+      setErr(error.message ?? labels.couldNotSaveCard);
       return;
     }
     if (setupIntent?.id) {
@@ -77,10 +117,10 @@ function SetupCardForm({
         ) : null}
         <Flex gap="2" wrap="wrap">
           <Button type="submit" disabled={!stripe || busy} size="2">
-            {busy ? "Saving…" : "Save card"}
+            {busy ? labels.savingCard : labels.saveCard}
           </Button>
           <Button type="button" variant="soft" color="gray" size="2" onClick={onCancel} disabled={busy}>
-            Cancel
+            {labels.cancel}
           </Button>
         </Flex>
       </Flex>
@@ -88,26 +128,21 @@ function SetupCardForm({
   );
 }
 
-export type CustomerPaymentSettingsLabels = {
-  title: string;
-  description: string;
-};
-
 export function CustomerPaymentSettings({
-  labels,
+  labels: labelsProp,
 }: {
   labels?: CustomerPaymentSettingsLabels;
 }) {
+  const actionLabels: CustomerPaymentMethodActionLabels = {
+    ...DEFAULT_PAYMENT_METHOD_LABELS,
+    ...labelsProp,
+  };
   const queryClient = useQueryClient();
   const { data: methods, isLoading, refetch } = usePaymentMethods(true);
   const createSi = useCreateSetupIntent();
   const setDefault = useSetDefaultPaymentMethod();
   const detach = useDetachPaymentMethod();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
-  // Day 15 Dispatch C — payment-method writes (`POST /payments/setup-intent`,
-  // `POST /payments/payment-methods/:id/default`, `DELETE /payments/payment-methods/:id`)
-  // are all `EmailVerifiedGuard`-gated BFF-side. Catch the typed 403 and
-  // surface the focused dialog with one-click resend.
   const bookable = useBookableAction();
   const guardWrites = useCallback(
     (err: unknown): boolean => {
@@ -163,9 +198,7 @@ export function CustomerPaymentSettings({
     return (
       <Card size="4" variant="surface" style={{ width: "100%", maxWidth: "560px" }}>
         <Callout.Root color="amber" variant="surface">
-          <Callout.Text>
-            Card payments are not configured (missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY). Contact support if this persists.
-          </Callout.Text>
+          <Callout.Text>{actionLabels.stripeNotConfigured}</Callout.Text>
         </Callout.Root>
       </Card>
     );
@@ -183,10 +216,10 @@ export function CustomerPaymentSettings({
         />
         <Box>
           <Heading size="7" trim="start" mb="2">
-            {labels?.title ?? "Payment methods"}
+            {labelsProp?.title ?? "Payment methods"}
           </Heading>
           <Text size="2" color="gray">
-            {labels?.description ??
+            {labelsProp?.description ??
               "Add a default card to complete your profile and authorize payment after a welper accepts your booking."}
           </Text>
         </Box>
@@ -210,10 +243,16 @@ export function CustomerPaymentSettings({
                 }}
               >
                 <Text size="2">
-                  {(m.brand ?? "Card").toUpperCase()} ·••• {m.last4}
+                  {(m.brand ?? actionLabels.cardBrandFallback).toUpperCase()} ·••• {m.last4}
                   {m.isDefault ? (
-                    <span style={{ marginLeft: 8, color: "var(--gray-10)", fontSize: "var(--font-size-1)" }}>
-                      (default)
+                    <span
+                      style={{
+                        marginLeft: 8,
+                        color: "var(--gray-10)",
+                        fontSize: "var(--font-size-1)",
+                      }}
+                    >
+                      {actionLabels.defaultBadge}
                     </span>
                   ) : null}
                 </Text>
@@ -225,7 +264,7 @@ export function CustomerPaymentSettings({
                       onClick={() => handleSetDefault(m.id)}
                       disabled={setDefault.isPending}
                     >
-                      Set default
+                      {actionLabels.setDefault}
                     </Button>
                   ) : null}
                   <Button
@@ -233,12 +272,12 @@ export function CustomerPaymentSettings({
                     variant="outline"
                     color="red"
                     onClick={() => {
-                      if (!window.confirm("Remove this card?")) return;
+                      if (!window.confirm(actionLabels.removeConfirm)) return;
                       handleDetach(m.id);
                     }}
                     disabled={detach.isPending}
                   >
-                    Remove
+                    {actionLabels.remove}
                   </Button>
                 </Flex>
               </Flex>
@@ -246,41 +285,47 @@ export function CustomerPaymentSettings({
           </Flex>
         ) : null}
 
-      {!clientSecret ? (
-        <Button
-          size="2"
-          variant="solid"
-          onClick={() => void startAddCard()}
-          disabled={createSi.isPending}
-        >
-          {createSi.isPending ? "Preparing…" : "Add payment method"}
-        </Button>
-      ) : (
-        <Box
-          p="4"
-          style={{
-            border: "1px solid var(--gray-6)",
-            borderRadius: "var(--radius-3)",
-            background: "var(--color-surface)",
-          }}
-        >
-          <Elements
-            stripe={stripePromise}
-            options={{
-              clientSecret,
-              appearance: { theme: "stripe" },
+        {!clientSecret ? (
+          <Button
+            size="2"
+            variant="solid"
+            onClick={() => void startAddCard()}
+            disabled={createSi.isPending}
+          >
+            {createSi.isPending ? actionLabels.preparing : actionLabels.addPaymentMethod}
+          </Button>
+        ) : (
+          <Box
+            p="4"
+            style={{
+              border: "1px solid var(--gray-6)",
+              borderRadius: "var(--radius-3)",
+              background: "var(--color-surface)",
             }}
           >
-            <SetupCardForm onSuccess={afterSave} onCancel={() => setClientSecret(null)} />
-          </Elements>
-        </Box>
-      )}
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret,
+                appearance: { theme: "stripe" },
+              }}
+            >
+              <SetupCardForm
+                onSuccess={afterSave}
+                onCancel={() => setClientSecret(null)}
+                labels={actionLabels}
+              />
+            </Elements>
+          </Box>
+        )}
 
-      {createSi.isError ? (
-        <Callout.Root color="red" variant="surface">
-          <Callout.Text>{(createSi.error as Error)?.message ?? "Could not start card setup"}</Callout.Text>
-        </Callout.Root>
-      ) : null}
+        {createSi.isError ? (
+          <Callout.Root color="red" variant="surface">
+            <Callout.Text>
+              {(createSi.error as Error)?.message ?? actionLabels.couldNotStartSetup}
+            </Callout.Text>
+          </Callout.Root>
+        ) : null}
       </Flex>
     </Card>
   );

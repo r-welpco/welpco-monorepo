@@ -168,7 +168,9 @@ export function useDashboardCommonLabels() {
   const t = useTranslations("dashboard.common");
   return {
     back: t("back"),
+    cancel: t("cancel"),
     genericError: t("genericError"),
+    turnstileComplete: t("turnstileComplete"),
   };
 }
 
@@ -276,6 +278,71 @@ export type WelperHomeLabels = {
   };
 };
 
+export type CustomerHomeLabels = {
+  greeting: (name: string) => string;
+  loading: string;
+  setupIncomplete: string;
+  upcomingBookings: (count: number) => string;
+  noUpcomingBookings: string;
+  statsSectionTitle: string;
+  stats: {
+    activeBookings: string;
+    bookingsCompleted: string;
+    favoriteWelpers: string;
+  };
+  statsFootnote: (count: number) => string;
+  activityTitle: string;
+  quickActions: {
+    title: string;
+    findWelper: string;
+    findWelperDescription: string;
+    viewBookings: string;
+    viewBookingsDescription: string;
+    openMessages: string;
+    openMessagesDescription: string;
+  };
+  recentActivity: {
+    title: string;
+    emptyTitle: string;
+    emptyDescription: string;
+    findWelper: string;
+  };
+};
+
+export function useCustomerHomeLabels(): CustomerHomeLabels {
+  const t = useTranslations("dashboard.home.customer");
+  return {
+    greeting: (name) => t("greeting", { name }),
+    loading: t("loading"),
+    setupIncomplete: t("setupIncomplete"),
+    upcomingBookings: (count) => t("upcomingBookings", { count }),
+    noUpcomingBookings: t("noUpcomingBookings"),
+    statsSectionTitle: t("statsSectionTitle"),
+    stats: {
+      activeBookings: t("stats.activeBookings"),
+      bookingsCompleted: t("stats.bookingsCompleted"),
+      favoriteWelpers: t("stats.favoriteWelpers"),
+    },
+    statsFootnote: (count) => t("statsFootnote", { count }),
+    activityTitle: t("activityTitle"),
+    quickActions: {
+      title: t("quickActions.title"),
+      findWelper: t("quickActions.findWelper"),
+      findWelperDescription: t("quickActions.findWelperDescription"),
+      viewBookings: t("quickActions.viewBookings"),
+      viewBookingsDescription: t("quickActions.viewBookingsDescription"),
+      openMessages: t("quickActions.openMessages"),
+      openMessagesDescription: t("quickActions.openMessagesDescription"),
+    },
+    recentActivity: {
+      title: t("recentActivity.title"),
+      emptyTitle: t("recentActivity.emptyTitle"),
+      emptyDescription: t("recentActivity.emptyDescription"),
+      findWelper: t("recentActivity.findWelper"),
+    },
+  };
+}
+
 export function useWelperHomeLabels(): WelperHomeLabels {
   const t = useTranslations("dashboard.home");
   return {
@@ -362,6 +429,8 @@ export function useWelperBookingsLabels() {
   return {
     title: t("title"),
     subtitle: t("subtitle"),
+    subtitleCustomer: t("subtitleCustomer"),
+    browseServices: t("browseServices"),
     signInRequired: t("signInRequired"),
     loadFailed: t("loadFailed"),
     genericError: t("genericError"),
@@ -396,6 +465,7 @@ export function useWelperBookingsLabels() {
       declineReasonPlaceholder: t("confirm.declineReasonPlaceholder"),
       cancelTitle: t("confirm.cancelTitle"),
       cancelDescription: t("confirm.cancelDescription"),
+      cancelDescriptionCustomer: t("confirm.cancelDescriptionCustomer"),
       cancelConfirm: t("confirm.cancelConfirm"),
       cancelCancel: t("confirm.cancelCancel"),
       cancelReasonLabel: t("confirm.cancelReasonLabel"),
@@ -421,6 +491,40 @@ export function useCustomerPreviewLabels() {
   };
 }
 
+export function useMessagesLabels(isWelper: boolean) {
+  const t = useTranslations("dashboard.messages");
+  const base = {
+    title: t("title"),
+    subtitle: isWelper ? t("subtitle") : t("subtitleCustomer"),
+    backToBookings: t("backToBookings"),
+    signInTitle: t("signInTitle"),
+    signInDescription: t("signInDescription"),
+    conversations: t("conversations"),
+    conversationsHint: isWelper ? t("conversationsHint") : t("conversationsHintCustomer"),
+    loadError: t("loadError"),
+    emptyTitle: t("emptyTitle"),
+    emptyDescription: t("emptyDescription"),
+    unreadAria: t("unreadAria"),
+    counterpartyCustomer: (id: string) =>
+      t("counterpartyCustomer", { id: id.slice(-8).toUpperCase() }),
+    counterpartyWelper: (id: string) =>
+      t("counterpartyWelper", { id: id.slice(-8).toUpperCase() }),
+    bookingRef: (id: string) =>
+      t("bookingRef", { id: id.slice(-8).toUpperCase() }),
+    lastMessage: (preview: string) => t("lastMessage", { preview }),
+    noneSelected: t("noneSelected"),
+    pickFromList: isWelper ? t("pickFromList") : t("pickFromListCustomer"),
+    threadTitle: t("threadTitle"),
+    threadBooking: (id: string) =>
+      t("threadBooking", { id: id.slice(-8).toUpperCase() }),
+    viewBooking: t("viewBooking"),
+    messagingClosed: t("messagingClosed"),
+    sendFailed: t("sendFailed"),
+  };
+  return base;
+}
+
+/** @deprecated Use useMessagesLabels */
 export function useWelperMessagesLabels() {
   const t = useTranslations("dashboard.messages");
   return {
@@ -453,12 +557,129 @@ export function useWelperMessagesLabels() {
   };
 }
 
+export function useCustomerProfileLabels() {
+  const t = useTranslations("dashboard.profile.customer");
+  const f = useTranslations("dashboard.profile.customer.favorites");
+  const form = useTranslations("dashboard.profile.customer.form");
+  const af = useTranslations("dashboard.profile.customer.form.addressFields");
+  const v = useTranslations("dashboard.profile.customer.form.validation");
+  return {
+    title: t("title"),
+    subtitle: t("subtitle"),
+    loadError: t("loadError"),
+    tabs: {
+      personal: t("tabs.personal"),
+      favorites: t("tabs.favorites"),
+    },
+    form: {
+      title: form("title"),
+      description: form("description"),
+      firstName: form("firstName"),
+      lastName: form("lastName"),
+      phone: form("phone"),
+      address: form("address"),
+      firstNamePlaceholder: form("firstNamePlaceholder"),
+      lastNamePlaceholder: form("lastNamePlaceholder"),
+      phonePlaceholder: form("phonePlaceholder"),
+      save: form("save"),
+      saving: form("saving"),
+      addressIncomplete: form("addressIncomplete"),
+      addressFields: {
+        streetAddress: af("streetAddress"),
+        city: af("city"),
+        stateProvince: af("stateProvince"),
+        zipPostalCode: af("zipPostalCode"),
+        streetPlaceholder: af("streetPlaceholder"),
+        provincePlaceholder: af("provincePlaceholder"),
+        country: af("country"),
+      },
+      validation: {
+        firstNameRequired: v("firstNameRequired"),
+        lastNameRequired: v("lastNameRequired"),
+        phoneRequired: v("phoneRequired"),
+        streetRequired: v("streetRequired"),
+        cityRequired: v("cityRequired"),
+        provinceRequired: v("provinceRequired"),
+        postalInvalid: v("postalInvalid"),
+      },
+    },
+    favorites: {
+      unknownWelper: f("unknownWelper"),
+      serviceProvider: f("serviceProvider"),
+      unknownLocation: f("unknownLocation"),
+      emptyTitle: f("emptyTitle"),
+      emptyDescription: f("emptyDescription"),
+      heading: f("heading"),
+      headingDescription: f("headingDescription"),
+      searchPlaceholder: f("searchPlaceholder"),
+      showingCount: (shown: number, total: number) => f("showingCount", { shown, total }),
+      noMatchTitle: f("noMatchTitle"),
+      noMatchDescription: f("noMatchDescription"),
+      jobsCompleted: (count: number) => f("jobsCompleted", { count }),
+      lastBooked: (date: string) => f("lastBooked", { date }),
+      viewProfile: f("viewProfile"),
+      remove: f("remove"),
+      quickRebook: f("quickRebook"),
+    },
+  };
+}
+
+export function useBookingNewLabels() {
+  const t = useTranslations("dashboard.bookingNew");
+  return {
+    title: t("title"),
+    scheduleWith: (name: string) => t("scheduleWith", { name }),
+    profileLoadFailed: t("profileLoadFailed"),
+    backToSearch: t("backToSearch"),
+    submitConfirming: t("submitConfirming"),
+    submitRequest: t("submitRequest"),
+    submitContinue: t("submitContinue"),
+    summaryTitle: t("summaryTitle"),
+    summaryRate: t("summaryRate"),
+    summaryHoldLabel: t("summaryHoldLabel"),
+    summaryHoldAmount: (amount: string) => t("summaryHoldAmount", { amount }),
+    summaryTaxNote: t("summaryTaxNote"),
+    summaryEstimatedJob: (duration: string) => t("summaryEstimatedJob", { duration }),
+    summaryEstimatedBeforeTax: (amount: string) => t("summaryEstimatedBeforeTax", { amount }),
+    summaryFinalChargeNote: t("summaryFinalChargeNote"),
+    summaryPickService: t("summaryPickService"),
+    beforeConfirmTitle: t("beforeConfirmTitle"),
+    beforeConfirmPolicy: t("beforeConfirmPolicy"),
+    detailsTitle: t("detailsTitle"),
+    serviceLabel: t("serviceLabel"),
+    selectService: t("selectService"),
+    chooseServiceFirst: t("chooseServiceFirst"),
+    serviceTypeLabel: t("serviceTypeLabel"),
+    selectServiceType: t("selectServiceType"),
+    chooseServiceType: t("chooseServiceType"),
+    serviceQuestionsTitle: t("serviceQuestionsTitle"),
+    questionsLoadFailed: t("questionsLoadFailed"),
+    retry: t("retry"),
+    whenTitle: t("whenTitle"),
+    dateLabel: t("dateLabel"),
+    startTimeLabel: t("startTimeLabel"),
+    endTimeLabel: t("endTimeLabel"),
+    endAfterStart: t("endAfterStart"),
+    minDuration: t("minDuration"),
+    maxDuration: t("maxDuration"),
+    notesLabel: t("notesLabel"),
+    notesOptional: t("notesOptional"),
+    notesPlaceholder: t("notesPlaceholder"),
+    profileGate: t("profileGate"),
+    paymentSettings: t("paymentSettings"),
+    paymentRequired: t("paymentRequired"),
+    createFailed: t("createFailed"),
+    mobileHoldLabel: t("mobileHoldLabel"),
+  };
+}
+
 export function useDashboardSettingsLabels() {
   const t = useTranslations("dashboard.settings");
   return {
     title: t("title"),
     subtitle: t("subtitle"),
     subtitleWelper: t("subtitleWelper"),
+    loadingAria: t("loadingAria"),
     signInTitle: t("signInTitle"),
     signInDescription: t("signInDescription"),
     tabs: {
@@ -476,6 +697,21 @@ export function useDashboardSettingsLabels() {
     deleteButton: t("deleteButton"),
     paymentTitle: t("paymentTitle"),
     paymentDescription: t("paymentDescription"),
+    paymentMethods: {
+      stripeNotConfigured: t("paymentMethods.stripeNotConfigured"),
+      saveCard: t("paymentMethods.saveCard"),
+      savingCard: t("paymentMethods.savingCard"),
+      cancel: t("paymentMethods.cancel"),
+      couldNotSaveCard: t("paymentMethods.couldNotSaveCard"),
+      cardBrandFallback: t("paymentMethods.cardBrandFallback"),
+      defaultBadge: t("paymentMethods.defaultBadge"),
+      setDefault: t("paymentMethods.setDefault"),
+      remove: t("paymentMethods.remove"),
+      removeConfirm: t("paymentMethods.removeConfirm"),
+      addPaymentMethod: t("paymentMethods.addPaymentMethod"),
+      preparing: t("paymentMethods.preparing"),
+      couldNotStartSetup: t("paymentMethods.couldNotStartSetup"),
+    },
     privacyCustomerNote: t("privacyCustomerNote"),
   };
 }
@@ -666,6 +902,86 @@ export function useWelperBookingDetailLabels() {
     },
     attachmentFallback: t("attachmentFallback"),
     previewUnavailable: t("previewUnavailable"),
+    additionalDetail: t("additionalDetail"),
+    receiptDraftLoadFailed: t("receiptDraftLoadFailed"),
+  };
+}
+
+export function useCustomerBookingDetailLabels() {
+  const t = useTranslations("dashboard.bookingsDetail.customer");
+  const p = useTranslations("dashboard.bookingsDetail.customer.payment");
+  return {
+    notFoundTitle: t("notFoundTitle"),
+    actionsHint: t("actionsHint"),
+    messageWelper: t("messageWelper"),
+    reviewWelper: t("reviewWelper"),
+    receiptWrongAmountCallout: t("receiptWrongAmountCallout"),
+    locationSectionTitle: t("locationSectionTitle"),
+    serviceAddress: t("serviceAddress"),
+    serviceQuestions: t("serviceQuestions"),
+    cancellationReason: t("cancellationReason"),
+    declineReason: t("declineReason"),
+    receiptAlreadyConfirmed: t("receiptAlreadyConfirmed"),
+    payment: {
+      sectionTitle: p("sectionTitle"),
+      cardOnFile: p("cardOnFile"),
+      authorizeHint: p("authorizeHint"),
+      authorizing: p("authorizing"),
+      authorize: p("authorize"),
+      holdActive: p("holdActive"),
+      captureScheduled: (date: string) => p("captureScheduled", { date }),
+      captured: p("captured"),
+      failed: p("failed"),
+      balanceTitle: p("balanceTitle"),
+      balanceHint: p("balanceHint"),
+      payBalance: p("payBalance"),
+      authorizeFailed: p("authorizeFailed"),
+      paymentFailed: p("paymentFailed"),
+      stripeNotConfigured: p("stripeNotConfigured"),
+      paymentUiLoadFailed: p("paymentUiLoadFailed"),
+      authenticationFailed: p("authenticationFailed"),
+    },
+    reviewDialog: {
+      editTitle: t("reviewDialog.editTitle"),
+      newTitle: t("reviewDialog.newTitle"),
+      editDescription: t("reviewDialog.editDescription"),
+      newDescription: t("reviewDialog.newDescription"),
+      newSubtext: t("reviewDialog.newSubtext"),
+      saveChanges: t("reviewDialog.saveChanges"),
+      skip: t("reviewDialog.skip"),
+    },
+  };
+}
+
+export function useSearchLabels() {
+  const t = useTranslations("dashboard.search");
+  return {
+    pageTitle: t("pageTitle"),
+    pageSubtitle: t("pageSubtitle"),
+    heroTitle: t("heroTitle"),
+    locationPrompt: t("locationPrompt"),
+    geolocationUnsupported: t("geolocationUnsupported"),
+    geocodingUnavailable: t("geocodingUnavailable"),
+    geocodingUnavailableRetry: t("geocodingUnavailableRetry"),
+    postalNotFound: t("postalNotFound"),
+    locationDenied: t("locationDenied"),
+    addressLookupFailed: t("addressLookupFailed"),
+    toggleFiltersHide: t("toggleFiltersHide"),
+    toggleFiltersShow: t("toggleFiltersShow"),
+    filtersActive: t("filtersActive"),
+    loadError: t("loadError"),
+    genericError: t("genericError"),
+    contactSupport: t("contactSupport"),
+    tryAgain: t("tryAgain"),
+    resultsHeading: t("resultsHeading"),
+    resultsError: t("resultsError"),
+    prevPage: t("prevPage"),
+    nextPage: t("nextPage"),
+    pageOf: (page: number, total: number) => t("pageOf", { page, total }),
+    emptyTitle: t("emptyTitle"),
+    emptyDescription: t("emptyDescription"),
+    clearSearchFilters: t("clearSearchFilters"),
+    browseCategories: t("browseCategories"),
   };
 }
 

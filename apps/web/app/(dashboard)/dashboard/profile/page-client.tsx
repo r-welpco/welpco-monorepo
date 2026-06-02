@@ -68,6 +68,7 @@ import {
   useWelperAvailabilityExceptionsLabels,
   useWelperAvailabilityScheduleLabels,
   useWelperProfileFormLabels,
+  useCustomerProfileLabels,
   useWelperProfileLabels,
   useWelperProfileOfferingLabels,
   useWelperServiceOfferingFormLabels,
@@ -200,6 +201,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   const isCustomer = user.role === "customer";
   const isWelper = user.role === "welper";
   const welperProfileLabels = useWelperProfileLabels();
+  const customerProfileLabels = useCustomerProfileLabels();
   const profilePhotoUploadLabels = useProfilePhotoUploadLabels();
   const welperProfileFormLabels = useWelperProfileFormLabels();
   const welperOfferingLabels = useWelperProfileOfferingLabels();
@@ -528,10 +530,10 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
         <Flex direction="column" gap="6">
           <Box>
             <Heading as="h1" size="7" mb="2" trim="start">
-              Profile
+              {customerProfileLabels.title}
             </Heading>
             <Text as="p" size="2" color="gray" highContrast>
-              Manage your profile information and preferences.
+              {customerProfileLabels.subtitle}
             </Text>
           </Box>
 
@@ -542,15 +544,15 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 ? error.message
                 : updateCustomerProfileMutation.error instanceof Error
                   ? updateCustomerProfileMutation.error.message
-                  : "We couldn't load your profile. Try again in a moment."}
+                  : customerProfileLabels.loadError}
             </Callout.Text>
           </Callout.Root>
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="personal">Personal info</TabsTrigger>
-            <TabsTrigger value="favorites">Favorites</TabsTrigger>
+            <TabsTrigger value="personal">{customerProfileLabels.tabs.personal}</TabsTrigger>
+            <TabsTrigger value="favorites">{customerProfileLabels.tabs.favorites}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="personal">
@@ -572,6 +574,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                   onRemove={handleCustomerPhotoRemove}
                 />
                 <CustomerProfileForm
+                  labels={customerProfileLabels.form}
                   defaultValues={
                     customerProfile
                       ? {
@@ -593,11 +596,14 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
           <TabsContent value="favorites">
             <Box pt="5">
               <FavoriteWelperList
+                labels={customerProfileLabels.favorites}
                 favorites={favoriteWelpers.map((f) => ({
                   id: f.id,
-                  name: f.welper?.displayName || "Unknown Welper",
-                  role: "Service Provider",
-                  location: f.welper?.serviceArea?.centerAddress?.city || "Unknown",
+                  name: f.welper?.displayName || customerProfileLabels.favorites.unknownWelper,
+                  role: customerProfileLabels.favorites.serviceProvider,
+                  location:
+                    f.welper?.serviceArea?.centerAddress?.city ||
+                    customerProfileLabels.favorites.unknownLocation,
                   rating: 4.5,
                   completedJobs: 10,
                 }))}

@@ -31,7 +31,6 @@ import {
   MapPin,
 } from "lucide-react";
 import { format, type Locale } from "date-fns";
-import { useTranslations } from "next-intl";
 import { getStatusColor } from "@/lib/constants/booking";
 import {
   useWelperBookingsLabels,
@@ -87,17 +86,6 @@ function formatBookingAddress(address: Record<string, string> | null | undefined
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-const CUSTOMER_STATUS_TABS: Array<{ label: string; value: BookingStatus | undefined }> = [
-  { label: "All", value: undefined },
-  { label: "Pending", value: "pending" },
-  { label: "Upcoming", value: "accepted" },
-  { label: "Active", value: "in_progress" },
-  { label: "Completed", value: "completed" },
-  { label: "Cancelled", value: "cancelled" },
-  { label: "Declined", value: "declined" },
-  { label: "Disputed", value: "disputed" },
-];
-
 const WELPER_TAB_VALUES: Array<BookingStatus | undefined> = [
   undefined,
   "pending",
@@ -114,7 +102,6 @@ export default function BookingsPageClient() {
   const { user } = useAuthStore();
   const welperLabels = useWelperBookingsLabels();
   const customerPreviewLabels = useCustomerPreviewLabels();
-  const tBookings = useTranslations("dashboard.bookings");
   const dateLocale = useDateFnsLocale();
   const [activeTab, setActiveTab] = useState<BookingStatus | undefined>(
     undefined
@@ -149,13 +136,14 @@ export default function BookingsPageClient() {
   const isWelper = user?.role === "welper";
   const isCustomer = user?.role === "customer";
 
-  const statusTabs = useMemo(() => {
-    if (!isWelper) return CUSTOMER_STATUS_TABS;
-    return WELPER_TAB_VALUES.map((value) => ({
-      value,
-      label: welperBookingTabLabel(welperLabels, value),
-    }));
-  }, [isWelper, welperLabels]);
+  const statusTabs = useMemo(
+    () =>
+      WELPER_TAB_VALUES.map((value) => ({
+        value,
+        label: welperBookingTabLabel(welperLabels, value),
+      })),
+    [welperLabels],
+  );
 
   const handleTabChange = useCallback(
     (status: BookingStatus | undefined) => {
@@ -189,9 +177,7 @@ export default function BookingsPageClient() {
           setMutationError(
             err instanceof Error
               ? err.message
-              : isWelper
-                ? welperLabels.acceptFailed
-                : "Failed to accept booking.",
+              : welperLabels.acceptFailed,
           );
           setPendingConfirm(null);
         },
@@ -210,9 +196,7 @@ export default function BookingsPageClient() {
             setMutationError(
               err instanceof Error
                 ? err.message
-                : isWelper
-                  ? welperLabels.declineFailed
-                  : "Failed to decline booking.",
+                  : welperLabels.declineFailed,
             );
             setPendingConfirm(null);
           },
@@ -236,9 +220,7 @@ export default function BookingsPageClient() {
             setMutationError(
               err instanceof Error
                 ? err.message
-                : isWelper
-                  ? welperLabels.cancelFailed
-                  : "Failed to cancel booking.",
+                  : welperLabels.cancelFailed,
             );
             setPendingConfirm(null);
           },
@@ -260,7 +242,7 @@ export default function BookingsPageClient() {
         style={{ minHeight: "400px" }}
       >
         <Text size="3" color="gray">
-          {isWelper ? welperLabels.signInRequired : "Please sign in to view bookings."}
+          {welperLabels.signInRequired}
         </Text>
       </Flex>
     );
@@ -274,12 +256,10 @@ export default function BookingsPageClient() {
       {/* Header */}
       <Box>
         <Heading as="h1" size="7" mb="2" trim="start">
-          {isWelper ? welperLabels.title : "Bookings"}
+          {welperLabels.title}
         </Heading>
         <Text as="p" size="3" color="gray">
-          {isCustomer
-            ? "Manage your service bookings and appointments."
-            : welperLabels.subtitle}
+          {isCustomer ? welperLabels.subtitleCustomer : welperLabels.subtitle}
         </Text>
       </Box>
 
@@ -351,14 +331,14 @@ export default function BookingsPageClient() {
             style={{ padding: "48px 24px" }}
           >
             <Text size="3" color="red" weight="medium">
-              {isWelper ? welperLabels.loadFailed : "Failed to load bookings"}
+              {welperLabels.loadFailed}
             </Text>
             <Text size="2" color="gray">
               {error instanceof Error
                 ? error.message
                 : isWelper
                   ? welperLabels.genericError
-                  : "Something went wrong. Please try again."}
+                  : welperLabels.genericError}
             </Text>
           </Flex>
         </Card>
@@ -375,16 +355,10 @@ export default function BookingsPageClient() {
           >
             <Calendar size={48} color="var(--gray-9)" />
             <Text size="3" weight="medium">
-              {isWelper ? welperLabels.emptyTitle : "No bookings found"}
+              {welperLabels.emptyTitle}
             </Text>
             <Text size="2" color="gray" align="center">
-              {activeTab
-                ? isWelper
-                  ? welperLabels.emptyFiltered(activeTab)
-                  : `No ${activeTab.replace(/_/g, " ")} bookings.`
-                : isWelper
-                  ? welperLabels.emptyAll
-                  : "You don't have any bookings yet."}
+              {activeTab ? welperLabels.emptyFiltered(activeTab) : welperLabels.emptyAll}
             </Text>
             {isCustomer && (
               <Button
@@ -393,7 +367,7 @@ export default function BookingsPageClient() {
                 onClick={() => router.push("/dashboard/search")}
                 style={{ marginTop: "8px" }}
               >
-                Browse Services
+                {welperLabels.browseServices}
               </Button>
             )}
           </Flex>
@@ -413,11 +387,9 @@ export default function BookingsPageClient() {
           {bookings.map((booking: BookingItem) => {
             const customerName =
               booking.customerFirstName?.trim() ||
-              (isWelper ? welperLabels.customerFallback : tBookings("customerFallback"));
+              welperLabels.customerFallback;
             const addressLine = formatBookingAddress(booking.address);
-            const viewDetailsLabel = isWelper
-              ? welperLabels.viewDetails
-              : tBookings("viewDetails");
+            const viewDetailsLabel = welperLabels.viewDetails;
 
             return (
             <Card
@@ -483,9 +455,7 @@ export default function BookingsPageClient() {
                             weight="medium"
                             style={{ textTransform: "capitalize" }}
                           >
-                            {isWelper
-                              ? welperLabels.statusLabel(booking.status)
-                              : booking.status.replace(/_/g, " ")}
+                            {welperLabels.statusLabel(booking.status)}
                           </Text>
                         </Badge>
                         <Text size="2" color="gray">
@@ -600,7 +570,7 @@ export default function BookingsPageClient() {
                           onClick={openConfirm("cancel", booking.id)}
                           disabled={cancelMutation.isPending}
                         >
-                          {isWelper ? welperLabels.cancelBooking : "Cancel booking"}
+                          {welperLabels.cancelBooking}
                         </Button>
                       )}
                     {isWelper && booking.availableActions?.includes("accept") && (
@@ -658,25 +628,19 @@ export default function BookingsPageClient() {
         <ActionConfirmDialog
           open
           onOpenChange={(open) => !open && !cancelMutation.isPending && closeConfirm()}
-          title={
-            isWelper ? welperLabels.confirm.cancelTitle : "Cancel this booking?"
-          }
+          title={welperLabels.confirm.cancelTitle}
           description={
             isWelper
               ? welperLabels.confirm.cancelDescription
-              : "Cancel more than 24 hours before the start time and the one-hour hold is released with no fee. Cancel within 24 hours of the start time and that hold may be charged as a cancellation fee. Tell us why so we can keep things fair."
+              : welperLabels.confirm.cancelDescriptionCustomer
           }
-          confirmLabel={isWelper ? welperLabels.confirm.cancelConfirm : "Cancel booking"}
-          cancelLabel={isWelper ? welperLabels.confirm.cancelCancel : "Keep booking"}
+          confirmLabel={welperLabels.confirm.cancelConfirm}
+          cancelLabel={welperLabels.confirm.cancelCancel}
           variant="danger"
           pending={cancelMutation.isPending}
           reasonField={{
-            label: isWelper
-              ? welperLabels.confirm.cancelReasonLabel
-              : "Reason for cancellation",
-            placeholder: isWelper
-              ? welperLabels.confirm.cancelReasonPlaceholder
-              : "e.g. Plans changed, found another welper",
+            label: welperLabels.confirm.cancelReasonLabel,
+            placeholder: welperLabels.confirm.cancelReasonPlaceholder,
             required: true,
           }}
           onConfirm={(reason) => runCancel(pendingConfirm.bookingId, reason)}
@@ -707,14 +671,12 @@ export default function BookingsPageClient() {
             size="2"
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            aria-label={isWelper ? welperLabels.prevPage : "Previous page"}
+            aria-label={welperLabels.prevPage}
           >
             <ChevronLeft size={18} />
           </Button>
           <Text size="2" color="gray">
-            {isWelper
-              ? welperLabels.pageOf(page, totalPages)
-              : `Page ${page} of ${totalPages}`}
+            {welperLabels.pageOf(page, totalPages)}
           </Text>
           <Button
             variant="soft"
@@ -722,7 +684,7 @@ export default function BookingsPageClient() {
             size="2"
             disabled={page >= totalPages}
             onClick={() => setPage((p) => p + 1)}
-            aria-label={isWelper ? welperLabels.nextPage : "Next page"}
+            aria-label={welperLabels.nextPage}
           >
             <ChevronRight size={18} />
           </Button>

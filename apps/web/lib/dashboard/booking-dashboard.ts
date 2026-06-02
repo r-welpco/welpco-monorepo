@@ -67,7 +67,10 @@ export function buildDashboardActivities(
   return sorted.slice(0, limit).map((b) => {
     const statusLabel = formatStatus(b.status);
     const when = formatBookingDate(b.scheduledDate, options?.dateLocale);
-    const title = role === "customer" ? "Booking" : (options?.jobTitle ?? "Job");
+    const title =
+      role === "customer"
+        ? (options?.jobTitle ?? "Booking")
+        : (options?.jobTitle ?? "Job");
     const parts = [statusLabel];
     if (when) parts.push(when);
     return {
@@ -91,15 +94,20 @@ export type DashboardStatItem = {
 export function computeCustomerStatsFromBookings(
   bookings: BookingItem[],
   favoriteWelperCount: number,
+  labels: {
+    activeBookings: string;
+    bookingsCompleted: string;
+    favoriteWelpers: string;
+  },
 ): DashboardStatItem[] {
   const active = bookings.filter((b) => ACTIVE_STATUSES.has(b.status)).length;
   const completed = bookings.filter((b) => COMPLETED_STATUSES.has(b.status));
   const servicesUsed = completed.length;
 
   return [
-    { title: "Active bookings", value: active },
-    { title: "Bookings completed", value: servicesUsed },
-    { title: "Favorite Welpers", value: favoriteWelperCount },
+    { title: labels.activeBookings, value: active },
+    { title: labels.bookingsCompleted, value: servicesUsed },
+    { title: labels.favoriteWelpers, value: favoriteWelperCount },
   ];
 }
 

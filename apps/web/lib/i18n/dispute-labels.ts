@@ -19,3 +19,15 @@ export function useDisputeCategoryLabel() {
     return raw.replace(/_/g, " ");
   };
 }
+
+/** Category pick-list labels for the booking dispute form (customer + welper). */
+export function useDisputeFormCategoryLabels() {
+  const t = useTranslations("dashboard.disputes.categories");
+  return {
+    no_show: t("no_show"),
+    quality: t("quality"),
+    overcharge: t("overcharge"),
+    safety: t("safety"),
+    other: t("other"),
+  };
+}

@@ -1203,7 +1203,9 @@
   "dashboard": {
     "common": {
       "back": "← Back",
-      "genericError": "Something went wrong."
+      "cancel": "Cancel",
+      "genericError": "Something went wrong.",
+      "turnstileComplete": "Complete the human verification challenge."
     },
     "footer": {
       "heading": "Application footer",
@@ -1358,11 +1360,43 @@
         "emptyTitle": "No activity yet",
         "emptyDescription": "Jobs and check-ins show up here.",
         "completeProfile": "Complete your profile"
+      },
+      "customer": {
+        "greeting": "Welcome back, {name}.",
+        "loading": "Loading your dashboard…",
+        "setupIncomplete": "Finish setting up your account to start booking.",
+        "upcomingBookings": "{count, plural, one {You have # upcoming booking.} other {You have # upcoming bookings.}}",
+        "noUpcomingBookings": "No upcoming bookings — find a Welper to get started.",
+        "statsSectionTitle": "Your numbers",
+        "stats": {
+          "activeBookings": "Active bookings",
+          "bookingsCompleted": "Bookings completed",
+          "favoriteWelpers": "Favorite Welpers"
+        },
+        "statsFootnote": "Counts use your {count} most recent bookings — open Bookings for the full list.",
+        "activityTitle": "Booking",
+        "quickActions": {
+          "title": "Quick actions",
+          "findWelper": "Find a Welper",
+          "findWelperDescription": "Browse and book.",
+          "viewBookings": "View bookings",
+          "viewBookingsDescription": "Upcoming and past.",
+          "openMessages": "Open messages",
+          "openMessagesDescription": "Talk to your Welpers."
+        },
+        "recentActivity": {
+          "title": "Recent activity",
+          "emptyTitle": "No activity yet",
+          "emptyDescription": "Bookings and updates show up here.",
+          "findWelper": "Find a Welper"
+        }
       }
     },
     "bookings": {
       "title": "Bookings",
       "subtitle": "Manage incoming booking requests and jobs.",
+      "subtitleCustomer": "Manage your service bookings and appointments.",
+      "browseServices": "Browse services",
       "signInRequired": "Please sign in to view bookings.",
       "loadFailed": "Failed to load bookings",
       "genericError": "Something went wrong. Please try again.",
@@ -1415,6 +1449,7 @@
         "declineReasonPlaceholder": "e.g. Schedule conflict on that day",
         "cancelTitle": "Cancel this booking?",
         "cancelDescription": "Cancel more than 24 hours before the start time and the one-hour hold is released with no fee. Cancel within 24 hours of the start time and that hold may be charged as a cancellation fee. Tell us why so we can keep things fair.",
+        "cancelDescriptionCustomer": "Cancel more than 24 hours before the start time and your one-hour card hold is released with no fee. Cancel within 24 hours of the start time and that hold may be charged as a cancellation fee. Tell us why so we can keep things fair.",
         "cancelConfirm": "Cancel booking",
         "cancelCancel": "Keep booking",
         "cancelReasonLabel": "Reason for cancellation",
@@ -1624,6 +1659,9 @@
     "messages": {
       "title": "Messages",
       "subtitle": "Pick a booking to chat with your customer.",
+      "subtitleCustomer": "Pick a booking to chat with your Welper.",
+      "conversationsHintCustomer": "Bookings you can message",
+      "pickFromListCustomer": "Pick a booking from the list to start chatting.",
       "backToBookings": "Back to bookings",
       "signInTitle": "Sign in to read your messages",
       "signInDescription": "Messages are tied to bookings. Sign in to see them.",
@@ -1652,6 +1690,7 @@
       "signInTitle": "Sign in to view settings",
       "signInDescription": "Your settings are private. Sign in to manage your account.",
       "subtitle": "Configure your account, privacy, and notifications.",
+      "loadingAria": "Loading settings",
       "tabs": {
         "account": "Account",
         "privacy": "Privacy",
@@ -1667,7 +1706,22 @@
       "deleteDescription": "We'll deactivate your account and sign you out. Active bookings and reviews stay attached to those records. If something's wrong, we'd rather hear it — let us know before you go.",
       "deleteButton": "Delete my account…",
       "paymentTitle": "Payment methods",
-      "paymentDescription": "Add a default card to complete your profile and authorize payment after a welper accepts your booking."
+      "paymentDescription": "Add a default card to complete your profile and authorize payment after a welper accepts your booking.",
+      "paymentMethods": {
+        "stripeNotConfigured": "Card payments are not configured (missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY). Contact support if this persists.",
+        "saveCard": "Save card",
+        "savingCard": "Saving…",
+        "cancel": "Cancel",
+        "couldNotSaveCard": "Could not save card",
+        "cardBrandFallback": "Card",
+        "defaultBadge": "(default)",
+        "setDefault": "Set default",
+        "remove": "Remove",
+        "removeConfirm": "Remove this card?",
+        "addPaymentMethod": "Add payment method",
+        "preparing": "Preparing…",
+        "couldNotStartSetup": "Could not start card setup"
+      }
     },
     "profile": {
       "title": "Profile",
@@ -1830,7 +1884,111 @@
         "statsWithExceptions": "This week's availability including exceptions.",
         "statsRegularOnly": "Summary of your regular schedule.",
         "dayShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+      },
+      "customer": {
+        "title": "Profile",
+        "subtitle": "Manage your profile information and preferences.",
+        "loadError": "We couldn't load your profile. Try again in a moment.",
+        "tabs": {
+          "personal": "Personal info",
+          "favorites": "Favorites"
+        },
+        "favorites": {
+          "unknownWelper": "Unknown Welper",
+          "serviceProvider": "Service provider",
+          "unknownLocation": "Unknown",
+          "emptyTitle": "No favorite Welpers yet",
+          "emptyDescription": "Start booking services to build your list of favorite Welpers for quick rebooking.",
+          "heading": "Favorite Welpers",
+          "headingDescription": "Your saved Welpers for quick rebooking.",
+          "searchPlaceholder": "Search favorites…",
+          "showingCount": "Showing {shown} of {total} favorites",
+          "noMatchTitle": "No favorites match your search",
+          "noMatchDescription": "Try adjusting your search query.",
+          "jobsCompleted": "{count} jobs completed",
+          "lastBooked": "Last booked: {date}",
+          "viewProfile": "View profile",
+          "remove": "Remove",
+          "quickRebook": "Quick rebook"
+        },
+        "form": {
+          "title": "Customer profile",
+          "description": "Share a few details to personalize your experience.",
+          "firstName": "First name",
+          "lastName": "Last name",
+          "phone": "Phone",
+          "address": "Address",
+          "firstNamePlaceholder": "Jane",
+          "lastNamePlaceholder": "Doe",
+          "phonePlaceholder": "+1 (555) 000-0000",
+          "save": "Save profile",
+          "saving": "Saving…",
+          "addressIncomplete": "Please complete all address fields",
+          "addressFields": {
+            "streetAddress": "Street address",
+            "city": "City",
+            "stateProvince": "Province",
+            "zipPostalCode": "Postal code",
+            "streetPlaceholder": "123 Main Street",
+            "provincePlaceholder": "Select province",
+            "country": "Country"
+          },
+          "validation": {
+            "firstNameRequired": "First name is required",
+            "lastNameRequired": "Last name is required",
+            "phoneRequired": "Phone number is required",
+            "streetRequired": "Street address is required",
+            "cityRequired": "City is required",
+            "provinceRequired": "Select a province",
+            "postalInvalid": "Enter a valid Canadian postal code"
+          }
+        }
       }
+    },
+    "bookingNew": {
+      "title": "New booking",
+      "scheduleWith": "Schedule a booking with {name}",
+      "profileLoadFailed": "We couldn't load this welper's profile. Try again, or pick another welper.",
+      "backToSearch": "Back to search",
+      "submitConfirming": "Confirming…",
+      "submitRequest": "Request booking",
+      "submitContinue": "Continue",
+      "summaryTitle": "Payment hold",
+      "summaryRate": "Rate",
+      "summaryHoldLabel": "Hold (1 hour)",
+      "summaryHoldAmount": "{amount} hold",
+      "summaryTaxNote": "This is a temporary authorization — you are not charged now. Tax is included when the hold is placed after the welper accepts.",
+      "summaryEstimatedJob": "Estimated job ({duration})",
+      "summaryEstimatedBeforeTax": "{amount} before tax",
+      "summaryFinalChargeNote": "Final charge is based on actual time after the service, up to your selected window.",
+      "summaryPickService": "Pick a service to see the hold amount.",
+      "beforeConfirmTitle": "Before you confirm",
+      "beforeConfirmPolicy": "Each booking is for at least one hour of service. When the welper accepts, we place a hold for one hour on your card — not a charge. You are only charged after the job is completed. Cancel more than 24 hours before the start time and the hold is released with no fee. Cancel within 24 hours of the start time and the one-hour hold may be charged as a cancellation fee.",
+      "detailsTitle": "Booking details",
+      "serviceLabel": "Service",
+      "selectService": "Select a service…",
+      "chooseServiceFirst": "Choose a service first. The questions for that service will appear here.",
+      "serviceTypeLabel": "Service type",
+      "selectServiceType": "Select a service type…",
+      "chooseServiceType": "Choose a service type to load the right questions.",
+      "serviceQuestionsTitle": "Service questions",
+      "questionsLoadFailed": "We couldn't load questions for this service. Check your connection and try again.",
+      "retry": "Retry",
+      "whenTitle": "When",
+      "dateLabel": "Date",
+      "startTimeLabel": "Start time",
+      "endTimeLabel": "End time",
+      "endAfterStart": "End time must be after start time.",
+      "minDuration": "Bookings must be at least 1 hour long. Lengthen the time window.",
+      "maxDuration": "Bookings can't be longer than 12 hours. Split into two bookings if you need more time.",
+      "notesLabel": "Notes",
+      "notesOptional": "(optional)",
+      "notesPlaceholder": "Any special instructions or requests…",
+      "profileGate": "Add your profile details and a saved payment method before you can confirm a booking.",
+      "paymentSettings": "Payment settings",
+      "paymentRequired": "Add a saved payment method in Settings before booking.",
+      "createFailed": "Failed to create booking. Please try again.",
+      "mobileHoldLabel": "Card hold (1 hr)"
     },
     "bookingsDetail": {
       "backToBookings": "Back to bookings",
@@ -1913,7 +2071,78 @@
         "other": "Something else"
       },
       "attachmentFallback": "Attachment",
-      "previewUnavailable": "Preview unavailable right now"
+      "previewUnavailable": "Preview unavailable right now",
+      "additionalDetail": "Additional detail",
+      "receiptDraftLoadFailed": "We couldn't load the receipt draft. Try again, or contact support if it keeps happening.",
+      "customer": {
+        "notFoundTitle": "Booking not found",
+        "actionsHint": "Message your welper, leave a review, or report a problem if something is wrong.",
+        "messageWelper": "Message welper",
+        "reviewWelper": "Leave a review",
+        "receiptWrongAmountCallout": "If this amount or the times look wrong, use Report a problem in Actions above.",
+        "locationSectionTitle": "Location & requests",
+        "serviceAddress": "Service address",
+        "serviceQuestions": "Service questions",
+        "cancellationReason": "Cancellation reason:",
+        "declineReason": "Decline reason:",
+        "payment": {
+          "sectionTitle": "Payment & authorization",
+          "cardOnFile": "Card on file",
+          "authorizeHint": "Complete payment authorization on your saved card (one-hour hold — not a charge until the service is completed). If you see this after the welper accepted, the automatic hold may have failed; try again or update your card in Settings.",
+          "authorizing": "Authorizing…",
+          "authorize": "Authorize payment",
+          "holdActive": "A one-hour hold is active on your card (placed when the welper accepted). You are not charged until the service is completed.",
+          "captureScheduled": " Capture is scheduled after {date} (pending service completion and dispute window).",
+          "captured": "Payment has been captured.",
+          "failed": "Payment could not be completed. Contact support if you need help.",
+          "balanceTitle": "Additional payment required",
+          "balanceHint": "The service total was higher than the original hold. Complete authentication on your saved card to pay the balance.",
+          "payBalance": "Pay balance",
+          "authorizeFailed": "Payment authorization failed",
+          "paymentFailed": "Payment failed",
+          "stripeNotConfigured": "Stripe is not configured.",
+          "paymentUiLoadFailed": "Payment UI could not load. Check Stripe configuration.",
+          "authenticationFailed": "Authentication failed"
+        },
+        "reviewDialog": {
+          "editTitle": "Edit your review",
+          "newTitle": "Review your Welper",
+          "editDescription": "Update your rating or comment if you need to fix a mistake.",
+          "newDescription": "Share your experience with this Welper.",
+          "newSubtext": "Your review helps other families find great welpers.",
+          "saveChanges": "Save changes",
+          "skip": "Skip for now"
+        },
+        "receiptAlreadyConfirmed": "This booking already has a confirmed receipt."
+      }
+    },
+    "search": {
+      "pageTitle": "Search Welpers",
+      "pageSubtitle": "Find the perfect Welper for your needs",
+      "heroTitle": "Find your Welper",
+      "locationPrompt": "Enter your postal code or use your location to find Welpers nearby.",
+      "geolocationUnsupported": "Geolocation is not supported by your browser.",
+      "geocodingUnavailable": "Location lookup isn't available right now. Please enter a postal code to search.",
+      "geocodingUnavailableRetry": "Location lookup isn't available right now. Please try again later.",
+      "postalNotFound": "We couldn't find that postal code. Try another or use your location.",
+      "locationDenied": "Location access was denied or unavailable.",
+      "addressLookupFailed": "Could not get address for your location.",
+      "toggleFiltersHide": "Hide filters",
+      "toggleFiltersShow": "Show filters",
+      "filtersActive": "Active",
+      "loadError": "We couldn't load Welpers right now.",
+      "genericError": "Something went wrong on our end.",
+      "contactSupport": "contact support",
+      "tryAgain": "Try again",
+      "resultsHeading": "Welpers",
+      "resultsError": "Something went wrong",
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "pageOf": "Page {page} of {total}",
+      "emptyTitle": "No Welpers found",
+      "emptyDescription": "Try adjusting your search or filters, or post a job and let welpers apply.",
+      "clearSearchFilters": "Clear search & filters",
+      "browseCategories": "Browse categories"
     },
     "disputes": {
       "backToBookings": "Back to bookings",

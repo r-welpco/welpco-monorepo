@@ -19,18 +19,19 @@ import { Search, UserPlus, Activity } from "lucide-react";
 import type { DashboardActivityItem } from "@/lib/dashboard/booking-dashboard";
 import styles from "./recent-activity.module.css";
 
-type WelperRecentActivityLabels = {
+type RecentActivityLabels = {
   title: string;
   emptyTitle: string;
   emptyDescription: string;
-  completeProfile: string;
+  /** CTA on empty state (welper: complete profile; customer: find a Welper). */
+  emptyCta: string;
 };
 
 interface RecentActivityProps {
   activities: DashboardActivityItem[];
   role: "customer" | "welper";
   loading?: boolean;
-  welperLabels?: WelperRecentActivityLabels;
+  welperLabels?: RecentActivityLabels;
 }
 
 function ActivityRow({
@@ -94,12 +95,13 @@ export const RecentActivity = memo(function RecentActivity({
   welperLabels,
 }: RecentActivityProps) {
   const dateFnsLocale = useDateFnsLocale();
-  const dateLocale = role === "welper" ? dateFnsLocale : undefined;
+  const dateLocale = dateFnsLocale;
+  const labels = welperLabels;
 
   return (
     <Box>
       <Heading as="h2" size="5" mb="3" trim="start">
-        {role === "welper" && welperLabels ? welperLabels.title : "Recent activity"}
+        {labels?.title ?? "Recent activity"}
       </Heading>
 
       {loading ? (
@@ -132,14 +134,13 @@ export const RecentActivity = memo(function RecentActivity({
             </Box>
             <Box>
               <Heading as="h3" size="3" align="center" trim="start">
-                {role === "welper" && welperLabels
-                  ? welperLabels.emptyTitle
-                  : "No activity yet"}
+                {labels?.emptyTitle ?? "No activity yet"}
               </Heading>
               <Text size="2" color="gray" highContrast align="center" as="p" mt="1">
-                {role === "customer"
-                  ? "Bookings and updates show up here."
-                  : (welperLabels?.emptyDescription ?? "Jobs and check-ins show up here.")}
+                {labels?.emptyDescription ??
+                  (role === "customer"
+                    ? "Bookings and updates show up here."
+                    : "Jobs and check-ins show up here.")}
               </Text>
             </Box>
             <Button size="2" color={SEMANTIC_COLOR.primary} variant="soft" asChild>
@@ -147,12 +148,12 @@ export const RecentActivity = memo(function RecentActivity({
                 {role === "customer" ? (
                   <>
                     <Search size={16} aria-hidden="true" />
-                    Find a Welper
+                    {labels?.emptyCta ?? "Find a Welper"}
                   </>
                 ) : (
                   <>
                     <UserPlus size={16} aria-hidden="true" />
-                    {welperLabels?.completeProfile ?? "Complete your profile"}
+                    {labels?.emptyCta ?? "Complete your profile"}
                   </>
                 )}
               </Link>

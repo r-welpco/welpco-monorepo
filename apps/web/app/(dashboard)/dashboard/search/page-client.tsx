@@ -35,7 +35,11 @@ import { ApiClientError } from "@/lib/api/client";
 import { transformCategoriesToOptions, validateCategoryId } from "@/lib/utils/category-utils";
 import type { SearchResultItem } from "@/types";
 import { maskCustomerWelperName, publicWelperDisplayName } from "@/lib/display-name";
-import { useMarketplaceLabels, useWelperAvailabilityDisplayLabels } from "@/lib/i18n/use-dashboard-labels";
+import {
+  useMarketplaceLabels,
+  useSearchLabels,
+  useWelperAvailabilityDisplayLabels,
+} from "@/lib/i18n/use-dashboard-labels";
 import { useLocale } from "next-intl";
 import { Button } from "@welpco/ui/button";
 import { IconButton } from "@welpco/ui/icon-button";
@@ -110,6 +114,7 @@ function mapToWelperProfileDialogProfile(
 export default function DashboardSearchPageClient() {
   const router = useRouter();
   const marketplaceLabels = useMarketplaceLabels();
+  const searchLabels = useSearchLabels();
   const availabilityLabels = useWelperAvailabilityDisplayLabels();
   const locale = useLocale();
   const searchParams = useSearchParams();
@@ -363,7 +368,7 @@ export default function DashboardSearchPageClient() {
 
   const handleUseMyLocation = useCallback(() => {
     if (!navigator?.geolocation) {
-      setLocationError("Geolocation is not supported by your browser.");
+      setLocationError(searchLabels.geolocationUnsupported);
       return;
     }
     setLocationError(null);
@@ -384,10 +389,10 @@ export default function DashboardSearchPageClient() {
         } catch (err) {
           if (err instanceof ApiClientError && err.code === "GEOCODING_API_DISABLED") {
             setLocationError(
-              "Location lookup isn't available right now. Please enter a postal code to search."
+              searchLabels.geocodingUnavailable
             );
           } else {
-            setLocationError("Could not get address for your location.");
+            setLocationError(searchLabels.addressLookupFailed);
           }
           updateParams({
             latitude: lat,
@@ -399,7 +404,7 @@ export default function DashboardSearchPageClient() {
         }
       },
       () => {
-        setLocationError("Location access was denied or unavailable.");
+        setLocationError(searchLabels.locationDenied);
         setLocationLoading(false);
       },
       { timeout: 15000, maximumAge: 300000, enableHighAccuracy: false }
@@ -524,10 +529,10 @@ export default function DashboardSearchPageClient() {
           />
           <Box>
             <Heading as="h1" size="7" mb="2">
-              Search Welpers
+              {searchLabels.pageTitle}
             </Heading>
             <Text as="p" size="2" color="gray" highContrast>
-              Find the perfect Welper for your needs
+              {searchLabels.pageSubtitle}
             </Text>
           </Box>
 
@@ -539,15 +544,15 @@ export default function DashboardSearchPageClient() {
               onChange={handlePostalChange}
               onSearch={handlePostalSubmit}
               onCategorySelect={(id) => handleCategoryChange(id)}
-              title="Find your Welper"
+              title={searchLabels.heroTitle}
               categories={heroCategories}
               loading={isLoading}
               onUseMyLocation={handleUseMyLocation}
               locationError={
                 postalError
                   ? isGeocodingUnavailable
-                    ? "Location lookup isn't available right now. Please try again later."
-                    : "We couldn't find that postal code. Try another or use your location."
+                    ? searchLabels.geocodingUnavailableRetry
+                    : searchLabels.postalNotFound
                   : locationError
               }
               locationLoading={locationLoading}
@@ -564,10 +569,14 @@ export default function DashboardSearchPageClient() {
               >
                 <Flex align="center" gap="2">
                   <SlidersHorizontal size={16} aria-hidden="true" />
-                  <span>{filtersOpen ? "Hide filters" : "Show filters"}</span>
+                  <span>
+                    {filtersOpen
+                      ? searchLabels.toggleFiltersHide
+                      : searchLabels.toggleFiltersShow}
+                  </span>
                   {hasActiveFilters && (
                     <Badge variant="soft" color={SEMANTIC_COLOR.primary} size="1">
-                      Active
+                      {searchLabels.filtersActive}
                     </Badge>
                   )}
                   {filtersOpen ? (
@@ -590,7 +599,7 @@ export default function DashboardSearchPageClient() {
             <Card size="4" variant="surface" style={{ width: "100%", maxWidth: "560px", minWidth: 0 }}>
               <Flex direction="column" gap="3" align="center">
                 <Text as="p" size="2" color="gray" highContrast align="center">
-                  Enter your postal code or use your location to find Welpers nearby.
+                  {searchLabels.locationPrompt}
                 </Text>
               </Flex>
             </Card>
@@ -599,16 +608,16 @@ export default function DashboardSearchPageClient() {
           {isError && !postalError && !showResults && (
             <Callout.Root color={SEMANTIC_COLOR.danger} role="alert">
               <Callout.Text>
-                We couldn&apos;t load Welpers right now.{" "}
+                {searchLabels.loadError}{" "}
                 {error instanceof Error && error.message
                   ? error.message
-                  : "Something went wrong on our end."}{" "}
-                Try again, or{" "}
-                <UiLink href="mailto:support@welpco.com">contact support</UiLink>.
+                  : searchLabels.genericError}{" "}
+                {searchLabels.tryAgain},{" "}
+                <UiLink href="mailto:support@welpco.com">{searchLabels.contactSupport}</UiLink>.
               </Callout.Text>
               <Box mt="3">
                 <Button onClick={() => refetch()} color={SEMANTIC_COLOR.primary} size="2">
-                  Try again
+                  {searchLabels.tryAgain}
                 </Button>
               </Box>
             </Callout.Root>
@@ -640,11 +649,11 @@ export default function DashboardSearchPageClient() {
                       isError
                         ? error != null && typeof error === "object" && "message" in error
                           ? String((error as Error).message)
-                          : "Something went wrong"
+                          : searchLabels.resultsError
                         : undefined
                     }
                     onRetry={() => refetch()}
-                    resultsHeading="Welpers"
+                    resultsHeading={searchLabels.resultsHeading}
                     emptyMessage=""
                   />
                 ) : (
@@ -682,12 +691,12 @@ export default function DashboardSearchPageClient() {
                       size="2"
                       disabled={!hasPrev}
                       onClick={() => updateParams({ page: page - 1 })}
-                      aria-label="Previous page"
+                      aria-label={searchLabels.prevPage}
                     >
                       <ChevronLeft size={18} aria-hidden="true" />
                     </IconButton>
                     <Text size="2" color="gray" highContrast>
-                      Page {page} of {totalPages}
+                      {searchLabels.pageOf(page, totalPages)}
                     </Text>
                     <IconButton
                       variant="soft"
@@ -695,7 +704,7 @@ export default function DashboardSearchPageClient() {
                       size="2"
                       disabled={!hasNext}
                       onClick={() => updateParams({ page: page + 1 })}
-                      aria-label="Next page"
+                      aria-label={searchLabels.nextPage}
                     >
                       <ChevronRight size={18} aria-hidden="true" />
                     </IconButton>
@@ -706,8 +715,8 @@ export default function DashboardSearchPageClient() {
 
             {showEmpty && (
               <SearchEmptyState
-                title="No Welpers found"
-                description="Try adjusting your search or filters, or post a job and let welpers apply."
+                title={searchLabels.emptyTitle}
+                description={searchLabels.emptyDescription}
                 primaryAction={{
                   label: marketplaceLabels.searchEmpty.postJob,
                   onClick: () => router.push("/dashboard/marketplace/new"),
@@ -721,11 +730,11 @@ export default function DashboardSearchPageClient() {
                   searchMinRating !== undefined ||
                   postalCode?.trim()
                     ? {
-                        label: "Clear search & filters",
+                        label: searchLabels.clearSearchFilters,
                         onClick: handleClearSearchAndFilters,
                       }
                     : {
-                        label: "Browse categories",
+                        label: searchLabels.browseCategories,
                         onClick: handleClearSearchAndFilters,
                       }
                 }

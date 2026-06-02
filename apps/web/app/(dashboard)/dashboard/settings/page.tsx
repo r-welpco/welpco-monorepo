@@ -284,6 +284,7 @@ function SettingsPageContent() {
                   labels={{
                     title: settingsLabels.paymentTitle,
                     description: settingsLabels.paymentDescription,
+                    ...settingsLabels.paymentMethods,
                   }}
                 />
               </Box>
@@ -309,9 +310,10 @@ function SettingsPageContent() {
 }
 
 function SettingsPageFallback() {
+  const { loadingAria } = useDashboardSettingsLabels();
   return (
     <Container size="3" px={{ initial: "4", sm: "6" }}>
-      <Flex direction="column" gap="6" aria-busy="true" aria-label="Loading settings">
+      <Flex direction="column" gap="6" aria-busy="true" aria-label={loadingAria}>
         <Box>
           <Skeleton height="32px" width="160px" mb="2" />
           <Skeleton height="16px" width="280px" />
