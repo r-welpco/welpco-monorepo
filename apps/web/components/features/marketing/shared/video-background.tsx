@@ -97,8 +97,10 @@ export function VideoBackground({
     if (!node || reducedMotion) return;
 
     function onVisible() {
-      if (lazyLoad) ensureVideoSrc(node, videoUrl);
-      tryPlay(node);
+      const current = videoRef.current;
+      if (!current) return;
+      if (lazyLoad) ensureVideoSrc(current, videoUrl);
+      tryPlay(current);
     }
 
     if (isRoughlyOnScreen(node)) onVisible();
