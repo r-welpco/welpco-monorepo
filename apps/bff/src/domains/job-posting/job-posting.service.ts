@@ -797,6 +797,7 @@ export class JobPostingService {
       item.canApply = blockReason === null;
       item.applyBlockReason = blockReason;
       item.myApplicationId = existing?.id ?? null;
+      item.customerId = job.customerId;
       if (customerDisplay) {
         item.customerDisplayName = customerDisplay.displayName;
         item.customerPhotoUrl = customerDisplay.photoUrl;

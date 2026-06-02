@@ -967,7 +967,7 @@
             "cityRequired": "La ville est requise.",
             "provinceRequired": "La province ou l'État est requis.",
             "postalRequired": "Le code postal est requis pour vous placer sur la carte.",
-            "radiusRange": "Choisissez un rayon entre 1 et 100 km."
+            "radiusRange": "Choisissez un rayon entre 1 et 10 000 km."
           },
           "selector": {
             "centerAddress": "Adresse centrale",
@@ -994,7 +994,7 @@
           "subcategory": "Sous-catégorie",
           "serviceTitle": "Titre du service",
           "hourlyRate": "Votre taux horaire ($)",
-          "customerChargeHint": "Les clients paieront {charge}/h pour ce service.",
+          "customerChargeHint": "Les clients paieront {charge}/h pour ce service. Cela inclut des frais de service de plateforme de {feePercent} % payés par le client.",
           "descriptionLabel": "Description",
           "addToList": "Ajouter à la liste",
           "loadingCategories": "Chargement des catégories…",
@@ -1420,6 +1420,19 @@
         "cancelReasonPlaceholder": "p. ex. Plans changés, autre Welper trouvé"
       }
     },
+    "customerPreview": {
+      "unknownName": "Membre",
+      "statsHeading": "Sur WELPCO",
+      "loadFailed": "Impossible de charger les détails du client. Réessayez plus tard.",
+      "noReviews": "Aucun avis de Welpers pour l'instant",
+      "ratingLine": "{rating} · {count, plural, one {# avis} other {# avis}}",
+      "completedBookings": "Réservations terminées",
+      "jobPosts": "Offres publiées sur la plateforme",
+      "memberSince": "Membre depuis",
+      "profileComplete": "Profil complet",
+      "profileIncomplete": "Profil incomplet",
+      "viewCustomerAria": "Voir le profil du client"
+    },
     "marketplace": {
       "list": {
         "titleCustomer": "Mes offres d'emploi",
@@ -1738,7 +1751,7 @@
           "subcategoriesOptional": "Sous-catégories (facultatif)",
           "subcategoriesHint": "Choisissez une ou plusieurs sous-catégories qui s'appliquent à cette offre.",
           "hourlyRate": "Votre taux horaire ($)",
-          "customerChargeHint": "Les clients paieront {charge}/h pour ce service.",
+          "customerChargeHint": "Les clients paieront {charge}/h pour ce service. Cela inclut des frais de service de plateforme de {feePercent} % payés par le client.",
           "experienceYears": "Expérience (années)",
           "description": "Description",
           "descriptionPlaceholder": "Expliquez ce que les clients peuvent attendre, ce qui est inclus et toute préparation nécessaire.",
@@ -1763,7 +1776,7 @@
             "stateRequired": "La province ou l'état est obligatoire",
             "postalRequired": "Le code postal est obligatoire",
             "radiusMin": "Le rayon doit être d'au moins 1 km",
-            "radiusMax": "Le rayon doit être d'au plus 100 km"
+            "radiusMax": "Le rayon doit être d'au plus 10 000 km"
           },
           "serviceAreaSelector": {
             "overrideDescription": "Utilisez la zone par défaut ou définissez une zone personnalisée pour cette offre.",

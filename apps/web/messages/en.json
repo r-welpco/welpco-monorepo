@@ -968,7 +968,7 @@
             "cityRequired": "City is required.",
             "provinceRequired": "Province / state is required.",
             "postalRequired": "Postal code is required so we can place you on the map.",
-            "radiusRange": "Choose a radius between 1 and 100 km."
+            "radiusRange": "Choose a radius between 1 and 10,000 km."
           },
           "selector": {
             "centerAddress": "Center address",
@@ -995,7 +995,7 @@
           "subcategory": "Subcategory",
           "serviceTitle": "Service title",
           "hourlyRate": "Your hourly rate ($)",
-          "customerChargeHint": "Customers will be charged {charge}/hr for this service.",
+          "customerChargeHint": "Customers will be charged {charge}/hr for this service. This includes a {feePercent}% platform service fee paid by the customer.",
           "descriptionLabel": "Description",
           "addToList": "Add to list",
           "loadingCategories": "Loading categories...",
@@ -1421,6 +1421,19 @@
         "cancelReasonPlaceholder": "e.g. Plans changed, found another welper"
       }
     },
+    "customerPreview": {
+      "unknownName": "Member",
+      "statsHeading": "On WELPCO",
+      "loadFailed": "Could not load customer details. Try again later.",
+      "noReviews": "No reviews from welpers yet",
+      "ratingLine": "{rating} · {count, plural, one {# review} other {# reviews}}",
+      "completedBookings": "Completed bookings",
+      "jobPosts": "Job posts on platform",
+      "memberSince": "Member since",
+      "profileComplete": "Profile complete",
+      "profileIncomplete": "Profile incomplete",
+      "viewCustomerAria": "View customer profile"
+    },
     "marketplace": {
       "list": {
         "titleCustomer": "My job posts",
@@ -1739,7 +1752,7 @@
           "subcategoriesOptional": "Subcategories (optional)",
           "subcategoriesHint": "Select one or more subcategories that apply to this offering.",
           "hourlyRate": "Your hourly rate ($)",
-          "customerChargeHint": "Customers will be charged {charge}/hr for this service.",
+          "customerChargeHint": "Customers will be charged {charge}/hr for this service. This includes a {feePercent}% platform service fee paid by the customer.",
           "experienceYears": "Experience (years)",
           "description": "Description",
           "descriptionPlaceholder": "Explain what clients can expect, what's included, and any preparation needed.",
@@ -1764,7 +1777,7 @@
             "stateRequired": "Province or state is required",
             "postalRequired": "Postal code is required",
             "radiusMin": "Radius must be at least 1 km",
-            "radiusMax": "Radius must be at most 100 km"
+            "radiusMax": "Radius must be at most 10,000 km"
           },
           "serviceAreaSelector": {
             "overrideDescription": "Use default service area or define a custom area for this service.",

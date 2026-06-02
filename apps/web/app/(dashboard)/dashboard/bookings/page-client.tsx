@@ -35,8 +35,10 @@ import { useTranslations } from "next-intl";
 import { getStatusColor } from "@/lib/constants/booking";
 import {
   useWelperBookingsLabels,
+  useCustomerPreviewLabels,
   welperBookingTabLabel,
 } from "@/lib/i18n/use-dashboard-labels";
+import { CustomerPreviewDialog } from "@/components/features/dashboard/customer-preview-dialog";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 
 // ─── Constants ────────────────────────────────────────────────────────────
@@ -111,6 +113,7 @@ export default function BookingsPageClient() {
   const router = useRouter();
   const { user } = useAuthStore();
   const welperLabels = useWelperBookingsLabels();
+  const customerPreviewLabels = useCustomerPreviewLabels();
   const tBookings = useTranslations("dashboard.bookings");
   const dateLocale = useDateFnsLocale();
   const [activeTab, setActiveTab] = useState<BookingStatus | undefined>(
@@ -134,6 +137,11 @@ export default function BookingsPageClient() {
 
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
+  const [previewCustomerId, setPreviewCustomerId] = useState<string | null>(null);
+  const [previewCustomerFallback, setPreviewCustomerFallback] = useState<{
+    name: string;
+    photoUrl: string | null;
+  } | null>(null);
 
   const bookings = data?.data ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -427,20 +435,43 @@ export default function BookingsPageClient() {
                 >
                   <Flex align="start" gap="3" style={{ minWidth: 0, flex: 1 }}>
                     {isWelper && (
-                      <Avatar
-                        size="3"
-                        src={booking.customerPhotoUrl ?? undefined}
-                        fallback={customerDisplayInitials(customerName)}
-                        radius="full"
-                        style={{ flexShrink: 0 }}
-                      />
-                    )}
-                    <Flex direction="column" gap="2" style={{ minWidth: 0, flex: 1 }}>
-                      {isWelper && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewCustomerFallback({
+                            name: customerName,
+                            photoUrl: booking.customerPhotoUrl ?? null,
+                          });
+                          setPreviewCustomerId(booking.customerId);
+                        }}
+                        aria-label={customerPreviewLabels.viewCustomerAria}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "var(--space-3)",
+                          padding: 0,
+                          margin: 0,
+                          border: "none",
+                          background: "transparent",
+                          cursor: "pointer",
+                          borderRadius: "var(--radius-2)",
+                          minWidth: 0,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Avatar
+                          size="3"
+                          src={booking.customerPhotoUrl ?? undefined}
+                          fallback={customerDisplayInitials(customerName)}
+                          radius="full"
+                          style={{ flexShrink: 0 }}
+                        />
                         <Text size="3" weight="medium" highContrast>
                           {customerName}
                         </Text>
-                      )}
+                      </button>
+                    )}
+                    <Flex direction="column" gap="2" style={{ minWidth: 0, flex: 1 }}>
                       <Flex align="center" gap="3" wrap="wrap">
                         <Badge
                           color={getStatusColor(booking.status)}
@@ -649,6 +680,21 @@ export default function BookingsPageClient() {
             required: true,
           }}
           onConfirm={(reason) => runCancel(pendingConfirm.bookingId, reason)}
+        />
+      )}
+
+      {isWelper && (
+        <CustomerPreviewDialog
+          customerId={previewCustomerId}
+          open={previewCustomerId !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setPreviewCustomerId(null);
+              setPreviewCustomerFallback(null);
+            }
+          }}
+          fallbackName={previewCustomerFallback?.name}
+          fallbackPhotoUrl={previewCustomerFallback?.photoUrl}
         />
       )}
 

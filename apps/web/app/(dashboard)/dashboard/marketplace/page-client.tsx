@@ -20,7 +20,8 @@ import { useBrowseJobPostings, useMyJobPostings } from "@/lib/hooks/use-job-post
 import { useState } from "react";
 import type { JobApplyBlockReason, JobPostingListItem } from "@/lib/services/job-posting.service";
 import { isJobOpenForWelperApplications } from "@/lib/marketplace/apply-block-messages";
-import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
+import { useMarketplaceLabels, useCustomerPreviewLabels } from "@/lib/i18n/use-dashboard-labels";
+import { CustomerPreviewDialog } from "@/components/features/dashboard/customer-preview-dialog";
 import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import { PlusIcon, SearchIcon, FileTextIcon } from "lucide-react";
 
@@ -49,6 +50,7 @@ export default function MarketplacePageClient() {
   const router = useRouter();
   const locale = useLocale();
   const labels = useMarketplaceLabels();
+  const customerPreviewLabels = useCustomerPreviewLabels();
   const categoryDisplayName = useCategoryDisplayName();
   const { user } = useAuthStore();
   const isCustomer = user?.role === "customer";
@@ -59,6 +61,11 @@ export default function MarketplacePageClient() {
   const [eligibleOnly, setEligibleOnly] = useState(false);
   const [viewMode, setViewMode] = useState<JobCardLayout>("grid");
   const [applyBlockedReason, setApplyBlockedReason] = useState<JobApplyBlockReason | null>(null);
+  const [previewCustomerId, setPreviewCustomerId] = useState<string | null>(null);
+  const [previewCustomerFallback, setPreviewCustomerFallback] = useState<{
+    name: string;
+    photoUrl: string | null;
+  } | null>(null);
 
   const handleCategoryChange = (id: string) => {
     setCategoryId(id);
@@ -135,6 +142,18 @@ export default function MarketplacePageClient() {
       }}
       customerName={isWelper ? job.customerDisplayName : undefined}
       customerPhotoUrl={isWelper ? job.customerPhotoUrl : undefined}
+      customerId={isWelper ? job.customerId : undefined}
+      onCustomerClick={
+        isWelper && job.customerId
+          ? (customerId: string) => {
+              setPreviewCustomerFallback({
+                name: job.customerDisplayName ?? customerPreviewLabels.unknownName,
+                photoUrl: job.customerPhotoUrl ?? null,
+              });
+              setPreviewCustomerId(customerId);
+            }
+          : undefined
+      }
       applicationCount={isCustomer ? job.applicationCount : undefined}
       applied={isWelper ? Boolean(job.myApplicationId) : undefined}
       onView={() => router.push(`/dashboard/marketplace/${job.id}`)}
@@ -217,7 +236,7 @@ export default function MarketplacePageClient() {
         )}
 
         {isLoading && (
-          <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4">
+          <Grid columns={{ initial: "1", sm: "2" }} gap="4">
             {Array.from({ length: 6 }).map((_, i) => (
               <JobCardSkeleton key={i} layout={viewMode} />
             ))}
@@ -236,7 +255,7 @@ export default function MarketplacePageClient() {
 
         {!isLoading && !isError && jobs.length > 0 && (
           viewMode === "grid" ? (
-            <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4">
+            <Grid columns={{ initial: "1", sm: "2" }} gap="4">
               {jobs.map(renderJobCard)}
             </Grid>
           ) : (
@@ -246,6 +265,21 @@ export default function MarketplacePageClient() {
           )
         )}
       </Flex>
+
+      {isWelper && (
+        <CustomerPreviewDialog
+          customerId={previewCustomerId}
+          open={previewCustomerId !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setPreviewCustomerId(null);
+              setPreviewCustomerFallback(null);
+            }
+          }}
+          fallbackName={previewCustomerFallback?.name}
+          fallbackPhotoUrl={previewCustomerFallback?.photoUrl}
+        />
+      )}
 
       <ApplyBlockedDialog
         open={applyBlockedReason != null}

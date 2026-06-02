@@ -299,7 +299,7 @@ export const DEFAULT_WELPER_SERVICE_AREA_LABELS: WelperServiceAreaStepLabels = {
     cityRequired: "City is required.",
     provinceRequired: "Province / state is required.",
     postalRequired: "Postal code is required so we can place you on the map.",
-    radiusRange: "Choose a radius between 1 and 100 km.",
+    radiusRange: "Choose a radius between 1 and 10,000 km.",
   },
   selector: DEFAULT_WELPER_SERVICE_AREA_SELECTOR,
   address: DEFAULT_WELPER_SERVICE_AREA_ADDRESS,
@@ -350,7 +350,7 @@ export const DEFAULT_WELPER_OFFERING_LABELS: WelperOfferingStepLabels = {
   serviceTitle: "Service title",
   hourlyRate: "Your hourly rate ($)",
   customerChargeHint: (charge) =>
-    `Customers will be charged ${charge}/hr for this service.`,
+    `Customers will be charged ${charge}/hr for this service. This includes a 25% platform service fee paid by the customer.`,
   descriptionLabel: "Description",
   addToList: "Add to list",
   loadingCategories: "Loading categories...",

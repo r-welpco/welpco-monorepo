@@ -18,7 +18,9 @@ import {
 import { CustomerProfileService } from './customer-profile.service';
 import { UpdateCustomerProfileDto } from './dto/update-customer-profile.dto';
 import { CustomerProfileResponseDto } from './dto/customer-profile-response.dto';
-import { CurrentUser, JwtAuthGuard } from '../../../common/auth';
+import { CustomerPublicSummaryDto } from './dto/customer-public-summary.dto';
+import { CurrentUser, JwtAuthGuard, Roles, RolesGuard } from '../../../common/auth';
+import { AccountType } from '../../user-management/entities/user-account.entity';
 
 @ApiTags('Customer Profile')
 @Controller('profiles/customer')
@@ -28,6 +30,28 @@ export class CustomerProfileController {
   constructor(
     private readonly customerProfileService: CustomerProfileService,
   ) {}
+
+  @Get(':customerId/summary')
+  @UseGuards(RolesGuard)
+  @Roles(AccountType.WELPER)
+  @ApiOperation({
+    summary: 'Get public customer summary (welpers only)',
+    description:
+      'Privacy-safe snapshot: display name, photo, welper-review rating, booking/job counts, member since.',
+  })
+  @ApiParam({ name: 'customerId', description: 'Customer user ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Customer summary retrieved',
+    type: CustomerPublicSummaryDto,
+  })
+  @ApiResponse({ status: 404, description: 'Customer not found' })
+  @ApiResponse({ status: 403, description: 'Welper role required' })
+  async getCustomerPublicSummary(
+    @Param('customerId') customerId: string,
+  ): Promise<CustomerPublicSummaryDto> {
+    return this.customerProfileService.getPublicSummary(customerId);
+  }
 
   @Get(':customerId')
   @ApiOperation({ summary: 'Get customer profile' })

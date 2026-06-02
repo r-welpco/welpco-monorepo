@@ -1,5 +1,6 @@
 "use client";
 
+import { PLATFORM_SERVICE_FEE_PERCENT } from "@welpco/ui/platform/profile-management";
 import { useTranslations } from "next-intl";
 import { useAuthMessages, useAuthRegisterStep } from "@/lib/i18n/auth-message-templates";
 import type {
@@ -226,7 +227,8 @@ export function useWelperOfferingStepLabels(maxServices: number): WelperOffering
     subcategory: t("subcategory"),
     serviceTitle: t("serviceTitle"),
     hourlyRate: t("hourlyRate"),
-    customerChargeHint: (charge) => t("customerChargeHint", { charge }),
+    customerChargeHint: (charge) =>
+      t("customerChargeHint", { charge, feePercent: PLATFORM_SERVICE_FEE_PERCENT }),
     descriptionLabel: t("descriptionLabel"),
     addToList: t("addToList"),
     loadingCategories: t("loadingCategories"),

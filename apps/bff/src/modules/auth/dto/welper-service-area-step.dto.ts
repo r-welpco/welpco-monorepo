@@ -55,10 +55,10 @@ export class SignupRadiusServiceAreaDto {
   @Type(() => ServiceAreaCenterAddressDto)
   centerAddress!: ServiceAreaCenterAddressDto;
 
-  @ApiProperty({ example: 25, description: 'Service radius in kilometres (1–100)' })
+  @ApiProperty({ example: 25, description: 'Service radius in kilometres (1–10000)' })
   @IsNumber()
   @Min(1)
-  @Max(100)
+  @Max(10000)
   radiusKm!: number;
 }
 

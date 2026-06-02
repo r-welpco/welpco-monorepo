@@ -63,6 +63,7 @@ import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import { publicWelperDisplayName } from "@/lib/display-name";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
+import { CustomerPreviewDialog } from "@/components/features/dashboard/customer-preview-dialog";
 import { EmailVerificationRequiredError } from "@/lib/api/client";
 import {
   ArrowLeft,
@@ -85,6 +86,7 @@ import {
   useBookingStatusLabel,
   useWelperBookingDetailLabels,
   useWelperBookingsLabels,
+  useCustomerPreviewLabels,
 } from "@/lib/i18n/use-dashboard-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import styles from "./booking-detail.module.css";
@@ -350,6 +352,11 @@ export default function BookingDetailClient({
   const [billingOutLocal, setBillingOutLocal] = useState("");
   const [receiptNotes, setReceiptNotes] = useState("");
   const [confirmKind, setConfirmKind] = useState<ConfirmKind | null>(null);
+  const [previewCustomerId, setPreviewCustomerId] = useState<string | null>(null);
+  const [previewCustomerFallback, setPreviewCustomerFallback] = useState<{
+    name: string;
+    photoUrl: string | null;
+  } | null>(null);
 
   const acceptMutation = useAcceptBooking();
   const declineMutation = useDeclineBooking();
@@ -404,6 +411,7 @@ export default function BookingDetailClient({
   const isCustomer = user?.role === "customer";
   const welperBookings = useWelperBookingsLabels();
   const welperDetail = useWelperBookingDetailLabels();
+  const customerPreviewLabels = useCustomerPreviewLabels();
   const bookingStatusLabel = useBookingStatusLabel();
   const dateFnsLocale = useDateFnsLocale();
   const dateLocale = isWelper ? dateFnsLocale : undefined;
@@ -1168,29 +1176,71 @@ export default function BookingDetailClient({
                   <Text size="1" color="gray" weight="medium">
                     {isWelper ? welperDetail.customer : "Customer"}
                   </Text>
-                  <Flex align="center" gap="2">
-                    <Avatar
-                      size="2"
-                      src={customerDisplayPhotoUrl ?? undefined}
-                      fallback={
-                        customerDisplayFirstName
-                          ? customerDisplayFirstName.slice(0, 2).toUpperCase()
-                          : isCustomer && user?.id === booking.customerId
-                            ? (user?.name?.trim().slice(0, 2) ||
-                                user?.email?.slice(0, 2) ||
-                                "ME").toUpperCase()
+                  {isWelper ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const name =
+                          customerDisplayFirstName?.trim() ||
+                          `#${booking.customerId.slice(-8).toUpperCase()}`;
+                        setPreviewCustomerFallback({
+                          name,
+                          photoUrl: customerDisplayPhotoUrl ?? null,
+                        });
+                        setPreviewCustomerId(booking.customerId);
+                      }}
+                      aria-label={customerPreviewLabels.viewCustomerAria}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "var(--space-2)",
+                        padding: "var(--space-1) var(--space-2)",
+                        margin: "calc(-1 * var(--space-1)) calc(-1 * var(--space-2))",
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
+                        borderRadius: "var(--radius-2)",
+                        minWidth: 0,
+                        textAlign: "left",
+                      }}
+                    >
+                      <Avatar
+                        size="2"
+                        src={customerDisplayPhotoUrl ?? undefined}
+                        fallback={
+                          customerDisplayFirstName
+                            ? customerDisplayFirstName.slice(0, 2).toUpperCase()
                             : "CU"
-                      }
-                    />
-                    <Text size="2">
-                      {isCustomer && user?.id === booking.customerId
-                        ? isWelper
-                          ? welperDetail.you
-                          : "You"
-                        : customerDisplayFirstName ??
+                        }
+                      />
+                      <Text size="2" weight="medium" highContrast>
+                        {customerDisplayFirstName ??
                           `#${booking.customerId.slice(-8).toUpperCase()}`}
-                    </Text>
-                  </Flex>
+                      </Text>
+                    </button>
+                  ) : (
+                    <Flex align="center" gap="2">
+                      <Avatar
+                        size="2"
+                        src={customerDisplayPhotoUrl ?? undefined}
+                        fallback={
+                          customerDisplayFirstName
+                            ? customerDisplayFirstName.slice(0, 2).toUpperCase()
+                            : user?.id === booking.customerId
+                              ? (user?.name?.trim().slice(0, 2) ||
+                                  user?.email?.slice(0, 2) ||
+                                  "ME").toUpperCase()
+                              : "CU"
+                        }
+                      />
+                      <Text size="2">
+                        {user?.id === booking.customerId
+                          ? "You"
+                          : customerDisplayFirstName ??
+                            `#${booking.customerId.slice(-8).toUpperCase()}`}
+                      </Text>
+                    </Flex>
+                  )}
                 </Flex>
                 <Flex direction="column" gap="1" minWidth="160px" flexBasis="200px" flexGrow="1">
                   <Text size="1" color="gray" weight="medium">
@@ -2067,6 +2117,21 @@ export default function BookingDetailClient({
             onConfirm={activeConfirm.onConfirm}
           />
         ) : null}
+
+        {isWelper && (
+          <CustomerPreviewDialog
+            customerId={previewCustomerId}
+            open={previewCustomerId !== null}
+            onOpenChange={(open) => {
+              if (!open) {
+                setPreviewCustomerId(null);
+                setPreviewCustomerFallback(null);
+              }
+            }}
+            fallbackName={previewCustomerFallback?.name}
+            fallbackPhotoUrl={previewCustomerFallback?.photoUrl}
+          />
+        )}
       </Flex>
     </Container>
   );

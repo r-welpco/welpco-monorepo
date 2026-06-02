@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { CANADIAN_PROVINCE_CODES } from "./canadian-provinces";
+import {
+  SERVICE_AREA_RADIUS_KM_MAX,
+  SERVICE_AREA_RADIUS_KM_MIN,
+} from "./service-area-utils";
 
 export type ServiceOfferingValidationLabels = {
   titleRequired: string;
@@ -32,7 +36,7 @@ const DEFAULT_VALIDATION_LABELS: ServiceOfferingValidationLabels = {
   stateRequired: "Province or state is required",
   postalRequired: "Postal code is required",
   radiusMin: "Radius must be at least 1 km",
-  radiusMax: "Radius must be at most 100 km",
+  radiusMax: "Radius must be at most 10,000 km",
 };
 
 export function createServiceAreaSchema(v: ServiceOfferingValidationLabels) {
@@ -51,7 +55,11 @@ export function createServiceAreaSchema(v: ServiceOfferingValidationLabels) {
         country: z.string().optional(),
       })
       .optional(),
-    radiusKm: z.number().min(1, v.radiusMin).max(100, v.radiusMax).optional(),
+    radiusKm: z
+      .number()
+      .min(SERVICE_AREA_RADIUS_KM_MIN, v.radiusMin)
+      .max(SERVICE_AREA_RADIUS_KM_MAX, v.radiusMax)
+      .optional(),
   });
 }
 

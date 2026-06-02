@@ -12,6 +12,8 @@ import { CreateCustomerProfileDto } from './dto/create-customer-profile.dto';
 import { UpdateCustomerProfileDto } from './dto/update-customer-profile.dto';
 import { EventPublisherService } from '../events/event-publisher.service';
 import { formatCustomerDisplayNameForWelper } from '../../../common/display-name.util';
+import { CustomerProfileAggregatesService } from './customer-profile-aggregates.service';
+import { CustomerPublicSummaryDto } from './dto/customer-public-summary.dto';
 
 export interface CustomerDisplayInfo {
   displayName: string;
@@ -26,6 +28,7 @@ export class CustomerProfileService {
     @InjectRepository(UserAccount)
     private userAccountRepository: Repository<UserAccount>,
     private eventPublisher: EventPublisherService,
+    private readonly customerAggregates: CustomerProfileAggregatesService,
   ) {}
 
   async findByCustomerId(customerId: string): Promise<CustomerProfile> {
@@ -64,6 +67,29 @@ export class CustomerProfileService {
   async findDisplayInfoByCustomerId(customerId: string): Promise<CustomerDisplayInfo | null> {
     const map = await this.findDisplayInfoByCustomerIds([customerId]);
     return map.get(customerId) ?? null;
+  }
+
+  /** Privacy-safe trust snapshot for welpers viewing a customer on lists. */
+  async getPublicSummary(customerId: string): Promise<CustomerPublicSummaryDto> {
+    const profile = await this.findByCustomerId(customerId);
+    const user = await this.userAccountRepository.findOne({ where: { id: customerId } });
+    if (!user) {
+      throw new NotFoundException('Customer not found');
+    }
+
+    const aggregates = await this.customerAggregates.getAggregates(customerId);
+
+    return {
+      customerId,
+      displayName: formatCustomerDisplayNameForWelper(profile.firstName, profile.lastName),
+      photoUrl: profile.profilePhotoUrl ?? null,
+      averageRating: aggregates.averageRating,
+      reviewCount: aggregates.reviewCount,
+      completedBookingsCount: aggregates.completedBookingsCount,
+      jobPostingsCount: aggregates.jobPostingsCount,
+      memberSince: user.createdAt.toISOString(),
+      profileComplete: profile.profileCompletionStatus === ProfileCompletionStatus.COMPLETE,
+    };
   }
 
   async create(

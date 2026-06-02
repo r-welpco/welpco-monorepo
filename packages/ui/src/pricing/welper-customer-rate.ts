@@ -1,6 +1,11 @@
 /** Welper hourly payout share: y = WELPER_HOURLY_RATE_SHARE × x (customer charge). */
 export const WELPER_HOURLY_RATE_SHARE = 0.75;
 
+/** Platform service fee included in the customer hourly charge (1 − welper share). */
+export const PLATFORM_SERVICE_FEE_PERCENT = Math.round(
+  (1 - WELPER_HOURLY_RATE_SHARE) * 100,
+);
+
 export function roundMoney(amount: number): number {
   return Math.round(amount * 100) / 100;
 }

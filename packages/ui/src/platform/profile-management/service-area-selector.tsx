@@ -19,6 +19,8 @@ import {
   radiusInputFromServiceArea,
   resolveServiceAreaRadiusKm,
   SERVICE_AREA_RADIUS_KM_DEFAULT,
+  SERVICE_AREA_RADIUS_KM_MAX,
+  SERVICE_AREA_RADIUS_KM_MIN,
 } from "./service-area-utils";
 import { useState, useEffect } from "react";
 
@@ -141,7 +143,11 @@ export function ServiceAreaSelector({
     const digits = value.replace(/\D/g, "");
     if (!digits) return undefined;
     const n = parseInt(digits, 10);
-    return Number.isNaN(n) ? undefined : n;
+    if (Number.isNaN(n)) return undefined;
+    return Math.min(
+      SERVICE_AREA_RADIUS_KM_MAX,
+      Math.max(SERVICE_AREA_RADIUS_KM_MIN, n),
+    );
   };
 
   const withDefaultCountry = (address: AddressValues): AddressValues => ({

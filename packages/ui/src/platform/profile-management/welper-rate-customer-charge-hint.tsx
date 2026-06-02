@@ -3,6 +3,7 @@
 import { Text } from "@welpco/ui/text";
 import { FORM_SPACING } from "@welpco/ui/tokens";
 import {
+  PLATFORM_SERVICE_FEE_PERCENT,
   customerHourlyChargeFromWelperRate,
   formatHourlyRateCurrency,
 } from "../../pricing/welper-customer-rate";
@@ -14,7 +15,7 @@ export interface WelperRateCustomerChargeHintProps {
 }
 
 const defaultFormatMessage = (formattedCustomerCharge: string) =>
-  `Customers will be charged ${formattedCustomerCharge}/hr for this service.`;
+  `Customers will be charged ${formattedCustomerCharge}/hr for this service. This includes a ${PLATFORM_SERVICE_FEE_PERCENT}% platform service fee paid by the customer.`;
 
 export function WelperRateCustomerChargeHint({
   welperRate,

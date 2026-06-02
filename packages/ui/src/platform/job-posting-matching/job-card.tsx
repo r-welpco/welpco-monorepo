@@ -62,10 +62,13 @@ export interface JobCardProps {
   applied?: boolean;
   customerName?: string | null;
   customerPhotoUrl?: string | null;
+  /** When set with `onCustomerClick`, the customer row is interactive. */
+  customerId?: string | null;
   layout?: JobCardLayout;
   labels?: JobCardLabels;
   onView?: () => void;
   onApply?: () => void;
+  onCustomerClick?: (customerId: string) => void;
 }
 
 function customerInitials(name?: string | null): string {
@@ -176,14 +179,18 @@ function CustomerIdentity({
   customerName,
   customerPhotoUrl,
   compact = false,
+  onClick,
+  clickAriaLabel,
 }: {
   customerName?: string | null;
   customerPhotoUrl?: string | null;
   compact?: boolean;
+  onClick?: () => void;
+  clickAriaLabel?: string;
 }) {
   if (!customerName) return null;
 
-  return (
+  const content = (
     <Flex align="center" gap="2" style={{ minWidth: 0 }}>
       <Avatar
         size={compact ? "1" : "2"}
@@ -195,6 +202,32 @@ function CustomerIdentity({
         {customerName}
       </Text>
     </Flex>
+  );
+
+  if (!onClick) return content;
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      aria-label={clickAriaLabel ?? customerName}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: 0,
+        margin: 0,
+        border: "none",
+        background: "transparent",
+        cursor: "pointer",
+        borderRadius: "var(--radius-2)",
+        minWidth: 0,
+      }}
+    >
+      {content}
+    </button>
   );
 }
 
@@ -213,9 +246,11 @@ export function JobCard({
   applied,
   customerName,
   customerPhotoUrl,
+  customerId,
   labels,
   onView,
   onApply,
+  onCustomerClick,
 }: JobCardProps) {
   const l = labels ?? DEFAULT_LABELS;
   const tagBadges =
@@ -282,6 +317,11 @@ export function JobCard({
                 customerName={customerName}
                 customerPhotoUrl={customerPhotoUrl}
                 compact
+                onClick={
+                  customerId && onCustomerClick
+                    ? () => onCustomerClick(customerId)
+                    : undefined
+                }
               />
               {hasFooterSignal && (
                 <Box

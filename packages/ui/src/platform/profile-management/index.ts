@@ -22,3 +22,9 @@ export * from "./service-preferences";
 export * from "./address-input";
 export * from "./canadian-provinces";
 export * from "./privacy-settings";
+export {
+  PLATFORM_SERVICE_FEE_PERCENT,
+  WELPER_HOURLY_RATE_SHARE,
+  customerHourlyChargeFromWelperRate,
+  formatHourlyRateCurrency,
+} from "../../pricing/welper-customer-rate";

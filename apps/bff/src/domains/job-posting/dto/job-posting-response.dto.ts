@@ -64,12 +64,14 @@ export class JobPostingListItemDto {
 
   @ApiPropertyOptional()
   customerPhotoUrl?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Customer user ID — included for welper marketplace list views.',
+  })
+  customerId?: string;
 }
 
 export class JobPostingResponseDto extends JobPostingListItemDto {
-  @ApiProperty()
-  customerId!: string;
-
   @ApiProperty()
   description!: string;
 
