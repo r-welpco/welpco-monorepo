@@ -12,8 +12,9 @@ import {
 } from './booking-pricing';
 
 describe('booking-pricing', () => {
-  it('derives customer hourly charge from welper rate (y = 0.75x)', () => {
-    expect(customerHourlyChargeFromWelperRate(75)).toBe(100);
+  it('derives customer hourly charge from welper rate (x = y × 1.25)', () => {
+    expect(customerHourlyChargeFromWelperRate(80)).toBe(100);
+    expect(customerHourlyChargeFromWelperRate(75)).toBe(93.75);
     expect(customerHourlyChargeFromWelperRate(0)).toBe(0);
   });
 

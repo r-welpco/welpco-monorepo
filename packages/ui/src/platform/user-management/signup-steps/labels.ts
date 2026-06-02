@@ -354,7 +354,7 @@ export const DEFAULT_WELPER_OFFERING_LABELS: WelperOfferingStepLabels = {
   serviceTitle: "Service title",
   hourlyRate: "Your hourly rate ($)",
   customerChargeHint: (charge) =>
-    `Customers will be charged ${charge}/hr for this service. This includes a 25% platform service fee paid by the customer.`,
+    `Customers will be charged ${charge}/hr for this service. This includes a platform service fee paid by the customer.`,
   descriptionLabel: "Description",
   addToList: "Add to list",
   loadingCategories: "Loading categories...",

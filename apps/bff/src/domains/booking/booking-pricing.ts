@@ -10,13 +10,16 @@ export const RECEIPT_BILLING_STEP_MINUTES = 15;
 /** Check-out may ceil up to this many minutes ahead of now (matches minimum bill). */
 export const RECEIPT_CHECKOUT_FUTURE_GRACE_MINUTES = MIN_BOOKING_DURATION_MINUTES;
 
-/** Welper hourly payout share: y = WELPER_HOURLY_RATE_SHARE × x (customer charge). */
-export const WELPER_HOURLY_RATE_SHARE = 0.75;
+/** Customer hourly charge = welper rate × this multiplier. */
+export const CUSTOMER_CHARGE_MULTIPLIER = 1.25;
 
-/** x from welper rate y, where y = 0.75x. */
+/** Welper hourly payout share: y = WELPER_HOURLY_RATE_SHARE × x (customer charge). */
+export const WELPER_HOURLY_RATE_SHARE = 1 / CUSTOMER_CHARGE_MULTIPLIER;
+
+/** Customer hourly charge x from welper rate y, where x = y × 1.25. */
 export function customerHourlyChargeFromWelperRate(welperRate: number): number {
   if (!Number.isFinite(welperRate) || welperRate <= 0) return 0;
-  return roundMoney(welperRate / WELPER_HOURLY_RATE_SHARE);
+  return roundMoney(welperRate * CUSTOMER_CHARGE_MULTIPLIER);
 }
 
 export function roundMoney(amount: number): number {

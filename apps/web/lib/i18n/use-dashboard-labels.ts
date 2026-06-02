@@ -7,7 +7,6 @@ import type { WeeklyAvailabilityDisplayLabels } from "@welpco/ui/platform";
 import type { BookingStatus } from "@/lib/services/booking-service";
 import { useAuthRegisterStep } from "@/lib/i18n/auth-message-templates";
 import { useWelperServiceAreaStepLabels } from "@/lib/i18n/use-auth-labels";
-import { PLATFORM_SERVICE_FEE_PERCENT } from "@welpco/ui/platform/profile-management";
 
 export type WelperNavChromeLabels = {
   mobileNavMenu: string;
@@ -1223,8 +1222,7 @@ export function useWelperServiceOfferingFormLabels() {
     subcategoriesOptional: t("subcategoriesOptional"),
     subcategoriesHint: t("subcategoriesHint"),
     hourlyRate: t("hourlyRate"),
-    customerChargeHint: (charge: string) =>
-      t("customerChargeHint", { charge, feePercent: PLATFORM_SERVICE_FEE_PERCENT }),
+    customerChargeHint: (charge: string) => t("customerChargeHint", { charge }),
     experienceYears: t("experienceYears"),
     description: t("description"),
     descriptionPlaceholder: t("descriptionPlaceholder"),

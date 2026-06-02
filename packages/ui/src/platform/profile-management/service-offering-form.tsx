@@ -40,7 +40,7 @@ export type ServiceOfferingFormLabels = {
   subcategoriesOptional: string;
   subcategoriesHint: string;
   hourlyRate: string;
-  /** Shown under the rate field — welper sets y, customers are charged x = y / 0.75. */
+  /** Shown under the rate field — welper sets y, customers are charged x = y × 1.25. */
   customerChargeHint?: (formattedCustomerCharge: string) => string;
   experienceYears: string;
   description: string;
