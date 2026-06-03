@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Fraunces, Inter_Tight, JetBrains_Mono } from "next/font/google";
+import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
 import "./tokens.css";
 import "./responsive.css";
@@ -100,6 +101,7 @@ export async function generateMetadata({
 }: {
   params: Promise<MarketingLayoutParams>;
 }): Promise<Metadata> {
+  await connection();
   const { locale } = await params;
   const isFr = locale === "fr";
   const t = await getTranslations({ locale, namespace: "marketing.layout" });
