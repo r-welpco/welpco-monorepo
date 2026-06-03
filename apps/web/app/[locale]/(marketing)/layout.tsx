@@ -82,31 +82,61 @@ const uncutSans = localFont({
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://welpco.com";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: {
-    default: "Welpco — Local services, real neighbours",
-    template: "%s — Welpco",
+const OG_IMAGE = {
+  en: {
+    path: "/og/og-image.png",
+    alt: "Welpco — Local help. Real neighbours.",
   },
-  description:
-    "Welpco connects you with vetted Welpers in your community — for the everyday services you need.",
-  openGraph: {
-    type: "website",
-    siteName: "Welpco",
-    title: "Welpco — Local services, real neighbours",
-    description:
-      "Vetted local providers for everyday services — childcare, lawn care, tutoring, tech help and more.",
-    url: SITE_URL,
-    images: [{ url: "/logos/Welpco_Imagotype_Primary_Reg_1.svg", width: 1200, height: 630, alt: "Welpco" }],
+  fr: {
+    path: "/og/og-image-fr.png",
+    alt: "Welpco — De l'aide locale. Des gens de confiance.",
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Welpco — Local services, real neighbours",
-    description: "Vetted local providers for everyday services in your neighborhood.",
-    images: ["/logos/Welpco_Imagotype_Primary_Reg_1.svg"],
-  },
-  alternates: { canonical: "/" },
-};
+} as const;
+
+type MarketingLayoutParams = { locale: string };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<MarketingLayoutParams>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const isFr = locale === "fr";
+  const t = await getTranslations({ locale, namespace: "marketing.layout" });
+  const og = isFr ? OG_IMAGE.fr : OG_IMAGE.en;
+
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: t("title"),
+      template: "%s — Welpco",
+    },
+    description: t("description"),
+    openGraph: {
+      type: "website",
+      siteName: "Welpco",
+      title: t("title"),
+      description: t("ogDescription"),
+      url: SITE_URL,
+      locale: isFr ? "fr_CA" : "en_US",
+      images: [
+        {
+          url: og.path,
+          width: 1200,
+          height: 630,
+          alt: og.alt,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("title"),
+      description: t("twitterDescription"),
+      images: [og.path],
+    },
+    alternates: { canonical: "/" },
+  };
+}
 
 export default async function MarketingLayout({
   children,

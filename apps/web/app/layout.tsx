@@ -59,6 +59,27 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+  openGraph: {
+    type: "website",
+    siteName: "Welpco",
+    title: "Welpco — Local services, real neighbours",
+    description:
+      "Welpco connects you with vetted Welpers in your community — for the everyday services you need.",
+    images: [
+      {
+        url: "/og/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Welpco — Local help. Real neighbours.",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Welpco — Local services, real neighbours",
+    description: "Vetted local providers for everyday services in your neighborhood.",
+    images: ["/og/og-image.png"],
+  },
 };
 
 export const viewport: Viewport = {
