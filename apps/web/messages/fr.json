@@ -1952,7 +1952,7 @@
           "saving": "Enregistrement…",
           "addressIncomplete": "Veuillez remplir tous les champs d'adresse",
           "addressFields": {
-            "streetAddress": "Adresse",
+            "streetAddress": "Rue",
             "city": "Ville",
             "stateProvince": "Province",
             "zipPostalCode": "Code postal",

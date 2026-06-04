@@ -33,6 +33,7 @@ import { useSearchServices, useDiscoveryCategories, usePublicWelperProfile } fro
 import { reverseGeocode } from "@/lib/services/geocode.service";
 import { ApiClientError } from "@/lib/api/client";
 import {
+  localizeCategoryOptionLabel,
   localizeCategoryOptions,
   transformCategoriesToOptions,
   validateCategoryId,
@@ -465,17 +466,23 @@ export default function DashboardSearchPageClient() {
       }));
   }, [categoriesData, categoryDisplayName]);
 
+  const localizeSearchCategory = useCallback(
+    (englishName: string) =>
+      localizeCategoryOptionLabel(categoryDisplayName, englishName),
+    [categoryDisplayName],
+  );
+
   const cardItems = useMemo(() => {
     if (!data?.items) return [];
     return data.items.map((item: SearchResultItem) => ({
       welperId: item.welperId,
       name: maskCustomerWelperName(item.name),
-      title: item.title,
+      title: localizeSearchCategory(item.title),
       location: item.location,
       hourlyRate: item.hourlyRate,
       rating: item.rating ?? 0,
       reviews: item.reviewCount ?? 0,
-      specialties: item.categories.map(categoryDisplayName),
+      specialties: item.categories.map(localizeSearchCategory),
       imageUrl: item.profilePhotoUrl ?? undefined,
       verified: item.verified === true,
       weeklyAvailability: item.weeklyAvailability,
@@ -488,7 +495,7 @@ export default function DashboardSearchPageClient() {
     data?.items,
     availabilityLabels,
     locale,
-    categoryDisplayName,
+    localizeSearchCategory,
     openProfileDialog,
     openServiceSelection,
   ]);
