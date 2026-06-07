@@ -1361,6 +1361,8 @@
         "statusPendingDescription": "Nous avons envoyé un courriel à {email}. Il doit ouvrir le lien et approuver avant que votre profil soit visible.",
         "statusExpiredTitle": "Lien d'approbation expiré",
         "statusExpiredDescription": "Mettez à jour les informations ci-dessous ou renvoyez le courriel pour obtenir un nouveau lien.",
+        "statusDeclinedTitle": "Approbation du tuteur refusée",
+        "statusDeclinedDescription": "{guardianName} a refusé la demande d'approbation. Vous pouvez modifier les informations ci-dessous et envoyer une nouvelle demande.",
         "summaryGuardian": "Tuteur",
         "summaryRelationship": "Lien de parenté",
         "summaryEmail": "Courriel",

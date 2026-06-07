@@ -1362,6 +1362,8 @@
         "statusPendingDescription": "We emailed {email}. They need to open the link and approve before your profile can go live.",
         "statusExpiredTitle": "Approval link expired",
         "statusExpiredDescription": "Update the details below or resend the email to get a new link.",
+        "statusDeclinedTitle": "Guardian approval declined",
+        "statusDeclinedDescription": "{guardianName} declined the guardian approval request. You can update the details below and send a new request.",
         "summaryGuardian": "Guardian",
         "summaryRelationship": "Relationship",
         "summaryEmail": "Email",

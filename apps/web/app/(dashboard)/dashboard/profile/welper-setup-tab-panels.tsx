@@ -329,6 +329,7 @@ export function WelperProfileGuardianPanel() {
   const approved = status?.status === "approved";
   const pending = status?.status === "pending";
   const expired = status?.status === "expired";
+  const declined = status?.status === "declined";
   const showForm = !approved && !pending;
 
   return (
@@ -395,6 +396,19 @@ export function WelperProfileGuardianPanel() {
               {resendNote}
             </Text>
           ) : null}
+        </Callout.Root>
+      ) : null}
+
+      {declined && status ? (
+        <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="status">
+          <Text size="2" weight="medium" as="p">
+            {t("statusDeclinedTitle")}
+          </Text>
+          <Text size="2" color="gray" as="p" mt="1">
+            {t("statusDeclinedDescription", {
+              guardianName: status.guardianFullName ?? t("summaryGuardian"),
+            })}
+          </Text>
         </Callout.Root>
       ) : null}
 
