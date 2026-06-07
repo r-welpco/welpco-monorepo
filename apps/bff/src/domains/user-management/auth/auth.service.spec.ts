@@ -316,6 +316,23 @@ describe('AuthService', () => {
       expect(mockUserRepository.save).not.toHaveBeenCalled();
     });
 
+    it('should reject legacy guardian accounts', async () => {
+      mockUserRepository.findOne.mockResolvedValue({
+        id: 'guardian-id',
+        email: loginDto.email,
+        passwordHash: 'hashed-password',
+        accountType: AccountType.GUARDIAN,
+        status: AccountStatus.ACTIVE,
+        emailVerified: true,
+      });
+
+      await expect(service.login(loginDto)).rejects.toThrow(
+        'This account type is no longer supported',
+      );
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+      expect(mockUserRepository.save).not.toHaveBeenCalled();
+    });
+
     it('should throw UnauthorizedException if password is invalid', async () => {
       const user = {
         id: 'user-id',
@@ -546,4 +563,3 @@ describe('AuthService', () => {
     });
   });
 });
-

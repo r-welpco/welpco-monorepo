@@ -1191,9 +1191,16 @@
       "explain": "En approuvant, vous confirmez être le parent ou tuteur légal et autorisez la création et l'utilisation d'un compte Welper sur Welpco.",
       "relationshipParent": "Parent",
       "relationshipLegalGuardian": "Tuteur légal",
-      "relationshipOther": "Autre",
       "approve": "Approuver le compte",
       "approving": "Approbation…",
+      "decline": "Refuser",
+      "declining": "Refus…",
+      "declinedTitle": "Approbation refusée",
+      "declinedDescription": "Le compte n'a pas été approuvé.",
+      "revoke": "Révoquer l'approbation",
+      "revoking": "Révocation…",
+      "revokedTitle": "Approbation révoquée",
+      "revokedDescription": "L'approbation du tuteur a été retirée du compte.",
       "successTitle": "Approuvé",
       "successDescription": "Merci. Le compte de {minorName} est approuvé. Il peut terminer la configuration sur Welpco.",
       "successCallout": "Approbation enregistrée. Le mineur peut continuer la configuration sur Welpco.",
@@ -1205,7 +1212,9 @@
       "expiredCallout": "Le mineur peut envoyer un nouveau courriel d'approbation depuis la configuration de son profil.",
       "errors": {
         "loadFailed": "Impossible de charger cette demande. Le lien est peut-être invalide.",
-        "approveFailed": "Impossible d'enregistrer votre approbation. Réessayez dans un instant."
+        "approveFailed": "Impossible d'enregistrer votre approbation. Réessayez dans un instant.",
+        "declineFailed": "Impossible d'enregistrer votre décision. Réessayez dans un instant.",
+        "revokeFailed": "Impossible de révoquer l'approbation. Réessayez dans un instant."
       }
     },
     "verification": {
@@ -1341,7 +1350,6 @@
         "relationship": "Lien de parenté",
         "relationshipParent": "Parent",
         "relationshipLegalGuardian": "Tuteur légal",
-        "relationshipOther": "Autre",
         "submit": "Envoyer la demande d'approbation",
         "submitting": "Envoi…",
         "resend": "Renvoyer le courriel",

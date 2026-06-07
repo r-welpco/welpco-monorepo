@@ -88,7 +88,13 @@ export interface IEmailNotificationService {
   sendNotificationEmail(userId: string, subject: string, html: string): Promise<void>;
   sendGenericNotificationEmail?(
     userId: string,
-    params: { title: string; body: string; actionUrl?: string; locale?: EmailLocale },
+    params: {
+      title: string;
+      body: string;
+      actionUrl?: string;
+      locale?: EmailLocale;
+      category?: NotificationCategory;
+    },
   ): Promise<void>;
   sendBookingEmailForUser?(userId: string, type: string, variables: Record<string, string | undefined>): Promise<void>;
   sendPaymentEmailForUser?(userId: string, type: PaymentEmailType, variables: PaymentEmailVariables): Promise<void>;
@@ -244,6 +250,7 @@ export class NotificationService {
             body,
             actionUrl,
             locale: locale as EmailLocale,
+            category,
           });
         } else if (emailSubject && emailHtml) {
           await this.emailNotificationService.sendNotificationEmail(userId, emailSubject, emailHtml);

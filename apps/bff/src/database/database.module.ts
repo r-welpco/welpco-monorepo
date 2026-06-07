@@ -7,7 +7,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
   UserAccount,
-  GuardianAccount,
   VerificationStatus,
   ReferralCode,
   Referral,
@@ -47,7 +46,6 @@ import { postgresSslOption } from './db-cli-options';
 
 const allEntities = [
   UserAccount,
-  GuardianAccount,
   VerificationStatus,
   ReferralCode,
   Referral,

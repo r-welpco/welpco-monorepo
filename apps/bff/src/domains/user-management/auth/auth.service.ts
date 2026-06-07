@@ -74,8 +74,11 @@ export class AuthService {
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
     const { email, password, accountType, referralCode, preferredLocale } = registerDto;
 
-    if (accountType === AccountType.ADMIN) {
-      throw new BadRequestException('Admin accounts cannot be registered publicly');
+    if (
+      accountType !== AccountType.CUSTOMER &&
+      accountType !== AccountType.WELPER
+    ) {
+      throw new BadRequestException('This account type cannot be registered publicly');
     }
 
     // Check if user already exists
@@ -184,6 +187,10 @@ export class AuthService {
       // Record failed attempt even if user doesn't exist (security)
       await this.accountLockoutService.recordFailedAttempt(email);
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.accountType === AccountType.GUARDIAN) {
+      throw new UnauthorizedException('This account type is no longer supported');
     }
 
     // Check if account is active
@@ -427,4 +434,3 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 }
-

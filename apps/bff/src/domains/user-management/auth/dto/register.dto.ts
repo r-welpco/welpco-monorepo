@@ -7,7 +7,6 @@ import { IsStrongPassword } from '../validators/password.validator';
 export const REGISTER_ACCOUNT_TYPES = [
   AccountType.CUSTOMER,
   AccountType.WELPER,
-  AccountType.GUARDIAN,
 ] as const;
 
 @ApiSchema({ name: 'DomainAuthRegisterDto' })
@@ -54,4 +53,3 @@ export class RegisterDto {
   @IsIn(['en', 'fr'])
   preferredLocale?: 'en' | 'fr';
 }
-

@@ -456,7 +456,6 @@ export class AdminService {
     deactivatedUsers: number;
     customers: number;
     welpers: number;
-    guardians: number;
   }> {
     const [
       totalUsers,
@@ -466,7 +465,6 @@ export class AdminService {
       deactivatedUsers,
       customers,
       welpers,
-      guardians,
     ] = await Promise.all([
       this.userRepository.count(),
       this.userRepository.count({ where: { status: AccountStatus.ACTIVE } }),
@@ -483,9 +481,6 @@ export class AdminService {
       this.userRepository.count({
         where: { accountType: AccountType.WELPER },
       }),
-      this.userRepository.count({
-        where: { accountType: AccountType.GUARDIAN },
-      }),
     ]);
 
     return {
@@ -496,7 +491,6 @@ export class AdminService {
       deactivatedUsers,
       customers,
       welpers,
-      guardians,
     };
   }
 

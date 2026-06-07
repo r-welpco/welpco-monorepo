@@ -36,12 +36,6 @@ export class AbilitiesFactory {
       can(Action.Delete, UserAccount, { id: user.userId });
     }
 
-    // Guardian abilities
-    if (user.accountType === AccountType.GUARDIAN) {
-      can(Action.Read, UserAccount, { id: user.userId });
-      can(Action.Update, UserAccount, { id: user.userId });
-    }
-
     if (user.accountType === AccountType.ADMIN) {
       can(Action.Manage, 'all');
     }
@@ -52,4 +46,3 @@ export class AbilitiesFactory {
     });
   }
 }
-

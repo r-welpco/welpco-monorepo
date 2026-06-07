@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsString, MaxLength, MinLength } from 'class-validator';
-import { RelationshipType } from '../../user-management/entities/guardian-account.entity';
+import { RelationshipType } from '../entities/minor-guardian-consent.entity';
 
 export class SubmitGuardianRequestDto {
   @ApiProperty({ example: 'Jane Smith' })

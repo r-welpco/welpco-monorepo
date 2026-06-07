@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   approveGuardianConsent,
+  declineGuardianConsent,
   getGuardianConsentStatus,
   getGuardianReviewPreview,
   resendGuardianReviewEmail,
+  revokeGuardianConsent,
   submitGuardianRequest,
   type SubmitGuardianRequestPayload,
 } from "@/lib/services/guardian-consent-service";
@@ -49,5 +51,17 @@ export function useGuardianReviewPreview(token: string | null) {
 export function useApproveGuardianConsent() {
   return useMutation({
     mutationFn: (token: string) => approveGuardianConsent(token),
+  });
+}
+
+export function useDeclineGuardianConsent() {
+  return useMutation({
+    mutationFn: (token: string) => declineGuardianConsent(token),
+  });
+}
+
+export function useRevokeGuardianConsent() {
+  return useMutation({
+    mutationFn: (token: string) => revokeGuardianConsent(token),
   });
 }

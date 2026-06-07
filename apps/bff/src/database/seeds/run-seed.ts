@@ -6,7 +6,6 @@ import { seedDatabase } from './seed';
 import { isProductionLikeSeed } from './seed-flags';
 import {
   UserAccount,
-  GuardianAccount,
   VerificationStatus,
   ReferralCode,
   Referral,
@@ -36,7 +35,6 @@ config({ path: join(__dirname, '../../../.env.local') });
 
 const allEntities = [
   UserAccount,
-  GuardianAccount,
   VerificationStatus,
   ReferralCode,
   Referral,

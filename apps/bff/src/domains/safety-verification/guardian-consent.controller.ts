@@ -23,6 +23,16 @@ import { ApproveGuardianConsentDto } from './dto/approve-guardian-consent.dto';
 export class GuardianConsentController {
   constructor(private readonly guardianConsentService: GuardianConsentService) {}
 
+  private requestIp(req: Request): string | undefined {
+    return (
+      (req.headers['x-forwarded-for'] as string | undefined)
+        ?.split(',')[0]
+        ?.trim() ??
+      req.socket.remoteAddress ??
+      undefined
+    );
+  }
+
   @Get('status')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
@@ -39,8 +49,11 @@ export class GuardianConsentController {
   async submitRequest(
     @CurrentUser() user: CurrentUserData,
     @Body() dto: SubmitGuardianRequestDto,
+    @Req() req: Request,
   ) {
-    return this.guardianConsentService.submitRequest(user.userId, dto);
+    return this.guardianConsentService.submitRequest(user.userId, dto, {
+      ipAddress: this.requestIp(req),
+    });
   }
 
   @Post('resend')
@@ -48,14 +61,21 @@ export class GuardianConsentController {
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Resend guardian review email' })
-  async resend(@CurrentUser() user: CurrentUserData) {
-    return this.guardianConsentService.resendEmail(user.userId);
+  async resend(
+    @CurrentUser() user: CurrentUserData,
+    @Req() req: Request,
+  ) {
+    return this.guardianConsentService.resendEmail(user.userId, {
+      ipAddress: this.requestIp(req),
+    });
   }
 
   @Get('review')
   @ApiOperation({ summary: 'Public preview for guardian review link' })
-  async getReview(@Query('token') token: string) {
-    return this.guardianConsentService.getReviewPreview(token ?? '');
+  async getReview(@Query('token') token: string, @Req() req: Request) {
+    return this.guardianConsentService.getReviewPreview(token ?? '', {
+      ipAddress: this.requestIp(req),
+    });
   }
 
   @Post('approve')
@@ -66,13 +86,27 @@ export class GuardianConsentController {
     @Req() req: Request,
     @Headers('user-agent') userAgent?: string,
   ) {
-    const ipAddress =
-      (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ??
-      req.socket.remoteAddress ??
-      undefined;
     return this.guardianConsentService.approveByToken(dto.token, {
-      ipAddress,
+      ipAddress: this.requestIp(req),
       userAgent,
+    });
+  }
+
+  @Post('decline')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Public guardian decline via token' })
+  async decline(@Body() dto: ApproveGuardianConsentDto, @Req() req: Request) {
+    return this.guardianConsentService.declineByToken(dto.token, {
+      ipAddress: this.requestIp(req),
+    });
+  }
+
+  @Post('revoke')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Public guardian consent revocation via management token' })
+  async revoke(@Body() dto: ApproveGuardianConsentDto, @Req() req: Request) {
+    return this.guardianConsentService.revokeByToken(dto.token, {
+      ipAddress: this.requestIp(req),
     });
   }
 }

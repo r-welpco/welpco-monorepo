@@ -49,8 +49,6 @@ const DELETE_STEPS: string[] = [
   `DELETE FROM service_offerings WHERE welper_id IN (${NON_ADMIN_IDS})`,
   `DELETE FROM welper_profiles WHERE welper_id IN (${NON_ADMIN_IDS})`,
   `DELETE FROM customer_profiles WHERE customer_id IN (${NON_ADMIN_IDS})`,
-  `DELETE FROM guardian_accounts
-   WHERE guardian_user_id IN (${NON_ADMIN_IDS}) OR minor_user_id IN (${NON_ADMIN_IDS})`,
   `DELETE FROM referrals
    WHERE referrer_user_id IN (${NON_ADMIN_IDS}) OR referee_user_id IN (${NON_ADMIN_IDS})`,
   `DELETE FROM referral_codes WHERE user_id IN (${NON_ADMIN_IDS})`,

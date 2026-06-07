@@ -5,7 +5,6 @@ export * from "./register-form";
 export * from "./account-verification";
 export * from "./password-reset";
 export * from "./referral-code-input";
-export * from "./guardian-account-form";
 export * from "./auth-background";
 export * from "./account-type-selection";
 export * from "./customer-register-form";
@@ -29,4 +28,3 @@ export * from "./referral-analytics";
 
 // Day 15 — Phase 2 Dispatch A. Signup wizard steps.
 export * from "./signup-steps";
-

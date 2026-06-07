@@ -6,13 +6,13 @@ import { GuardianConsentService } from './guardian-consent.service';
 import {
   GuardianConsentStatus,
   MinorGuardianConsent,
+  RelationshipType,
 } from './entities/minor-guardian-consent.entity';
 import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
 import { UserAccount } from '../user-management/entities/user-account.entity';
 import { EmailService } from '../user-management/email/email.service';
 import { CacheService } from '../user-management/cache/cache.service';
 import { SignupOrchestratorService } from '../user-management/auth/signup-orchestrator.service';
-import { RelationshipType } from '../user-management/entities/guardian-account.entity';
 
 describe('GuardianConsentService', () => {
   let service: GuardianConsentService;
@@ -25,6 +25,7 @@ describe('GuardianConsentService', () => {
   let userRepo: { findOne: jest.Mock };
   let emailService: { sendGuardianReviewEmail: jest.Mock };
   let signupOrchestrator: { refreshWelperDiscoverability: jest.Mock };
+  let cacheService: { get: jest.Mock; increment: jest.Mock };
 
   beforeEach(async () => {
     consentRepo = {
@@ -36,6 +37,10 @@ describe('GuardianConsentService', () => {
     userRepo = { findOne: jest.fn() };
     emailService = { sendGuardianReviewEmail: jest.fn().mockResolvedValue(undefined) };
     signupOrchestrator = { refreshWelperDiscoverability: jest.fn().mockResolvedValue(undefined) };
+    cacheService = {
+      get: jest.fn().mockResolvedValue(null),
+      increment: jest.fn().mockResolvedValue(1),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -44,7 +49,7 @@ describe('GuardianConsentService', () => {
         { provide: getRepositoryToken(WelperProfile), useValue: welperProfileRepo },
         { provide: getRepositoryToken(UserAccount), useValue: userRepo },
         { provide: EmailService, useValue: emailService },
-        { provide: CacheService, useValue: { get: jest.fn(), increment: jest.fn() } },
+        { provide: CacheService, useValue: cacheService },
         { provide: SignupOrchestratorService, useValue: signupOrchestrator },
       ],
     }).compile();
@@ -100,6 +105,10 @@ describe('GuardianConsentService', () => {
 
     expect(result.approved).toBe(true);
     expect(consent.status).toBe(GuardianConsentStatus.APPROVED);
+    expect(consent.managementTokenHash).toBe(
+      createHash('sha256').update(token).digest('hex'),
+    );
+    expect(consent.tokenHash).toBeNull();
     expect(signupOrchestrator.refreshWelperDiscoverability).toHaveBeenCalledWith('minor-1');
   });
 
@@ -115,7 +124,7 @@ describe('GuardianConsentService', () => {
     await expect(service.approveByToken(token)).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('getReviewPreview keeps expired links readable after expiry', async () => {
+  it('getReviewPreview invalidates expired links and clears their token', async () => {
     const token = randomUUID();
     const consent: Partial<MinorGuardianConsent> = {
       minorUserId: 'minor-1',
@@ -126,19 +135,62 @@ describe('GuardianConsentService', () => {
       relationshipType: RelationshipType.PARENT,
     };
     consentRepo.findOne.mockResolvedValue(consent);
-    welperProfileRepo.findOne.mockResolvedValue({
-      welperId: 'minor-1',
-      firstName: 'Alex',
-      lastName: 'Lee',
-    });
-
-    const preview = await service.getReviewPreview(token);
-
-    expect(preview.expired).toBe(true);
+    await expect(service.getReviewPreview(token)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
     expect(consent.status).toBe(GuardianConsentStatus.EXPIRED);
-    expect(consent.tokenHash).toBe(createHash('sha256').update(token).digest('hex'));
+    expect(consent.tokenHash).toBeNull();
+    expect(consent.tokenExpiresAt).toBeNull();
+  });
 
-    const refreshed = await service.getReviewPreview(token);
-    expect(refreshed.expired).toBe(true);
+  it('resend keeps the existing token when email delivery fails', async () => {
+    const existingHash = createHash('sha256').update('old-token').digest('hex');
+    const consent: Partial<MinorGuardianConsent> = {
+      minorUserId: 'minor-1',
+      status: GuardianConsentStatus.PENDING,
+      tokenHash: existingHash,
+      guardianEmail: 'jane@example.com',
+      guardianFullName: 'Jane Lee',
+    };
+    consentRepo.findOne.mockResolvedValue(consent);
+    welperProfileRepo.findOne.mockResolvedValue({ firstName: 'Alex', lastName: 'Lee' });
+    userRepo.findOne.mockResolvedValue({ preferredLocale: 'fr' });
+    emailService.sendGuardianReviewEmail.mockRejectedValue(new Error('delivery failed'));
+
+    await expect(service.resendEmail('minor-1')).rejects.toThrow('delivery failed');
+    expect(consent.tokenHash).toBe(existingHash);
+    expect(consentRepo.save).not.toHaveBeenCalled();
+    expect(cacheService.increment).not.toHaveBeenCalled();
+  });
+
+  it('declines a pending request and clears its token', async () => {
+    const token = randomUUID();
+    const consent: Partial<MinorGuardianConsent> = {
+      minorUserId: 'minor-1',
+      status: GuardianConsentStatus.PENDING,
+      tokenHash: createHash('sha256').update(token).digest('hex'),
+      tokenExpiresAt: new Date(Date.now() + 60_000),
+    };
+    consentRepo.findOne.mockResolvedValue(consent);
+
+    await expect(service.declineByToken(token)).resolves.toEqual({ declined: true });
+    expect(consent.status).toBe(GuardianConsentStatus.DECLINED);
+    expect(consent.tokenHash).toBeNull();
+    expect(signupOrchestrator.refreshWelperDiscoverability).toHaveBeenCalledWith('minor-1');
+  });
+
+  it('revokes approved consent through the management token', async () => {
+    const token = randomUUID();
+    const consent: Partial<MinorGuardianConsent> = {
+      minorUserId: 'minor-1',
+      status: GuardianConsentStatus.APPROVED,
+      managementTokenHash: createHash('sha256').update(token).digest('hex'),
+    };
+    consentRepo.findOne.mockResolvedValue(consent);
+
+    await expect(service.revokeByToken(token)).resolves.toEqual({ revoked: true });
+    expect(consent.status).toBe(GuardianConsentStatus.DECLINED);
+    expect(consent.managementTokenHash).toBeNull();
+    expect(consent.revokedAt).toBeInstanceOf(Date);
   });
 });

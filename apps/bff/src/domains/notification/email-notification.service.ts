@@ -23,10 +23,18 @@ import {
 } from '@welpco/email';
 import { EmailService } from '../user-management/email/email.service';
 import { emailLocaleForUser } from '../user-management/auth/user-locale.helper';
-import { UserAccount } from '../user-management/entities/user-account.entity';
+import {
+  AccountType,
+  UserAccount,
+} from '../user-management/entities/user-account.entity';
+import {
+  GuardianConsentStatus,
+  MinorGuardianConsent,
+} from '../safety-verification/entities/minor-guardian-consent.entity';
 import { localePathPrefix } from '../../common/preferred-locale';
 import { IEmailNotificationService } from './notification.service';
 import { resolveUserLocale } from './notification-locale.helper';
+import { NotificationCategory } from './entities';
 
 export type { BookingEmailType, BookingEmailVariables, DisputeEmailType, DisputeEmailVariables, PaymentEmailType, PaymentEmailVariables };
 
@@ -41,6 +49,8 @@ export class EmailNotificationService implements IEmailNotificationService {
     private readonly emailService: EmailService,
     @InjectRepository(UserAccount)
     private readonly userRepo: Repository<UserAccount>,
+    @InjectRepository(MinorGuardianConsent)
+    private readonly guardianConsentRepo: Repository<MinorGuardianConsent>,
   ) {
     this.publicAppUrl =
       this.configService.get<string>('PUBLIC_APP_URL') ||
@@ -69,6 +79,7 @@ export class EmailNotificationService implements IEmailNotificationService {
       body: string;
       actionUrl?: string;
       locale?: EmailLocale;
+      category?: NotificationCategory;
     },
   ): Promise<void> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
@@ -86,6 +97,35 @@ export class EmailNotificationService implements IEmailNotificationService {
       publicAppUrl: this.publicAppUrl,
     });
     await this.emailService.sendEmail({ to: user.email, subject, html });
+
+    if (
+      params.category === NotificationCategory.MESSAGE ||
+      params.category === NotificationCategory.REVIEW
+    ) {
+      const guardianTitle =
+        params.category === NotificationCategory.MESSAGE
+          ? locale === 'fr'
+            ? 'Nouveau message'
+            : 'New message'
+          : params.title;
+      const guardianBody =
+        params.category === NotificationCategory.MESSAGE
+          ? locale === 'fr'
+            ? 'Le compte Welpco du mineur a reçu un nouveau message.'
+            : "The minor's Welpco account received a new message."
+          : params.body;
+      await this.sendGuardianCopy(
+        user,
+        getNotificationEmailSubject(guardianTitle),
+        getNotificationEmailHtml({
+          title: guardianTitle,
+          body: guardianBody,
+          locale,
+          publicAppUrl: this.publicAppUrl,
+        }),
+        locale,
+      );
+    }
   }
 
   async sendBookingEmailForUser(
@@ -99,7 +139,9 @@ export class EmailNotificationService implements IEmailNotificationService {
       return;
     }
     const locale = emailLocaleForUser(user) as EmailLocale;
-    await this.sendBookingEmail(type, user.email, variables, locale);
+    const { subject, html } = this.renderBookingEmail(type, variables, locale);
+    await this.emailService.sendEmail({ to: user.email, subject, html });
+    await this.sendGuardianCopy(user, subject, html, locale);
   }
 
   async sendPaymentEmailForUser(
@@ -121,6 +163,7 @@ export class EmailNotificationService implements IEmailNotificationService {
       publicAppUrl: this.publicAppUrl,
     });
     await this.emailService.sendEmail({ to: user.email, subject, html });
+    await this.sendGuardianCopy(user, subject, html, locale);
   }
 
   async sendDisputeEmailForUser(
@@ -142,6 +185,7 @@ export class EmailNotificationService implements IEmailNotificationService {
       publicAppUrl: this.publicAppUrl,
     });
     await this.emailService.sendEmail({ to: user.email, subject, html });
+    await this.sendGuardianCopy(user, subject, html, locale);
   }
 
   async sendBookingEmail(
@@ -150,6 +194,19 @@ export class EmailNotificationService implements IEmailNotificationService {
     variables: BookingEmailVariables,
     locale: EmailLocale = 'en',
   ): Promise<void> {
+    const { subject, html } = this.renderBookingEmail(
+      type,
+      variables,
+      locale,
+    );
+    await this.emailService.sendEmail({ to: recipientEmail, subject, html });
+  }
+
+  private renderBookingEmail(
+    type: BookingEmailType,
+    variables: BookingEmailVariables,
+    locale: EmailLocale,
+  ): { subject: string; html: string } {
     const prefix = localePathPrefix(locale);
     const bookingUrl =
       variables.bookingUrl || `${this.frontendUrl}${prefix}/dashboard/bookings`;
@@ -163,7 +220,7 @@ export class EmailNotificationService implements IEmailNotificationService {
       publicAppUrl: this.publicAppUrl,
     });
 
-    await this.emailService.sendEmail({ to: recipientEmail, subject, html });
+    return { subject, html };
   }
 
   async sendWelcomeEmail(
@@ -181,5 +238,45 @@ export class EmailNotificationService implements IEmailNotificationService {
       subject: getWelcomeEmailSubject(locale),
       html,
     });
+  }
+
+  private async sendGuardianCopy(
+    minor: UserAccount,
+    subject: string,
+    html: string,
+    locale: EmailLocale,
+  ): Promise<void> {
+    if (minor.accountType !== AccountType.WELPER) {
+      return;
+    }
+
+    try {
+      const consent = await this.guardianConsentRepo.findOne({
+        where: {
+          minorUserId: minor.id,
+          status: GuardianConsentStatus.APPROVED,
+        },
+      });
+      if (
+        !consent?.guardianEmail ||
+        consent.guardianEmail.toLowerCase() === minor.email.toLowerCase()
+      ) {
+        return;
+      }
+
+      const copySubject =
+        locale === 'fr'
+          ? `[Copie tuteur] ${subject}`
+          : `[Guardian copy] ${subject}`;
+      await this.emailService.sendEmail({
+        to: consent.guardianEmail,
+        subject: copySubject,
+        html,
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Guardian email copy failed for minor ${minor.id}: ${(err as Error).message}`,
+      );
+    }
   }
 }

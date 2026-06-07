@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { CacheModule } from './cache/cache.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { GuardianModule } from './guardian/guardian.module';
 import { ReferralModule } from './referral/referral.module';
 import { AdminModule } from './admin/admin.module';
 import { EmailModule } from './email/email.module';
@@ -21,7 +20,6 @@ import { ProfileManagementDomainModule } from '../profile-management/profile-man
     EmailModule,
     AuthModule.forRoot({ registerController: false }),
     UsersModule,
-    GuardianModule,
     ReferralModule,
     AdminModule,
     ProfileManagementDomainModule,

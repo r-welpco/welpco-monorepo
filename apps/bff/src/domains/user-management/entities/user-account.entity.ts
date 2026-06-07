@@ -7,7 +7,6 @@ import {
   OneToOne,
   OneToMany,
 } from 'typeorm';
-import { GuardianAccount } from './guardian-account.entity';
 import { VerificationStatus } from './verification-status.entity';
 import { ReferralCode } from './referral-code.entity';
 import { Referral } from './referral.entity';
@@ -29,8 +28,8 @@ export enum AccountStatus {
 /**
  * Role chosen by the user at step 1 of the signup wizard. NULL until the user
  * picks (between `POST /auth/signup/begin` and `POST /auth/signup/step/select-role`).
- * Distinct from `accountType` (which preserves the legacy `Customer | Welper |
- * Guardian | Admin` taxonomy used across the rest of the domain) so the wizard
+ * Distinct from `accountType` (which preserves the database account taxonomy)
+ * so the wizard
  * has a single source of truth for "did the user pick yet?" without conflating
  * with the broader account-type enum.
  *
@@ -95,8 +94,8 @@ export class UserAccount {
 
   /**
    * Role chosen at step 1 of the wizard. NULL until the user picks. Distinct
-   * from `accountType` (which is the legacy taxonomy used across the rest of
-   * the domain). Once written, it is locked — the wizard does not allow
+   * from `accountType` (which is the database taxonomy). Once written, it is
+   * locked — the wizard does not allow
    * changing role mid-flow.
    */
   @Column({
@@ -136,12 +135,6 @@ export class UserAccount {
   updatedAt!: Date;
 
   // Relations
-  @OneToOne(() => GuardianAccount, (guardian) => guardian.guardianUser)
-  guardianAccount!: GuardianAccount;
-
-  @OneToOne(() => GuardianAccount, (guardian) => guardian.minorUser)
-  minorAccount!: GuardianAccount;
-
   @OneToOne(() => VerificationStatus, (verification) => verification.user)
   verificationStatus!: VerificationStatus;
 
@@ -154,4 +147,3 @@ export class UserAccount {
   @OneToMany(() => Referral, (referral) => referral.referee)
   referralsReceived!: Referral[];
 }
-

@@ -268,7 +268,7 @@ export function WelperProfilePayoutPanel() {
   );
 }
 
-type RelationshipOption = "Parent" | "Legal Guardian" | "Other";
+type RelationshipOption = "Parent" | "Legal Guardian";
 
 function guardianRelationshipLabel(
   relationshipType: string,
@@ -279,8 +279,6 @@ function guardianRelationshipLabel(
       return t("relationshipParent");
     case "Legal Guardian":
       return t("relationshipLegalGuardian");
-    case "Other":
-      return t("relationshipOther");
     default:
       return relationshipType;
   }
@@ -462,7 +460,6 @@ export function WelperProfileGuardianPanel() {
                 <SelectContent>
                   <SelectItem value="Parent">{t("relationshipParent")}</SelectItem>
                   <SelectItem value="Legal Guardian">{t("relationshipLegalGuardian")}</SelectItem>
-                  <SelectItem value="Other">{t("relationshipOther")}</SelectItem>
                 </SelectContent>
               </Select>
             </Box>

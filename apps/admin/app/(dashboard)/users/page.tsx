@@ -35,7 +35,7 @@ const SORTABLE_COLUMNS = [
   "signupSteps",
 ] as const satisfies readonly AdminUsersSortBy[];
 
-const ACCOUNT_TYPES = ["", "Customer", "Welper", "Guardian", "Admin"] as const;
+const ACCOUNT_TYPES = ["", "Customer", "Welper", "Admin"] as const;
 const STATUSES = ["", "Pending", "Active", "Suspended", "Deactivated"] as const;
 
 const QUICK_PRESETS: { label: string; query: Record<string, string> }[] = [

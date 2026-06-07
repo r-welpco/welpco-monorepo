@@ -18,6 +18,7 @@ import { UsersService } from '../user-management/users/users.service';
 import { S3UrlPresignerService } from '../../clients/s3';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
 import { QuestionType } from '../content-management/entities/question.entity';
+import { JobPostingService } from '../job-posting/job-posting.service';
 
 describe('BookingService', () => {
   let service: BookingService;
@@ -96,6 +97,10 @@ describe('BookingService', () => {
         country: 'CA',
       },
     }),
+    findDisplayInfoByCustomerId: jest.fn().mockResolvedValue({
+      displayName: 'Test Customer',
+      photoUrl: null,
+    }),
   };
 
   const mockWelperProfileService = {
@@ -169,6 +174,7 @@ describe('BookingService', () => {
         { provide: WelperProfileService, useValue: mockWelperProfileService },
         { provide: UsersService, useValue: mockUsersService },
         { provide: BackgroundCheckService, useValue: mockBackgroundCheckService },
+        { provide: JobPostingService, useValue: {} },
         {
           provide: S3UrlPresignerService,
           useValue: {

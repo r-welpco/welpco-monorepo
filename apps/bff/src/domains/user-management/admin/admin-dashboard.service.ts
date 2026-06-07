@@ -38,7 +38,6 @@ export interface AdminDashboardSnapshot {
     deactivatedUsers: number;
     customers: number;
     welpers: number;
-    guardians: number;
     welpersPending: number;
     welpersSignupIncomplete: number;
     welpersBgInProgress: number;
@@ -100,7 +99,6 @@ export class AdminDashboardService {
       deactivatedUsers,
       customers,
       welpers,
-      guardians,
       welpersPending,
       welpersSignupIncomplete,
       welpersBgInProgress,
@@ -124,7 +122,6 @@ export class AdminDashboardService {
       this.userRepository.count({ where: { status: AccountStatus.DEACTIVATED } }),
       this.userRepository.count({ where: { accountType: AccountType.CUSTOMER } }),
       this.userRepository.count({ where: { accountType: AccountType.WELPER } }),
-      this.userRepository.count({ where: { accountType: AccountType.GUARDIAN } }),
       this.userRepository.count({
         where: { accountType: AccountType.WELPER, status: AccountStatus.PENDING },
       }),
@@ -186,7 +183,6 @@ export class AdminDashboardService {
         deactivatedUsers,
         customers,
         welpers,
-        guardians,
         welpersPending,
         welpersSignupIncomplete,
         welpersBgInProgress,

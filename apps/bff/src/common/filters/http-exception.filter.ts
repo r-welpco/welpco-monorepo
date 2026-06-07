@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { redactSensitiveUrl } from '../interceptors/logging.interceptor';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -16,6 +17,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+    const requestPath = redactSensitiveUrl(request.url);
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | object = 'Internal server error';
@@ -29,7 +31,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     // Log error
     this.logger.error(
-      `${request.method} ${request.url} - Status: ${status} - Message: ${JSON.stringify(message)}`,
+      `${request.method} ${requestPath} - Status: ${status} - Message: ${JSON.stringify(message)}`,
       exception instanceof Error ? exception.stack : undefined,
     );
 
@@ -42,7 +44,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const errorResponse: Record<string, unknown> = {
       statusCode: status,
       timestamp: new Date().toISOString(),
-      path: request.url,
+      path: requestPath,
       method: request.method,
       message: messageText,
     };

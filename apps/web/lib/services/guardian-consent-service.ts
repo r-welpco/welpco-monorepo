@@ -23,7 +23,7 @@ export interface SubmitGuardianRequestPayload {
   guardianFullName: string;
   guardianEmail: string;
   guardianPhone: string;
-  relationshipType: "Parent" | "Legal Guardian" | "Other";
+  relationshipType: "Parent" | "Legal Guardian";
 }
 
 export interface GuardianReviewPreviewResponse {
@@ -65,6 +65,22 @@ export async function getGuardianReviewPreview(
 export async function approveGuardianConsent(token: string): Promise<{ approved: boolean }> {
   return apiClient.post<{ approved: boolean }>(
     "/api/verification/guardian/approve",
+    { token },
+    { skipAuth: true },
+  );
+}
+
+export async function declineGuardianConsent(token: string): Promise<{ declined: boolean }> {
+  return apiClient.post<{ declined: boolean }>(
+    "/api/verification/guardian/decline",
+    { token },
+    { skipAuth: true },
+  );
+}
+
+export async function revokeGuardianConsent(token: string): Promise<{ revoked: boolean }> {
+  return apiClient.post<{ revoked: boolean }>(
+    "/api/verification/guardian/revoke",
     { token },
     { skipAuth: true },
   );

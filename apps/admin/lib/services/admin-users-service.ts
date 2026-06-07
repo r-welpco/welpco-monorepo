@@ -26,7 +26,7 @@ export interface AdminUserRow {
   /** Welper only: fee paid for background check. null for non-welpers. */
   backgroundCheckPaid?: boolean | null;
   backgroundCheckStatus?: string | null;
-  /** Customer/Welper signup wizard progress; null for Admin/Guardian. */
+  /** Customer/Welper signup wizard progress; null for Admin. */
   signupStepsCompleted?: number | null;
   signupStepsRequired?: number | null;
   profilePhotoUrl?: string | null;

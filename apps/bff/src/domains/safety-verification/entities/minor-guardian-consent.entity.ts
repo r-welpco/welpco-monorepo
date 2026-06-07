@@ -9,7 +9,11 @@ import {
   Index,
 } from 'typeorm';
 import { UserAccount } from '../../user-management/entities/user-account.entity';
-import { RelationshipType } from '../../user-management/entities/guardian-account.entity';
+
+export enum RelationshipType {
+  PARENT = 'Parent',
+  LEGAL_GUARDIAN = 'Legal Guardian',
+}
 
 export enum GuardianConsentStatus {
   PENDING = 'pending',
@@ -56,8 +60,19 @@ export class MinorGuardianConsent {
   @Column({ name: 'token_expires_at', type: 'timestamptz', nullable: true })
   tokenExpiresAt!: Date | null;
 
+  @Column({
+    name: 'management_token_hash',
+    type: 'varchar',
+    length: 64,
+    nullable: true,
+  })
+  managementTokenHash!: string | null;
+
   @Column({ name: 'consented_at', type: 'timestamptz', nullable: true })
   consentedAt!: Date | null;
+
+  @Column({ name: 'revoked_at', type: 'timestamptz', nullable: true })
+  revokedAt!: Date | null;
 
   @Column({ name: 'ip_address', type: 'varchar', length: 45, nullable: true })
   ipAddress!: string | null;

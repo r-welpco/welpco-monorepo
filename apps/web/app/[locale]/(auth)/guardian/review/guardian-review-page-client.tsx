@@ -14,7 +14,9 @@ import { Box } from "@welpco/ui/box";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
   useApproveGuardianConsent,
+  useDeclineGuardianConsent,
   useGuardianReviewPreview,
+  useRevokeGuardianConsent,
 } from "@/lib/hooks/use-guardian-consent";
 
 const CARD_STYLE = { width: "100%", maxWidth: "480px", minWidth: 0 } as const;
@@ -28,8 +30,6 @@ function relationshipLabel(
       return t("relationshipParent");
     case "Legal Guardian":
       return t("relationshipLegalGuardian");
-    case "Other":
-      return t("relationshipOther");
     default:
       return relationshipType;
   }
@@ -41,7 +41,11 @@ export default function GuardianReviewPageClient() {
   const token = searchParams.get("token");
   const { data: preview, isLoading, isError } = useGuardianReviewPreview(token);
   const approve = useApproveGuardianConsent();
+  const decline = useDeclineGuardianConsent();
+  const revoke = useRevokeGuardianConsent();
   const [approved, setApproved] = useState(false);
+  const [declined, setDeclined] = useState(false);
+  const [revoked, setRevoked] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!token) {
@@ -103,6 +107,25 @@ export default function GuardianReviewPageClient() {
   const minorName = [preview.minorFirstName, preview.minorLastName].filter(Boolean).join(" ").trim();
   const localizedRelationship = relationshipLabel(preview.relationshipType, t);
 
+  if (declined || revoked) {
+    return (
+      <AuthBackground>
+        <Card size="4" variant="surface" style={CARD_STYLE}>
+          <Flex direction="column" gap="4" style={{ minWidth: 0 }}>
+            <Heading as="h1" size="6" trim="start">
+              {revoked ? t("revokedTitle") : t("declinedTitle")}
+            </Heading>
+            <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="status">
+              <Callout.Text>
+                {revoked ? t("revokedDescription") : t("declinedDescription")}
+              </Callout.Text>
+            </Callout.Root>
+          </Flex>
+        </Card>
+      </AuthBackground>
+    );
+  }
+
   if (preview.alreadyApproved || approved) {
     return (
       <AuthBackground>
@@ -123,6 +146,28 @@ export default function GuardianReviewPageClient() {
                 {preview.alreadyApproved ? t("alreadyApprovedCallout") : t("successCallout")}
               </Callout.Text>
             </Callout.Root>
+            <Button
+              size="2"
+              variant="soft"
+              color={SEMANTIC_COLOR.danger}
+              disabled={revoke.isPending}
+              onClick={() => {
+                setError(null);
+                void revoke
+                  .mutateAsync(token)
+                  .then(() => setRevoked(true))
+                  .catch((err: unknown) =>
+                    setError(err instanceof Error ? err.message : t("errors.revokeFailed")),
+                  );
+              }}
+            >
+              {revoke.isPending ? t("revoking") : t("revoke")}
+            </Button>
+            {error ? (
+              <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface">
+                <Callout.Text>{error}</Callout.Text>
+              </Callout.Root>
+            ) : null}
           </Flex>
         </Card>
       </AuthBackground>
@@ -194,6 +239,23 @@ export default function GuardianReviewPageClient() {
             }}
           >
             {approve.isPending ? t("approving") : t("approve")}
+          </Button>
+          <Button
+            size="3"
+            variant="soft"
+            color={SEMANTIC_COLOR.danger}
+            disabled={approve.isPending || decline.isPending}
+            onClick={() => {
+              setError(null);
+              void decline
+                .mutateAsync(token)
+                .then(() => setDeclined(true))
+                .catch((err: unknown) =>
+                  setError(err instanceof Error ? err.message : t("errors.declineFailed")),
+                );
+            }}
+          >
+            {decline.isPending ? t("declining") : t("decline")}
           </Button>
         </Flex>
       </Card>

@@ -25,7 +25,6 @@ export interface AdminDashboardSnapshot {
     deactivatedUsers: number;
     customers: number;
     welpers: number;
-    guardians: number;
     welpersPending: number;
     welpersSignupIncomplete: number;
     welpersBgInProgress: number;
