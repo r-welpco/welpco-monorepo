@@ -16,6 +16,7 @@ type RequestWithRawBody = Request & { rawBody?: Buffer };
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { PaymentService } from './payment.service';
+import { PayoutBatchService } from './payout-batch.service';
 import { createStripeClient } from './stripe-client';
 import { BackgroundCheckPaymentService } from '../safety-verification/background-check-payment.service';
 
@@ -27,6 +28,7 @@ export class StripeWebhookController {
   constructor(
     private readonly config: ConfigService,
     private readonly paymentService: PaymentService,
+    private readonly payoutBatchService: PayoutBatchService,
     private readonly backgroundCheckPaymentService: BackgroundCheckPaymentService,
   ) {}
 
@@ -35,7 +37,7 @@ export class StripeWebhookController {
   @ApiOperation({
     summary: 'Stripe webhook (signature verified)',
     description:
-      'Configure events including checkout.session.completed (background check), payment_intent.*, setup_intent.succeeded, and charge.refunded.',
+      'Configure events including checkout.session.completed (background check), payment_intent.*, setup_intent.succeeded, charge.refunded, transfer.created, and transfer.failed.',
   })
   async handleStripe(
     @Req() req: RequestWithRawBody,
@@ -76,6 +78,15 @@ export class StripeWebhookController {
         }
       }
       await this.paymentService.processWebhookEvent(event);
+      if (event.type === 'transfer.created') {
+        await this.payoutBatchService.handleTransferWebhook(
+          event.data.object as Stripe.Transfer,
+        );
+      } else if (event.type === 'transfer.failed') {
+        await this.payoutBatchService.handleTransferFailed(
+          event.data.object as Stripe.Transfer,
+        );
+      }
     } catch (e) {
       this.logger.error(`Webhook processing failed: ${(e as Error).message}`);
       throw new HttpException('Webhook processing failed', HttpStatus.INTERNAL_SERVER_ERROR);

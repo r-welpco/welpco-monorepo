@@ -13,6 +13,7 @@ import { Dispute } from './entities/dispute.entity';
 import { Resolution } from './entities/resolution.entity';
 import { BookingRequest, BookingRequestStatus } from '../booking/entities/booking-request.entity';
 import { PaymentService } from '../payment/payment.service';
+import { WelperPayoutLedgerService } from '../payment/welper-payout-ledger.service';
 import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { AdminAuditService } from '../user-management/admin/admin-audit.service';
 import { S3UrlPresignerService } from '../../clients/s3';
@@ -119,6 +120,13 @@ describe('DisputeService', () => {
         { provide: getRepositoryToken(Message), useValue: mockMessageRepo },
         { provide: DataSource, useValue: mockDataSource },
         { provide: PaymentService, useValue: mockPaymentService },
+        {
+          provide: WelperPayoutLedgerService,
+          useValue: {
+            excludeForDispute: jest.fn().mockResolvedValue(undefined),
+            restoreAfterDisputeResolved: jest.fn().mockResolvedValue(undefined),
+          },
+        },
         { provide: ApplicationSettingsService, useValue: mockApplicationSettings },
         { provide: AdminAuditService, useValue: { record: jest.fn().mockResolvedValue(undefined) } },
         {
@@ -217,9 +225,8 @@ describe('DisputeService', () => {
       const [recipient, params] = mockNotificationService.emitForUser.mock.calls[0]!;
       expect(recipient).toBe('welp-1'); // counterparty, NOT the filer
       expect(params.category).toBe(NotificationCategory.DISPUTE);
-      expect(params.title).toMatch(/problem report/i);
-      expect(params.body).toContain(createDto.subject);
-      expect(params.link).toContain('/dashboard/disputes/dispute-new');
+      expect(params.disputeEmailType).toBe('dispute_filed');
+      expect(params.disputeEmailVariables).toMatchObject({ subject: createDto.subject });
       expect(params.metadata).toMatchObject({
         disputeId: 'dispute-new',
         bookingId: 'booking-1',

@@ -9,6 +9,9 @@ import {
   customerHourlyChargeFromWelperRate,
   floorToReceiptBillingStep,
   snapReceiptBillingWindow,
+  computeWelperGrossCentsFromCustomerSubtotal,
+  computePlatformGrossCents,
+  computeWelperRefundShareCents,
 } from './booking-pricing';
 
 describe('booking-pricing', () => {
@@ -51,5 +54,18 @@ describe('booking-pricing', () => {
     expect(snapped.checkIn.getMinutes()).toBe(0);
     expect(snapped.checkOut.getHours()).toBe(10);
     expect(snapped.checkOut.getMinutes()).toBe(0);
+  });
+
+  it('splits customer subtotal into welper gross and platform gross (25% fee)', () => {
+    expect(computeWelperGrossCentsFromCustomerSubtotal(12500)).toBe(10000);
+    expect(computePlatformGrossCents(12500)).toBe(2500);
+    expect(computeWelperGrossCentsFromCustomerSubtotal(0)).toBe(0);
+  });
+
+  it('allocates welper refund share proportionally from customer refund', () => {
+    const subtotal = 10000;
+    const total = 11300;
+    expect(computeWelperRefundShareCents(5650, subtotal, total)).toBe(4000);
+    expect(computeWelperRefundShareCents(11300, subtotal, total)).toBe(8000);
   });
 });

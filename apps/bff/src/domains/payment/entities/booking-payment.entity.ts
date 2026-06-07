@@ -65,4 +65,11 @@ export class BookingPayment extends BaseEntity {
 
   @Column({ name: 'fully_refunded_at', type: 'timestamptz', nullable: true })
   fullyRefundedAt!: Date | null;
+
+  @Column({ name: 'stripe_balance_transaction_id', type: 'varchar', length: 255, nullable: true })
+  stripeBalanceTransactionId!: string | null;
+
+  /** Stripe processing fee on this charge (platform-paid). */
+  @Column({ name: 'stripe_fee_cents', type: 'int', nullable: true })
+  stripeFeeCents!: number | null;
 }

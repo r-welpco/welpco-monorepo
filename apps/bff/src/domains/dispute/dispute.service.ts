@@ -24,6 +24,7 @@ import { CreateResolutionDto } from './dto/create-resolution.dto';
 import { DisputeParticipantSummaryDto } from './dto/dispute-participant-summary.dto';
 import { DisputeResolutionSummaryDto } from './dto/dispute-resolution-summary.dto';
 import { PaymentService, type RefundCapturedResult } from '../payment/payment.service';
+import { WelperPayoutLedgerService } from '../payment/welper-payout-ledger.service';
 import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { majorCurrencyUnitsToCents } from '../payment/money';
 import { AdminAuditService } from '../user-management/admin/admin-audit.service';
@@ -89,6 +90,7 @@ export class DisputeService {
     private readonly messageRepo: Repository<Message>,
     private readonly dataSource: DataSource,
     private readonly paymentService: PaymentService,
+    private readonly welperPayoutLedgerService: WelperPayoutLedgerService,
     private readonly applicationSettings: ApplicationSettingsService,
     private readonly adminAuditService: AdminAuditService,
     private readonly s3Presigner: S3UrlPresignerService,
@@ -419,6 +421,8 @@ export class DisputeService {
       await bookingRepo.save(booking);
 
       await queryRunner.commitTransaction();
+
+      await this.welperPayoutLedgerService.excludeForDispute(bookingId);
 
       // NOTIFICATIONS-001: notify the OTHER party that a problem report was
       // filed. Filer already knows; we don't ping them. Body keeps the
@@ -789,6 +793,10 @@ export class DisputeService {
         await this.emitBookingLifecycleNotifications(booking, 'booking_cancelled', 'dispute_cancelled');
       }
 
+      if (nextStatus === BookingRequestStatus.COMPLETED) {
+        await this.welperPayoutLedgerService.restoreAfterDisputeResolved(booking.id);
+      }
+
       return {
         id: saved.id,
         disputeId: saved.disputeId,
@@ -884,6 +892,10 @@ export class DisputeService {
       }
 
       await queryRunner.commitTransaction();
+
+      if (booking?.status === BookingRequestStatus.COMPLETED) {
+        await this.welperPayoutLedgerService.restoreAfterDisputeResolved(dispute.bookingId);
+      }
 
       // Audit log: keep a trail even though the actor isn't staff. Same audit
       // table the resolution flow writes to — search by `action =

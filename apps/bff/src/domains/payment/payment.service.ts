@@ -30,6 +30,8 @@ import {
   buildBookingActionUrl,
   getFrontendBaseUrl,
 } from '../notification/notification-locale.helper';
+import { WelperPayoutLedgerService } from './welper-payout-ledger.service';
+import { syncStripeFeeForPaymentIntent } from './stripe-fee.util';
 
 export const PAYMENT_METHOD_REQUIRED_CODE = 'PAYMENT_METHOD_REQUIRED';
 /** Saved card cannot be charged off-session (e.g. SCA). Welper cannot complete accept until customer fixes card or pays another way. */
@@ -73,6 +75,7 @@ export class PaymentService {
     private readonly bookingTaxService: BookingTaxService,
     private readonly customerProfileService: CustomerProfileService,
     private readonly notificationService: NotificationService,
+    private readonly welperPayoutLedgerService: WelperPayoutLedgerService,
   ) {
     const key = this.config.get<string>('STRIPE_SECRET_KEY');
     this.stripe = key ? createStripeClient(key) : null;
@@ -562,8 +565,34 @@ export class PaymentService {
 
     validateTransition(booking.status, BookingRequestStatus.PAYMENT_RELEASED);
     booking.status = BookingRequestStatus.PAYMENT_RELEASED;
+    booking.paymentReleasedAt = new Date();
     await this.bookingRepo.save(booking);
+    await this.syncCapturedPaymentStripeFees(bookingId);
+    await this.welperPayoutLedgerService.createLedgerForPaymentReleased(bookingId);
     await this.emitBookingPaymentReleased(booking);
+  }
+
+  private async syncCapturedPaymentStripeFees(bookingId: string): Promise<void> {
+    if (!this.stripe) return;
+    const rows = await this.bookingPaymentRepo.find({
+      where: { bookingId, status: BookingPaymentRecordStatus.CAPTURED },
+    });
+    for (const row of rows) {
+      if (row.stripeFeeCents != null) continue;
+      try {
+        const { feeCents, balanceTransactionId } = await syncStripeFeeForPaymentIntent(
+          this.stripe,
+          row.stripePaymentIntentId,
+        );
+        row.stripeFeeCents = feeCents;
+        row.stripeBalanceTransactionId = balanceTransactionId;
+        await this.bookingPaymentRepo.save(row);
+      } catch (err) {
+        this.logger.warn(
+          `Fee sync on payment release failed for ${row.stripePaymentIntentId}: ${(err as Error).message}`,
+        );
+      }
+    }
   }
 
   async syncPaymentIntentFromWebhook(pi: Stripe.PaymentIntent): Promise<void> {
@@ -580,6 +609,18 @@ export class PaymentService {
       row.capturedAt = new Date();
       if (row.capturedAmountCents == null && typeof pi.amount_received === 'number') {
         row.capturedAmountCents = pi.amount_received;
+      }
+      if (this.stripe && row.stripeFeeCents == null) {
+        try {
+          const { feeCents, balanceTransactionId } = await syncStripeFeeForPaymentIntent(
+            this.stripe,
+            pi.id,
+          );
+          row.stripeFeeCents = feeCents;
+          row.stripeBalanceTransactionId = balanceTransactionId;
+        } catch {
+          // non-fatal; ledger sync retries later
+        }
       }
     }
     await this.bookingPaymentRepo.save(row);
@@ -1268,6 +1309,7 @@ export class PaymentService {
     const delta = charge.amount_refunded - previouslyRefunded;
     if (delta > 0) {
       await this.emitRefundIssued(row, delta);
+      await this.welperPayoutLedgerService.applyRefundDelta(row.bookingId, delta);
     }
   }
 

@@ -104,3 +104,37 @@ export function computeOneHourHoldTotalCents(
 ): number {
   return Math.round(computeOneHourHoldTotal(hourlyRate, taxRateBps) * 100);
 }
+
+/** Welper service earnings from customer-facing subtotal (pre-tax, no fees deducted). */
+export function computeWelperGrossCentsFromCustomerSubtotal(subtotalCents: number): number {
+  if (!Number.isFinite(subtotalCents) || subtotalCents <= 0) return 0;
+  return Math.round(subtotalCents * WELPER_HOURLY_RATE_SHARE);
+}
+
+/** Platform service-fee portion from customer-facing subtotal (pre-tax). */
+export function computePlatformGrossCents(subtotalCents: number): number {
+  if (!Number.isFinite(subtotalCents) || subtotalCents <= 0) return 0;
+  return subtotalCents - computeWelperGrossCentsFromCustomerSubtotal(subtotalCents);
+}
+
+/**
+ * Allocate a customer refund (total cents incl. tax when applicable) to the welper
+ * share proportionally against the original customer service subtotal.
+ */
+export function computeWelperRefundShareCents(
+  refundTotalCents: number,
+  customerSubtotalCents: number,
+  customerTotalCents: number,
+): number {
+  if (
+    !Number.isFinite(refundTotalCents) ||
+    refundTotalCents <= 0 ||
+    customerSubtotalCents <= 0 ||
+    customerTotalCents <= 0
+  ) {
+    return 0;
+  }
+  const welperGross = computeWelperGrossCentsFromCustomerSubtotal(customerSubtotalCents);
+  const refundOnSubtotal = Math.round((refundTotalCents * customerSubtotalCents) / customerTotalCents);
+  return Math.min(welperGross, Math.round((refundOnSubtotal * welperGross) / customerSubtotalCents));
+}

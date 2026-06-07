@@ -332,8 +332,9 @@
               "type": "list",
               "items": [
                 "Certaines fonctionnalités du Site peuvent nécessiter des frais, incluant notamment des frais de service applicables aux transactions effectuées via la plateforme.",
-                "Welpco applique généralement des frais de service équivalents à 20 % du montant du service fixé par le Prestataire. Ces frais sont ajoutés au prix affiché et sont payés par le Client lors de la transaction.",
-                "Le Prestataire reçoit le montant qu’il a fixé pour le service, sous réserve des frais applicables et des modalités du fournisseur de paiement.",
+                "Welpco applique généralement des frais de service équivalents à 25 % du montant du service fixé par le Prestataire. Ces frais sont ajoutés au tarif affiché du Prestataire et sont payés par le Client lors de la transaction.",
+                "Le Prestataire reçoit l’intégralité du montant qu’il a fixé pour le service (son tarif horaire multiplié par les heures facturées). Welpco ne déduit pas les frais de traitement des paiements des gains du Prestataire; Welpco absorbe les frais de traitement Stripe sur le compte plateforme.",
+                "Les versements aux Prestataires sont effectués chaque vendredi (America/Toronto), au moins sept (7) jours après le déblocage du paiement client pour une réservation terminée, sous réserve de l’activation de Stripe Connect et de l’absence de litige ouvert ou de remboursement intégral.",
                 "Certains services, tels que les vérifications d’antécédents, peuvent également être assujettis à des frais distincts. Ces frais sont clairement indiqués avant leur facturation et sont, sauf indication contraire, non remboursables.",
                 "En utilisant le Site, vous acceptez de payer tous les frais applicables et reconnaissez que ceux-ci peuvent être modifiés en tout temps par Welpco, avec effet lors de leur publication ou lors de la prochaine transaction."
               ]
@@ -360,7 +361,7 @@
               "items": [
                 "En utilisant les services payants du Site, vous acceptez de payer tous les frais applicables, incluant le prix du service fixé par le Prestataire ainsi que les frais de service de Welpco, tels qu’indiqués au moment de la transaction.",
                 "Les paiements sont effectués via des méthodes de paiement sécurisées proposées sur le Site et sont traités par un fournisseur de services de paiement tiers, notamment Stripe.",
-                "Selon le fonctionnement de la plateforme, les fonds peuvent être temporairement retenus jusqu’à la confirmation de la réalisation du service, après quoi ils sont transférés au Prestataire, sous réserve des délais et conditions du fournisseur de paiement.",
+                "Selon le fonctionnement de la plateforme, les fonds du Client peuvent être temporairement retenus jusqu’à la confirmation de la réalisation du service. Après capture, les gains du Prestataire deviennent admissibles au versement hebdomadaire du vendredi, au moins sept (7) jours après le déblocage du paiement, via Stripe Connect vers le compte connecté du Prestataire.",
                 "L’utilisateur reconnaît que Welpco ne contrôle pas les délais de traitement des paiements et ne peut être tenue responsable des retards, interruptions ou frais supplémentaires imposés par le fournisseur de paiement."
               ]
             }
@@ -375,8 +376,9 @@
               "type": "list",
               "items": [
                 "Welpco applique des frais de service sur les transactions effectuées via la plateforme.",
-                "Ces frais de service sont généralement équivalents à 20 % du montant du service fixé par le Prestataire et sont ajoutés au prix payable par le Client au moment de la transaction.",
-                "Le Prestataire reçoit le montant qu’il a fixé pour le service, sous réserve des conditions applicables du fournisseur de paiement.",
+                "Ces frais de service sont généralement équivalents à 25 % du montant du service fixé par le Prestataire et sont ajoutés au prix payable par le Client au moment de la transaction.",
+                "Le Prestataire reçoit son montant de service complet; Welpco absorbe les frais de traitement des paiements et ne les déduit pas des versements au Prestataire.",
+                "Les versements hebdomadaires ont lieu le vendredi (America/Toronto) une fois la période de retenue minimale et les autres conditions d’admissibilité remplies.",
                 "Les détails concernant les frais applicables, incluant tout frais additionnel, sont clairement indiqués au moment de la transaction ou sur le Site.",
                 "Welpco se réserve le droit de modifier ses frais de service à tout moment, lesquels prendront effet lors de leur publication ou lors de la prochaine transaction."
               ]

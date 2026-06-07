@@ -32,6 +32,7 @@ import { AccountType, AccountStatus, UserAccount } from '../entities/user-accoun
 import { BackgroundCheckStatus } from '../entities/verification-status.entity';
 import { AccountLockoutService } from '../auth/account-lockout.service';
 import { PaymentService } from '../../payment/payment.service';
+import { PayoutBatchService } from '../../payment/payout-batch.service';
 import {
   ApplicationSettingsService,
   PAYMENT_CAPTURE_DELAY_KEY,
@@ -73,6 +74,7 @@ export class AdminController {
     private readonly supportTicketService: SupportTicketService,
     private readonly adminAuditService: AdminAuditService,
     private readonly jobPostingService: JobPostingService,
+    private readonly payoutBatchService: PayoutBatchService,
   ) {}
 
   @Get('users')
@@ -589,6 +591,75 @@ export class AdminController {
     const csv = header + lines.join('\n');
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="welpco-payments.csv"');
+    res.send(csv);
+  }
+
+  @Get('payouts/upcoming')
+  @ApiOperation({ summary: 'Preview upcoming Friday welper payout batch' })
+  async getPayoutUpcoming() {
+    return this.payoutBatchService.getUpcomingPreview();
+  }
+
+  @Get('payouts/batches')
+  @ApiOperation({ summary: 'List welper payout batches' })
+  @ApiQuery({ name: 'payoutFriday', required: false, description: 'YYYY-MM-DD (Toronto)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async listPayoutBatches(
+    @Query('payoutFriday') payoutFriday?: string,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
+  ) {
+    const batches = await this.payoutBatchService.listBatches(limit, payoutFriday?.trim() || undefined);
+    return { data: batches };
+  }
+
+  @Get('payouts/batches/:id')
+  @ApiOperation({ summary: 'Full payout batch review payload' })
+  @ApiParam({ name: 'id', description: 'Payout batch ID' })
+  async getPayoutBatch(@Param('id') id: string) {
+    return this.payoutBatchService.getBatchReview(id);
+  }
+
+  @Post('payouts/batches/build')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Build or refresh draft payout batch for a Friday' })
+  async buildPayoutBatch(
+    @CurrentUser() actor: CurrentUserData,
+    @Body('payoutFriday') payoutFriday?: string,
+  ) {
+    const batch = await this.payoutBatchService.buildDraftBatch(payoutFriday?.trim() || undefined);
+    await this.adminAuditService.record(actor.userId, 'admin.payout_batch.build', {
+      batchId: batch.id,
+      payoutFriday: batch.payoutFriday,
+      bookingCount: batch.bookingCount,
+      welperCount: batch.welperCount,
+      totalWelperNetCents: batch.totalWelperNetCents,
+    });
+    return batch;
+  }
+
+  @Post('payouts/batches/:id/approve')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Approve payout batch and execute Stripe Connect transfers' })
+  @ApiParam({ name: 'id', description: 'Payout batch ID' })
+  async approvePayoutBatch(@CurrentUser() actor: CurrentUserData, @Param('id') id: string) {
+    const batch = await this.payoutBatchService.approveAndExecute(id, actor.userId);
+    await this.adminAuditService.record(actor.userId, 'admin.payout_batch.approve', {
+      batchId: batch.id,
+      payoutFriday: batch.payoutFriday,
+      status: batch.status,
+      totalWelperNetCents: batch.totalWelperNetCents,
+      welperCount: batch.welperCount,
+    });
+    return batch;
+  }
+
+  @Get('payouts/batches/:id/export')
+  @ApiOperation({ summary: 'Export payout batch as CSV for finance' })
+  @ApiParam({ name: 'id', description: 'Payout batch ID' })
+  async exportPayoutBatch(@Param('id') id: string, @Res() res: Response) {
+    const csv = await this.payoutBatchService.exportBatchCsv(id);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="welpco-payout-${id}.csv"`);
     res.send(csv);
   }
 

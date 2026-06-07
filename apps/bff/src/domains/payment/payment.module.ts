@@ -20,6 +20,11 @@ import { BookingTaxService } from './booking-tax.service';
 import { EmailVerifiedGuardModule } from '../../common/guards/email-verified.guard.module';
 import { NotificationModule } from '../notification/notification.module';
 import { SafetyVerificationModule } from '../safety-verification/safety-verification.module';
+import { BookingServiceReceipt } from '../booking/entities/booking-service-receipt.entity';
+import { PayoutBatch } from './entities/payout-batch.entity';
+import { WelperPayoutLedger } from './entities/welper-payout-ledger.entity';
+import { WelperPayoutLedgerService } from './welper-payout-ledger.service';
+import { PayoutBatchService } from './payout-batch.service';
 
 @Module({
   imports: [
@@ -32,6 +37,9 @@ import { SafetyVerificationModule } from '../safety-verification/safety-verifica
       BookingRequest,
       WelperProfile,
       CustomerProfile,
+      BookingServiceReceipt,
+      PayoutBatch,
+      WelperPayoutLedger,
     ]),
     CustomerProfileModule,
     EmailVerifiedGuardModule,
@@ -45,7 +53,16 @@ import { SafetyVerificationModule } from '../safety-verification/safety-verifica
     PaymentCaptureScheduler,
     StripeConnectService,
     BookingTaxService,
+    WelperPayoutLedgerService,
+    PayoutBatchService,
   ],
-  exports: [ApplicationSettingsService, PaymentService, StripeConnectService, BookingTaxService],
+  exports: [
+    ApplicationSettingsService,
+    PaymentService,
+    StripeConnectService,
+    BookingTaxService,
+    WelperPayoutLedgerService,
+    PayoutBatchService,
+  ],
 })
 export class PaymentModule {}

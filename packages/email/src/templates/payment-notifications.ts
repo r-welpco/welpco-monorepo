@@ -62,8 +62,8 @@ export function getPaymentNotificationCopy(
       return {
         title: fr ? "Versement en cours" : "Payout queued",
         body: fr
-          ? `${amountLabel} d\u2019une récente réservation est en route vers votre compte de versement.`
-          : `${amountLabel} from a recent booking is on its way to your payout account.`,
+          ? `${amountLabel} d\u2019une récente réservation sera versé sur votre compte Stripe Connect le prochain vendredi admissible (au moins 7 jours après la fin du service).`
+          : `${amountLabel} from a recent booking will be transferred to your Stripe Connect account on the next eligible Friday (at least 7 days after the job is completed).`,
       };
     case "payment_failed": {
       const detail = variables.failureReason?.trim()
