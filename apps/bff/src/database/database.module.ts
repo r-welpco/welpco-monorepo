@@ -41,6 +41,7 @@ import { SupportTicket } from '../domains/dispute/entities/support-ticket.entity
 import { Resolution } from '../domains/dispute/entities/resolution.entity';
 import { ApplicationSetting, BookingPayment, ProcessedWebhookEvent } from '../domains/payment/entities';
 import { BackgroundCheckOrder } from '../domains/safety-verification/entities';
+import { MinorGuardianConsent } from '../domains/safety-verification/entities/minor-guardian-consent.entity';
 import { JobPosting, JobApplication } from '../domains/job-posting/entities';
 import { postgresSslOption } from './db-cli-options';
 
@@ -78,6 +79,7 @@ const allEntities = [
   BookingPayment,
   ProcessedWebhookEvent,
   BackgroundCheckOrder,
+  MinorGuardianConsent,
   AdminAuditLog,
   JobPosting,
   JobApplication,

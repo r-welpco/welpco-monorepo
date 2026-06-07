@@ -10,7 +10,7 @@ import { Box } from "@welpco/ui/box";
 import { ProfilePhotoAvatar } from "@welpco/ui/platform/profile-management";
 
 import { DashboardStats } from "@/components/features/dashboard/dashboard-stats";
-import { RecentActivity } from "@/components/features/dashboard/recent-activity";
+import { RecentNotifications } from "@/components/features/dashboard/recent-notifications";
 import { QuickActions } from "@/components/features/dashboard/quick-actions";
 import { CustomerSetupChecklist } from "@/components/features/dashboard/customer-setup-checklist";
 import { WelperSetupChecklist } from "@/components/features/dashboard/welper-setup-checklist";
@@ -21,18 +21,15 @@ import { useDashboardUser } from "@/lib/hooks/use-dashboard-user";
 import { useCustomerProfile, useFavoriteWelpers, useWelperProfile } from "@/lib/hooks/use-profile";
 import { useBookings } from "@/lib/hooks/use-bookings";
 import {
-  buildDashboardActivities,
   computeCustomerStatsFromBookings,
   computeWelperStatsFromBookings,
   countUpcomingBookings,
   countPendingForWelper,
 } from "@/lib/dashboard/booking-dashboard";
 import {
-  useBookingStatusLabel,
   useCustomerHomeLabels,
   useWelperHomeLabels,
 } from "@/lib/i18n/use-dashboard-labels";
-import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 
 const BOOKINGS_DASHBOARD_LIMIT = 50;
 
@@ -62,8 +59,6 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
   const { data: session } = useSession();
   const welperHome = useWelperHomeLabels();
   const customerHome = useCustomerHomeLabels();
-  const dateFnsLocale = useDateFnsLocale();
-  const bookingStatusLabel = useBookingStatusLabel();
 
   const userRole = user?.role || "customer";
   const bookingsRole =
@@ -105,18 +100,24 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
       !normalizedCustomerSetup ||
       !normalizedCustomerSetup.setupComplete);
 
-  const welperSetupIncomplete =
+  const welperRequiredSetupIncomplete =
     userRole === "welper" &&
     ((welperSetupPending && !welperSetup) ||
       !normalizedWelperSetup ||
       !normalizedWelperSetup.setupComplete);
+
+  const welperChecklistVisible =
+    userRole === "welper" &&
+    ((welperSetupPending && !welperSetup) ||
+      !normalizedWelperSetup ||
+      normalizedWelperSetup.allSetupComplete !== true);
 
   const {
     data: bookingsResponse,
     isLoading: bookingsLoading,
   } = useBookings(
     { page: 1, limit: BOOKINGS_DASHBOARD_LIMIT, role: bookingsRole ?? "customer" },
-    { enabled: !!bookingsRole && !welperSetupIncomplete && !customerSetupIncomplete },
+    { enabled: !!bookingsRole && !welperRequiredSetupIncomplete && !customerSetupIncomplete },
   );
 
   const { data: customerProfile } = useCustomerProfile(user.id, userRole === "customer");
@@ -141,33 +142,6 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     return null;
   }, [userRole, bookings, favoriteWelpersList?.total, welperHome.stats, customerHome.stats]);
 
-  const activities = useMemo(() => {
-    if (!bookingsRole) return [];
-    return buildDashboardActivities(
-      bookings,
-      bookingsRole,
-      8,
-      bookingsRole === "welper"
-        ? {
-            jobTitle: welperHome.activityTitle,
-            formatStatus: bookingStatusLabel,
-            dateLocale: dateFnsLocale,
-          }
-        : {
-            jobTitle: customerHome.activityTitle,
-            formatStatus: bookingStatusLabel,
-            dateLocale: dateFnsLocale,
-          },
-    );
-  }, [
-    bookings,
-    bookingsRole,
-    welperHome.activityTitle,
-    customerHome.activityTitle,
-    bookingStatusLabel,
-    dateFnsLocale,
-  ]);
-
   const upcomingCount = useMemo(() => countUpcomingBookings(bookings), [bookings]);
   const pendingForWelper = useMemo(
     () => (userRole === "welper" ? countPendingForWelper(bookings) : 0),
@@ -182,9 +156,9 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     return customerHome.statsFootnote(bookings.length);
   }, [bookingsResponse, bookings.length, userRole, welperHome, customerHome]);
 
-  const welperShowSetupChecklist = userRole === "welper" && welperSetupIncomplete;
+  const welperShowSetupChecklist = welperChecklistVisible;
   const customerShowSetupChecklist = userRole === "customer" && customerSetupIncomplete;
-  const hideDashboardExtras = welperSetupIncomplete || customerSetupIncomplete;
+  const hideDashboardExtras = welperRequiredSetupIncomplete || customerSetupIncomplete;
 
   // The single concrete state line below the greeting. Avoids generic
   // "here's what's happening" copy — names a number when there is one.
@@ -193,7 +167,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
       return userRole === "welper" ? welperHome.loading : customerHome.loading;
     }
     if (userRole === "welper") {
-      if (welperSetupIncomplete && !welperShowSetupChecklist) {
+      if (welperRequiredSetupIncomplete && !welperShowSetupChecklist) {
         return welperHome.setupIncomplete;
       }
       if (pendingForWelper > 0) {
@@ -223,7 +197,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     upcomingCount,
     pendingForWelper,
     bookings,
-    welperSetupIncomplete,
+    welperRequiredSetupIncomplete,
     customerSetupIncomplete,
     customerShowSetupChecklist,
     welperShowSetupChecklist,
@@ -311,22 +285,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
               }
             />
 
-            <RecentActivity
-              activities={activities}
-              role={userRole === "welper" ? "welper" : "customer"}
-              loading={statsLoading}
-              welperLabels={
-                userRole === "welper"
-                  ? {
-                      ...welperHome.recentActivity,
-                      emptyCta: welperHome.recentActivity.completeProfile,
-                    }
-                  : {
-                      ...customerHome.recentActivity,
-                      emptyCta: customerHome.recentActivity.findWelper,
-                    }
-              }
-            />
+            <RecentNotifications />
           </>
         ) : null}
       </Flex>

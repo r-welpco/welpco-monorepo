@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
@@ -21,7 +21,6 @@ import {
 } from "@welpco/ui/select";
 import { Text } from "@welpco/ui/text";
 import { TextField } from "@welpco/ui/text-field";
-import { Dialog, DialogContent } from "@welpco/ui/dialog";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
   DEFAULT_IDENTITY_LABELS,
@@ -59,13 +58,15 @@ const SUPPORTED_COUNTRY_CODES = [
 
 type CountryCode = (typeof SUPPORTED_COUNTRY_CODES)[number];
 
-function calculateAge(dobIso: string): number | null {
+function calculateAgeUtc(dobIso: string): number | null {
   const dob = new Date(dobIso);
   if (Number.isNaN(dob.getTime())) return null;
-  const now = new Date();
-  let age = now.getFullYear() - dob.getFullYear();
-  const m = now.getMonth() - dob.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+  const today = new Date();
+  let age = today.getUTCFullYear() - dob.getUTCFullYear();
+  const monthDiff = today.getUTCMonth() - dob.getUTCMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getUTCDate() < dob.getUTCDate())) {
+    age -= 1;
+  }
   return age;
 }
 
@@ -135,7 +136,6 @@ export function IdentityStep({
 }: IdentityStepProps) {
   const labels = labelsProp ?? DEFAULT_IDENTITY_LABELS;
   const schema = useMemo(() => createSchema(labels), [labels]);
-  const [minorModalOpen, setMinorModalOpen] = useState(false);
   const selectedRole = state.selectedRole;
 
   const filled = state.filledData.identity;
@@ -175,17 +175,12 @@ export function IdentityStep({
       return;
     }
 
-    const age = calculateAge(values.dateOfBirth);
+    const age = calculateAgeUtc(values.dateOfBirth);
     if (age === null) {
       form.setError("dateOfBirth", {
         type: "manual",
         message: labels.validation.dobInvalid,
       });
-      return;
-    }
-
-    if (selectedRole === "welper" && age >= 14 && age < 18) {
-      setMinorModalOpen(true);
       return;
     }
 
@@ -197,7 +192,7 @@ export function IdentityStep({
       return;
     }
 
-    if (age < 18) {
+    if (selectedRole === "customer" && age < 18) {
       form.setError("dateOfBirth", {
         type: "manual",
         message: labels.validation.dobMinAge,
@@ -217,24 +212,6 @@ export function IdentityStep({
   });
 
   return (
-    <>
-      <Dialog open={minorModalOpen} onOpenChange={setMinorModalOpen}>
-        <DialogContent
-          title={labels.minorWelperModal.title}
-          description={labels.minorWelperModal.description}
-        >
-          <Flex justify="end" mt="4">
-            <Button
-              type="button"
-              color={SEMANTIC_COLOR.primary}
-              onClick={() => setMinorModalOpen(false)}
-            >
-              {labels.minorWelperModal.close}
-            </Button>
-          </Flex>
-        </DialogContent>
-      </Dialog>
-
       <Card
       size="4"
       variant="surface"
@@ -543,6 +520,5 @@ export function IdentityStep({
         </form>
       </Flex>
     </Card>
-    </>
   );
 }

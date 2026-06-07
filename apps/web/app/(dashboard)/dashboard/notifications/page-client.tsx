@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Container } from "@welpco/ui/container";
 import { Flex } from "@welpco/ui/flex";
 import { NotificationCenter } from "@welpco/ui/platform/notification";
-import type { NotificationCardProps } from "@welpco/ui/platform/notification";
 import {
   useNotifications,
   useUnreadCount,
@@ -14,48 +13,18 @@ import {
   useClearAllNotifications,
 } from "@/lib/hooks/use-notifications";
 import type { NotificationItem } from "@/lib/services/notification-service";
-import { formatDistanceToNow } from "date-fns";
 import type { Locale } from "date-fns";
 import { useDashboardNotificationLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import { normalizeDashboardActionUrl } from "@/lib/i18n/dashboard-navigation";
-
-// NOTIFICATIONS-001 + NOTIFICATIONS-002 (Day 16 dispatch 2): map every BFF
-// `NotificationCategory` to a card visual type. `message` and `dispute` are
-// new — the BFF emits them today; without these entries the cards would
-// fall back to `info` and lose their semantic colour.
-const CATEGORY_TO_TYPE: Record<string, NotificationCardProps["type"]> = {
-  booking: "booking",
-  payment: "payment",
-  review: "info",
-  message: "message",
-  dispute: "warning",
-  security: "warning",
-  system: "info",
-};
+import { mapNotificationToCardProps } from "@/lib/notifications/notification-card-mapper";
 
 function mapToCardProps(
   item: NotificationItem,
   viewLabel: string,
   dateLocale?: Locale,
-): NotificationCardProps {
-  const type = CATEGORY_TO_TYPE[item.category] ?? "info";
-  const actionUrl =
-    item.metadata && typeof item.metadata.actionUrl === "string"
-      ? item.metadata.actionUrl
-      : undefined;
-  return {
-    id: item.id,
-    title: item.title,
-    message: item.body,
-    type,
-    timestamp: formatDistanceToNow(new Date(item.createdAt), {
-      addSuffix: true,
-      locale: dateLocale,
-    }),
-    isRead: item.isRead,
-    actionLabel: actionUrl ? viewLabel : undefined,
-  };
+) {
+  return mapNotificationToCardProps(item, { viewLabel, dateLocale });
 }
 
 export default function NotificationsPageClient() {

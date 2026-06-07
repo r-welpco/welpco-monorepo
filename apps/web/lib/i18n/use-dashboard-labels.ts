@@ -21,6 +21,7 @@ export type WelperNavChromeLabels = {
 
 export type WelperNavLabels = {
   roleBadge: string;
+  minorBadge?: string;
   tabs: {
     dashboard: string;
     marketplace: string;
@@ -126,6 +127,7 @@ export function useWelperNavLabels(): WelperNavLabels {
   const chrome = useTranslations("dashboard.nav.chrome");
   return {
     roleBadge: t("roleBadge"),
+    minorBadge: t("minorBadge"),
     tabs: {
       dashboard: t("tabs.dashboard"),
       marketplace: t("tabs.marketplace"),
@@ -777,6 +779,7 @@ export function useWelperProfileLabels() {
       availability: t("tabs.availability"),
       serviceArea: t("tabs.serviceArea"),
       backgroundCheck: t("tabs.backgroundCheck"),
+      guardian: t("tabs.guardian"),
       payout: t("tabs.payout"),
     },
     overview: {
@@ -1343,6 +1346,16 @@ export function useDashboardNotificationLabels() {
     emptyUnreadTitle: t("emptyUnreadTitle"),
     emptyAllDescription: t("emptyAllDescription"),
     emptyUnreadDescription: t("emptyUnreadDescription"),
+  };
+}
+
+export function useRecentNotificationsLabels() {
+  const t = useTranslations("dashboard.home.recentNotifications");
+  return {
+    title: t("title"),
+    viewAll: t("viewAll"),
+    emptyTitle: t("emptyTitle"),
+    emptyDescription: t("emptyDescription"),
   };
 }
 

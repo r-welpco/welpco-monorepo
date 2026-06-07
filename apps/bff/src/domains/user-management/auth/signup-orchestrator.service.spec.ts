@@ -34,6 +34,7 @@ import { ProfileCreationService } from '../../profile-management/profile-creatio
 import { EmailVerificationService } from './email-verification.service';
 import { ReferralService } from '../referral/referral.service';
 import { BackgroundCheckService } from '../../safety-verification/background-check.service';
+import { GuardianConsentService } from '../../safety-verification/guardian-consent.service';
 
 /**
  * Day 15 — Phase 1 of the signup ↔ onboarding merge.
@@ -59,6 +60,11 @@ describe('SignupOrchestratorService', () => {
   let availabilityRepo: jest.Mocked<Repository<AvailabilityCalendar>>;
   let prefRepo: jest.Mocked<Repository<NotificationPreference>>;
   let profileCreationService: jest.Mocked<ProfileCreationService>;
+  let guardianConsentService: {
+    hasApprovedConsent: jest.Mock;
+    getStatus: jest.Mock;
+    isMinorWelper: jest.Mock;
+  };
   let dataSource: { transaction: jest.Mock };
 
   const mockUser = (overrides: Partial<UserAccount> = {}): UserAccount =>
@@ -127,6 +133,22 @@ describe('SignupOrchestratorService', () => {
     }) as WelperProfile;
 
   beforeEach(async () => {
+    guardianConsentService = {
+      hasApprovedConsent: jest.fn().mockResolvedValue(false),
+      getStatus: jest.fn().mockResolvedValue({
+        required: false,
+        status: null,
+        guardianFullName: null,
+        guardianEmail: null,
+        guardianPhone: null,
+        relationshipType: null,
+        consentedAt: null,
+        tokenExpiresAt: null,
+        signupStepComplete: false,
+      }),
+      isMinorWelper: jest.fn().mockResolvedValue(false),
+    };
+
     const repoMock = () => ({
       findOne: jest.fn(),
       find: jest.fn().mockResolvedValue([]),
@@ -219,6 +241,10 @@ describe('SignupOrchestratorService', () => {
               promoEnabled: true,
             }),
           },
+        },
+        {
+          provide: GuardianConsentService,
+          useFactory: () => guardianConsentService,
         },
         {
           provide: GEOCODE_SERVICE,
@@ -462,6 +488,120 @@ describe('SignupOrchestratorService', () => {
       expect(state.setupTasks?.some((t) => t.id === 'welperServiceArea' && !t.completed)).toBe(
         true,
       );
+    });
+
+    it('marks background check and payout as optional setup tasks', async () => {
+      userRepo.findOne.mockResolvedValue(
+        mockUser({ selectedRole: SelectedRole.WELPER, signupCompleted: false }),
+      );
+      welperRepo.findOne.mockResolvedValue(mockWelper());
+      offeringRepo.find.mockResolvedValue([] as never);
+      availabilityRepo.find.mockResolvedValue([] as never);
+      prefRepo.find.mockResolvedValue([] as never);
+
+      const state = await service.getState('user-1');
+      const bg = state.setupTasks?.find((t) => t.id === 'welperBackgroundCheck');
+      const payout = state.setupTasks?.find((t) => t.id === 'welperPayout');
+      expect(bg?.required).toBe(false);
+      expect(payout?.required).toBe(false);
+    });
+
+    it('uses welperGuardian instead of background check for minor welpers', async () => {
+      userRepo.findOne.mockResolvedValue(
+        mockUser({ selectedRole: SelectedRole.WELPER, signupCompleted: true, emailVerified: true }),
+      );
+      welperRepo.findOne.mockResolvedValue(
+        mockWelper({
+          dateOfBirth: new Date('2010-06-01'),
+          profileCompletionStatus: ProfileCompletionStatus.COMPLETE,
+        }),
+      );
+      offeringRepo.find.mockResolvedValue([
+        { welperId: 'user-1', active: true, serviceDescription: 'Title\n\nDesc' },
+      ] as never);
+      availabilityRepo.find.mockResolvedValue([
+        { welperId: 'user-1', available: true, dayOfWeek: DayOfWeek.MONDAY },
+      ] as never);
+      prefRepo.find.mockResolvedValue([] as never);
+      guardianConsentService.getStatus.mockResolvedValue({
+        required: true,
+        status: 'pending',
+        guardianFullName: 'Jane Lee',
+        guardianEmail: 'jane@example.com',
+        guardianPhone: '+14165551234',
+        relationshipType: 'Parent',
+        consentedAt: null,
+        tokenExpiresAt: new Date().toISOString(),
+        signupStepComplete: false,
+      });
+      guardianConsentService.hasApprovedConsent.mockResolvedValue(false);
+
+      const state = await service.getState('user-1');
+
+      expect(state.setupTasks?.some((t) => t.id === 'welperBackgroundCheck')).toBe(false);
+      expect(state.setupTasks?.some((t) => t.id === 'welperGuardian')).toBe(true);
+      expect(state.setupTasks?.find((t) => t.id === 'welperGuardian')?.required).toBe(true);
+      expect(state.discoverable).toBe(false);
+    });
+
+    it('sets discoverable when required setup is complete without background check approval', async () => {
+      userRepo.findOne.mockResolvedValue(
+        mockUser({
+          selectedRole: SelectedRole.WELPER,
+          signupCompleted: true,
+          emailVerified: true,
+        }),
+      );
+      welperRepo.findOne.mockResolvedValue(
+        mockWelper({
+          firstName: 'A',
+          lastName: 'B',
+          phoneNumber: {
+            countryCode: '+1',
+            number: '4165551234',
+            formatted: '+1 416-555-1234',
+          },
+          bio: 'x'.repeat(20),
+          profilePhotoUrl: 'https://example.com/photo.jpg',
+          serviceArea: {
+            type: 'radius',
+            centerAddress: {
+              city: 'Toronto',
+              stateProvince: 'ON',
+              zipPostalCode: 'M5V 2T6',
+            },
+            radiusKm: 25,
+          },
+          profileCompletionStatus: ProfileCompletionStatus.COMPLETE,
+          profileVisibility: ProfileVisibility.PUBLIC,
+          dateOfBirth: new Date('1995-01-01'),
+        }),
+      );
+      offeringRepo.find.mockResolvedValue([
+        {
+          welperId: 'user-1',
+          active: true,
+          serviceDescription: 'Title\n\nDesc',
+          serviceCategoryId: 'cat-1',
+          hourlyRate: 25,
+        },
+      ] as never);
+      availabilityRepo.find.mockResolvedValue([
+        {
+          welperId: 'user-1',
+          available: true,
+          dayOfWeek: DayOfWeek.MONDAY,
+          startTime: '09:00',
+          endTime: '17:00',
+        },
+      ] as never);
+      prefRepo.find.mockResolvedValue([] as never);
+
+      const state = await service.getState('user-1');
+
+      expect(state.setupComplete).toBe(true);
+      expect(state.allSetupComplete).toBe(false);
+      expect(state.discoverable).toBe(true);
     });
   });
 

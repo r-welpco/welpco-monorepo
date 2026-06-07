@@ -17,6 +17,7 @@ import { ListChecks, ChevronRight } from "lucide-react";
 import type { CustomerSetupTaskDto, WelperSetupTaskDto } from "@welpco/types";
 import { normalizeCustomerSetupChecklist } from "@/lib/dashboard/normalize-customer-setup-checklist";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
+import { getWelperSetupProgress } from "@/lib/dashboard/welper-setup-progress";
 import {
   CUSTOMER_SETUP_TASK_LABEL_KEYS,
   WELPER_SETUP_TASK_LABEL_KEYS,
@@ -99,21 +100,46 @@ export function SetupChecklistPopover({
 
   const data = isCustomer ? customerData : welperData;
 
-  const requiredTasks = useMemo(
-    () => data?.setupTasks.filter((task) => task.required) ?? [],
-    [data],
-  );
-  const pendingTasks = useMemo(
-    () => requiredTasks.filter((task) => !task.completed),
-    [requiredTasks],
-  );
-  const completedRequired = requiredTasks.length - pendingTasks.length;
-  const remainingCount = pendingTasks.length;
+  const welperProgress = useMemo(() => {
+    if (isCustomer || !welperData) return undefined;
+    return getWelperSetupProgress(welperData.setupTasks);
+  }, [isCustomer, welperData]);
+
+  const requiredTasks = useMemo(() => {
+    if (isCustomer) {
+      return data?.setupTasks.filter((task) => task.required) ?? [];
+    }
+    return welperProgress?.requiredTasks ?? [];
+  }, [isCustomer, data, welperProgress]);
+
+  const pendingTasks = useMemo(() => {
+    if (isCustomer) {
+      return requiredTasks.filter((task) => !task.completed);
+    }
+    if (!welperProgress) return [];
+    return welperProgress.pendingActionTasks;
+  }, [isCustomer, requiredTasks, welperProgress]);
+
+  const completedRequired = isCustomer
+    ? requiredTasks.length - pendingTasks.length
+    : welperProgress?.requiredComplete
+      ? requiredTasks.length
+      : requiredTasks.length - pendingTasks.length;
+  const remainingCount = isCustomer
+    ? pendingTasks.length
+    : welperProgress?.allComplete
+      ? 0
+      : (welperProgress?.pendingActionTasks.length ?? 0);
   const progressPct = Math.round(
     (completedRequired / Math.max(requiredTasks.length, 1)) * 100,
   );
+  const welperAllComplete = !isCustomer && (welperProgress?.allComplete ?? false);
 
-  if (isInitialLoad || !data || data.setupComplete || remainingCount === 0) {
+  if (isInitialLoad || !data || (isCustomer && data.setupComplete) || welperAllComplete) {
+    return null;
+  }
+
+  if (remainingCount === 0) {
     return null;
   }
 
@@ -143,10 +169,19 @@ export function SetupChecklistPopover({
                 {t("header.title")}
               </Text>
               <Text size="2" color="gray" as="p">
-                {t("header.subtitle", {
-                  done: completedRequired,
-                  total: requiredTasks.length,
-                })}
+                {isCustomer
+                  ? t("header.subtitle", {
+                      done: completedRequired,
+                      total: requiredTasks.length,
+                    })
+                  : welperProgress?.requiredComplete
+                    ? t("header.subtitleOptional", {
+                        count: welperProgress.pendingOptionalTasks.length,
+                      })
+                    : t("header.subtitle", {
+                        done: completedRequired,
+                        total: requiredTasks.length,
+                      })}
               </Text>
             </Box>
             <Progress

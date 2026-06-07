@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -10,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { EmailService } from '../user-management/email/email.service';
 import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
-import { UserAccount, AccountType } from '../user-management/entities/user-account.entity';
+import { UserAccount } from '../user-management/entities/user-account.entity';
 import {
   VerificationStatus,
   BackgroundCheckStatus,
@@ -293,24 +292,9 @@ export class BackgroundCheckService {
     return SIGNUP_COMPLETE_CERTN_STATUSES.has(certnStatus);
   }
 
-  async assertCanAcceptBookings(userId: string): Promise<void> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (!user || user.accountType !== AccountType.WELPER) return;
-
-    if (!(await this.isBackgroundCheckRequiredForUser(userId))) {
-      return;
-    }
-
-    const verification = await this.verificationRepo.findOne({ where: { userId } });
-    if (verification?.backgroundCheckStatus === BackgroundCheckStatus.PASSED) {
-      return;
-    }
-
-    throw new ForbiddenException({
-      code: 'BACKGROUND_CHECK_REQUIRED',
-      message:
-        'Your background check must be approved before you can accept bookings or appear in search.',
-    });
+  async assertCanAcceptBookings(_userId: string): Promise<void> {
+    // Background check is optional for accepting bookings; trust badge still
+    // reflects Passed status on public profiles.
   }
 
   async assertVisibleInSearch(userId: string): Promise<boolean> {

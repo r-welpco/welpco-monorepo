@@ -6,17 +6,18 @@ import { Popover, PopoverTrigger, PopoverContent } from "@welpco/ui/popover";
 import { Badge } from "@welpco/ui/badge";
 import { Box } from "@welpco/ui/box";
 import { NotificationCenter } from "@welpco/ui/platform/notification";
-import type { NotificationCardProps } from "@welpco/ui/platform/notification";
 import { Bell } from "lucide-react";
 import {
   DashboardHeaderIconTrigger,
   DASHBOARD_HEADER_GLYPH_SIZE,
 } from "@/components/layout/dashboard-header-icon-trigger";
-import { formatDistanceToNow } from "date-fns";
-import type { Locale } from "date-fns";
 import { useDashboardNotificationLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import { normalizeDashboardActionUrl } from "@/lib/i18n/dashboard-navigation";
+import {
+  getNotificationActionUrl,
+  mapNotificationToCardProps,
+} from "@/lib/notifications/notification-card-mapper";
 import {
   useNotifications,
   useUnreadCount,
@@ -26,42 +27,12 @@ import {
 } from "@/lib/hooks/use-notifications";
 import type { NotificationItem } from "@/lib/services/notification-service";
 
-// NOTIFICATIONS-001 + NOTIFICATIONS-002 (Day 16 dispatch 2): keep this map
-// in lock-step with `apps/web/app/(dashboard)/dashboard/notifications/page-client.tsx`.
-// `message` and `dispute` are new — without these the popover would fall
-// back to `info` and lose semantic colour.
-const CATEGORY_TO_TYPE: Record<string, NotificationCardProps["type"]> = {
-  booking: "booking",
-  payment: "payment",
-  review: "info",
-  message: "message",
-  dispute: "warning",
-  security: "warning",
-  system: "info",
-};
-
 function mapToCardProps(
   item: NotificationItem,
   viewLabel: string,
-  dateLocale?: Locale,
-): NotificationCardProps {
-  const type = CATEGORY_TO_TYPE[item.category] ?? "info";
-  const actionUrl =
-    item.metadata && typeof item.metadata.actionUrl === "string"
-      ? item.metadata.actionUrl
-      : undefined;
-  return {
-    id: item.id,
-    title: item.title,
-    message: item.body,
-    type,
-    timestamp: formatDistanceToNow(new Date(item.createdAt), {
-      addSuffix: true,
-      locale: dateLocale,
-    }),
-    isRead: item.isRead,
-    actionLabel: actionUrl ? viewLabel : undefined,
-  };
+  dateLocale?: import("date-fns").Locale,
+) {
+  return mapNotificationToCardProps(item, { viewLabel, dateLocale });
 }
 
 export interface NotificationBellPopoverProps {

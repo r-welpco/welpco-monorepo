@@ -312,7 +312,12 @@ export function useWelperSetupChecklist(enabled = true) {
     placeholderData: keepPreviousData,
     refetchInterval: (query) => {
       const data = query.state.data;
-      if (!data || data.setupComplete) return false;
+      if (!data) return false;
+      const allDone =
+        data.allSetupComplete ??
+        (data.setupComplete &&
+          !data.setupTasks.some((task) => !task.required && !task.completed));
+      if (allDone) return false;
       return 30_000;
     },
   });

@@ -11,3 +11,4 @@ export * from "./templates/payment-notifications";
 export * from "./templates/dispute-notifications";
 export * from "./templates/notification";
 export * from "./templates/background-check";
+export * from "./templates/guardian-consent";

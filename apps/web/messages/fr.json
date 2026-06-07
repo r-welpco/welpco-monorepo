@@ -1185,6 +1185,34 @@
         "resetFailed": "Impossible de réinitialiser le mot de passe. Le lien est peut-être expiré — demandez-en un nouveau."
       }
     },
+    "guardianReview": {
+      "invalidLinkTitle": "Ce lien de révision ne fonctionne pas",
+      "invalidLinkDescription": "Le lien est peut-être expiré ou déjà utilisé. Demandez au mineur d'envoyer une nouvelle demande depuis son profil.",
+      "invalidLinkCallout": "Demandez un nouveau courriel d'approbation depuis le profil Welpco du mineur.",
+      "loading": "Chargement de la demande…",
+      "title": "Approuver un compte Welper",
+      "intro": "{minorName} souhaite rejoindre Welpco en tant que Welper — une plateforme de services locaux.",
+      "yourRole": "Vous êtes indiqué comme {relationship} ({guardianName}).",
+      "explain": "En approuvant, vous confirmez être le parent ou tuteur légal et autorisez la création et l'utilisation d'un compte Welper sur Welpco.",
+      "relationshipParent": "Parent",
+      "relationshipLegalGuardian": "Tuteur légal",
+      "relationshipOther": "Autre",
+      "approve": "Approuver le compte",
+      "approving": "Approbation…",
+      "successTitle": "Approuvé",
+      "successDescription": "Merci. Le compte de {minorName} est approuvé. Il peut terminer la configuration sur Welpco.",
+      "successCallout": "Approbation enregistrée. Le mineur peut continuer la configuration sur Welpco.",
+      "alreadyApprovedTitle": "Déjà approuvé",
+      "alreadyApprovedDescription": "Vous avez déjà approuvé ce compte. Aucune autre action n'est requise.",
+      "alreadyApprovedCallout": "Aucune autre action n'est requise.",
+      "expiredTitle": "Lien expiré",
+      "expiredDescription": "Ce lien d'approbation a expiré. Demandez au mineur de renvoyer la demande depuis son profil.",
+      "expiredCallout": "Le mineur peut envoyer un nouveau courriel d'approbation depuis la configuration de son profil.",
+      "errors": {
+        "loadFailed": "Impossible de charger cette demande. Le lien est peut-être invalide.",
+        "approveFailed": "Impossible d'enregistrer votre approbation. Réessayez dans un instant."
+      }
+    },
     "verification": {
       "title": "Vérifiez votre compte",
       "codeSentPrefix": "Nous avons envoyé un code à 6 chiffres à",
@@ -1253,6 +1281,7 @@
         "welperOffering": "Offres de service",
         "welperAvailability": "Disponibilités",
         "welperBackgroundCheck": "Vérification des antécédents",
+        "welperGuardian": "Approbation du tuteur",
         "welperPayout": "Configuration des paiements",
         "optionalProfile": "Photo de profil",
         "customerHomeAddress": "Adresse domicile",
@@ -1261,15 +1290,24 @@
       "customerProgressTitle": "Complétez votre profil pour commencer à réserver",
       "customerAllComplete": "Votre profil est complet — vous pouvez réserver un Welper.",
       "title": "Terminez votre configuration",
-      "description": "Complétez ces étapes pour que les clients vous trouvent et que vous soyez payé.",
+      "description": "Complétez les étapes requises pour commencer à recevoir des réservations. La vérification des antécédents et Stripe sont recommandées ensuite.",
       "progress": "{done} sur {total} étapes requises terminées",
       "progressAria": "Progression de la configuration {percent} pour cent",
       "compactProgress": "Configuration — {done} sur {total} étapes",
+      "compactOptionalProgress": "Recommandé — {total, plural, one {# étape restante} other {# étapes restantes}}",
       "continueSetup": "Continuer la configuration",
+      "continueRecommended": "Terminer les étapes recommandées",
+      "requiredCompleteLive": "Vous pouvez recevoir des réservations. Terminez les étapes recommandées ci-dessous pour être vérifié et recevoir vos paiements.",
       "optional": "facultatif",
       "statusDone": "Terminé",
       "statusTodo": "À faire",
       "statusLinkSent": "Lien envoyé",
+      "statusGuardianPending": "En attente de l'approbation du tuteur",
+      "optionalHints": {
+        "welperBackgroundCheck": "Ajoute un badge vérifié à votre profil pour une meilleure visibilité et la confiance des clients.",
+        "welperPayout": "Nécessaire pour recevoir vos paiements une fois les mandats terminés.",
+        "welperGuardian": "Votre parent ou tuteur légal doit approuver votre compte avant que vous apparaissiez dans la recherche."
+      },
       "open": "Ouvrir",
       "verifyEmail": "Entrer le code",
       "resendVerification": "Renvoyer le courriel",
@@ -1277,15 +1315,15 @@
       "resendSent": "Envoyé. Vérifiez votre boîte dans une minute ou deux.",
       "resendFailed": "Impossible de renvoyer le courriel. Réessayez dans un instant.",
       "allCompleteDiscoverable": "Configuration terminée — vous êtes visible dans la recherche.",
-      "allCompletePendingBg": "Configuration terminée — vous serez visible après approbation de la vérification.",
       "header": {
         "title": "Terminer la configuration",
         "subtitle": "{done} sur {total} étapes — complétez le reste pour réserver",
+        "subtitleOptional": "{count, plural, one {# étape recommandée restante} other {# étapes recommandées restantes}}",
         "aria": "Liste de configuration, {count, plural, one {# étape restante} other {# étapes restantes}}"
       },
       "backgroundCheck": {
         "pageTitle": "Vérification des antécédents",
-        "pageSubtitle": "Payez les frais et complétez Certn pour travailler comme Welper.",
+        "pageSubtitle": "Obtenez le badge vérifié avec une vérification des antécédents. Vous pouvez recevoir des réservations avant l'approbation.",
         "adminReviewPending": "Paiement reçu. Cette étape reste ouverte jusqu'à l'approbation par un administrateur. Vous pouvez terminer Certn en attendant.",
         "adminApproved": "Votre vérification des antécédents est approuvée."
       },
@@ -1293,10 +1331,41 @@
         "pageTitle": "Configuration des paiements",
         "pageSubtitle": "Connectez Stripe pour recevoir vos paiements.",
         "connectedSuccess": "Votre compte Stripe est connecté. Vous pouvez recevoir vos paiements."
+      },
+      "guardian": {
+        "pageSubtitle": "Ajoutez votre parent ou tuteur légal pour qu'il approuve votre compte Welper.",
+        "notRequired": "L'approbation du tuteur n'est pas requise pour votre compte.",
+        "formTitle": "Coordonnées du tuteur",
+        "fullName": "Nom complet",
+        "fullNamePlaceholder": "Nom complet du parent ou tuteur",
+        "email": "Courriel",
+        "emailPlaceholder": "tuteur@exemple.com",
+        "phone": "Téléphone",
+        "phonePlaceholder": "+1 416 555 1234",
+        "relationship": "Lien de parenté",
+        "relationshipParent": "Parent",
+        "relationshipLegalGuardian": "Tuteur légal",
+        "relationshipOther": "Autre",
+        "submit": "Envoyer la demande d'approbation",
+        "submitting": "Envoi…",
+        "resend": "Renvoyer le courriel",
+        "resending": "Envoi…",
+        "resendSent": "Courriel envoyé. Demandez à votre tuteur de vérifier sa boîte de réception.",
+        "statusApprovedTitle": "Tuteur approuvé",
+        "statusApprovedDescription": "Votre tuteur a approuvé votre compte. Vous pourrez apparaître dans la recherche une fois le reste de la configuration terminé.",
+        "statusPendingTitle": "En attente de l'approbation du tuteur",
+        "statusPendingDescription": "Nous avons envoyé un courriel à {email}. Il doit ouvrir le lien et approuver avant que votre profil soit visible.",
+        "statusExpiredTitle": "Lien d'approbation expiré",
+        "statusExpiredDescription": "Mettez à jour les informations ci-dessous ou renvoyez le courriel pour obtenir un nouveau lien.",
+        "summaryGuardian": "Tuteur",
+        "summaryRelationship": "Lien de parenté",
+        "summaryEmail": "Courriel",
+        "summaryPhone": "Téléphone"
       }
     },
     "nav": {
       "roleBadge": "Welper",
+      "minorBadge": "Mineur",
       "customerRoleBadge": "Client",
       "tabs": {
         "dashboard": "Tableau de bord",
@@ -1365,6 +1434,12 @@
         "emptyTitle": "Aucune activité pour l'instant",
         "emptyDescription": "Les mandats et mises à jour s'affichent ici.",
         "completeProfile": "Compléter votre profil"
+      },
+      "recentNotifications": {
+        "title": "Notifications récentes",
+        "viewAll": "Tout voir",
+        "emptyTitle": "Aucune notification pour l'instant",
+        "emptyDescription": "Les réservations, messages et paiements s'affichent ici."
       },
       "customer": {
         "greeting": "Bon retour, {name}.",
@@ -1758,6 +1833,7 @@
         "availability": "Disponibilités",
         "serviceArea": "Zone",
         "backgroundCheck": "Vérification des antécédents",
+        "guardian": "Tuteur",
         "payout": "Configuration des paiements"
       },
       "overview": {

@@ -15,6 +15,7 @@ import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { CheckCircle2, Circle, CircleDashed } from "lucide-react";
 import type { WelperSetupTaskDto } from "@welpco/types";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
+import { getWelperSetupProgress } from "@/lib/dashboard/welper-setup-progress";
 import {
   WELPER_SETUP_TASK_LABEL_KEYS,
   welperTaskActionHref,
@@ -22,6 +23,8 @@ import {
 import { useResendVerification } from "@/lib/hooks/use-resend-verification";
 import { useBackgroundCheckStatus, useWelperSetupChecklist } from "@/lib/hooks/use-signup";
 import type { BackgroundCheckStatusResponse } from "@/lib/services/background-check-service";
+import { useGuardianConsentStatus } from "@/lib/hooks/use-guardian-consent";
+import type { GuardianConsentStatusResponse } from "@/lib/services/guardian-consent-service";
 
 function setupTaskLabel(
   task: WelperSetupTaskDto,
@@ -44,12 +47,37 @@ function setupTaskStatusLabel(
   task: WelperSetupTaskDto,
   t: ReturnType<typeof useTranslations<"dashboard.setup">>,
   bg: BackgroundCheckStatusResponse | undefined,
+  guardian: GuardianConsentStatusResponse | undefined,
 ): string {
   if (task.completed) return t("statusDone");
   if (task.id === "welperBackgroundCheck" && isBackgroundCheckLinkSent(bg)) {
     return t("statusLinkSent");
   }
+  if (task.id === "welperGuardian" && guardian?.status === "pending") {
+    return t("statusGuardianPending");
+  }
   return t("statusTodo");
+}
+
+function setupTaskOptionalHint(
+  task: WelperSetupTaskDto,
+  t: ReturnType<typeof useTranslations<"dashboard.setup">>,
+  bg: BackgroundCheckStatusResponse | undefined,
+  guardian: GuardianConsentStatusResponse | undefined,
+): string | undefined {
+  if (task.completed || task.required) return undefined;
+  if (task.id === "welperBackgroundCheck") {
+    if (isBackgroundCheckLinkSent(bg)) return undefined;
+    return t("optionalHints.welperBackgroundCheck");
+  }
+  if (task.id === "welperGuardian") {
+    if (guardian?.status === "pending") return undefined;
+    return t("optionalHints.welperGuardian");
+  }
+  if (task.id === "welperPayout") {
+    return t("optionalHints.welperPayout");
+  }
+  return undefined;
 }
 
 interface WelperSetupChecklistProps {
@@ -73,6 +101,7 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
     }
   }, [isWelperSession, isError, refetch]);
   const { data: backgroundCheck } = useBackgroundCheckStatus();
+  const { data: guardianConsent } = useGuardianConsentStatus(isWelperSession);
 
   const emailVerified = session?.user?.emailVerified === true;
   const data = useMemo(
@@ -104,29 +133,32 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
     );
   }
 
-  if (data.setupComplete) {
-    if (variant === "compact") return null;
-    return (
-      <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
-        <Callout.Text>
-          {data.discoverable ? t("allCompleteDiscoverable") : t("allCompletePendingBg")}
-        </Callout.Text>
-      </Callout.Root>
-    );
-  }
-
-  const requiredTasks = data.setupTasks.filter((task: WelperSetupTaskDto) => task.required);
-  const completedRequired = requiredTasks.filter((task: WelperSetupTaskDto) => task.completed).length;
+  const progress = getWelperSetupProgress(data.setupTasks);
+  const { requiredTasks, requiredComplete, allComplete, pendingOptionalTasks } = progress;
+  const completedRequired = requiredTasks.filter((task) => task.completed).length;
   const progressPct = Math.round(
     (completedRequired / Math.max(requiredTasks.length, 1)) * 100,
   );
 
-  if (variant === "compact") {
-    const nextTask = data.setupTasks.find(
-      (task: WelperSetupTaskDto) => task.required && !task.completed,
-    );
+  if (allComplete) {
+    if (variant === "compact") return null;
     return (
-      <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="status">
+      <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
+        <Callout.Text>{t("allCompleteDiscoverable")}</Callout.Text>
+      </Callout.Root>
+    );
+  }
+
+  if (variant === "compact") {
+    const nextTask =
+      progress.pendingActionTasks[0] ??
+      data.setupTasks.find((task: WelperSetupTaskDto) => !task.completed);
+    return (
+      <Callout.Root
+        color={requiredComplete ? SEMANTIC_COLOR.primary : SEMANTIC_COLOR.warning}
+        variant="surface"
+        role="status"
+      >
         <Flex
           align={{ initial: "stretch", sm: "center" }}
           justify="between"
@@ -135,15 +167,22 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
           direction={{ initial: "column", sm: "row" }}
         >
           <Callout.Text>
-            {t("compactProgress", {
-              done: completedRequired,
-              total: requiredTasks.length,
-            })}
+            {requiredComplete
+              ? t("compactOptionalProgress", { total: pendingOptionalTasks.length })
+              : t("compactProgress", {
+                  done: completedRequired,
+                  total: requiredTasks.length,
+                })}
           </Callout.Text>
           {nextTask ? (
-            <Button size="2" color={SEMANTIC_COLOR.warning} variant="soft" asChild>
+            <Button
+              size="2"
+              color={requiredComplete ? SEMANTIC_COLOR.primary : SEMANTIC_COLOR.warning}
+              variant="soft"
+              asChild
+            >
               <Link href={welperTaskActionHref(nextTask, locale, session?.user?.email ?? undefined)}>
-                {t("continueSetup")}
+                {requiredComplete ? t("continueRecommended") : t("continueSetup")}
               </Link>
             </Button>
           ) : null}
@@ -155,26 +194,35 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
   return (
     <Box>
       <Flex direction="column" gap="4">
-        <Box>
-          <Text size="2" weight="medium" mb="2" as="p">
-            {t("progress", { done: completedRequired, total: requiredTasks.length })}
-          </Text>
-          <Progress
-            value={progressPct}
-            size="2"
-            color={SEMANTIC_COLOR.primary}
-            aria-label={t("progressAria", { percent: progressPct })}
-          />
-        </Box>
+        {requiredComplete ? (
+          <Callout.Root color={SEMANTIC_COLOR.primary} variant="surface" role="status">
+            <Callout.Text>{t("requiredCompleteLive")}</Callout.Text>
+          </Callout.Root>
+        ) : (
+          <Box>
+            <Text size="2" weight="medium" mb="2" as="p">
+              {t("progress", { done: completedRequired, total: requiredTasks.length })}
+            </Text>
+            <Progress
+              value={progressPct}
+              size="2"
+              color={SEMANTIC_COLOR.primary}
+              aria-label={t("progressAria", { percent: progressPct })}
+            />
+          </Box>
+        )}
 
         <Flex direction="column" gap="2" asChild>
           <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-            {data.setupTasks.map((task: WelperSetupTaskDto) => (
+            {data.setupTasks
+              .filter((task: WelperSetupTaskDto) => !task.completed)
+              .map((task: WelperSetupTaskDto) => (
               <SetupTaskRow
                 key={task.id}
                 task={task}
                 label={setupTaskLabel(task, t)}
-                statusLabel={setupTaskStatusLabel(task, t, backgroundCheck)}
+                statusLabel={setupTaskStatusLabel(task, t, backgroundCheck, guardianConsent)}
+                optionalHint={setupTaskOptionalHint(task, t, backgroundCheck, guardianConsent)}
                 locale={locale}
                 sessionEmail={session?.user?.email ?? undefined}
               />
@@ -190,12 +238,14 @@ function SetupTaskRow({
   task,
   label,
   statusLabel,
+  optionalHint,
   locale,
   sessionEmail,
 }: {
   task: WelperSetupTaskDto;
   label: string;
   statusLabel: string;
+  optionalHint?: string;
   locale: Locale;
   sessionEmail?: string;
 }) {
@@ -235,6 +285,11 @@ function SetupTaskRow({
             <Text size="1" color="gray" as="p">
               {statusLabel}
             </Text>
+            {optionalHint ? (
+              <Text size="1" color="gray" as="p" mt="1">
+                {optionalHint}
+              </Text>
+            ) : null}
             {task.id === "emailVerification" && resendNote ? (
               <Text
                 size="1"

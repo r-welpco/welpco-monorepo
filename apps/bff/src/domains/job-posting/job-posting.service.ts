@@ -44,9 +44,9 @@ import {
   type CustomerDisplayInfo,
 } from '../profile-management/customer-profile/customer-profile.service';
 import { ProfileCompletionStatus } from '../profile-management/entities/profile-completion-status.enum';
+import { ProfileVisibility } from '../profile-management/entities/profile-visibility.enum';
 import { ServiceOfferingService } from '../profile-management/service-offering/service-offering.service';
 import { WelperProfileService } from '../profile-management/welper-profile/welper-profile.service';
-import { BackgroundCheckService } from '../safety-verification/background-check.service';
 import { CategoriesService } from '../content-management/categories/categories.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
@@ -75,7 +75,6 @@ export class JobPostingService {
     private readonly customerProfileService: CustomerProfileService,
     private readonly serviceOfferingService: ServiceOfferingService,
     private readonly welperProfileService: WelperProfileService,
-    private readonly backgroundCheckService: BackgroundCheckService,
     private readonly categoriesService: CategoriesService,
     private readonly notificationService: NotificationService,
     private readonly usersService: UsersService,
@@ -420,7 +419,7 @@ export class JobPostingService {
     dto: CreateJobApplicationDto,
   ): Promise<JobApplicationResponseDto> {
     const offeringsResult = await this.serviceOfferingService.findByWelperId(welperId, 1, 100, true);
-    const discoverable = await this.backgroundCheckService.assertVisibleInSearch(welperId);
+    const discoverable = await this.isWelperMarketplaceEligible(welperId);
 
     const { savedApp, job } = await this.dataSource.transaction(async (manager) => {
       const jobRepo = manager.getRepository(JobPosting);
@@ -784,7 +783,7 @@ export class JobPostingService {
         welperOfferings ??
         (await this.serviceOfferingService.findByWelperId(viewerId, 1, 100, true)).data;
       const matching = resolveMatchingOfferings(offerings, job.subcategoryId);
-      const discoverable = await this.backgroundCheckService.assertVisibleInSearch(viewerId);
+      const discoverable = await this.isWelperMarketplaceEligible(viewerId);
       const existing = await this.applicationRepo.findOne({
         where: { jobPostingId: job.id, welperId: viewerId },
       });
@@ -963,5 +962,18 @@ export class JobPostingService {
       link: `${baseUrl}${path}/${entityId}`,
       metadata: { jobPostingId: entityId },
     });
+  }
+
+  /** True when the welper profile is complete and public (background check optional). */
+  private async isWelperMarketplaceEligible(welperId: string): Promise<boolean> {
+    try {
+      const profile = await this.welperProfileService.findByWelperId(welperId);
+      return (
+        profile.profileCompletionStatus === ProfileCompletionStatus.COMPLETE &&
+        profile.profileVisibility === ProfileVisibility.PUBLIC
+      );
+    } catch {
+      return false;
+    }
   }
 }

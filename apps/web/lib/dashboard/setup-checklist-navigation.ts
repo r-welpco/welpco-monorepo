@@ -20,6 +20,7 @@ export const WELPER_SETUP_TASK_LABEL_KEYS = {
   welperOffering: "taskLabels.welperOffering",
   welperAvailability: "taskLabels.welperAvailability",
   welperBackgroundCheck: "taskLabels.welperBackgroundCheck",
+  welperGuardian: "taskLabels.welperGuardian",
   welperPayout: "taskLabels.welperPayout",
   optionalProfile: "taskLabels.optionalProfile",
 } as const satisfies Record<WelperSetupTaskId, `taskLabels.${WelperSetupTaskId}`>;
@@ -34,6 +35,7 @@ const WELPER_PROFILE_SETUP_TAB_HREFS: Partial<Record<WelperSetupTaskId, string>>
   welperOffering: "/dashboard/profile?tab=offerings",
   welperAvailability: "/dashboard/profile?tab=availability",
   welperBackgroundCheck: "/dashboard/profile?tab=backgroundCheck",
+  welperGuardian: "/dashboard/profile?tab=guardian",
   welperPayout: "/dashboard/profile?tab=payout",
   optionalProfile: "/dashboard/profile?tab=profile",
 };

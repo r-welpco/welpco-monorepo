@@ -1186,6 +1186,34 @@
         "resetFailed": "We couldn't reset your password. The link may have expired — request a new one."
       }
     },
+    "guardianReview": {
+      "invalidLinkTitle": "This review link won't work",
+      "invalidLinkDescription": "The link may be expired or already used. Ask the minor to send a new approval request from their profile.",
+      "invalidLinkCallout": "Request a new approval email from the minor's Welpco profile.",
+      "loading": "Loading request…",
+      "title": "Approve a Welper account",
+      "intro": "{minorName} wants to join Welpco as a Welper — a platform for local service jobs.",
+      "yourRole": "You are listed as their {relationship} ({guardianName}).",
+      "explain": "By approving, you confirm that you are their parent or legal guardian and you allow them to create and use a Welper account on Welpco.",
+      "relationshipParent": "Parent",
+      "relationshipLegalGuardian": "Legal guardian",
+      "relationshipOther": "Other",
+      "approve": "Approve account",
+      "approving": "Approving…",
+      "successTitle": "Approved",
+      "successDescription": "Thank you. {minorName}'s account is approved. They can finish setup on Welpco.",
+      "successCallout": "Approval recorded. The minor can continue setup on Welpco.",
+      "alreadyApprovedTitle": "Already approved",
+      "alreadyApprovedDescription": "You have already approved this account. No further action is needed.",
+      "alreadyApprovedCallout": "No further action is needed.",
+      "expiredTitle": "Link expired",
+      "expiredDescription": "This approval link has expired. Ask the minor to resend the request from their profile.",
+      "expiredCallout": "The minor can send a new approval email from their profile setup.",
+      "errors": {
+        "loadFailed": "We couldn't load this request. The link may be invalid.",
+        "approveFailed": "We couldn't record your approval. Try again in a moment."
+      }
+    },
     "verification": {
       "title": "Verify your account",
       "codeSentPrefix": "We sent a 6-digit code to",
@@ -1254,6 +1282,7 @@
         "welperOffering": "Service offerings",
         "welperAvailability": "Availability",
         "welperBackgroundCheck": "Background check",
+        "welperGuardian": "Guardian approval",
         "welperPayout": "Payout setup",
         "optionalProfile": "Profile photo",
         "customerHomeAddress": "Home address",
@@ -1262,15 +1291,24 @@
       "customerProgressTitle": "Finish your profile to start booking",
       "customerAllComplete": "Your profile is complete — you're ready to book a Welper.",
       "title": "Finish your setup",
-      "description": "Complete these steps so customers can find you and you can get paid.",
+      "description": "Complete the required steps to start taking bookings. Background check and payout setup are recommended next.",
       "progress": "{done} of {total} required steps done",
       "progressAria": "Setup progress {percent} percent",
       "compactProgress": "Setup — {done} of {total} steps done",
+      "compactOptionalProgress": "Recommended — {total, plural, one {# step left} other {# steps left}}",
       "continueSetup": "Continue setup",
+      "continueRecommended": "Finish recommended steps",
+      "requiredCompleteLive": "You're ready to take bookings. Finish the recommended steps below to get verified and receive payouts.",
       "optional": "optional",
       "statusDone": "Done",
       "statusTodo": "Not started",
       "statusLinkSent": "Link sent",
+      "statusGuardianPending": "Awaiting guardian approval",
+      "optionalHints": {
+        "welperBackgroundCheck": "Adds a verified badge to your profile for better visibility and customer confidence.",
+        "welperPayout": "Required to receive payouts for completed jobs.",
+        "welperGuardian": "Your parent or legal guardian must approve your account before you appear in search."
+      },
       "open": "Open",
       "verifyEmail": "Enter code",
       "resendVerification": "Resend email",
@@ -1278,15 +1316,15 @@
       "resendSent": "Sent. Check your inbox in a minute or two.",
       "resendFailed": "We couldn't resend the email. Try again in a moment.",
       "allCompleteDiscoverable": "Setup complete — you're visible in customer search.",
-      "allCompletePendingBg": "Setup complete — we'll show you in search once your background check is approved.",
       "header": {
         "title": "Finish setup",
         "subtitle": "{done} of {total} steps done — complete the rest to start booking",
+        "subtitleOptional": "{count, plural, one {# recommended step left} other {# recommended steps left}}",
         "aria": "Setup checklist, {count, plural, one {# step remaining} other {# steps remaining}}"
       },
       "backgroundCheck": {
         "pageTitle": "Background check",
-        "pageSubtitle": "Pay the screening fee and complete Certn to work as a Welper.",
+        "pageSubtitle": "Get verified with a background check. You can start taking bookings before this is approved.",
         "adminReviewPending": "Payment received. This step stays open until an admin approves your background check. You can finish Certn while you wait.",
         "adminApproved": "Your background check is approved."
       },
@@ -1294,10 +1332,41 @@
         "pageTitle": "Payout setup",
         "pageSubtitle": "Connect Stripe so you can receive payments for completed jobs.",
         "connectedSuccess": "Your Stripe account is connected. You're ready to receive payouts."
+      },
+      "guardian": {
+        "pageSubtitle": "Add your parent or legal guardian so they can approve your Welper account.",
+        "notRequired": "Guardian approval is not required for your account.",
+        "formTitle": "Guardian information",
+        "fullName": "Full name",
+        "fullNamePlaceholder": "Parent or guardian full name",
+        "email": "Email",
+        "emailPlaceholder": "guardian@example.com",
+        "phone": "Phone",
+        "phonePlaceholder": "+1 416 555 1234",
+        "relationship": "Relationship",
+        "relationshipParent": "Parent",
+        "relationshipLegalGuardian": "Legal guardian",
+        "relationshipOther": "Other",
+        "submit": "Send approval request",
+        "submitting": "Sending…",
+        "resend": "Resend email",
+        "resending": "Sending…",
+        "resendSent": "Email sent. Ask your guardian to check their inbox.",
+        "statusApprovedTitle": "Guardian approved",
+        "statusApprovedDescription": "Your guardian has approved your account. You can appear in customer search once the rest of your setup is complete.",
+        "statusPendingTitle": "Waiting for guardian approval",
+        "statusPendingDescription": "We emailed {email}. They need to open the link and approve before your profile can go live.",
+        "statusExpiredTitle": "Approval link expired",
+        "statusExpiredDescription": "Update the details below or resend the email to get a new link.",
+        "summaryGuardian": "Guardian",
+        "summaryRelationship": "Relationship",
+        "summaryEmail": "Email",
+        "summaryPhone": "Phone"
       }
     },
     "nav": {
       "roleBadge": "Welper",
+      "minorBadge": "Minor",
       "customerRoleBadge": "Customer",
       "tabs": {
         "dashboard": "Dashboard",
@@ -1366,6 +1435,12 @@
         "emptyTitle": "No activity yet",
         "emptyDescription": "Jobs and check-ins show up here.",
         "completeProfile": "Complete your profile"
+      },
+      "recentNotifications": {
+        "title": "Recent notifications",
+        "viewAll": "View all",
+        "emptyTitle": "No notifications yet",
+        "emptyDescription": "Booking updates, messages, and payments show up here."
       },
       "customer": {
         "greeting": "Welcome back, {name}.",
@@ -1759,6 +1834,7 @@
         "availability": "Availability",
         "serviceArea": "Area",
         "backgroundCheck": "Background check",
+        "guardian": "Guardian",
         "payout": "Payout setup"
       },
       "overview": {

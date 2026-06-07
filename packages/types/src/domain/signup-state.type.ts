@@ -38,6 +38,7 @@ export type WelperSetupTaskId =
   | 'welperOffering'
   | 'welperAvailability'
   | 'welperBackgroundCheck'
+  | 'welperGuardian'
   | 'welperPayout'
   | 'optionalProfile';
 
@@ -93,7 +94,9 @@ export interface SignupStateDto {
   setupTasks?: WelperSetupTaskDto[] | CustomerSetupTaskDto[];
   /** All required setup tasks complete. */
   setupComplete?: boolean;
-  /** Welper-only: visible in customer search (profile complete + BG passed when required). */
+  /** All setup tasks complete, including optional background check and payout. */
+  allSetupComplete?: boolean;
+  /** Welper-only: visible in customer search (required profile setup complete). */
   discoverable?: boolean;
 }
 
@@ -176,6 +179,12 @@ export interface SignupFilledData {
     promoPriceCents: number;
     promoEnabled: boolean;
     skipped?: boolean;
+  };
+  welperGuardian?: {
+    status: string | null;
+    guardianFullName: string | null;
+    guardianEmail: string | null;
+    signupStepComplete: boolean;
   };
   welperPayout?: {
     stripeOnboardingCompleted?: boolean;

@@ -4,6 +4,9 @@ import {
   getBackgroundCheckInviteEmailHtml,
   getBackgroundCheckInviteEmailSubject,
   getBackgroundCheckInviteEmailText,
+  getGuardianReviewEmailHtml,
+  getGuardianReviewEmailSubject,
+  getGuardianReviewEmailText,
   getPasswordResetEmailHtml,
   getPasswordResetEmailSubject,
   getVerificationEmailHtml,
@@ -177,6 +180,35 @@ export class EmailService {
       subject: getBackgroundCheckInviteEmailSubject(locale),
       html: getBackgroundCheckInviteEmailHtml(params),
       text: getBackgroundCheckInviteEmailText(params),
+    });
+  }
+
+  async sendGuardianReviewEmail(
+    email: string,
+    token: string,
+    options: {
+      locale?: UserPreferredLocale;
+      guardianName: string;
+      minorFirstName: string;
+      minorLastName?: string;
+    },
+  ): Promise<void> {
+    const locale = resolvePreferredLocale(options.locale) as EmailLocale;
+    const reviewUrl = `${this.localizedAuthUrl('/guardian/review', locale)}?token=${encodeURIComponent(token)}`;
+    const params = {
+      reviewUrl,
+      guardianName: options.guardianName,
+      minorFirstName: options.minorFirstName,
+      minorLastName: options.minorLastName,
+      locale,
+      publicAppUrl: this.publicAppUrl,
+    };
+
+    await this.sendEmail({
+      to: email,
+      subject: getGuardianReviewEmailSubject(locale),
+      html: getGuardianReviewEmailHtml(params),
+      text: getGuardianReviewEmailText(params),
     });
   }
 }

@@ -75,9 +75,11 @@ function useResolvedColorScheme(
 
 function WelperBrandMark({
   roleBadge,
+  minorBadge,
   colorScheme,
 }: {
   roleBadge?: string;
+  minorBadge?: string;
   colorScheme: "light" | "dark";
 }) {
   return (
@@ -91,12 +93,18 @@ function WelperBrandMark({
       <Badge color="green" variant="soft" size="1" highContrast>
         {roleBadge ?? "Welper"}
       </Badge>
+      {minorBadge ? (
+        <Badge color="amber" variant="soft" size="1" highContrast>
+          {minorBadge}
+        </Badge>
+      ) : null}
     </Flex>
   );
 }
 
 export interface WelperHeaderLabels {
   roleBadge?: string;
+  minorBadge?: string;
   tabs: {
     dashboard: string;
     marketplace: string;
@@ -324,6 +332,7 @@ export function WelperHeader({
                       <Flex align="center" gap="2">
                         <WelperBrandMark
                           roleBadge={labels?.roleBadge}
+                          minorBadge={labels?.minorBadge}
                           colorScheme={colorScheme}
                         />
                         <ChevronDown size={14} aria-hidden="true" />
@@ -343,6 +352,7 @@ export function WelperHeader({
               ) : (
                 <WelperBrandMark
                   roleBadge={labels?.roleBadge}
+                  minorBadge={labels?.minorBadge}
                   colorScheme={colorScheme}
                 />
               )}

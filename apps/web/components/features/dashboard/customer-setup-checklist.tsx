@@ -147,7 +147,9 @@ export function CustomerSetupChecklist({ variant = "full" }: CustomerSetupCheckl
 
         <Flex direction="column" gap="2" asChild>
           <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-            {data.setupTasks.map((task) => (
+            {data.setupTasks
+              .filter((task) => !task.completed)
+              .map((task) => (
               <SetupTaskRow
                 key={task.id}
                 task={task}

@@ -29,5 +29,7 @@ export function normalizeWelperSetupChecklist(
   const setupComplete = setupTasks
     .filter((t) => t.required)
     .every((t) => t.completed);
-  return { ...data, setupTasks, setupComplete };
+  const allSetupComplete =
+    data.allSetupComplete ?? setupTasks.every((t) => t.completed);
+  return { ...data, setupTasks, setupComplete, allSetupComplete };
 }

@@ -16,7 +16,6 @@ import type { SearchServicesQueryDto } from './dto/search-services-query.dto';
 import type { SearchResultItemDto, SearchServicesResponseDto } from './dto/search-result-item.dto';
 import type { PublicWelperProfileDto, PublicServiceOfferingDto } from './dto/public-welper-profile.dto';
 import { DiscoveryCategoriesCacheService } from '../../common/discovery-categories-cache/discovery-categories-cache.service';
-import { BackgroundCheckStatus } from '../user-management/entities/verification-status.entity';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
 import { AvailabilityService } from '../profile-management/availability/availability.service';
 import { emptyWeeklyAvailabilitySummary } from '../profile-management/availability/dto/weekly-availability-summary.dto';
@@ -205,19 +204,6 @@ export class ServiceDiscoveryService {
           WHERE so_active.welper_id = p.welper_id
           AND so_active.active = true
         )`,
-      )
-      .andWhere(
-        `EXISTS (
-          SELECT 1 FROM verification_statuses vs
-          WHERE vs.user_id = p.welper_id
-          AND vs.background_check_status IN (:...bgAllowed)
-        )`,
-        {
-          bgAllowed: [
-            BackgroundCheckStatus.PASSED,
-            BackgroundCheckStatus.NOT_REQUIRED,
-          ],
-        },
       );
 
     if (categoryIds.length > 0) {
@@ -380,11 +366,6 @@ export class ServiceDiscoveryService {
     ]);
 
     if (profile.profileVisibility !== ProfileVisibility.PUBLIC || profile.profileCompletionStatus !== ProfileCompletionStatus.COMPLETE) {
-      throw new NotFoundException('Welper profile not found');
-    }
-
-    const searchable = await this.backgroundCheckService.assertVisibleInSearch(welperId);
-    if (!searchable) {
       throw new NotFoundException('Welper profile not found');
     }
 

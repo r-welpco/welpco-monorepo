@@ -12,6 +12,7 @@ import { useDashboardUser } from "@/lib/hooks/use-dashboard-user";
 import { useCustomerProfile, useWelperProfile } from "@/lib/hooks/use-profile";
 import { AuthBackgroundSVG } from "@/components/features/personalization/auth-background-svg";
 import { useUnreadCount } from "@/lib/hooks/use-notifications";
+import { useWelperSetupChecklist } from "@/lib/hooks/use-signup";
 import { NotificationBellPopover } from "@/components/layout/notification-bell-popover";
 import { SetupChecklistPopover } from "@/components/layout/setup-checklist-popover";
 import {
@@ -138,6 +139,14 @@ export default function DashboardLayoutClient({
 
   const customerNavLabels = useCustomerNavLabels();
   const welperNavLabels = useWelperNavLabels();
+  const { data: welperSetupChecklist } = useWelperSetupChecklist(userRole === "welper");
+  const welperHeaderLabels = useMemo(
+    () => ({
+      ...welperNavLabels,
+      minorBadge: welperSetupChecklist?.isMinorWelper ? welperNavLabels.minorBadge : undefined,
+    }),
+    [welperNavLabels, welperSetupChecklist?.isMinorWelper],
+  );
   const { locale, setLocale } = useDashboardLocale();
 
   if (!mounted) {
@@ -203,7 +212,7 @@ export default function DashboardLayoutClient({
       ) : (
         <WelperHeader
           {...headerProps}
-          labels={welperNavLabels}
+          labels={welperHeaderLabels}
           tabStripStyle={tabStripStyle}
         />
       )}

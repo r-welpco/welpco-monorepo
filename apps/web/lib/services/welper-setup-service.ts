@@ -4,7 +4,9 @@ import type { WelperSetupTaskDto } from "@welpco/types";
 export interface WelperSetupChecklistDto {
   setupTasks: WelperSetupTaskDto[];
   setupComplete: boolean;
+  allSetupComplete?: boolean;
   discoverable: boolean;
+  isMinorWelper?: boolean;
 }
 
 export async function getWelperSetupChecklist(): Promise<WelperSetupChecklistDto> {

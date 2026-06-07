@@ -56,6 +56,7 @@ import {
 } from "@welpco/ui/platform/profile-management";
 import {
   WelperProfileBackgroundCheckPanel,
+  WelperProfileGuardianPanel,
   WelperProfilePayoutPanel,
 } from "./welper-setup-tab-panels";
 import type {
@@ -107,6 +108,7 @@ const WELPER_PROFILE_TABS = new Set([
   "availability",
   "serviceArea",
   "backgroundCheck",
+  "guardian",
   "payout",
 ]);
 
@@ -120,6 +122,10 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
 
   // Only run profile API calls when session is ready (avoids "No access token" and infinite loading)
   const sessionReady = sessionStatus === "authenticated";
+  const isCustomer = user.role === "customer";
+  const isWelper = user.role === "welper";
+  const { data: welperSetup } = useWelperSetupChecklist(isWelper && sessionReady);
+  const isMinorWelper = welperSetup?.isMinorWelper === true;
 
   const tabFromUrl = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState(() => {
@@ -152,10 +158,17 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
       setActiveTab("profile");
       return;
     }
+    if (isMinorWelper && tab === "backgroundCheck") {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", "guardian");
+      router.replace(`/dashboard/profile?${params.toString()}`);
+      setActiveTab("guardian");
+      return;
+    }
     if (tab && WELPER_PROFILE_TABS.has(tab)) {
       setActiveTab(tab);
     }
-  }, [searchParams, user.role, router]);
+  }, [searchParams, user.role, router, isMinorWelper]);
 
   const handleWelperTabChange = useCallback(
     (value: string) => {
@@ -198,8 +211,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   );
 
   // Determine user role
-  const isCustomer = user.role === "customer";
-  const isWelper = user.role === "welper";
   const welperProfileLabels = useWelperProfileLabels();
   const customerProfileLabels = useCustomerProfileLabels();
   const profilePhotoUploadLabels = useProfilePhotoUploadLabels();
@@ -211,7 +222,6 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   const dateFnsLocale = useDateFnsLocale();
   const welperServiceAreaLabels = useWelperServiceAreaStepLabels();
 
-  const { data: welperSetup } = useWelperSetupChecklist(isWelper && sessionReady);
   const welperSetupIncomplete = useMemo(() => {
     if (!isWelper || !welperSetup) return false;
     return !normalizeWelperSetupChecklist(
@@ -662,7 +672,13 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
             <TabsTrigger value="offerings">{welperProfileLabels.tabs.offerings}</TabsTrigger>
             <TabsTrigger value="availability">{welperProfileLabels.tabs.availability}</TabsTrigger>
             <TabsTrigger value="serviceArea">{welperProfileLabels.tabs.serviceArea}</TabsTrigger>
-            <TabsTrigger value="backgroundCheck">{welperProfileLabels.tabs.backgroundCheck}</TabsTrigger>
+            {isMinorWelper ? (
+              <TabsTrigger value="guardian">{welperProfileLabels.tabs.guardian}</TabsTrigger>
+            ) : (
+              <TabsTrigger value="backgroundCheck">
+                {welperProfileLabels.tabs.backgroundCheck}
+              </TabsTrigger>
+            )}
             <TabsTrigger value="payout">{welperProfileLabels.tabs.payout}</TabsTrigger>
           </TabsList>
 
@@ -899,6 +915,12 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
           <TabsContent value="backgroundCheck">
             <Box pt="5">
               <WelperProfileBackgroundCheckPanel />
+            </Box>
+          </TabsContent>
+
+          <TabsContent value="guardian">
+            <Box pt="5">
+              <WelperProfileGuardianPanel />
             </Box>
           </TabsContent>
 

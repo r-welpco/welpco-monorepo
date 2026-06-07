@@ -60,9 +60,10 @@ export interface SignupStateDto {
     filledData: SignupFilledData;
     setupTasks?: WelperSetupTaskDto[];
     setupComplete?: boolean;
+    allSetupComplete?: boolean;
     discoverable?: boolean;
 }
-export type WelperSetupTaskId = 'emailVerification' | 'welperServiceArea' | 'welperOffering' | 'welperAvailability' | 'welperBackgroundCheck' | 'welperPayout' | 'optionalProfile';
+export type WelperSetupTaskId = 'emailVerification' | 'welperServiceArea' | 'welperOffering' | 'welperAvailability' | 'welperBackgroundCheck' | 'welperGuardian' | 'welperPayout' | 'optionalProfile';
 export interface WelperSetupTaskDto {
     id: WelperSetupTaskId;
     label: string;

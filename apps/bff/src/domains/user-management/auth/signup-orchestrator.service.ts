@@ -44,6 +44,7 @@ import { WelperPayoutStepDto } from '../../../modules/auth/dto/welper-payout-ste
 import { NotificationPrefsStepDto } from '../../../modules/auth/dto/notification-prefs-step.dto';
 import { OptionalProfileStepDto } from '../../../modules/auth/dto/optional-profile-step.dto';
 import { BackgroundCheckService } from '../../safety-verification/background-check.service';
+import { GuardianConsentService } from '../../safety-verification/guardian-consent.service';
 import { StripeConnectService } from '../../payment/stripe-connect.service';
 import { platformAccessEnabledForClients } from '../../../common/platform-access';
 import { resolvePreferredLocale } from '../../../common/preferred-locale';
@@ -136,6 +137,12 @@ export interface SignupFilledData {
     promoEnabled: boolean;
     skipped?: boolean;
   };
+  welperGuardian?: {
+    status: string | null;
+    guardianFullName: string | null;
+    guardianEmail: string | null;
+    signupStepComplete: boolean;
+  };
   welperPayout?: {
     stripeOnboardingCompleted?: boolean;
   };
@@ -189,7 +196,8 @@ export const WELPER_SETUP_TASKS = [
 
 export type WelperSetupTaskId =
   | 'emailVerification'
-  | (typeof WELPER_SETUP_TASKS)[number];
+  | (typeof WELPER_SETUP_TASKS)[number]
+  | 'welperGuardian';
 
 export interface WelperSetupTask {
   id: WelperSetupTaskId;
@@ -226,11 +234,13 @@ export interface SignupState {
   filledData: SignupFilledData;
   setupTasks?: WelperSetupTask[] | CustomerSetupTask[];
   setupComplete?: boolean;
+  /** All checklist tasks complete, including optional background check and payout. */
+  allSetupComplete?: boolean;
   discoverable?: boolean;
 }
 
 const SETUP_TASK_META: Record<
-  (typeof WELPER_SETUP_TASKS)[number],
+  (typeof WELPER_SETUP_TASKS)[number] | 'welperGuardian',
   { label: string; href: string; required: boolean }
 > = {
   welperServiceArea: {
@@ -251,12 +261,17 @@ const SETUP_TASK_META: Record<
   welperBackgroundCheck: {
     label: 'Background check',
     href: '/dashboard/profile?tab=backgroundCheck',
-    required: true,
+    required: false,
+  },
+  welperGuardian: {
+    label: 'Guardian approval',
+    href: '/dashboard/profile?tab=guardian',
+    required: false,
   },
   welperPayout: {
     label: 'Payout setup',
     href: '/dashboard/profile?tab=payout',
-    required: true,
+    required: false,
   },
   optionalProfile: {
     label: 'Profile photo',
@@ -340,6 +355,7 @@ export class SignupOrchestratorService {
     private readonly referralService: ReferralService,
     private readonly dataSource: DataSource,
     private readonly backgroundCheckService: BackgroundCheckService,
+    private readonly guardianConsentService: GuardianConsentService,
     private readonly stripeConnectService: StripeConnectService,
     @Inject(GEOCODE_SERVICE)
     private readonly geocodeService: IGeocodeService,
@@ -382,7 +398,9 @@ export class SignupOrchestratorService {
   async getWelperSetupChecklist(userId: string): Promise<{
     setupTasks: WelperSetupTask[];
     setupComplete: boolean;
+    allSetupComplete: boolean;
     discoverable: boolean;
+    isMinorWelper: boolean;
   }> {
     await this.assertWelper(userId);
 
@@ -405,12 +423,35 @@ export class SignupOrchestratorService {
     const setupComplete = setupTasks
       .filter((t) => t.required)
       .every((t) => t.completed);
+    const allSetupComplete = setupTasks.every((t) => t.completed);
 
     return {
       setupTasks,
       setupComplete,
+      allSetupComplete,
       discoverable: state.discoverable ?? false,
+      isMinorWelper: await this.guardianConsentService.isMinorWelper(userId),
     };
+  }
+
+  /** Called after guardian approval to refresh profile visibility. */
+  async refreshWelperDiscoverability(userId: string): Promise<void> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user || user.selectedRole !== SelectedRole.WELPER) return;
+    const welper = await this.welperProfileRepo.findOne({
+      where: { welperId: userId },
+    });
+    const state = await this.getState(userId);
+    const completed = new Set<SignupStepName>([
+      ...state.completedSteps,
+      ...(state.setupTasks
+        ?.filter((t) => t.completed && t.id !== 'emailVerification')
+        .map((t) => t.id as SignupStepName) ?? []),
+    ]);
+    await this.maybeRefreshWelperDiscoverability(userId, welper, completed, {
+      isMinorWelper: await this.guardianConsentService.isMinorWelper(userId),
+      guardianApproved: await this.guardianConsentService.hasApprovedConsent(userId),
+    });
   }
 
   // ---------------------------------------------------------------------
@@ -640,7 +681,6 @@ export class SignupOrchestratorService {
       try {
         if (welper?.dateOfBirth && !isAdultWelper(welper.dateOfBirth)) {
           await this.backgroundCheckService.skipForMinor(userId);
-          completed.add('welperBackgroundCheck');
           filledData.welperBackgroundCheck = {
             paid: false,
             certnStatus: 'not_required',
@@ -648,6 +688,13 @@ export class SignupOrchestratorService {
             promoPriceCents: 0,
             promoEnabled: false,
             skipped: true,
+          };
+          const guardianStatus = await this.guardianConsentService.getStatus(userId);
+          filledData.welperGuardian = {
+            status: guardianStatus.status,
+            guardianFullName: guardianStatus.guardianFullName,
+            guardianEmail: guardianStatus.guardianEmail,
+            signupStepComplete: guardianStatus.signupStepComplete,
           };
         } else if (welper?.dateOfBirth && isAdultWelper(welper.dateOfBirth)) {
           if (await this.backgroundCheckService.isAdminBackgroundCheckApproved(userId)) {
@@ -706,6 +753,7 @@ export class SignupOrchestratorService {
 
     let setupTasks: WelperSetupTask[] | CustomerSetupTask[] | undefined;
     let setupComplete: boolean | undefined;
+    let allSetupComplete: boolean | undefined;
     let discoverable: boolean | undefined;
 
     if (role === SelectedRole.CUSTOMER) {
@@ -721,24 +769,41 @@ export class SignupOrchestratorService {
         .filter((t) => t.required)
         .every((t) => t.completed);
     } else if (role === SelectedRole.WELPER) {
+      const isMinorWelper =
+        !!welper?.dateOfBirth && !isAdultWelper(welper.dateOfBirth);
+      const guardianApproved = isMinorWelper
+        ? await this.guardianConsentService.hasApprovedConsent(userId)
+        : true;
+      const setupOptions = { isMinorWelper, guardianApproved };
+
       if (user.signupCompleted) {
-        await this.maybeRefreshWelperDiscoverability(userId, welper, completed);
+        await this.maybeRefreshWelperDiscoverability(
+          userId,
+          welper,
+          completed,
+          setupOptions,
+        );
         welper =
           (await this.welperProfileRepo.findOne({
             where: { welperId: userId },
           })) ?? welper;
       }
-      setupTasks = this.buildSetupTasks(completed, user.emailVerified);
+      setupTasks = this.buildSetupTasks(
+        completed,
+        user.emailVerified,
+        setupOptions,
+      );
       setupComplete = setupTasks
         .filter((t) => t.required)
         .every((t) => t.completed);
+      allSetupComplete = setupTasks.every((t) => t.completed);
       const profileComplete =
         welper?.profileCompletionStatus === ProfileCompletionStatus.COMPLETE;
-      const visibleInSearch = user.signupCompleted
-        ? await this.backgroundCheckService.assertVisibleInSearch(userId)
-        : false;
       discoverable =
-        user.signupCompleted === true && profileComplete === true && visibleInSearch;
+        user.signupCompleted === true &&
+        profileComplete === true &&
+        setupComplete === true &&
+        guardianApproved;
     }
 
     return {
@@ -754,6 +819,7 @@ export class SignupOrchestratorService {
       filledData,
       setupTasks,
       setupComplete,
+      allSetupComplete,
       discoverable,
     };
   }
@@ -1263,6 +1329,7 @@ export class SignupOrchestratorService {
   private buildSetupTasks(
     completed: Set<SignupStepName>,
     emailVerified: boolean,
+    options?: { isMinorWelper?: boolean; guardianApproved?: boolean },
   ): WelperSetupTask[] {
     const emailTask: WelperSetupTask = {
       id: 'emailVerification',
@@ -1271,14 +1338,25 @@ export class SignupOrchestratorService {
       required: true,
       completed: emailVerified,
     };
-    const profileTasks = WELPER_SETUP_TASKS.map((id) => {
+    const dashboardTaskIds: Array<(typeof WELPER_SETUP_TASKS)[number] | 'welperGuardian'> =
+      options?.isMinorWelper
+        ? WELPER_SETUP_TASKS.map((id) =>
+            id === 'welperBackgroundCheck' ? ('welperGuardian' as const) : id,
+          )
+        : [...WELPER_SETUP_TASKS];
+    const profileTasks = dashboardTaskIds.map((id) => {
       const meta = SETUP_TASK_META[id];
+      const taskCompleted =
+        id === 'welperGuardian'
+          ? (options?.guardianApproved ?? false)
+          : completed.has(id as SignupStepName);
       return {
         id,
         label: meta.label,
         href: meta.href,
-        required: meta.required,
-        completed: completed.has(id),
+        required:
+          id === 'welperGuardian' && options?.isMinorWelper ? true : meta.required,
+        completed: taskCompleted,
       };
     });
     return [emailTask, ...profileTasks];
@@ -1396,12 +1474,22 @@ export class SignupOrchestratorService {
     userId: string,
     profile: WelperProfile | null,
     completed: Set<SignupStepName>,
+    options?: { isMinorWelper?: boolean; guardianApproved?: boolean },
   ): Promise<void> {
     if (!profile) return;
     const user = await this.userRepo.findOne({ where: { id: userId } });
+    const isMinorWelper =
+      options?.isMinorWelper ??
+      (!!profile.dateOfBirth && !isAdultWelper(profile.dateOfBirth));
+    const guardianApproved =
+      options?.guardianApproved ??
+      (isMinorWelper
+        ? await this.guardianConsentService.hasApprovedConsent(userId)
+        : true);
     const setupTasks = this.buildSetupTasks(
       completed,
       user?.emailVerified ?? false,
+      { isMinorWelper, guardianApproved },
     );
     const setupComplete = setupTasks
       .filter((t) => t.required)
@@ -1410,11 +1498,12 @@ export class SignupOrchestratorService {
     profile.profileCompletionStatus =
       await this.computeWelperProfileCompletionStatus(userId, profile);
 
-    if (setupComplete && profile.profileCompletionStatus === ProfileCompletionStatus.COMPLETE) {
-      const visible = await this.backgroundCheckService.assertVisibleInSearch(userId);
-      profile.profileVisibility = visible
-        ? ProfileVisibility.PUBLIC
-        : ProfileVisibility.PRIVATE;
+    if (
+      setupComplete &&
+      profile.profileCompletionStatus === ProfileCompletionStatus.COMPLETE &&
+      guardianApproved
+    ) {
+      profile.profileVisibility = ProfileVisibility.PUBLIC;
     } else {
       profile.profileVisibility = ProfileVisibility.PRIVATE;
     }
