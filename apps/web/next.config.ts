@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import path from "path";
 import createNextIntlPlugin from "next-intl/plugin";
 
-const withNextIntl = createNextIntlPlugin();
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
 /** Dev/preview: @vercel/analytics and @vercel/speed-insights load debug scripts from here (prod uses `/_vercel/*` on same origin). */
@@ -13,9 +13,11 @@ const nextConfig: NextConfig = {
   turbopack: {
     // Monorepo root so Next.js uses pnpm-lock.yaml and avoids multiple-lockfile warning
     root: path.join(__dirname, "..", ".."),
-    resolveAlias: {
-      "next-intl/config": "./i18n/request.ts",
-    },
+  },
+  experimental: {
+    // The persistent cache has grown beyond 9 GB locally and causes Turbopack
+    // to saturate CPU and memory while loading and compacting old SST files.
+    turbopackFileSystemCacheForDev: false,
   },
   cacheComponents: true,
   async headers() {

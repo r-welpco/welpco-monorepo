@@ -917,12 +917,7 @@
           "countryPlaceholder": "Country",
           "phonePlaceholder": "416 555 1234",
           "dateOfBirth": "Date of birth",
-          "dobHint": "You must be at least 18 to sign up.",
-          "minorWelperModal": {
-            "title": "Minor Welper sign-up coming soon",
-            "description": "Guardian-managed accounts for Welpers aged 14–17 are almost ready. Check back in a couple of days — we'll let you know when you can sign up.",
-            "close": "Got it"
-          },
+          "dobHint": "Customers must be 18+. Welpers can sign up from age 14 with guardian approval.",
           "tosPrefix": "I agree to the",
           "tosLink": "Terms of Service",
           "privacyPrefix": "I've read the",
@@ -1299,6 +1294,7 @@
       "continueSetup": "Continue setup",
       "continueRecommended": "Finish recommended steps",
       "requiredCompleteLive": "You're ready to take bookings. Finish the recommended steps below to get verified and receive payouts.",
+      "requiredCompleteLiveMinor": "You're ready to take bookings. Finish the recommended steps below to receive payouts.",
       "optional": "optional",
       "statusDone": "Done",
       "statusTodo": "Not started",
@@ -2373,7 +2369,9 @@
         "close": "Close",
         "bookNow": "Book now",
         "loadFailed": "Could not load profile.",
-        "experienceYears": "{years}+ yrs exp"
+        "experienceYears": "{years}+ yrs exp",
+        "minorBadge": "Minor",
+        "minorBadgeTooltip": "Welper is under 18"
       },
       "serviceDialog": {
         "loading": "Loading…",

@@ -93,6 +93,8 @@ function mapToWelperProfileDialogProfile(
       days: boolean[];
       adHocOnly: boolean;
     };
+    verified?: boolean;
+    isMinor?: boolean;
   } | null
 ): WelperProfileDialogProfile | null {
   if (!data) return null;
@@ -103,6 +105,8 @@ function mapToWelperProfileDialogProfile(
     lastName: data.lastName,
     bio: data.bio,
     profilePhotoUrl: data.profilePhotoUrl,
+    verified: data.verified === true ? true : undefined,
+    isMinor: data.isMinor === true ? true : undefined,
     serviceOfferings: (data.serviceOfferings ?? []).map((o) => ({
       id: o.id,
       serviceCategoryId: o.serviceCategoryId,
@@ -485,6 +489,9 @@ export default function DashboardSearchPageClient() {
       specialties: item.categories.map(localizeSearchCategory),
       imageUrl: item.profilePhotoUrl ?? undefined,
       verified: item.verified === true,
+      isMinor: item.isMinor === true,
+      minorBadgeLabel: searchLabels.profileDialog.minorBadge,
+      minorBadgeTooltip: searchLabels.profileDialog.minorBadgeTooltip,
       weeklyAvailability: item.weeklyAvailability,
       availabilityLabels,
       availabilityLocale: locale,
@@ -498,6 +505,8 @@ export default function DashboardSearchPageClient() {
     localizeSearchCategory,
     openProfileDialog,
     openServiceSelection,
+    searchLabels.profileDialog.minorBadge,
+    searchLabels.profileDialog.minorBadgeTooltip,
   ]);
 
   const total = data?.total ?? 0;
@@ -721,6 +730,9 @@ export default function DashboardSearchPageClient() {
                         reviews={item.reviews}
                         imageUrl={item.imageUrl}
                         verified={item.verified}
+                        isMinor={item.isMinor}
+                        minorBadgeLabel={item.minorBadgeLabel}
+                        minorBadgeTooltip={item.minorBadgeTooltip}
                         weeklyAvailability={item.weeklyAvailability}
                         availabilityLabels={item.availabilityLabels}
                         availabilityLocale={item.availabilityLocale}

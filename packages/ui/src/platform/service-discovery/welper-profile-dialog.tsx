@@ -12,6 +12,8 @@ import { Skeleton } from "@welpco/ui/skeleton";
 import { Separator } from "@welpco/ui/separator";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { customerWelperDisplayName } from "./customer-welper-display-name";
+import { MinorTrustBadge } from "./minor-trust-badge";
+import { VerifiedTrustBadge } from "./verified-trust-badge";
 import { WeeklyAvailabilityStrip } from "./weekly-availability-strip";
 import type {
   WeeklyAvailabilityDisplayLabels,
@@ -39,6 +41,10 @@ export interface WelperProfileDialogProfile {
   lastName: string | null;
   bio: string | null;
   profilePhotoUrl: string | null;
+  /** Background-check verified — render badge only when explicitly true. */
+  verified?: boolean;
+  /** Minor welper (14–17) — render badge only when explicitly true. */
+  isMinor?: boolean;
   serviceOfferings: WelperProfileDialogOffering[];
   weeklyAvailability?: WeeklyAvailabilitySummary | null;
 }
@@ -54,6 +60,8 @@ export interface WelperProfileDialogLabels {
   bookNow?: string;
   loadFailed?: string;
   experienceYears?: (years: number) => string;
+  minorBadge?: string;
+  minorBadgeTooltip?: string;
 }
 
 export interface WelperProfileDialogProps {
@@ -125,9 +133,19 @@ export function WelperProfileDialog({
                   style={{ flexShrink: 0 }}
                 />
                 <Box flexGrow="1" style={{ minWidth: 0 }}>
-                  <Heading size="5" mb="1" trim="start">
-                    {displayName}
-                  </Heading>
+                  <Flex align="center" gap="2" wrap="wrap" mb="1">
+                    <Heading size="5" trim="start">
+                      {displayName}
+                    </Heading>
+                    {profile.verified === true ? <VerifiedTrustBadge size="2" /> : null}
+                    {profile.isMinor === true ? (
+                      <MinorTrustBadge
+                        size="2"
+                        label={l?.minorBadge ?? "Minor"}
+                        tooltip={l?.minorBadgeTooltip ?? "Welper is under 18"}
+                      />
+                    ) : null}
+                  </Flex>
                   <Text size="2" color="gray" highContrast>
                     {profile.bio || (l?.noBio ?? "No bio provided.")}
                   </Text>

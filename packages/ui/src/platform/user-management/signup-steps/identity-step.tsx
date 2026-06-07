@@ -34,7 +34,7 @@ import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite 
  * Captures identity fields shared by both customer and welper roles:
  *   - first name + last name
  *   - phone (validated client-side via libphonenumber-js; the BFF re-validates)
- *   - date of birth (18+ for customers and Welpers; 14–17 Welpers see a coming-soon modal)
+ *   - date of birth (18+ for customers; 14+ for welpers, with guardian approval after signup)
  *   - ToS + Privacy Policy acceptance (both required)
  *
  * Mobile-first single-task layout. Required-field markers per bible §16.3.

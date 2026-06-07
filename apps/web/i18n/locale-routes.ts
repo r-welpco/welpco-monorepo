@@ -17,6 +17,7 @@ const AUTH_PREFIXES = [
   "forgot-password",
   "reset-password",
   "verification",
+  "guardian",
 ] as const;
 
 export function hasFrenchPrefix(pathname: string): boolean {

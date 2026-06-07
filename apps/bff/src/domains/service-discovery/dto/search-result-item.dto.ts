@@ -37,6 +37,12 @@ export class SearchResultItemDto {
   })
   verified?: boolean;
 
+  @ApiPropertyOptional({
+    description:
+      'Minor welper flag (14–17). True only when date of birth is present and the welper is under 18.',
+  })
+  isMinor?: boolean;
+
   @ApiProperty({ type: WeeklyAvailabilitySummaryDto })
   weeklyAvailability!: WeeklyAvailabilitySummaryDto;
 }

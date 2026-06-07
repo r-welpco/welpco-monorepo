@@ -1162,6 +1162,8 @@ export function useSearchLabels() {
       bookNow: profileDialog("bookNow"),
       loadFailed: profileDialog("loadFailed"),
       experienceYears: (years: number) => profileDialog("experienceYears", { years }),
+      minorBadge: profileDialog("minorBadge"),
+      minorBadgeTooltip: profileDialog("minorBadgeTooltip"),
     },
     serviceDialog: {
       loading: serviceDialog("loading"),

@@ -154,11 +154,6 @@ export interface IdentityStepLabels extends SignupCommonLabels {
   phonePlaceholder: string;
   dateOfBirth: string;
   dobHint: string;
-  minorWelperModal: {
-    title: string;
-    description: string;
-    close: string;
-  };
   tosPrefix: string;
   tosLink: string;
   privacyPrefix: string;
@@ -194,13 +189,7 @@ export const DEFAULT_IDENTITY_LABELS: IdentityStepLabels = {
   countryPlaceholder: "Country",
   phonePlaceholder: "416 555 1234",
   dateOfBirth: "Date of birth",
-  dobHint: "You must be at least 18 to sign up.",
-  minorWelperModal: {
-    title: "Minor Welper sign-up coming soon",
-    description:
-      "Guardian-managed accounts for Welpers aged 14–17 are almost ready. Check back in a couple of days — we'll let you know when you can sign up.",
-    close: "Got it",
-  },
+  dobHint: "Customers must be 18+. Welpers can sign up from age 14 with guardian approval.",
   tosPrefix: "I agree to the",
   tosLink: "Terms of Service",
   privacyPrefix: "I've read the",

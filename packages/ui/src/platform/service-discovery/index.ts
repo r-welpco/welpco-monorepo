@@ -3,6 +3,7 @@
 export * from "./service-search-bar";
 export * from "./search-filters";
 export * from "./verified-trust-badge";
+export * from "./minor-trust-badge";
 export * from "./welper-profile-card";
 export * from "./welper-profile-card-compact";
 export * from "./search-results-list";

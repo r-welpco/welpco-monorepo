@@ -196,7 +196,9 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
       <Flex direction="column" gap="4">
         {requiredComplete ? (
           <Callout.Root color={SEMANTIC_COLOR.primary} variant="surface" role="status">
-            <Callout.Text>{t("requiredCompleteLive")}</Callout.Text>
+            <Callout.Text>
+              {raw?.isMinorWelper ? t("requiredCompleteLiveMinor") : t("requiredCompleteLive")}
+            </Callout.Text>
           </Callout.Root>
         ) : (
           <Box>

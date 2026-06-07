@@ -2,3 +2,5 @@ packages:
   - 'apps/*'
   - 'packages/*'
 
+overrides:
+  '@radix-ui/themes': '3.3.0'

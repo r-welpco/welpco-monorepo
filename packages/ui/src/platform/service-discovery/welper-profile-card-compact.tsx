@@ -9,6 +9,7 @@ import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { VerifiedTrustBadge } from "./verified-trust-badge";
+import { MinorTrustBadge } from "./minor-trust-badge";
 import { WeeklyAvailabilityStrip } from "./weekly-availability-strip";
 import type {
   WeeklyAvailabilityDisplayLabels,
@@ -34,6 +35,10 @@ export interface WelperProfileCardCompactProps {
   imageUrl?: string;
   /** Background-check verified — render badge only when explicitly true. */
   verified?: boolean;
+  /** Minor welper — render badge only when explicitly true. */
+  isMinor?: boolean;
+  minorBadgeLabel?: string;
+  minorBadgeTooltip?: string;
   weeklyAvailability?: WeeklyAvailabilitySummary | null;
   availabilityLabels?: WeeklyAvailabilityDisplayLabels;
   availabilityLocale?: string;
@@ -51,6 +56,9 @@ export function WelperProfileCardCompact({
   reviews,
   imageUrl,
   verified = false,
+  isMinor = false,
+  minorBadgeLabel,
+  minorBadgeTooltip,
   weeklyAvailability,
   availabilityLabels,
   availabilityLocale,
@@ -86,6 +94,13 @@ export function WelperProfileCardCompact({
                   {name}
                 </Heading>
                 {verified === true && <VerifiedTrustBadge size="1" />}
+                {isMinor === true && (
+                  <MinorTrustBadge
+                    size="1"
+                    label={minorBadgeLabel}
+                    tooltip={minorBadgeTooltip}
+                  />
+                )}
               </Flex>
               <Text size="2" color="gray" highContrast>
                 {`${title} \u00B7 ${location}`}

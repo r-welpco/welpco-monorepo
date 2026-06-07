@@ -7,7 +7,6 @@ import {
   Validate,
   ValidatorConstraint,
   ValidatorConstraintInterface,
-  ValidationArguments,
 } from 'class-validator';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
@@ -21,8 +20,8 @@ import { parsePhoneNumberFromString } from 'libphonenumber-js';
  * The phone is accepted as a free-form string (E.164 ideal but national
  * format with country hint also accepted) and validated via
  * `parsePhoneNumberFromString().isValid()`. The orchestrator parses again
- * and persists the structured `PhoneNumber` shape. dateOfBirth requires
- * users to be at least 18 years old.
+ * and persists the structured `PhoneNumber` shape. Age rules (14+ welper,
+ * 18+ customer) are enforced in the signup orchestrator based on role.
  */
 @ValidatorConstraint({ name: 'isValidPhoneE164', async: false })
 class IsValidPhoneE164Constraint implements ValidatorConstraintInterface {
@@ -34,24 +33,6 @@ class IsValidPhoneE164Constraint implements ValidatorConstraintInterface {
 
   defaultMessage(): string {
     return 'Phone number is not a valid international phone number';
-  }
-}
-
-@ValidatorConstraint({ name: 'isAtLeast18YearsAgo', async: false })
-class IsAtLeast18YearsAgoConstraint implements ValidatorConstraintInterface {
-  validate(value: unknown): boolean {
-    if (typeof value !== 'string') return false;
-    const dob = new Date(value);
-    if (Number.isNaN(dob.getTime())) return false;
-    const now = new Date();
-    let age = now.getFullYear() - dob.getFullYear();
-    const m = now.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
-    return age >= 18;
-  }
-
-  defaultMessage(_args: ValidationArguments): string {
-    return 'You must be at least 18 years old to sign up';
   }
 }
 
@@ -90,11 +71,11 @@ export class IdentityStepDto {
   phone!: string;
 
   @ApiProperty({
-    description: 'Date of birth (ISO 8601 date). Must be at least 18 years ago.',
+    description:
+      'Date of birth (ISO 8601 date). Customers must be 18+; welpers may be 14–17 with guardian approval.',
     example: '1995-06-12',
   })
   @IsDateString({}, { message: 'dateOfBirth must be an ISO date string' })
-  @Validate(IsAtLeast18YearsAgoConstraint)
   dateOfBirth!: string;
 
   @ApiProperty({

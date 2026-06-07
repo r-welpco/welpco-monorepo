@@ -230,13 +230,15 @@ describe('ServiceDiscoveryService', () => {
         welperId: 'w1',
         name: 'Jane D.',
         title: 'Care',
-        hourlyRate: 25,
+        hourlyRate: 31.25,
         categories: ['Care'],
         verified: true,
+        isMinor: false,
       });
       expect(result.items[1]).toMatchObject({
         welperId: 'w2',
         verified: false,
+        isMinor: false,
       });
     });
 
@@ -377,6 +379,7 @@ describe('ServiceDiscoveryService', () => {
         bio: 'Bio',
         // Wave 1 trust-signal zero-state — bible §22.6 honesty contract.
         verified: false,
+        isMinor: false,
         averageRating: null,
         reviewCount: 0,
         responseTimeMinutes: null,
@@ -387,7 +390,7 @@ describe('ServiceDiscoveryService', () => {
             serviceCategoryId: 'cat1',
             categoryName: 'Care',
             serviceDescription: 'Babysitting',
-            hourlyRate: 25,
+            hourlyRate: 31.25,
             experienceYears: 2,
           },
         ],
@@ -439,6 +442,41 @@ describe('ServiceDiscoveryService', () => {
         country: 'CA',
         postalCodes: ['M5V', 'M5W'],
       });
+    });
+
+    it('returns isMinor when date of birth indicates under 18', async () => {
+      const profile = {
+        id: 'prof-3',
+        welperId: 'w3',
+        firstName: 'Alex',
+        lastName: 'Kim',
+        bio: 'Bio',
+        profilePhotoUrl: null,
+        serviceArea: null,
+        serviceAreaCity: null,
+        serviceAreaPostalCodes: null,
+        countryCode: 'CA',
+        provinceCode: 'ON',
+        dateOfBirth: new Date('2010-06-01'),
+        verified: false,
+        profileVisibility: ProfileVisibility.PUBLIC,
+        profileCompletionStatus: ProfileCompletionStatus.COMPLETE,
+      };
+      mockWelperProfileService.findByWelperId.mockResolvedValue(profile);
+      mockServiceOfferingService.findByWelperId.mockResolvedValue({
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 100,
+        totalPages: 1,
+      });
+      mockCategoriesService.findAll.mockResolvedValue([]);
+      mockBackgroundCheckService.hasPassedBackgroundCheck.mockResolvedValue(false);
+
+      const result = await service.getPublicWelperProfile('w3');
+
+      expect(result.isMinor).toBe(true);
+      expect(result.verified).toBe(false);
     });
 
     it('should throw NotFound when profile is not public', async () => {

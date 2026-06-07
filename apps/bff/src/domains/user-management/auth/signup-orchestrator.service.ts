@@ -49,7 +49,7 @@ import { StripeConnectService } from '../../payment/stripe-connect.service';
 import { platformAccessEnabledForClients } from '../../../common/platform-access';
 import { resolvePreferredLocale } from '../../../common/preferred-locale';
 import { applyPreferredLocaleIfProvided } from './user-locale.helper';
-import { isAdultWelper } from '../../safety-verification/background-check-age.util';
+import { calculateAgeUtc, isAdultWelper } from '../../safety-verification/background-check-age.util';
 import { GEOCODE_SERVICE } from '../../geocode/geocode.interface';
 import {
   WELPER_SIGNUP_BIO_MIN_LENGTH,
@@ -900,6 +900,18 @@ export class SignupOrchestratorService {
     if (!parsed?.isValid()) {
       // class-validator catches this earlier; defense in depth.
       throw new BadRequestException('Invalid phone number');
+    }
+    const age = calculateAgeUtc(dto.dateOfBirth);
+    if (age === null) {
+      throw new BadRequestException('Invalid date of birth');
+    }
+    if (user.selectedRole === SelectedRole.CUSTOMER && age < 18) {
+      throw new BadRequestException('You must be at least 18 years old to sign up');
+    }
+    if (user.selectedRole === SelectedRole.WELPER && age < 14) {
+      throw new BadRequestException(
+        'You must be at least 14 years old to sign up as a Welper',
+      );
     }
     const phoneNumber = {
       countryCode: `+${parsed.countryCallingCode}`,

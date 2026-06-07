@@ -916,12 +916,7 @@
           "countryPlaceholder": "Pays",
           "phonePlaceholder": "416 555 1234",
           "dateOfBirth": "Date de naissance",
-          "dobHint": "Vous devez avoir au moins 18 ans pour vous inscrire.",
-          "minorWelperModal": {
-            "title": "Inscription Welper mineur bientôt disponible",
-            "description": "Les comptes gérés par un tuteur pour les Welpers de 14 à 17 ans arrivent très bientôt. Revenez dans quelques jours — nous vous préviendrons dès que l'inscription sera ouverte.",
-            "close": "Compris"
-          },
+          "dobHint": "Les clients doivent avoir 18 ans ou plus. Les Welpers peuvent s'inscrire dès 14 ans avec l'approbation d'un tuteur.",
           "tosPrefix": "J'accepte les",
           "tosLink": "Conditions d'utilisation",
           "privacyPrefix": "J'ai lu la",
@@ -1298,6 +1293,7 @@
       "continueSetup": "Continuer la configuration",
       "continueRecommended": "Terminer les étapes recommandées",
       "requiredCompleteLive": "Vous pouvez recevoir des réservations. Terminez les étapes recommandées ci-dessous pour être vérifié et recevoir vos paiements.",
+      "requiredCompleteLiveMinor": "Vous pouvez recevoir des réservations. Terminez les étapes recommandées ci-dessous pour recevoir vos paiements.",
       "optional": "facultatif",
       "statusDone": "Terminé",
       "statusTodo": "À faire",
@@ -2372,7 +2368,9 @@
         "close": "Fermer",
         "bookNow": "Réserver",
         "loadFailed": "Impossible de charger le profil.",
-        "experienceYears": "{years}+ ans d'exp."
+        "experienceYears": "{years}+ ans d'exp.",
+        "minorBadge": "Mineur",
+        "minorBadgeTooltip": "Le Welper a moins de 18 ans"
       },
       "serviceDialog": {
         "loading": "Chargement…",

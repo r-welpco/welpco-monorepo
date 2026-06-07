@@ -301,6 +301,8 @@ export interface SearchResultItem {
   reviewCount?: number;
   /** Background-check verified — only true when explicitly set by BFF. */
   verified?: boolean;
+  /** Minor welper (14–17) — only true when explicitly set by BFF. */
+  isMinor?: boolean;
   weeklyAvailability?: WeeklyAvailabilitySummary;
 }
 
@@ -365,6 +367,8 @@ export interface PublicWelperProfile {
   serviceAreaInfo: PublicServiceAreaInfo | null;
   /** Wave 1 trust signal: KYC-verified flag. Bible §22.6: never default to true. */
   verified: boolean;
+  /** Minor welper (14–17). True only when date of birth indicates under 18. */
+  isMinor: boolean;
   /** 2-decimal precision; null when reviewCount === 0 (bible §22.6: no fake social proof). */
   averageRating: number | null;
   reviewCount: number;

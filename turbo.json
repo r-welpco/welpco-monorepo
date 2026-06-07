@@ -10,8 +10,27 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "build/**"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**"],
       "inputs": ["$TURBO_DEFAULT$", "!**/*.stories.{tsx,jsx,mdx}"]
+    },
+    "@welpco/web#build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.stories.{tsx,jsx,mdx}"],
+      "env": [
+        "AUTH_INTERNAL_API_URL",
+        "CONTACT_INBOX",
+        "INTERNAL_API_URL",
+        "NEXT_PUBLIC_DEFAULT_COUNTRY_CODE",
+        "NEXT_PUBLIC_ENABLE_SW_IN_DEV",
+        "NEXT_PUBLIC_PLATFORM_ACCESS_GATED",
+        "NEXT_PUBLIC_SITE_URL",
+        "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+        "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+        "PLATFORM_ACCESS_GATED",
+        "PUBLIC_APP_URL",
+        "TURNSTILE_SECRET_KEY"
+      ]
     },
     "build-storybook": {
       "dependsOn": ["^build"],
@@ -41,4 +60,3 @@
     }
   }
 }
-

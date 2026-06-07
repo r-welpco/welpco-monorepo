@@ -22,6 +22,7 @@ import { emptyWeeklyAvailabilitySummary } from '../profile-management/availabili
 import type { WeeklyAvailabilitySummaryDto } from '../profile-management/availability/dto/weekly-availability-summary.dto';
 import { formatWelperDisplayNameForCustomer } from '../../common/display-name.util';
 import { customerHourlyChargeFromWelperRate } from '../booking/booking-pricing';
+import { isMinorWelper } from '../safety-verification/background-check-age.util';
 
 const BIO_SNIPPET_LENGTH = 120;
 
@@ -74,7 +75,7 @@ export class ServiceDiscoveryService {
 
   private buildSearchResultItems(
     pageIds: string[],
-    profileByWelperId: Map<string, Pick<WelperProfile, 'firstName' | 'lastName' | 'bio' | 'profilePhotoUrl' | 'serviceArea' | 'countryCode' | 'provinceCode' | 'rating' | 'reviewCount'>>,
+    profileByWelperId: Map<string, Pick<WelperProfile, 'firstName' | 'lastName' | 'bio' | 'profilePhotoUrl' | 'serviceArea' | 'countryCode' | 'provinceCode' | 'rating' | 'reviewCount' | 'dateOfBirth'>>,
     offeringsByWelperId: Map<string, Array<Pick<ServiceOffering, 'welperId' | 'hourlyRate' | 'serviceCategoryId'>>>,
     categoryMap: Map<string, string>,
     backgroundCheckPassedByWelperId: Map<string, boolean>,
@@ -113,6 +114,7 @@ export class ServiceDiscoveryService {
         rating,
         reviewCount,
         verified: backgroundCheckPassedByWelperId.get(welperId) === true,
+        isMinor: profile ? isMinorWelper(profile.dateOfBirth) : false,
         weeklyAvailability:
           weeklyAvailabilityByWelperId.get(welperId) ??
           emptyWeeklyAvailabilitySummary(),
@@ -289,7 +291,7 @@ export class ServiceDiscoveryService {
     const [profilesPage, offeringsPage] = await Promise.all([
       this.welperProfileRepo.find({
         where: { welperId: In(pageIds) },
-        select: ['welperId', 'firstName', 'lastName', 'bio', 'profilePhotoUrl', 'serviceArea', 'countryCode', 'provinceCode', 'rating', 'reviewCount'],
+        select: ['welperId', 'firstName', 'lastName', 'bio', 'profilePhotoUrl', 'serviceArea', 'countryCode', 'provinceCode', 'rating', 'reviewCount', 'dateOfBirth'],
       }),
       this.serviceOfferingRepo.find({
         where: { welperId: In(pageIds), active: true },
@@ -414,6 +416,7 @@ export class ServiceDiscoveryService {
       serviceArea: profile.serviceArea,
       serviceAreaInfo,
       verified,
+      isMinor: isMinorWelper(profile.dateOfBirth),
       averageRating: aggregates.averageRating,
       reviewCount: aggregates.reviewCount,
       responseTimeMinutes: aggregates.responseTimeMinutes,

@@ -83,6 +83,12 @@ export class PublicWelperProfileDto {
 
   @ApiProperty({
     description:
+      'Minor welper flag (14–17). True only when date of birth is present and the welper is under 18.',
+  })
+  isMinor!: boolean;
+
+  @ApiProperty({
+    description:
       'Average review rating (2-decimal precision). Null when the welper has zero reviews — ' +
       'bible §22.6 forbids fake social proof.',
     nullable: true,
