@@ -176,6 +176,8 @@ export interface CustomerHeaderProps {
   onLogout?: () => void;
   /** Host-provided tint for the desktop tab strip (e.g. from Appearance background). */
   tabStripStyle?: CSSProperties;
+  /** Optional strip below the top bar (e.g. setup-incomplete notice). */
+  bannerSlot?: React.ReactNode;
 }
 
 const DEFAULT_CUSTOMER_TABS = [
@@ -210,6 +212,7 @@ export function CustomerHeader({
   onSettingsClick,
   onLogout,
   tabStripStyle,
+  bannerSlot,
 }: CustomerHeaderProps) {
   const labels = labelsProp;
   const customerTabs = labels
@@ -618,6 +621,8 @@ export function CustomerHeader({
             </Flex>
           </Flex>
         </Box>
+
+        {bannerSlot}
 
         <Box
           display={{ initial: "none", md: "block" }}

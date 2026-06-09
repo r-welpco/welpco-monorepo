@@ -14,6 +14,7 @@ import { AuthBackgroundSVG } from "@/components/features/personalization/auth-ba
 import { useUnreadCount } from "@/lib/hooks/use-notifications";
 import { NotificationBellPopover } from "@/components/layout/notification-bell-popover";
 import { SetupChecklistPopover } from "@/components/layout/setup-checklist-popover";
+import { SetupIncompleteHeaderBanner } from "@/components/layout/setup-incomplete-header-banner";
 import {
   useCustomerNavLabels,
   useWelperNavLabels,
@@ -115,17 +116,24 @@ export default function DashboardLayoutClient({
     await performClientSignOut({ callbackUrl: "/", queryClient });
   }, [queryClient]);
 
+  const setupRole = userRole === "welper" ? "welper" : "customer";
+
   const headerActionsSlot = useMemo(
     () => (
       <Flex align="center" gap="3" mr="2">
         <SetupChecklistPopover
-          role={userRole === "welper" ? "welper" : "customer"}
+          role={setupRole}
           badgeColor={userRole === "welper" ? "green" : "blue"}
         />
         <NotificationBellPopover badgeColor={userRole === "welper" ? "green" : "blue"} />
       </Flex>
     ),
-    [userRole],
+    [setupRole, userRole],
+  );
+
+  const headerBannerSlot = useMemo(
+    () => <SetupIncompleteHeaderBanner role={setupRole} />,
+    [setupRole],
   );
 
   const tabStripStyle = useMemo(
@@ -191,6 +199,7 @@ export default function DashboardLayoutClient({
     onProfileClick: handleProfileClick,
     onSettingsClick: handleSettingsClick,
     onLogout: handleLogout,
+    bannerSlot: headerBannerSlot,
   };
 
   return (

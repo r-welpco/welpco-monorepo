@@ -1357,6 +1357,13 @@
         "subtitleOptional": "{count, plural, one {# recommended step left} other {# recommended steps left}}",
         "aria": "Setup checklist, {count, plural, one {# step remaining} other {# steps remaining}}"
       },
+      "headerBanner": {
+        "customer": "Finish your profile to start booking Welpers.",
+        "welper": "Complete required setup before you can receive bookings.",
+        "progress": "{done} of {total} required steps done",
+        "continue": "Continue setup",
+        "viewChecklist": "View checklist"
+      },
       "backgroundCheck": {
         "pageTitle": "Background check",
         "pageSubtitle": "Get verified with a background check. You can start taking bookings before this is approved.",

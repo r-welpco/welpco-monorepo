@@ -53,6 +53,32 @@ export function customerTaskActionHref(
   return resolveAppHref(task.href, locale);
 }
 
+/** True when the user is on the dashboard home (setup checklist lives here). */
+export function isDashboardHomePath(pathname: string): boolean {
+  const normalized = pathname.replace(/\/$/, "") || "/";
+  return normalized === "/dashboard";
+}
+
+/**
+ * True when the current route matches a setup task destination (path + relevant query).
+ */
+export function isSetupTaskDestination(
+  pathname: string,
+  searchParams: URLSearchParams,
+  destinationHref: string,
+): boolean {
+  const [destPath, destQuery = ""] = destinationHref.split("?");
+  const normalizedPath = pathname.replace(/\/$/, "") || "/";
+  const normalizedDest = destPath.replace(/\/$/, "") || "/";
+  if (normalizedPath !== normalizedDest) return false;
+  if (!destQuery) return true;
+  const target = new URLSearchParams(destQuery);
+  for (const [key, value] of target.entries()) {
+    if (searchParams.get(key) !== value) return false;
+  }
+  return true;
+}
+
 export function welperTaskActionHref(
   task: WelperSetupTaskDto,
   locale: Locale,

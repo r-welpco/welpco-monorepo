@@ -164,6 +164,8 @@ export interface WelperHeaderProps {
   onLogout?: () => void;
   /** Host-provided tint for the desktop tab strip (e.g. from Appearance background). */
   tabStripStyle?: CSSProperties;
+  /** Optional strip below the top bar (e.g. setup-incomplete notice). */
+  bannerSlot?: React.ReactNode;
 }
 
 const DEFAULT_WELPER_TABS = [
@@ -195,6 +197,7 @@ export function WelperHeader({
   onSettingsClick,
   onLogout,
   tabStripStyle,
+  bannerSlot,
 }: WelperHeaderProps) {
   const labels = labelsProp;
   const welperTabs = labels
@@ -545,6 +548,8 @@ export function WelperHeader({
             </Flex>
           </Flex>
         </Box>
+
+        {bannerSlot}
 
         {/* Desktop-only tab strip. On mobile the hamburger handles nav. */}
         <Box

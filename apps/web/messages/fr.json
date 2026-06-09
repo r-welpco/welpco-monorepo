@@ -1356,6 +1356,13 @@
         "subtitleOptional": "{count, plural, one {# étape recommandée restante} other {# étapes recommandées restantes}}",
         "aria": "Liste de configuration, {count, plural, one {# étape restante} other {# étapes restantes}}"
       },
+      "headerBanner": {
+        "customer": "Complétez votre profil pour commencer à réserver des Welpers.",
+        "welper": "Terminez les étapes requises avant de pouvoir recevoir des réservations.",
+        "progress": "{done} sur {total} étapes requises terminées",
+        "continue": "Continuer la configuration",
+        "viewChecklist": "Consulter la liste"
+      },
       "backgroundCheck": {
         "pageTitle": "Vérification des antécédents",
         "pageSubtitle": "Obtenez le badge vérifié avec une vérification des antécédents. Vous pouvez recevoir des réservations avant l'approbation.",
