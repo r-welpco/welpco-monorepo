@@ -11,7 +11,7 @@
       "comingSoon": "Bientôt disponible",
       "swipeHint": "Glissez pour en voir plus",
       "welperPhotosGallery": "Photos de Welpers",
-      "howItWorksPhotosGallery": "Photos — Comment ça marche",
+      "howItWorksPhotosGallery": "Photos — Comment ça fonctionne",
       "personasGallery": "Qui peut devenir Welper"
     },
     "languageSwitcher": {
@@ -23,14 +23,14 @@
     "nav": {
       "home": "Accueil",
       "about": "À propos",
-      "howItWorks": "Comment ça marche",
+      "howItWorks": "Comment ça fonctionne",
       "faq": "FAQ",
       "contact": "Contact",
       "signIn": "Connexion",
       "findHelp": "Trouver de l'aide"
     },
     "footer": {
-      "tagline": "Une place de marché de services locaux. Prestataires vérifiés, paiements sous séquestre, messagerie sur la plateforme.",
+      "tagline": "Une place de marché de services locaux. Profils de prestataires, paiements sécurisés en dépôt et messagerie sur la plateforme.",
       "cols": {
         "welpco": "Welpco",
         "customers": "Pour les clients",
@@ -42,7 +42,7 @@
         "ourMission": "Notre mission",
         "findWelper": "Trouver un Welper",
         "categories": "Catégories",
-        "howItWorks": "Comment ça marche",
+        "howItWorks": "Comment ça fonctionne",
         "trustSafety": "Confiance et sécurité",
         "welperHandbook": "Guide du Welper",
         "weeklyPayouts": "Paiements hebdomadaires (vendredi)",
@@ -61,8 +61,8 @@
     "home": {
       "hero": {
         "line1": "De l'aide locale.",
-        "line2": "Des gens de confiance.",
-        "subhead": "Connectez-vous à des Welpers de confiance dans votre communauté — garde d'enfants, entretien de pelouse, tutorat, aide technologique et plus.",
+        "line2": "Des gens d'ici.",
+        "subhead": "Entrez en contact avec des Welpers de votre communauté — garde d'enfants, tonte de pelouse, tutorat, assistance technologique et bien plus.",
         "findHelp": "Trouver de l'aide",
         "becomeWelper": "Devenir Welper",
         "searchKeywordPlaceholder": "De quoi avez-vous besoin?",
@@ -164,7 +164,7 @@
         }
       },
       "howItWorks": {
-        "eyebrow": "Comment ça marche",
+        "eyebrow": "Comment ça fonctionne",
         "titleLine1": "Trois étapes.",
         "titleLine2": "Sans friction.",
         "subtitle": "Que vous réserviez un service ou que vous en offriez un, la mise en route prend quelques minutes.",
@@ -174,7 +174,7 @@
           {
             "n": "01",
             "title": "Rechercher à proximité",
-            "body": "Indiquez le service dont vous avez besoin et votre code postal. Parcourez les Welpers vérifiés près de chez vous en quelques secondes."
+            "body": "Parcourez les Welpers près de chez vous en quelques secondes."
           },
           {
             "n": "02",
@@ -191,7 +191,7 @@
           {
             "n": "01",
             "title": "Créez votre profil",
-            "body": "Inscrivez-vous, listez vos services, fixez vos tarifs et votre disponibilité hebdomadaire. Les adultes passent une vérification des antécédents."
+            "body": "Inscrivez-vous, listez vos services, fixez vos tarifs et votre disponibilité hebdomadaire."
           },
           {
             "n": "02",
@@ -209,7 +209,7 @@
         "badge": "Bientôt disponible",
         "titleLine1": "Comptes prestataires",
         "titleLine2": "pour les mineurs.",
-        "body": "Les Welpers de 14 ans et plus peuvent s'inscrire sous un compte géré par un tuteur. Pas de vérification des antécédents; le tuteur approuve chaque réservation.",
+        "body": "Les Welpers âgés de 14 ans et plus peuvent s'inscrire sur Welpco avec un compte supervisé par un tuteur légal. Le tuteur reçoit toutes les notifications liées aux activités, communications et réservations du compte du mineur.",
         "ctaPrimary": "Configurer un compte tuteur",
         "ctaFaq": "Lire la FAQ",
         "cardTitle": "Vérifié par le tuteur",
@@ -218,13 +218,13 @@
       },
       "trust": {
         "eyebrow": "— Confiance et sécurité",
-        "titleLine1": "La confiance,",
-        "titleLine2": "par conception.",
-        "subtitle": "Vérifications, paiements sous séquestre, messagerie sur la plateforme et évaluations bidirectionnelles — intégrés à chaque réservation.",
+        "titleLine1": "Confiance et",
+        "titleLine2": "sécurité.",
+        "subtitle": "Paiements sécurisés en dépôt, messagerie intégrée à la plateforme et évaluations bidirectionnelles — inclus dans chaque réservation.",
         "items": [
           {
             "title": "Welpers vérifiés",
-            "body": "Chaque Welper adulte passe une vérification des antécédents avant sa première réservation."
+            "body": "Une vérification des antécédents est disponible pour les Welpers adultes afin de renforcer la confiance et obtenir un badge sur leur profil."
           },
           {
             "title": "Fonds retenus jusqu'à la fin",
@@ -281,7 +281,7 @@
           },
           {
             "q": "Est-ce sécuritaire d'avoir un Welper chez moi?",
-            "a": "Vérification pour les adultes; badge Mineur et compte tuteur pour les mineurs."
+            "a": "La sécurité est une priorité sur Welpco. Les Welpers adultes peuvent compléter une vérification des antécédents pour obtenir un badge de confiance. Les Welpers âgés de 14 ans à 17 ans utilisent un compte supervisé par un tuteur légal, qui est informé de toutes les activités et réservations."
           }
         ]
       }
@@ -289,13 +289,13 @@
     "about": {
       "meta": {
         "title": "À propos",
-        "description": "Welpco connecte les personnes qui ont besoin de services du quotidien à des prestataires vérifiés dans leur région."
+        "description": "Welpco connecte les personnes qui ont besoin de services du quotidien à des prestataires dans leur région."
       },
       "hero": {
         "eyebrow": "— À propos",
         "titleLine1": "Une place de marché",
         "titleLine2": "de services locaux.",
-        "lead": "Welpco connecte les personnes qui ont besoin de services du quotidien à des prestataires vérifiés dans leur région.",
+        "lead": "Welpco connecte les personnes qui ont besoin de services du quotidien à des prestataires dans leur région.",
         "sub": "De la garde de dernière minute à l'entretien saisonnier de la cour, Welpco gère la recherche, la planification, le paiement et les évaluations — il ne reste que le travail lui-même.",
         "imageAlt": "Voisins qui s'entraident dans la communauté par une après-midi ensoleillée"
       },
@@ -361,11 +361,11 @@
     },
     "howItWorksPage": {
       "meta": {
-        "title": "Comment ça marche",
+        "title": "Comment ça fonctionne",
         "description": "Comment Welpco fonctionne pour les clients et les Welpers."
       },
       "hero": {
-        "eyebrow": "— Comment ça marche",
+        "eyebrow": "— Comment ça fonctionne",
         "title": "Comment Welpco",
         "titleItalic": "fonctionne.",
         "sub": "Deux parcours — réserver et offrir un service. Trois étapes chacun."
@@ -380,10 +380,6 @@
             "Ajoutez votre expérience, vos services et vos tarifs."
           ],
           [
-            "Vérification des antécédents",
-            "Obligatoire pour les Welpers adultes — rassure les clients et crédibilise les Welpers."
-          ],
-          [
             "Définir votre disponibilité",
             "Temps partiel, temps plein, fins de semaine — vous décidez."
           ],
@@ -392,8 +388,8 @@
             "Parcourez les demandes, acceptez ce qui vous convient."
           ],
           [
-            "Être payé et évalué",
-            "Paiement hebdomadaire le vendredi suivant; le client évalue à la fin du travail."
+            "Soyez payé, obtenez des évaluations",
+            "Pour recevoir vos paiements, les Welpers doivent créer et connecter un compte Stripe lors de leur inscription. Les paiements sont effectués chaque semaine et versés le vendredi de la semaine suivante. Les clients peuvent soumettre une évaluation une fois le travail terminé."
           ]
         ],
         "cta": "Créer votre profil Welper",
@@ -426,7 +422,10 @@
             ],
             [
               "Pourquoi ai-je besoin d'une vérification d'antécédents?",
-              "Welpco se définit comme une plateforme sécuritaire et conviviale. Nous voulons assurer, du mieux possible, un environnement sécuritaire pour nos clients. Une vérification d'antécédents offre la tranquillité d'esprit nécessaire aux clients lorsqu'un Welper entre dans leur domicile ou sur leur propriété. Si vous réussissez la vérification, un badge certifié apparaîtra sur votre profil. Si vous échouez, vous n'aurez pas le badge, mais vous pourrez tout de même être Welper."
+              [
+                "Welpco est conçu pour être une plateforme sécuritaire et accueillante. Nous visons à assurer, dans la mesure du possible, un environnement sécuritaire pour nos clients. Une vérification d'antécédents permet d'offrir une tranquillité d'esprit supplémentaire lorsque un Welper entre dans le domicile ou sur la propriété d'un client.",
+                "Si vous complétez la vérification avec succès, un badge de vérification apparaîtra sur votre profil. Si vous ne complétez pas ou ne réussissez pas la vérification, vous n'obtiendrez pas le badge, mais vous pourrez tout de même devenir Welper."
+              ]
             ],
             [
               "Comment suis-je payé?",
@@ -488,7 +487,7 @@
             ],
             [
               "Comment savoir si un Welper est sécuritaire?",
-              "Welpco met l'accent sur la sécurité. Les Welpers doivent réussir une vérification d'antécédents pour obtenir un badge certifié. Les Welpers mineurs ne passent pas cette vérification et auront un badge « Mineur »."
+              "Welpco met la sécurité au premier plan. Les Welpers adultes peuvent effectuer une vérification des antécédents afin d'obtenir un badge de vérification sur leur profil. Les Welpers âgés de 14 ans et plus utilisent un compte supervisé par un tuteur légal et affichent un badge « Mineur »."
             ],
             [
               "Et si un service dont j'ai besoin n'est pas offert?",

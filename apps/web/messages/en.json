@@ -30,7 +30,7 @@
       "findHelp": "Find help"
     },
     "footer": {
-      "tagline": "A local-services marketplace. Vetted providers, escrow payments, on-platform messaging.",
+      "tagline": "A local-services marketplace. Provider profiles, secure escrow payments, and on-platform messaging.",
       "cols": {
         "welpco": "Welpco",
         "customers": "For customers",
@@ -62,7 +62,7 @@
       "hero": {
         "line1": "Local help.",
         "line2": "Real neighbours.",
-        "subhead": "Connect with trusted Welpers in your community — childcare, lawn care, tutoring, tech help, and more.",
+        "subhead": "Connect with Welpers in your community — childcare, lawn care, tutoring, tech help, and more.",
         "findHelp": "Find help",
         "becomeWelper": "Become a Welper",
         "searchKeywordPlaceholder": "What do you need a hand with?",
@@ -174,7 +174,7 @@
           {
             "n": "01",
             "title": "Search nearby",
-            "body": "Enter the service you need and your zip code. Browse vetted Welpers in your area in seconds."
+            "body": "Browse Welpers in your area in seconds."
           },
           {
             "n": "02",
@@ -191,7 +191,7 @@
           {
             "n": "01",
             "title": "Build your profile",
-            "body": "Sign up, list your services, set your rates and weekly availability. Adults complete a background check."
+            "body": "Sign up, list your services, set your rates and weekly availability."
           },
           {
             "n": "02",
@@ -209,7 +209,7 @@
         "badge": "Coming soon",
         "titleLine1": "Service-provider accounts",
         "titleLine2": "for minors.",
-        "body": "Welpers aged 14 and up can now sign up under a guardian-managed account. Background checks are waived; guardians review every booking.",
+        "body": "Welpers aged 14 and up can join Welpco with a guardian-supervised account. The guardian receives all notifications related to the account's activities, communications, and bookings.",
         "ctaPrimary": "Set up a guardian account",
         "ctaFaq": "Read the FAQ",
         "cardTitle": "Guardian-verified",
@@ -218,13 +218,13 @@
       },
       "trust": {
         "eyebrow": "— Trust & safety",
-        "titleLine1": "Trust,",
-        "titleLine2": "by design.",
-        "subtitle": "Background checks, escrow payments, on-platform messaging, and two-way ratings — baked into every booking.",
+        "titleLine1": "Trust",
+        "titleLine2": "& safety.",
+        "subtitle": "Secure payments held in escrow, in-platform messaging, and two-way reviews — built into every booking.",
         "items": [
           {
-            "title": "Background-checked Welpers",
-            "body": "Every adult Welper passes a background check before they can take their first booking."
+            "title": "Verified Welpers",
+            "body": "Background checks are available for adult Welpers to help build trust and earn a badge on their profile."
           },
           {
             "title": "Funds held until done",
@@ -280,8 +280,8 @@
             "a": "Payment is taken when your booking is confirmed and held until the job is complete. Once you confirm completion, funds are released to the Welper."
           },
           {
-            "q": "How do I know that having a Welper at my home is safe?",
-            "a": "Adult Welpers complete background checks and earn a certified badge on their profile. Minor Welpers display a Minor badge and sign up under a guardian-managed account."
+            "q": "Is it safe to have a Welper in my home?",
+            "a": "Safety is a top priority at Welpco. Adult Welpers can complete a background check to earn a badge on their profile. Welpers aged 14 to 17 use a guardian-supervised account, where a legal guardian is notified of all activities and bookings."
           }
         ]
       }
@@ -289,13 +289,13 @@
     "about": {
       "meta": {
         "title": "About",
-        "description": "Welpco connects people who need everyday services with vetted providers in their area."
+        "description": "Welpco connects people who need everyday services with providers in their area."
       },
       "hero": {
         "eyebrow": "— About us",
         "titleLine1": "A local-services",
         "titleLine2": "marketplace.",
-        "lead": "Welpco connects people who need everyday services with vetted providers in their area.",
+        "lead": "Welpco connects people who need everyday services with providers in their area.",
         "sub": "From last-minute babysitting to seasonal yard work, Welpco runs the search, scheduling, payment and review layer — so the only thing left is the work itself.",
         "imageAlt": "Neighbours helping each other in the community on a sunny afternoon"
       },
@@ -380,10 +380,6 @@
             "Add your experience, the services you provide, and what you charge."
           ],
           [
-            "Pass a background check",
-            "Required for adult Welpers — keeps customers confident, keeps Welpers credible."
-          ],
-          [
             "Set your availability",
             "You tell us when you work. Part-time, full-time, weekends, evenings — all welcome."
           ],
@@ -393,7 +389,7 @@
           ],
           [
             "Get paid, get reviewed",
-            "Payment is sent the following week on the Friday on a weekly basis. Reviews are submitted by the customer when the job is complete."
+            "To receive payments, Welpers must create and connect a Stripe account during registration. Payments are issued weekly and sent on the Friday of the following week. Customers can submit a review once the job has been completed."
           ]
         ],
         "cta": "Start your Welper profile",
@@ -425,8 +421,11 @@
               "To become a Welper, simply sign up via our website or app and create your profile. You can include your experience and the type of services you provide. You will also need to choose the amount you will charge for the service(s) you will provide."
             ],
             [
-              "Why do I need a background check?",
-              "Welpco identifies itself as a safe and user-friendly platform. We want to ensure, to the best of our ability, that our platform is a safe environment for our customers. A background check gives our customers the ease of mind they require when having a Welper enter their home and/or their property. If you pass the background check, you will receive a certified badge on your profile. If you fail the background check, you will not receive a certified badge on your profile, but you will still be able to be a Welper."
+              "Do I need a background check?",
+              [
+                "Welpco is designed to be a safe and welcoming platform. We aim to ensure, as much as possible, a secure environment for our clients. A background check is optional, however, it helps provide added peace of mind for our clients.",
+                "If you complete the background check successfully, a badge will appear on your profile. If you do not complete or do not pass the check, you will not receive the badge, but you can still become a Welper."
+              ]
             ],
             [
               "How do I get paid?",
@@ -489,7 +488,7 @@
             ],
             [
               "How do I know that allowing a Welper on my property, or in my home, is safe?",
-              "Welpco prides itself on providing a safe and secure environment for both our customers and our Welpers. Welpers will need to pass a background check during sign up to ensure the integrity of the work they will provide. Welpers who pass their background check, will have a certified badge on their profile. Welpers who are minors, will not need to complete a background check, so their profiles will display a \"Minor badge\"."
+              "Welpco prioritizes safety. Adult Welpers can complete a background check to earn a badge on their profile. Welpers aged 14 to 17 operate under a guardian-supervised account and display a \"Minor\" badge."
             ],
             [
               "What if there is a service I need that I don't see offered on the platform?",
