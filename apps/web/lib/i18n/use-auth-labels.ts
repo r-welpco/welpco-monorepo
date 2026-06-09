@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useAuthMessages, useAuthRegisterStep } from "@/lib/i18n/auth-message-templates";
+import { useCanadianProvinceLabels } from "@/lib/i18n/use-canadian-provinces";
 import type {
   AccountRecoveryFormLabels,
   AccountVerificationLabels,
@@ -178,6 +179,7 @@ export function useWelperServiceAreaStepLabels(): WelperServiceAreaStepLabels {
   const tc = useTranslations("auth.common");
   const t = useTranslations("auth.register.steps.welperServiceArea");
   const area = useAuthRegisterStep("welperServiceArea");
+  const provinceLabels = useCanadianProvinceLabels();
   return {
     back: tc("back"),
     continue: tc("continue"),
@@ -197,6 +199,8 @@ export function useWelperServiceAreaStepLabels(): WelperServiceAreaStepLabels {
       serviceRadius: t("selector.serviceRadius"),
       radiusPlaceholder: t("selector.radiusPlaceholder"),
       radiusHint: area.selector.radiusHint,
+      save: t("selector.save"),
+      saving: t("selector.saving"),
     },
     address: {
       streetAddress: t("address.streetAddress"),
@@ -204,7 +208,13 @@ export function useWelperServiceAreaStepLabels(): WelperServiceAreaStepLabels {
       stateProvince: t("address.stateProvince"),
       zipPostalCode: t("address.zipPostalCode"),
       streetPlaceholder: t("address.streetPlaceholder"),
+      cityPlaceholder: t("address.cityPlaceholder"),
+      zipPlaceholder: t("address.zipPlaceholder"),
+      provincePlaceholder: t("address.provincePlaceholder"),
+      country: t("address.country"),
+      countryValue: t("address.countryValue"),
     },
+    provinceLabels,
   };
 }
 

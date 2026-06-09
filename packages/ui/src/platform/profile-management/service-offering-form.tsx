@@ -55,6 +55,7 @@ export type ServiceOfferingFormLabels = {
   validation?: ServiceOfferingValidationLabels;
   serviceAreaSelector?: ServiceAreaSelectorLabels;
   serviceAreaAddress?: AddressInputLabels;
+  serviceAreaProvinceLabels?: Record<string, string>;
 };
 
 export interface ServiceOfferingFormProps {
@@ -310,6 +311,7 @@ function ServiceAreaField({
   labels,
   selectorLabels,
   addressLabels,
+  provinceLabels,
 }: {
   form: ReturnType<typeof useForm<ServiceOfferingValues>>;
   defaultServiceArea: ServiceArea;
@@ -317,6 +319,7 @@ function ServiceAreaField({
   labels?: ServiceOfferingFormLabels;
   selectorLabels?: ServiceAreaSelectorLabels;
   addressLabels?: AddressInputLabels;
+  provinceLabels?: Record<string, string>;
 }) {
   const useOverride = form.watch("serviceAreaOverride");
   return (
@@ -358,6 +361,7 @@ function ServiceAreaField({
                 defaultServiceArea={defaultServiceArea}
                 selectorLabels={selectorLabels}
                 addressLabels={addressLabels}
+                provinceLabels={provinceLabels}
                 showAddressCountry={false}
               />
             )}
@@ -540,6 +544,7 @@ export function ServiceOfferingForm({
             labels={labels}
             selectorLabels={labels?.serviceAreaSelector}
             addressLabels={labels?.serviceAreaAddress}
+            provinceLabels={labels?.serviceAreaProvinceLabels}
           />
         )}
         <ActiveStatusField form={form} loading={loading} labels={labels} />

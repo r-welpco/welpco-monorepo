@@ -22,6 +22,7 @@ export interface ServiceAreaCardProps {
   description?: string;
   selectorLabels?: ServiceAreaSelectorLabels;
   addressLabels?: AddressInputLabels;
+  provinceLabels?: Record<string, string>;
 }
 
 export function ServiceAreaCard({
@@ -33,6 +34,7 @@ export function ServiceAreaCard({
   description = "Define the geographic area where you provide services. This helps customers find you when searching for services in their area.",
   selectorLabels,
   addressLabels,
+  provinceLabels,
 }: ServiceAreaCardProps) {
   return (
     <Card size="3" variant="surface" style={{ width: "100%", minWidth: 0, maxWidth: "640px" }}>
@@ -61,6 +63,7 @@ export function ServiceAreaCard({
           noCard={true}
           selectorLabels={selectorLabels}
           addressLabels={addressLabels}
+          provinceLabels={provinceLabels}
         />
       </Flex>
     </Card>

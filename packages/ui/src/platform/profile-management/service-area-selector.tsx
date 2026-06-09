@@ -47,6 +47,8 @@ export interface ServiceAreaSelectorLabels {
   serviceRadius: string;
   radiusPlaceholder: string;
   radiusHint: string;
+  save?: string;
+  saving?: string;
   /** Per-offering override UI when `allowOverride` and `defaultServiceArea` are set. */
   override?: ServiceAreaSelectorOverrideLabels;
 }
@@ -82,6 +84,7 @@ export interface ServiceAreaSelectorProps {
   showCenterAddressLabel?: boolean;
   selectorLabels?: ServiceAreaSelectorLabels;
   addressLabels?: AddressInputLabels;
+  provinceLabels?: Record<string, string>;
   /** When false, hides country on the address fields (Canada-only for now). */
   showAddressCountry?: boolean;
 }
@@ -97,6 +100,7 @@ export function ServiceAreaSelector({
   showCenterAddressLabel = true,
   selectorLabels: selectorLabelsProp,
   addressLabels,
+  provinceLabels,
   showAddressCountry = true,
 }: ServiceAreaSelectorProps) {
   const selectorLabels = selectorLabelsProp ?? DEFAULT_SELECTOR_LABELS;
@@ -279,6 +283,7 @@ export function ServiceAreaSelector({
                 <AddressInput
                   values={centerAddress}
                   labels={addressLabels}
+                  provinceLabels={provinceLabels}
                   onChange={(address) =>
                     handleAddressChange({ ...address, country: address.country || "CA" })
                   }
@@ -329,6 +334,7 @@ export function ServiceAreaSelector({
             <AddressInput
               values={centerAddress}
               labels={addressLabels}
+              provinceLabels={provinceLabels}
               onChange={(address) =>
                 handleAddressChange({ ...address, country: address.country || "CA" })
               }
@@ -377,8 +383,8 @@ export function ServiceAreaSelector({
             onClick={handleSave}
           >
             {loading
-              ? (selectorLabels.override?.saving ?? "Saving…")
-              : (selectorLabels.override?.save ?? "Save service area")}
+              ? (selectorLabels.saving ?? selectorLabels.override?.saving ?? "Saving…")
+              : (selectorLabels.save ?? selectorLabels.override?.save ?? "Save service area")}
           </Button>
         </Flex>
       )}

@@ -30,6 +30,7 @@ export interface AddressInputLabels {
   zipPlaceholder?: string;
   provincePlaceholder?: string;
   country?: string;
+  countryValue?: string;
 }
 
 const DEFAULT_ADDRESS_INPUT_LABELS: AddressInputLabels = {
@@ -57,6 +58,7 @@ export interface AddressInputProps {
   };
   loading?: boolean;
   required?: boolean;
+  provinceLabels?: Record<string, string>;
   /** @deprecated Country is always Canada; kept for API compatibility. */
   showCountry?: boolean;
 }
@@ -82,6 +84,7 @@ export function AddressInput({
   errors,
   loading,
   required = true,
+  provinceLabels,
 }: AddressInputProps) {
   const labels = labelsProp ?? DEFAULT_ADDRESS_INPUT_LABELS;
   const provinceValue = normalizeCanadianProvinceCode(values.stateProvince);
@@ -178,7 +181,7 @@ export function AddressInput({
             <SelectContent>
               {CANADIAN_PROVINCES.map((province) => (
                 <SelectItem key={province.code} value={province.code}>
-                  {province.label}
+                  {provinceLabels?.[province.code] ?? province.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -220,7 +223,7 @@ export function AddressInput({
       </Flex>
 
       <Text size="1" color="gray">
-        {labels.country ?? "Country"}: Canada
+        {labels.country ?? "Country"}: {labels.countryValue ?? "Canada"}
       </Text>
     </Flex>
   );

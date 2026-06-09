@@ -6,6 +6,7 @@ import type { ProfilePhotoUploadLabels } from "@welpco/ui/platform/profile-manag
 import type { WeeklyAvailabilityDisplayLabels } from "@welpco/ui/platform";
 import type { BookingStatus } from "@/lib/services/booking-service";
 import { useAuthRegisterStep } from "@/lib/i18n/auth-message-templates";
+import { useCanadianProvinceLabels } from "@/lib/i18n/use-canadian-provinces";
 import { useWelperServiceAreaStepLabels } from "@/lib/i18n/use-auth-labels";
 
 export type WelperNavChromeLabels = {
@@ -581,6 +582,7 @@ export function useCustomerProfileLabels() {
   const form = useTranslations("dashboard.profile.customer.form");
   const af = useTranslations("dashboard.profile.customer.form.addressFields");
   const v = useTranslations("dashboard.profile.customer.form.validation");
+  const provinceLabels = useCanadianProvinceLabels();
   return {
     title: t("title"),
     subtitle: t("subtitle"),
@@ -612,7 +614,9 @@ export function useCustomerProfileLabels() {
         zipPlaceholder: af("zipPlaceholder"),
         provincePlaceholder: af("provincePlaceholder"),
         country: af("country"),
+        countryValue: af("countryValue"),
       },
+      provinceLabels,
       validation: {
         firstNameRequired: v("firstNameRequired"),
         lastNameRequired: v("lastNameRequired"),
@@ -1267,6 +1271,7 @@ export function useWelperServiceOfferingFormLabels() {
       },
     },
     serviceAreaAddress: serviceArea.address,
+    serviceAreaProvinceLabels: serviceArea.provinceLabels,
   };
 }
 

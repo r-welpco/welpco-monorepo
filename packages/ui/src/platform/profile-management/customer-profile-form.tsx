@@ -40,6 +40,7 @@ export interface CustomerProfileFormLabels {
   saving: string;
   addressIncomplete: string;
   addressFields: AddressInputLabels;
+  provinceLabels?: Record<string, string>;
   validation: CustomerProfileFormValidationLabels;
 }
 
@@ -296,6 +297,7 @@ export function CustomerProfileForm({
                       values={field.value}
                       onChange={field.onChange}
                       labels={labels.addressFields}
+                      provinceLabels={labels.provinceLabels}
                       errors={{
                         streetAddress: addressError?.issues?.find((i) =>
                           i.path.includes("streetAddress"),

@@ -981,14 +981,21 @@
             "centerAddress": "Adresse centrale",
             "serviceRadius": "Rayon de service (km)",
             "radiusPlaceholder": "25",
-            "radiusHint": "Les services seront disponibles dans un rayon de {km} km autour de l'adresse centrale."
+            "radiusHint": "Les services seront disponibles dans un rayon de {km} km autour de l'adresse centrale.",
+            "save": "Enregistrer",
+            "saving": "Enregistrement…"
           },
           "address": {
             "streetAddress": "Adresse",
             "city": "Ville",
             "stateProvince": "Province / État",
             "zipPostalCode": "Code postal",
-            "streetPlaceholder": "123 rue Principale"
+            "streetPlaceholder": "123 rue Principale",
+            "cityPlaceholder": "Montréal",
+            "zipPlaceholder": "H2X 1Y4",
+            "provincePlaceholder": "Choisir une province",
+            "country": "Pays",
+            "countryValue": "Canada"
           }
         },
         "welperOffering": {
@@ -1249,7 +1256,22 @@
       "back": "← Retour",
       "cancel": "Annuler",
       "genericError": "Une erreur s'est produite.",
-      "turnstileComplete": "Complétez la vérification anti-robot."
+      "turnstileComplete": "Complétez la vérification anti-robot.",
+      "canadianProvinces": {
+        "AB": "Alberta",
+        "BC": "Colombie-Britannique",
+        "MB": "Manitoba",
+        "NB": "Nouveau-Brunswick",
+        "NL": "Terre-Neuve-et-Labrador",
+        "NS": "Nouvelle-Écosse",
+        "NT": "Territoires du Nord-Ouest",
+        "NU": "Nunavut",
+        "ON": "Ontario",
+        "PE": "Île-du-Prince-Édouard",
+        "QC": "Québec",
+        "SK": "Saskatchewan",
+        "YT": "Yukon"
+      }
     },
     "footer": {
       "heading": "Pied de page de l'application",
@@ -2051,7 +2073,8 @@
             "cityPlaceholder": "Montréal",
             "zipPlaceholder": "H2X 1Y4",
             "provincePlaceholder": "Choisir une province",
-            "country": "Pays"
+            "country": "Pays",
+            "countryValue": "Canada"
           },
           "validation": {
             "firstNameRequired": "Le prénom est requis",

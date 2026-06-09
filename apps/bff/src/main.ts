@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -67,6 +68,12 @@ async function bootstrap() {
   // runs before Nest registers parsers on listen() and breaks webhooks.
   app.useBodyParser('json', { limit: '1mb' });
   app.useBodyParser('urlencoded', { limit: '1mb', extended: false });
+
+  // Favicons (browsers hit /favicon.ico and /favicon.png on the API host)
+  app.useStaticAssets(join(__dirname, '..', 'public'), {
+    index: false,
+    fallthrough: true,
+  });
 
   // Global prefix
   app.setGlobalPrefix('api');

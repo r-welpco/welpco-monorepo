@@ -269,6 +269,8 @@ const DEFAULT_WELPER_SERVICE_AREA_SELECTOR: ServiceAreaSelectorLabels = {
   radiusPlaceholder: "25",
   radiusHint:
     "Services will be available within {km} km of the center address.",
+  save: "Save service area",
+  saving: "Saving…",
 };
 
 const DEFAULT_WELPER_SERVICE_AREA_ADDRESS: AddressInputLabels = {
@@ -277,6 +279,11 @@ const DEFAULT_WELPER_SERVICE_AREA_ADDRESS: AddressInputLabels = {
   stateProvince: "Province / state",
   zipPostalCode: "Postal / ZIP code",
   streetPlaceholder: "123 Main Street",
+  cityPlaceholder: "Toronto",
+  zipPlaceholder: "M5H 1A1",
+  provincePlaceholder: "Select province",
+  country: "Country",
+  countryValue: "Canada",
 };
 
 export interface WelperServiceAreaStepLabels extends SignupCommonLabels {
@@ -291,6 +298,7 @@ export interface WelperServiceAreaStepLabels extends SignupCommonLabels {
   };
   selector: ServiceAreaSelectorLabels;
   address: AddressInputLabels;
+  provinceLabels?: Record<string, string>;
 }
 
 export const DEFAULT_WELPER_SERVICE_AREA_LABELS: WelperServiceAreaStepLabels = {

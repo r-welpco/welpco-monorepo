@@ -903,6 +903,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 description={welperProfileLabels.serviceArea.description}
                 selectorLabels={welperServiceAreaLabels.selector}
                 addressLabels={welperServiceAreaLabels.address}
+                provinceLabels={welperServiceAreaLabels.provinceLabels}
                 error={
                   updateWelperProfileMutation.error instanceof Error
                     ? updateWelperProfileMutation.error.message

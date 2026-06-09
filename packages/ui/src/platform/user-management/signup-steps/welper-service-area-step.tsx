@@ -178,6 +178,7 @@ export function WelperServiceAreaStep({
             loading={loading}
             selectorLabels={labels.selector}
             addressLabels={labels.address}
+            provinceLabels={labels.provinceLabels}
             showAddressCountry={false}
             onSave={(area) =>
               setServiceArea({
