@@ -921,9 +921,8 @@
           "dobHint": "Les clients et les Welpers doivent avoir 18 ans ou plus pour s'inscrire.",
           "minorComingSoon": {
             "title": "Bientôt disponible",
-            "description": "L'inscription Welper pour les moins de 18 ans n'est pas encore disponible. Revenez bientôt, ou choisissez Client si vous réservez des services pour votre foyer.",
-            "confirmLabel": "OK",
-            "changeRoleLabel": "Choisir un autre rôle"
+            "description": "L'inscription Welper pour les moins de 18 ans n'est pas encore disponible.",
+            "confirmLabel": "OK"
           },
           "tosPrefix": "J'accepte les",
           "tosLink": "Conditions d'utilisation",

@@ -118,7 +118,6 @@ export function useIdentityStepLabels(): IdentityStepLabels {
       title: t("minorComingSoon.title"),
       description: t("minorComingSoon.description"),
       confirmLabel: t("minorComingSoon.confirmLabel"),
-      changeRoleLabel: t("minorComingSoon.changeRoleLabel"),
     },
     tosPrefix: t("tosPrefix"),
     tosLink: t("tosLink"),

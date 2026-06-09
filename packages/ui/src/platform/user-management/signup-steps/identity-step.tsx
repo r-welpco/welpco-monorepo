@@ -24,7 +24,6 @@ import { TextField } from "@welpco/ui/text-field";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogTitle,
@@ -226,21 +225,6 @@ export function IdentityStep({
             {labels.minorComingSoon.description}
           </AlertDialogDescription>
           <Flex gap="3" mt="4" justify="end" wrap="wrap">
-            {onBack && labels.minorComingSoon.changeRoleLabel ? (
-              <AlertDialogCancel>
-                <Button
-                  type="button"
-                  variant="soft"
-                  color="gray"
-                  onClick={() => {
-                    setMinorModalOpen(false);
-                    onBack();
-                  }}
-                >
-                  {labels.minorComingSoon.changeRoleLabel}
-                </Button>
-              </AlertDialogCancel>
-            ) : null}
             <AlertDialogAction>
               <Button type="button" color={SEMANTIC_COLOR.primary}>
                 {labels.minorComingSoon.confirmLabel}

@@ -922,9 +922,8 @@
           "dobHint": "Customers and Welpers must be 18 or older to sign up.",
           "minorComingSoon": {
             "title": "Coming soon",
-            "description": "Welper sign-up for users under 18 isn't available yet. Check back soon, or choose Customer if you're booking services for your household.",
-            "confirmLabel": "OK",
-            "changeRoleLabel": "Choose a different role"
+            "description": "Welper sign-up for users under 18 isn't available yet.",
+            "confirmLabel": "OK"
           },
           "tosPrefix": "I agree to the",
           "tosLink": "Terms of Service",

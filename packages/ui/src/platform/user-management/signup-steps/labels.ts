@@ -158,7 +158,6 @@ export interface IdentityStepLabels extends SignupCommonLabels {
     title: string;
     description: string;
     confirmLabel: string;
-    changeRoleLabel?: string;
   };
   tosPrefix: string;
   tosLink: string;
@@ -199,9 +198,8 @@ export const DEFAULT_IDENTITY_LABELS: IdentityStepLabels = {
   minorComingSoon: {
     title: "Coming soon",
     description:
-      "Welper sign-up for users under 18 isn't available yet. Check back soon, or choose Customer if you're booking services for your household.",
+      "Welper sign-up for users under 18 isn't available yet.",
     confirmLabel: "OK",
-    changeRoleLabel: "Choose a different role",
   },
   tosPrefix: "I agree to the",
   tosLink: "Terms of Service",
