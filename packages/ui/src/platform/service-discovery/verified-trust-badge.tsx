@@ -18,19 +18,19 @@ export interface VerifiedTrustBadgeProps {
  * `verified: true` — never default or infer.
  */
 export function VerifiedTrustBadge({ size = "2" }: VerifiedTrustBadgeProps) {
-  const iconSize = size === "1" ? 14 : 16;
+  const iconSize = size === "1" ? 16 : 18;
 
   return (
     <Tooltip content={TOOLTIP_LABEL}>
       <Badge
         color={SEMANTIC_COLOR.success}
-        variant="soft"
+        variant="solid"
         highContrast
         size={size}
         aria-label={TOOLTIP_LABEL}
-        style={{ cursor: "default", paddingInline: size === "1" ? "4px" : "6px" }}
+        style={{ cursor: "default", paddingInline: size === "1" ? "5px" : "7px" }}
       >
-        <ShieldCheck size={iconSize} aria-hidden="true" />
+        <ShieldCheck size={iconSize} aria-hidden="true" strokeWidth={2.25} />
       </Badge>
     </Tooltip>
   );

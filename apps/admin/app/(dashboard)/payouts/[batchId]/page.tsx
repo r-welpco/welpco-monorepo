@@ -12,14 +12,9 @@ import {
 } from "@welpco/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AdminErrorCallout } from "@/components/admin-callout";
+import { AdminErrorCallout, AdminWarningCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
-import {
-  formatAdminDateTime,
-  formatAdminMoneyCents,
-  formatAdminStatusLabel,
-  shortId,
-} from "@/lib/admin-format";
+import { formatAdminDateTime, formatAdminMoneyCents, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
 import { getPayoutBatch } from "@/lib/services/admin-payouts-service";
 import { PayoutApproveAction } from "../payout-batch-actions";
 import { PayoutLineDetailsButton, PayoutWelperDetailsButton } from "../payout-computation-details-modal";
@@ -27,11 +22,7 @@ import { PayoutBatchExportClient } from "./payout-batch-export-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function PayoutBatchPage({
-  params,
-}: {
-  params: Promise<{ batchId: string }>;
-}) {
+export default async function PayoutBatchPage({ params }: { params: Promise<{ batchId: string }> }) {
   const { batchId } = await params;
   let batch;
   let err: string | null = null;
@@ -63,13 +54,34 @@ export default async function PayoutBatchPage({
 
       <Link href="/payouts">← Back to payouts</Link>
 
+      {["executing", "partial", "failed"].includes(batch.status) ? (
+        <AdminWarningCallout
+          message={
+            <>
+              <Text weight="bold">Verify this batch in Stripe Dashboard before any retry.</Text> Transfers with an ID
+              must not be submitted again. Only rows with no transfer ID are eligible for a future batch.
+            </>
+          }
+        />
+      ) : null}
+
       <Card style={{ padding: "1.25rem" }}>
         <Flex justify="between" align="start" wrap="wrap" gap="3">
           <Flex direction="column" gap="1">
             <Text size="2" color="gray">
               Batch {shortId(batch.id)}
             </Text>
-            <Badge color={batch.status === "completed" ? "green" : batch.status === "failed" ? "red" : batch.status === "partial" ? "orange" : "gray"}>
+            <Badge
+              color={
+                batch.status === "completed"
+                  ? "green"
+                  : batch.status === "failed"
+                    ? "red"
+                    : batch.status === "partial"
+                      ? "orange"
+                      : "gray"
+              }
+            >
               {formatAdminStatusLabel(batch.status)}
             </Badge>
             {batch.executedAt ? (
@@ -114,8 +126,8 @@ export default async function PayoutBatchPage({
             <div>
               <Text weight="medium">{welper.welperEmail ?? welper.welperId}</Text>
               <Text size="2" color="gray">
-                {welper.bookingCount} booking{welper.bookingCount === 1 ? "" : "s"} · Transfer{" "}
-                {formatAdminMoneyCents(welper.welperNetCents, "CAD")}
+                {welper.bookingCount} booking
+                {welper.bookingCount === 1 ? "" : "s"} · Transfer {formatAdminMoneyCents(welper.welperNetCents, "CAD")}
               </Text>
             </div>
             <Badge color={welper.connectReady ? "green" : "red"}>
@@ -132,6 +144,7 @@ export default async function PayoutBatchPage({
                 <TableColumnHeaderCell>Welper net</TableColumnHeaderCell>
                 <TableColumnHeaderCell>Platform net</TableColumnHeaderCell>
                 <TableColumnHeaderCell>Status</TableColumnHeaderCell>
+                <TableColumnHeaderCell>Stripe transfer</TableColumnHeaderCell>
                 <TableColumnHeaderCell>Details</TableColumnHeaderCell>
               </TableRow>
             </TableHeader>
@@ -149,10 +162,12 @@ export default async function PayoutBatchPage({
                     {line.exclusionReason ? ` (${line.exclusionReason})` : ""}
                   </TableCell>
                   <TableCell>
-                    <PayoutLineDetailsButton
-                      line={line}
-                      welperLabel={welper.welperEmail ?? welper.welperId}
-                    />
+                    <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                      {line.stripeTransferId ?? "—"}
+                    </Text>
+                  </TableCell>
+                  <TableCell>
+                    <PayoutLineDetailsButton line={line} welperLabel={welper.welperEmail ?? welper.welperId} />
                   </TableCell>
                 </TableRow>
               ))}

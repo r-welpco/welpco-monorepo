@@ -332,9 +332,8 @@
               "type": "list",
               "items": [
                 "Certain features of the Site may require fees, including service fees applicable to transactions carried out via the platform.",
-                "Welpco generally applies a service fee equivalent to 25% of the amount of the service set by the Service Provider. These fees are added to the Service Provider's displayed rate and are paid by the Client at the time of the transaction.",
-                "The Service Provider receives the full amount they have set for the service (their listed rate multiplied by billed hours). Welpco does not deduct payment processing fees from the Service Provider's earnings; Welpco absorbs Stripe card processing fees on the platform account.",
-                "Welper payouts are issued weekly on Friday (America/Toronto), at least seven (7) days after customer payment is released for a completed booking, subject to Stripe Connect onboarding and absence of open disputes or full refunds.",
+                "Welpco generally applies a service fee equivalent to 20% of the amount of the service set by the Service Provider. These fees are added to the displayed price and are paid by the Client at the time of the transaction.",
+                "The Service Provider receives the amount that they have set for the service, subject to applicable fees and the terms of the payment provider.",
                 "Certain services, such as background checks, may also be subject to separate fees. These fees are clearly indicated prior to being charged and are, unless otherwise specified, non-refundable.",
                 "By using the Site, you agree to pay all applicable fees and acknowledge that such fees may be modified at any time by Welpco, effective upon their publication or upon the next transaction."
               ]
@@ -359,9 +358,9 @@
             {
               "type": "list",
               "items": [
-                "By using the paid services of the Site, you agree to pay all applicable fees, including the price of the service set by the Service Provider as well as Welpco’s service fees, as indicated at the time of the transaction.",
+                "By using the paid services of the Site, you agree to pay all applicable fees, including the price of the service set by the Service Provider as well as Welpco's service fees, as indicated at the time of the transaction.",
                 "Payments are made via secure payment methods offered on the Site and are processed by a third-party payment service provider, including Stripe.",
-                "Depending on the operation of the platform, customer funds may be temporarily held until confirmation of the completion of the service. After capture, Service Provider earnings become eligible for weekly payout on Friday, at least seven (7) days after payment release, via Stripe Connect to the Service Provider's connected account.",
+                "Depending on the operation of the platform, funds may be temporarily held until confirmation of the completion of the service, after which they are transferred to the Service Provider, subject to the delays and conditions of the payment provider.",
                 "The user acknowledges that Welpco does not control payment processing times and cannot be held responsible for delays, interruptions or additional fees imposed by the payment provider."
               ]
             }
@@ -376,9 +375,8 @@
               "type": "list",
               "items": [
                 "Welpco applies service fees to transactions carried out via the platform.",
-                "These service fees are generally equivalent to 25% of the amount of the service set by the Service Provider and are added to the amount payable by the Client at the time of the transaction.",
-                "The Service Provider receives their full listed service amount; Welpco absorbs payment processing fees and does not deduct them from Service Provider transfers.",
-                "Weekly payouts occur on Friday (America/Toronto) once the minimum hold period and other eligibility conditions are met.",
+                "These service fees are generally equivalent to 20% of the amount of the service set by the Service Provider and are added to the amount payable by the Client at the time of the transaction.",
+                "The Service Provider receives the amount that they have set for the service, subject to the applicable conditions of the payment provider.",
                 "Details regarding applicable fees, including any additional fees, are clearly indicated at the time of the transaction or on the Site.",
                 "Welpco reserves the right to modify its service fees at any time, which shall take effect upon their publication or upon the next transaction."
               ]
@@ -401,19 +399,13 @@
         {
           "type": "subsection",
           "id": "8.5",
-          "title": "Cancellation Policy",
+          "title": "Cancellation",
           "blocks": [
             {
-              "type": "paragraph",
-              "text": "Both Welpers and customers have the ability to cancel the service for free up until 24 hours before the time of the service."
-            },
-            {
-              "type": "paragraph",
-              "text": "If the customer cancels the service less than 24 hours before the time of the service, 1 hour of pay will be kept by Welpco to pay the Welper."
-            },
-            {
-              "type": "paragraph",
-              "text": "If the Welper cancels the service less than 24 hours before the time of the service, Welpco will issue a full refund to the customer."
+              "type": "list",
+              "items": [
+                "You may cancel your subscription or paid services at any time by following the instructions on the Site. Cancellations take effect at the end of the current subscription period."
+              ]
             }
           ]
         },
@@ -423,41 +415,10 @@
           "title": "Refund Policy",
           "blocks": [
             {
-              "type": "paragraph",
-              "text": "If a customer doesn't receive the service they paid for due to the Welper's cancellation or absence, the customer will receive a full refund."
-            },
-            {
-              "type": "paragraph",
-              "text": "If the customer is not satisfied with the service they received, they may contact us directly via the app or website and express their complaint, while submitting any necessary proof, such as:"
-            },
-            {
               "type": "list",
               "items": [
-                "Photos of the result of the service they received."
+                "Unless otherwise required by law or specifically indicated at the time of purchase, fees paid are non-refundable. In case of a dispute regarding a payment, please contact our customer service."
               ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Welpco will then assess the complaint and contact the customer with our decision, which could include either of the following:"
-            },
-            {
-              "type": "list",
-              "items": [
-                "A credit to use towards a future transaction;",
-                "A designated Welper will be selected by Welpco to complete or re-do the service at no cost to the customer."
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "In all cases, customers have the ability to rate and leave reviews for Welpers once a job is complete, which will be visible to all customers. Likewise, Welpers have the ability to rate and leave reviews based on their experience with customers."
-            },
-            {
-              "type": "paragraph",
-              "text": "If the Welper shows up on time for the service and the service requires the customer to be present, but they are absent, the service will be cancelled if the customer doesn't communicate their absence or late arrival with the Welper and an hour of pay will be kept to pay the Welper, and the remainder of the payment will be issued as a refund to the customer."
-            },
-            {
-              "type": "paragraph",
-              "text": "This is a transparent process that encourages positive experiences between customers and Welpers alike."
             }
           ]
         }

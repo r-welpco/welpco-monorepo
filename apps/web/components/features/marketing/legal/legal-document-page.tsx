@@ -95,15 +95,50 @@ export function LegalPrivacyDocumentView({
   );
 }
 
+export function LegalPolicyDocumentView({
+  title,
+  subtitle,
+  paragraphs,
+}: {
+  title: string;
+  subtitle?: string;
+  paragraphs: string[];
+}) {
+  return (
+    <main className={styles.legalPage}>
+      <Container size="2" px={{ initial: "4", sm: "6" }} py={{ initial: "5", md: "6" }}>
+        <header className={styles.pageHeader}>
+          <Heading as="h1" size="3" weight="medium" className={styles.pageTitle}>
+            {title}
+          </Heading>
+          {subtitle ? (
+            <Text as="p" size="2" color="gray" className={styles.pageLead}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </header>
+
+        <Box className={styles.sectionBody}>
+          {paragraphs.map((paragraph) => (
+            <p key={paragraph.slice(0, 48)}>{paragraph}</p>
+          ))}
+        </Box>
+      </Container>
+    </main>
+  );
+}
+
 export function LegalTermsDocumentView({
   title,
   lastUpdated,
   notice,
+  intro,
   sections,
 }: {
   title: string;
-  lastUpdated: string;
-  notice: string;
+  lastUpdated?: string;
+  notice?: string;
+  intro?: string;
   sections: LegalTermsSection[];
 }) {
   return (
@@ -116,6 +151,11 @@ export function LegalTermsDocumentView({
           {lastUpdated ? (
             <Text as="p" size="1" color="gray" className={styles.lastUpdated}>
               {lastUpdated}
+            </Text>
+          ) : null}
+          {intro ? (
+            <Text as="p" size="2" color="gray" className={styles.pageLead}>
+              {intro}
             </Text>
           ) : null}
           {notice ? (

@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import Stripe from 'stripe';
@@ -15,19 +10,13 @@ import {
   computeWelperGrossCentsFromCustomerSubtotal,
   computeWelperRefundShareCents,
 } from '../booking/booking-pricing';
-import {
-  BookingPayment,
-  BookingPaymentRecordStatus,
-} from './entities/booking-payment.entity';
+import { BookingPayment, BookingPaymentRecordStatus } from './entities/booking-payment.entity';
 import { WelperPayoutLedger } from './entities/welper-payout-ledger.entity';
 import { PayoutBatch } from './entities/payout-batch.entity';
 import { WelperPayoutLedgerStatus } from './entities/payout-ledger-status.enum';
 import { createStripeClient } from './stripe-client';
 import { isStripeFeeSynced, syncStripeFeeForPaymentIntent } from './stripe-fee.util';
-import {
-  applyTotalsToBatch,
-  computeTotalsFromLines,
-} from './payout-batch-totals.util';
+import { applyTotalsToBatch, computeTotalsFromLines } from './payout-batch-totals.util';
 
 export const STRIPE_FEE_PENDING_REASON = 'stripe_fee_pending';
 
@@ -53,9 +42,7 @@ export class WelperPayoutLedgerService {
     this.stripe = key ? createStripeClient(key) : null;
   }
 
-  async syncStripeFeesForBooking(
-    bookingId: string,
-  ): Promise<{ totalFeeCents: number; allSynced: boolean }> {
+  async syncStripeFeesForBooking(bookingId: string): Promise<{ totalFeeCents: number; allSynced: boolean }> {
     if (!this.stripe) return { totalFeeCents: 0, allSynced: false };
     const rows = await this.bookingPaymentRepo.find({
       where: { bookingId, status: BookingPaymentRecordStatus.CAPTURED },
@@ -84,9 +71,7 @@ export class WelperPayoutLedgerService {
         }
       } catch (err) {
         allSynced = false;
-        this.logger.warn(
-          `Stripe fee sync failed for PI ${row.stripePaymentIntentId}: ${(err as Error).message}`,
-        );
+        this.logger.warn(`Stripe fee sync failed for PI ${row.stripePaymentIntentId}: ${(err as Error).message}`);
       }
     }
     return { totalFeeCents: totalFee, allSynced };
@@ -96,7 +81,10 @@ export class WelperPayoutLedgerService {
     const batch = await this.batchRepo.findOne({ where: { id: batchId } });
     if (!batch) return;
     const lines = await this.ledgerRepo.find({
-      where: { payoutBatchId: batchId, status: WelperPayoutLedgerStatus.SCHEDULED },
+      where: {
+        payoutBatchId: batchId,
+        status: WelperPayoutLedgerStatus.SCHEDULED,
+      },
     });
     applyTotalsToBatch(batch, computeTotalsFromLines(lines));
     await this.batchRepo.save(batch);
@@ -104,7 +92,9 @@ export class WelperPayoutLedgerService {
 
   /** Create or refresh ledger row when customer payment is fully captured. */
   async createLedgerForPaymentReleased(bookingId: string): Promise<WelperPayoutLedger | null> {
-    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
+    const booking = await this.bookingRepo.findOne({
+      where: { id: bookingId },
+    });
     if (!booking || booking.status !== BookingRequestStatus.PAYMENT_RELEASED) {
       return null;
     }
@@ -124,6 +114,30 @@ export class WelperPayoutLedgerService {
     }
 
     const { totalFeeCents, allSynced } = await this.syncStripeFeesForBooking(bookingId);
+    return this.upsertLedgerForReleasedBooking(booking, receipt, {
+      totalFeeCents,
+      allSynced,
+    });
+  }
+
+  async upsertLedgerForReleasedBooking(
+    booking: BookingRequest,
+    receipt: BookingServiceReceipt,
+    fees: { totalFeeCents: number; allSynced: boolean },
+    manager?: EntityManager,
+  ): Promise<WelperPayoutLedger> {
+    if (!booking.paymentReleasedAt) {
+      throw new BadRequestException('Booking missing payment_released_at');
+    }
+    const ledgerRepo = manager ? manager.getRepository(WelperPayoutLedger) : this.ledgerRepo;
+    const existing = await ledgerRepo.findOne({
+      where: { bookingId: booking.id },
+    });
+    if (existing?.status === WelperPayoutLedgerStatus.TRANSFERRED) {
+      return existing;
+    }
+
+    const { totalFeeCents, allSynced } = fees;
     const welperGrossCents = computeWelperGrossCentsFromCustomerSubtotal(receipt.subtotalCents);
     const platformGrossCents = computePlatformGrossCents(receipt.subtotalCents);
     const welperRefundCents = existing?.welperRefundCents ?? 0;
@@ -131,7 +145,7 @@ export class WelperPayoutLedgerService {
 
     const feePending = !allSynced;
     const payload: Partial<WelperPayoutLedger> = {
-      bookingId,
+      bookingId: booking.id,
       welperId: booking.welperId,
       customerId: booking.customerId,
       paymentReleasedAt: booking.paymentReleasedAt,
@@ -153,47 +167,48 @@ export class WelperPayoutLedgerService {
             : existing?.status === WelperPayoutLedgerStatus.EXCLUDED
               ? WelperPayoutLedgerStatus.PENDING
               : (existing?.status ?? WelperPayoutLedgerStatus.PENDING),
-      exclusionReason: feePending
-        ? STRIPE_FEE_PENDING_REASON
-        : welperNetCents <= 0
-          ? 'fully_refunded'
-          : null,
+      exclusionReason: feePending ? STRIPE_FEE_PENDING_REASON : welperNetCents <= 0 ? 'fully_refunded' : null,
     };
 
     if (existing) {
       if (existing.status === WelperPayoutLedgerStatus.SCHEDULED) {
         Object.assign(existing, payload);
-        return this.ledgerRepo.save(existing);
+        return ledgerRepo.save(existing);
       }
       if (
         existing.status !== WelperPayoutLedgerStatus.EXCLUDED &&
         existing.status !== WelperPayoutLedgerStatus.FAILED
       ) {
         Object.assign(existing, payload);
-        return this.ledgerRepo.save(existing);
+        return ledgerRepo.save(existing);
       }
       if (existing.status === WelperPayoutLedgerStatus.EXCLUDED && welperNetCents > 0 && !feePending) {
         existing.status = WelperPayoutLedgerStatus.PENDING;
         existing.exclusionReason = null;
         Object.assign(existing, payload);
-        return this.ledgerRepo.save(existing);
+        return ledgerRepo.save(existing);
       }
       if (feePending) {
         Object.assign(existing, payload);
-        return this.ledgerRepo.save(existing);
+        return ledgerRepo.save(existing);
       }
       return existing;
     }
 
-    return this.ledgerRepo.save(this.ledgerRepo.create(payload));
+    return ledgerRepo.save(ledgerRepo.create(payload));
   }
 
   async excludeForDispute(bookingId: string, manager?: EntityManager): Promise<string | null> {
     const repo = manager ? manager.getRepository(WelperPayoutLedger) : this.ledgerRepo;
-    const row = await repo.findOne({ where: { bookingId } });
+    const row = manager
+      ? await repo
+          .createQueryBuilder('ledger')
+          .setLock('pessimistic_write')
+          .where('ledger.booking_id = :bookingId', { bookingId })
+          .getOne()
+      : await repo.findOne({ where: { bookingId } });
     if (!row || row.status === WelperPayoutLedgerStatus.TRANSFERRED) return null;
-    const batchId =
-      row.status === WelperPayoutLedgerStatus.SCHEDULED ? row.payoutBatchId : null;
+    const batchId = row.status === WelperPayoutLedgerStatus.SCHEDULED ? row.payoutBatchId : null;
     if (row.status === WelperPayoutLedgerStatus.SCHEDULED && row.payoutBatchId) {
       row.payoutBatchId = null;
     }
@@ -207,7 +222,9 @@ export class WelperPayoutLedgerService {
   }
 
   async restoreAfterDisputeResolved(bookingId: string): Promise<void> {
-    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
+    const booking = await this.bookingRepo.findOne({
+      where: { id: bookingId },
+    });
     if (!booking || booking.status === BookingRequestStatus.DISPUTED) return;
     const row = await this.ledgerRepo.findOne({ where: { bookingId } });
     if (!row || row.status !== WelperPayoutLedgerStatus.EXCLUDED) return;
@@ -224,9 +241,7 @@ export class WelperPayoutLedgerService {
     const row = await this.ledgerRepo.findOne({ where: { bookingId } });
     if (!row) return;
     if (row.status === WelperPayoutLedgerStatus.TRANSFERRED) {
-      this.logger.warn(
-        `Refund after transfer for booking ${bookingId}; manual ops required`,
-      );
+      this.logger.warn(`Refund after transfer for booking ${bookingId}; manual ops required`);
       return;
     }
 
@@ -235,10 +250,7 @@ export class WelperPayoutLedgerService {
       row.customerSubtotalCents,
       row.customerTotalCents,
     );
-    row.welperRefundCents = Math.min(
-      row.welperGrossCents,
-      (row.welperRefundCents ?? 0) + welperShare,
-    );
+    row.welperRefundCents = Math.min(row.welperGrossCents, (row.welperRefundCents ?? 0) + welperShare);
     row.welperNetCents = Math.max(0, row.welperGrossCents - row.welperRefundCents);
 
     const batchId = row.payoutBatchId;
@@ -262,6 +274,31 @@ export class WelperPayoutLedgerService {
       { payoutBatchId: batchId, status: WelperPayoutLedgerStatus.SCHEDULED },
       { status: WelperPayoutLedgerStatus.PENDING, payoutBatchId: null },
     );
+  }
+
+  async refreshPendingStripeFees(limit = 100): Promise<{ scanned: number; recovered: number; stillPending: number }> {
+    const rows = await this.ledgerRepo.find({
+      where: {
+        status: WelperPayoutLedgerStatus.EXCLUDED,
+        exclusionReason: STRIPE_FEE_PENDING_REASON,
+      },
+      order: { updatedAt: 'ASC' },
+      take: Math.min(Math.max(limit, 1), 200),
+    });
+
+    let recovered = 0;
+    for (const row of rows) {
+      const refreshed = await this.createLedgerForPaymentReleased(row.bookingId);
+      if (refreshed?.status === WelperPayoutLedgerStatus.PENDING && refreshed.exclusionReason == null) {
+        recovered += 1;
+      }
+    }
+
+    return {
+      scanned: rows.length,
+      recovered,
+      stillPending: rows.length - recovered,
+    };
   }
 
   async findById(id: string): Promise<WelperPayoutLedger> {

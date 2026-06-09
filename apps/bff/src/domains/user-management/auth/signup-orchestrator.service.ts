@@ -928,10 +928,12 @@ export class SignupOrchestratorService {
     if (user.selectedRole === SelectedRole.CUSTOMER && age < 18) {
       throw new BadRequestException('You must be at least 18 years old to sign up');
     }
-    if (user.selectedRole === SelectedRole.WELPER && age < 14) {
-      throw new BadRequestException(
-        'You must be at least 14 years old to sign up as a Welper',
-      );
+    if (user.selectedRole === SelectedRole.WELPER && age < 18) {
+      throw new BadRequestException({
+        code: 'MINOR_SIGNUP_UNAVAILABLE',
+        message:
+          'Welper sign-up for users under 18 is coming soon. You must be 18 or older to continue.',
+      });
     }
     const phoneNumber = {
       countryCode: `+${parsed.countryCallingCode}`,

@@ -13,7 +13,13 @@ export class Resolution extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   notes!: string | null;
 
-  @Column({ name: 'refund_amount', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({
+    name: 'refund_amount',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
   refundAmount!: number | null;
 
   @Column({ name: 'resolved_by_id', type: 'uuid', nullable: true })
@@ -21,4 +27,21 @@ export class Resolution extends BaseEntity {
 
   @Column({ name: 'resolved_at', type: 'timestamptz', nullable: true })
   resolvedAt!: Date | null;
+
+  @Column({
+    name: 'refund_status',
+    type: 'varchar',
+    length: 32,
+    nullable: true,
+  })
+  refundStatus!: string | null;
+
+  @Column({ name: 'refund_message', type: 'text', nullable: true })
+  refundMessage!: string | null;
+
+  @Column({ name: 'refunds_created', type: 'int', nullable: true })
+  refundsCreated!: number | null;
+
+  @Column({ name: 'refund_attempted_at', type: 'timestamptz', nullable: true })
+  refundAttemptedAt!: Date | null;
 }

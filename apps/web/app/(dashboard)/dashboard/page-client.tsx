@@ -167,7 +167,21 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
       return userRole === "welper" ? welperHome.loading : customerHome.loading;
     }
     if (userRole === "welper") {
-      if (welperRequiredSetupIncomplete && !welperShowSetupChecklist) {
+      if (welperShowSetupChecklist) {
+        if (pendingForWelper > 0) {
+          return welperHome.pendingJobs(pendingForWelper);
+        }
+        const active = bookings.filter((b) =>
+          ["accepted", "in_progress"].includes(b.status),
+        ).length;
+        if (active > 0) {
+          return welperHome.activeJobs(active);
+        }
+        return welperRequiredSetupIncomplete
+          ? welperHome.setupIncomplete
+          : welperHome.recommendedSetupRemaining;
+      }
+      if (welperRequiredSetupIncomplete) {
         return welperHome.setupIncomplete;
       }
       if (pendingForWelper > 0) {

@@ -16,7 +16,10 @@ describe('WelperPayoutLedgerService', () => {
     findOne: jest.fn(),
     find: jest.fn(),
     save: jest.fn(async (row: WelperPayoutLedger) => row),
-    create: jest.fn((row: Partial<WelperPayoutLedger>) => ({ id: 'ledger-1', ...row })),
+    create: jest.fn((row: Partial<WelperPayoutLedger>) => ({
+      id: 'ledger-1',
+      ...row,
+    })),
     update: jest.fn(),
   };
   const mockBatchRepo = {
@@ -36,11 +39,23 @@ describe('WelperPayoutLedgerService', () => {
           provide: ConfigService,
           useValue: { get: jest.fn(() => undefined) },
         },
-        { provide: getRepositoryToken(WelperPayoutLedger), useValue: mockLedgerRepo },
+        {
+          provide: getRepositoryToken(WelperPayoutLedger),
+          useValue: mockLedgerRepo,
+        },
         { provide: getRepositoryToken(PayoutBatch), useValue: mockBatchRepo },
-        { provide: getRepositoryToken(BookingRequest), useValue: mockBookingRepo },
-        { provide: getRepositoryToken(BookingServiceReceipt), useValue: mockReceiptRepo },
-        { provide: getRepositoryToken(BookingPayment), useValue: mockBookingPaymentRepo },
+        {
+          provide: getRepositoryToken(BookingRequest),
+          useValue: mockBookingRepo,
+        },
+        {
+          provide: getRepositoryToken(BookingServiceReceipt),
+          useValue: mockReceiptRepo,
+        },
+        {
+          provide: getRepositoryToken(BookingPayment),
+          useValue: mockBookingPaymentRepo,
+        },
       ],
     }).compile();
     service = module.get(WelperPayoutLedgerService);
@@ -156,6 +171,29 @@ describe('WelperPayoutLedgerService', () => {
           payoutBatchId: null,
         }),
       );
+    });
+  });
+
+  describe('refreshPendingStripeFees', () => {
+    it('reports recovered and still-pending ledger rows', async () => {
+      mockLedgerRepo.find.mockResolvedValue([{ bookingId: 'booking-1' }, { bookingId: 'booking-2' }]);
+      const refresh = jest
+        .spyOn(service, 'createLedgerForPaymentReleased')
+        .mockResolvedValueOnce({
+          status: WelperPayoutLedgerStatus.PENDING,
+          exclusionReason: null,
+        } as WelperPayoutLedger)
+        .mockResolvedValueOnce({
+          status: WelperPayoutLedgerStatus.EXCLUDED,
+          exclusionReason: STRIPE_FEE_PENDING_REASON,
+        } as WelperPayoutLedger);
+
+      await expect(service.refreshPendingStripeFees()).resolves.toEqual({
+        scanned: 2,
+        recovered: 1,
+        stillPending: 1,
+      });
+      expect(refresh).toHaveBeenCalledTimes(2);
     });
   });
 });

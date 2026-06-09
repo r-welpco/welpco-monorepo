@@ -114,6 +114,12 @@ export function useIdentityStepLabels(): IdentityStepLabels {
     phonePlaceholder: t("phonePlaceholder"),
     dateOfBirth: t("dateOfBirth"),
     dobHint: t("dobHint"),
+    minorComingSoon: {
+      title: t("minorComingSoon.title"),
+      description: t("minorComingSoon.description"),
+      confirmLabel: t("minorComingSoon.confirmLabel"),
+      changeRoleLabel: t("minorComingSoon.changeRoleLabel"),
+    },
     tosPrefix: t("tosPrefix"),
     tosLink: t("tosLink"),
     privacyPrefix: t("privacyPrefix"),

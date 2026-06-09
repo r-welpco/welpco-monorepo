@@ -13,20 +13,8 @@ import {
   DefaultValuePipe,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
-import {
-  JwtAuthGuard,
-  RolesGuard,
-  Roles,
-  SignupCompletedGuard,
-} from '../../common/auth';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { JwtAuthGuard, RolesGuard, Roles, SignupCompletedGuard } from '../../common/auth';
 import { CurrentUser, CurrentUserData } from '../../common/auth/decorators/current-user.decorator';
 import { AccountType } from '../user-management/entities/user-account.entity';
 import { DisputeService } from './dispute.service';
@@ -68,7 +56,11 @@ export class DisputeController {
     description:
       'Returns a short-lived (15 min) S3 PUT URL plus the key to submit alongside the dispute create payload. Validates content-type (image/jpeg, image/png, image/webp, image/heic, application/pdf) and size (≤10MB).',
   })
-  @ApiResponse({ status: 200, description: 'Presigned URL minted', type: DisputeEvidencePresignResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Presigned URL minted',
+    type: DisputeEvidencePresignResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Invalid content-type or size' })
   @ApiResponse({ status: 503, description: 'Evidence storage not configured' })
   async presignEvidenceUpload(
@@ -80,31 +72,40 @@ export class DisputeController {
 
   @Post('bookings/:bookingId/disputes')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'File a dispute for a booking (transitions booking to disputed)' })
+  @ApiOperation({
+    summary: 'File a dispute for a booking (transitions booking to disputed)',
+  })
   @ApiParam({ name: 'bookingId', description: 'Booking ID' })
   @ApiResponse({ status: 201, description: 'Dispute created' })
-  @ApiResponse({ status: 400, description: 'Booking status does not allow dispute' })
-  @ApiResponse({ status: 403, description: 'Not a participant of this booking' })
+  @ApiResponse({
+    status: 400,
+    description: 'Booking status does not allow dispute',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Not a participant of this booking',
+  })
   @ApiResponse({ status: 404, description: 'Booking not found' })
-  @ApiResponse({ status: 409, description: 'Booking already has an open dispute' })
+  @ApiResponse({
+    status: 409,
+    description: 'Booking already has an open dispute',
+  })
   async create(
     @CurrentUser() user: CurrentUserData,
     @Param('bookingId') bookingId: string,
     @Body() dto: CreateDisputeDto,
   ): Promise<DisputeResponseDto> {
-    return this.disputeService.create(
-      bookingId,
-      user.userId,
-      user.effectiveRole,
-      dto,
-    );
+    return this.disputeService.create(bookingId, user.userId, user.effectiveRole, dto);
   }
 
   @Get('bookings/:bookingId/dispute')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get dispute for this booking (if any)' })
   @ApiParam({ name: 'bookingId', description: 'Booking ID' })
-  @ApiResponse({ status: 200, description: 'Dispute if exists, or null if none filed' })
+  @ApiResponse({
+    status: 200,
+    description: 'Dispute if exists, or null if none filed',
+  })
   @ApiResponse({ status: 404, description: 'Booking not found' })
   async getByBooking(
     @CurrentUser() user: CurrentUserData,
@@ -134,17 +135,8 @@ export class DisputeController {
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
     @Query('status') status?: string,
   ) {
-    const statusDb =
-      user.effectiveRole === 'admin' && status
-        ? disputeStatusQueryToDb(status)
-        : undefined;
-    return this.disputeService.findMine(
-      user.userId,
-      user.effectiveRole,
-      page,
-      limit,
-      statusDb,
-    );
+    const statusDb = user.effectiveRole === 'admin' && status ? disputeStatusQueryToDb(status) : undefined;
+    return this.disputeService.findMine(user.userId, user.effectiveRole, page, limit, statusDb);
   }
 
   @Get('disputes/:id')
@@ -156,10 +148,7 @@ export class DisputeController {
   @ApiResponse({ status: 200, description: 'Dispute details' })
   @ApiResponse({ status: 403, description: 'Not authorized' })
   @ApiResponse({ status: 404, description: 'Dispute not found' })
-  async getById(
-    @CurrentUser() user: CurrentUserData,
-    @Param('id') id: string,
-  ): Promise<DisputeResponseDto> {
+  async getById(@CurrentUser() user: CurrentUserData, @Param('id') id: string): Promise<DisputeResponseDto> {
     return this.disputeService.findById(id, user.userId, user.effectiveRole);
   }
 
@@ -176,14 +165,18 @@ export class DisputeController {
       'The original filer of a dispute may withdraw it while it is still open or in_review. Once admin escalates or resolves the dispute, the participant cannot withdraw — contact support instead. Returns the dispute with `status: "withdrawn"`. The associated booking is restored to COMPLETED if it was sitting in DISPUTED.',
   })
   @ApiParam({ name: 'id', description: 'Dispute ID' })
-  @ApiResponse({ status: 200, description: 'Dispute withdrawn', type: DisputeResponseDto })
-  @ApiResponse({ status: 400, description: 'Dispute is no longer withdrawable' })
+  @ApiResponse({
+    status: 200,
+    description: 'Dispute withdrawn',
+    type: DisputeResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Dispute is no longer withdrawable',
+  })
   @ApiResponse({ status: 403, description: 'Only the filer can withdraw' })
   @ApiResponse({ status: 404, description: 'Dispute not found' })
-  async withdraw(
-    @CurrentUser() user: CurrentUserData,
-    @Param('id') id: string,
-  ): Promise<DisputeResponseDto> {
+  async withdraw(@CurrentUser() user: CurrentUserData, @Param('id') id: string): Promise<DisputeResponseDto> {
     return this.disputeService.withdraw(id, user.userId);
   }
 
@@ -197,8 +190,15 @@ export class DisputeController {
       'Marks dispute resolved and transitions booking from disputed to completed (default) or cancelled (bookingOutcome).',
   })
   @ApiParam({ name: 'id', description: 'Dispute ID' })
-  @ApiResponse({ status: 201, description: 'Resolution created; booking status updated', type: CreateResolutionResponseDto })
-  @ApiResponse({ status: 400, description: 'Dispute not resolvable or booking not disputed' })
+  @ApiResponse({
+    status: 201,
+    description: 'Resolution created; booking status updated',
+    type: CreateResolutionResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Dispute not resolvable or booking not disputed',
+  })
   @ApiResponse({ status: 404, description: 'Dispute not found' })
   @ApiResponse({ status: 409, description: 'Resolution already exists' })
   async createResolution(
@@ -207,5 +207,17 @@ export class DisputeController {
     @Body() dto: CreateResolutionDto,
   ): Promise<CreateResolutionResponseDto> {
     return this.disputeService.createResolution(id, user.userId, dto);
+  }
+
+  @Post('disputes/:id/resolution/refund/retry')
+  @UseGuards(RolesGuard)
+  @Roles(AccountType.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Retry a failed or partial Stripe refund for an existing resolution',
+  })
+  @ApiParam({ name: 'id', description: 'Dispute ID' })
+  async retryResolutionRefund(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    return this.disputeService.retryResolutionRefund(id, user.userId);
   }
 }

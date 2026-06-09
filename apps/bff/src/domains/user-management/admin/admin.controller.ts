@@ -16,14 +16,7 @@ import {
   DefaultValuePipe,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { AdminDashboardService } from './admin-dashboard.service';
 import { UpdateBackgroundCheckDto, UpdateUserAccountStatusDto } from './dto';
@@ -33,10 +26,7 @@ import { BackgroundCheckStatus } from '../entities/verification-status.entity';
 import { AccountLockoutService } from '../auth/account-lockout.service';
 import { PaymentService } from '../../payment/payment.service';
 import { PayoutBatchService } from '../../payment/payout-batch.service';
-import {
-  ApplicationSettingsService,
-  PAYMENT_CAPTURE_DELAY_KEY,
-} from '../../payment/application-settings.service';
+import { ApplicationSettingsService, PAYMENT_CAPTURE_DELAY_KEY } from '../../payment/application-settings.service';
 import { CurrentUser, CurrentUserData } from '../../../common/auth/decorators/current-user.decorator';
 import { BookingService } from '../../booking/booking.service';
 import { SupportTicketService } from '../../dispute/support-ticket.service';
@@ -83,7 +73,11 @@ export class AdminController {
   @ApiQuery({ name: 'status', enum: AccountStatus, required: false })
   @ApiQuery({ name: 'emailVerified', type: Boolean, required: false })
   @ApiQuery({ name: 'signupCompleted', type: Boolean, required: false })
-  @ApiQuery({ name: 'backgroundCheckStatus', enum: BackgroundCheckStatus, required: false })
+  @ApiQuery({
+    name: 'backgroundCheckStatus',
+    enum: BackgroundCheckStatus,
+    required: false,
+  })
   @ApiQuery({ name: 'limit', type: Number, required: false })
   @ApiQuery({ name: 'offset', type: Number, required: false })
   @ApiQuery({
@@ -106,7 +100,8 @@ export class AdminController {
     @Query('status') status?: AccountStatus,
     @Query('emailVerified') emailVerified?: string,
     @Query('signupCompleted') signupCompleted?: string,
-    @Query('backgroundCheckStatus') backgroundCheckStatus?: BackgroundCheckStatus,
+    @Query('backgroundCheckStatus')
+    backgroundCheckStatus?: BackgroundCheckStatus,
     @Query('search') search?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
@@ -114,30 +109,21 @@ export class AdminController {
     @Query('sortDir') sortDir?: string,
   ) {
     const bgStatus =
-      backgroundCheckStatus &&
-      Object.values(BackgroundCheckStatus).includes(backgroundCheckStatus)
+      backgroundCheckStatus && Object.values(BackgroundCheckStatus).includes(backgroundCheckStatus)
         ? backgroundCheckStatus
         : undefined;
-    const allowedSortBy = [
-      'createdAt',
-      'email',
-      'status',
-      'lastLoginAt',
-      'signupSteps',
-    ] as const;
+    const allowedSortBy = ['createdAt', 'email', 'status', 'lastLoginAt', 'signupSteps'] as const;
     const resolvedSortBy =
       sortBy && allowedSortBy.includes(sortBy as (typeof allowedSortBy)[number])
         ? (sortBy as (typeof allowedSortBy)[number])
         : undefined;
-    const resolvedSortDir =
-      sortDir === 'asc' || sortDir === 'desc' ? sortDir : undefined;
+    const resolvedSortDir = sortDir === 'asc' || sortDir === 'desc' ? sortDir : undefined;
 
     const result = await this.adminService.findAll({
       accountType,
       status,
       emailVerified: emailVerified === 'true' ? true : emailVerified === 'false' ? false : undefined,
-      signupCompleted:
-        signupCompleted === 'true' ? true : signupCompleted === 'false' ? false : undefined,
+      signupCompleted: signupCompleted === 'true' ? true : signupCompleted === 'false' ? false : undefined,
       backgroundCheckStatus: bgStatus,
       search: search?.trim() || undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
@@ -152,7 +138,9 @@ export class AdminController {
   }
 
   @Get('users/:id/signup-state')
-  @ApiOperation({ summary: 'Get signup wizard progress for a user (read-only)' })
+  @ApiOperation({
+    summary: 'Get signup wizard progress for a user (read-only)',
+  })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'Signup state summary' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -195,11 +183,7 @@ export class AdminController {
     @Param('id') id: string,
     @Body() dto: UpdateUserAccountStatusDto,
   ) {
-    const { user, previousStatus } = await this.adminService.updateAccountStatusFromAdmin(
-      actor.userId,
-      id,
-      dto,
-    );
+    const { user, previousStatus } = await this.adminService.updateAccountStatusFromAdmin(actor.userId, id, dto);
     await this.adminAuditService.record(actor.userId, 'admin.user.status', {
       targetUserId: id,
       status: dto.status,
@@ -269,7 +253,9 @@ export class AdminController {
 
   @Put('users/:id/profile-flags')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Set profile completion status and/or onboarding flag' })
+  @ApiOperation({
+    summary: 'Set profile completion status and/or onboarding flag',
+  })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'Profile flags updated' })
   @ApiResponse({ status: 404, description: 'User or profile not found' })
@@ -310,7 +296,10 @@ export class AdminController {
     @Query('maxRating') maxRating?: string,
   ) {
     return this.adminService.listReviews({
-      page, limit, revieweeId, reviewerType,
+      page,
+      limit,
+      revieweeId,
+      reviewerType,
       minRating: minRating ? parseInt(minRating, 10) : undefined,
       maxRating: maxRating ? parseInt(maxRating, 10) : undefined,
     });
@@ -322,7 +311,9 @@ export class AdminController {
   @ApiParam({ name: 'id', description: 'Review ID' })
   async deleteReview(@CurrentUser() actor: CurrentUserData, @Param('id') id: string) {
     await this.adminService.deleteReview(id);
-    await this.adminAuditService.record(actor.userId, 'admin.review.delete', { reviewId: id });
+    await this.adminAuditService.record(actor.userId, 'admin.review.delete', {
+      reviewId: id,
+    });
   }
 
   @Get('notifications')
@@ -339,7 +330,13 @@ export class AdminController {
     @Query('channel') channel?: string,
     @Query('category') category?: string,
   ) {
-    return this.adminService.listNotifications({ page, limit, userId, channel, category });
+    return this.adminService.listNotifications({
+      page,
+      limit,
+      userId,
+      channel,
+      category,
+    });
   }
 
   @Get('referrals')
@@ -372,7 +369,8 @@ export class AdminController {
   ) {
     const result = await this.bookingService.cancelByAdmin(id, actor.userId, body.reason);
     await this.adminAuditService.record(actor.userId, 'admin.booking.cancel', {
-      bookingId: id, reason: body.reason,
+      bookingId: id,
+      reason: body.reason,
     });
     return result;
   }
@@ -380,13 +378,11 @@ export class AdminController {
   @Post('users')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create admin user account' })
-  async createAdminUser(
-    @CurrentUser() actor: CurrentUserData,
-    @Body() body: { email: string; password: string },
-  ) {
+  async createAdminUser(@CurrentUser() actor: CurrentUserData, @Body() body: { email: string; password: string }) {
     const user = await this.adminService.createAdminUser(body.email, body.password);
     await this.adminAuditService.record(actor.userId, 'admin.user.create', {
-      targetUserId: user.id, email: user.email,
+      targetUserId: user.id,
+      email: user.email,
     });
     return sanitizeAdminUser(user);
   }
@@ -402,7 +398,9 @@ export class AdminController {
   }
 
   @Get('dashboard')
-  @ApiOperation({ summary: 'Aggregated dashboard snapshot (users, disputes, tickets, bookings, payments)' })
+  @ApiOperation({
+    summary: 'Aggregated dashboard snapshot (users, disputes, tickets, bookings, payments)',
+  })
   @ApiResponse({ status: 200, description: 'Dashboard snapshot' })
   async getDashboard() {
     return this.adminDashboardService.getSnapshot();
@@ -415,8 +413,16 @@ export class AdminController {
   @ApiQuery({ name: 'customerId', required: false })
   @ApiQuery({ name: 'welperId', required: false })
   @ApiQuery({ name: 'status', required: false, enum: BookingRequestStatus })
-  @ApiQuery({ name: 'dateFrom', required: false, description: 'YYYY-MM-DD scheduled_date' })
-  @ApiQuery({ name: 'dateTo', required: false, description: 'YYYY-MM-DD scheduled_date' })
+  @ApiQuery({
+    name: 'dateFrom',
+    required: false,
+    description: 'YYYY-MM-DD scheduled_date',
+  })
+  @ApiQuery({
+    name: 'dateTo',
+    required: false,
+    description: 'YYYY-MM-DD scheduled_date',
+  })
   async listBookings(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
@@ -521,9 +527,21 @@ export class AdminController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'welperId', required: false })
   @ApiQuery({ name: 'customerId', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: BookingPaymentRecordStatus })
-  @ApiQuery({ name: 'capturedDateFrom', required: false, description: 'ISO date' })
-  @ApiQuery({ name: 'capturedDateTo', required: false, description: 'ISO date' })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: BookingPaymentRecordStatus,
+  })
+  @ApiQuery({
+    name: 'capturedDateFrom',
+    required: false,
+    description: 'ISO date',
+  })
+  @ApiQuery({
+    name: 'capturedDateTo',
+    required: false,
+    description: 'ISO date',
+  })
   async listPayments(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(25), ParseIntPipe) limit: number,
@@ -575,8 +593,7 @@ export class AdminController {
       res.status(200).json(payload);
       return;
     }
-    const header =
-      'booking_id,welper_id,customer_id,amount_cents,currency,stripe_payment_intent_id,captured_at\n';
+    const header = 'booking_id,welper_id,customer_id,amount_cents,currency,stripe_payment_intent_id,captured_at\n';
     const lines = rows.map((r) =>
       [
         r.bookingId,
@@ -602,7 +619,11 @@ export class AdminController {
 
   @Get('payouts/batches')
   @ApiOperation({ summary: 'List welper payout batches' })
-  @ApiQuery({ name: 'payoutFriday', required: false, description: 'YYYY-MM-DD (Toronto)' })
+  @ApiQuery({
+    name: 'payoutFriday',
+    required: false,
+    description: 'YYYY-MM-DD (Toronto)',
+  })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async listPayoutBatches(
     @Query('payoutFriday') payoutFriday?: string,
@@ -622,10 +643,7 @@ export class AdminController {
   @Post('payouts/batches/build')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Build or refresh draft payout batch for a Friday' })
-  async buildPayoutBatch(
-    @CurrentUser() actor: CurrentUserData,
-    @Body('payoutFriday') payoutFriday?: string,
-  ) {
+  async buildPayoutBatch(@CurrentUser() actor: CurrentUserData, @Body('payoutFriday') payoutFriday?: string) {
     const batch = await this.payoutBatchService.buildDraftBatch(payoutFriday?.trim() || undefined);
     await this.adminAuditService.record(actor.userId, 'admin.payout_batch.build', {
       batchId: batch.id,
@@ -637,9 +655,22 @@ export class AdminController {
     return batch;
   }
 
+  @Post('payouts/refresh-pending-fees')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Retry Stripe fee lookup for payout lines excluded as stripe_fee_pending',
+  })
+  async refreshPendingPayoutFees(@CurrentUser() actor: CurrentUserData) {
+    const result = await this.payoutBatchService.refreshPendingStripeFees();
+    await this.adminAuditService.record(actor.userId, 'admin.payout_fees.refresh', result);
+    return result;
+  }
+
   @Post('payouts/batches/:id/approve')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Approve payout batch and execute Stripe Connect transfers' })
+  @ApiOperation({
+    summary: 'Approve payout batch and execute Stripe Connect transfers',
+  })
   @ApiParam({ name: 'id', description: 'Payout batch ID' })
   async approvePayoutBatch(@CurrentUser() actor: CurrentUserData, @Param('id') id: string) {
     const batch = await this.payoutBatchService.approveAndExecute(id, actor.userId);
@@ -664,7 +695,9 @@ export class AdminController {
   }
 
   @Get('settings/payment_capture_delay_minutes')
-  @ApiOperation({ summary: 'Get payment capture delay (minutes after service completion)' })
+  @ApiOperation({
+    summary: 'Get payment capture delay (minutes after service completion)',
+  })
   async getCaptureDelay() {
     const minutes = await this.applicationSettingsService.getPaymentCaptureDelayMinutes();
     return { key: PAYMENT_CAPTURE_DELAY_KEY, value: minutes };
@@ -672,7 +705,9 @@ export class AdminController {
 
   @Put('settings/payment_capture_delay_minutes')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update payment capture delay (minutes after service completion)' })
+  @ApiOperation({
+    summary: 'Update payment capture delay (minutes after service completion)',
+  })
   async setCaptureDelay(@CurrentUser() actor: CurrentUserData, @Body('value') value: string) {
     await this.applicationSettingsService.setValue(PAYMENT_CAPTURE_DELAY_KEY, String(value));
     await this.adminAuditService.record(actor.userId, 'admin.settings.payment_capture_delay_minutes', {

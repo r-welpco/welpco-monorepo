@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "title": "Welpco — Cancellation Policy",
+    "description": "Welpco cancellation policy for customers and Welpers."
+  },
+  "hero": {
+    "title": "Cancellation policy"
+  },
+  "paragraphs": [
+    "Both Welpers and customers have the ability to cancel the service for free up until 24 hours before the time of the service.",
+    "If the customer cancels the service less than 24 hours before the time of the service, an amount equivalent to one hour of the booked service will be charged and paid to the Welper.",
+    "If the Welper cancels the service less than 24 hours before the time of the service, Welpco will issue a full refund to the customer."
+  ]
+}

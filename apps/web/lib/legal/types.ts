@@ -29,8 +29,24 @@ export type LegalPrivacyDocument = {
 
 export type LegalTermsDocument = {
   meta: { title: string; description: string };
-  hero: { title: string; lastUpdated: string; notice: string };
+  hero: {
+    title: string;
+    lastUpdated?: string;
+    notice?: string;
+    intro?: string;
+  };
   sections: LegalTermsSection[];
 };
 
-export type LegalDocumentKind = "privacy" | "terms";
+export type LegalPolicyDocument = {
+  meta: { title: string; description: string };
+  hero: { title: string; subtitle?: string };
+  paragraphs: string[];
+};
+
+export type LegalDocumentKind =
+  | "privacy"
+  | "terms"
+  | "refund"
+  | "cancellation"
+  | "codeOfConduct";

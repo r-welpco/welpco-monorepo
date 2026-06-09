@@ -48,6 +48,7 @@ describe('DisputeService', () => {
 
   const mockResolutionRepo = {
     findOne: jest.fn(),
+    save: jest.fn(async (resolution: Resolution) => resolution),
   };
 
   const mockBookingRepo = {
@@ -74,7 +75,9 @@ describe('DisputeService', () => {
   };
 
   const mockUserAccountRepo = { findOne: jest.fn().mockResolvedValue(null) };
-  const mockCustomerProfileRepo = { findOne: jest.fn().mockResolvedValue(null) };
+  const mockCustomerProfileRepo = {
+    findOne: jest.fn().mockResolvedValue(null),
+  };
   const mockWelperProfileRepo = { findOne: jest.fn().mockResolvedValue(null) };
   const mockMessageRepo = {
     createQueryBuilder: jest.fn(),
@@ -107,16 +110,32 @@ describe('DisputeService', () => {
     mockQueryRunner.commitTransaction.mockResolvedValue(undefined);
     mockQueryRunner.rollbackTransaction.mockResolvedValue(undefined);
     mockQueryRunner.release.mockResolvedValue(undefined);
+    mockResolutionRepo.save.mockImplementation(async (resolution: Resolution) => resolution);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DisputeService,
         { provide: getRepositoryToken(Dispute), useValue: mockDisputeRepo },
-        { provide: getRepositoryToken(Resolution), useValue: mockResolutionRepo },
-        { provide: getRepositoryToken(BookingRequest), useValue: mockBookingRepo },
-        { provide: getRepositoryToken(UserAccount), useValue: mockUserAccountRepo },
-        { provide: getRepositoryToken(CustomerProfile), useValue: mockCustomerProfileRepo },
-        { provide: getRepositoryToken(WelperProfile), useValue: mockWelperProfileRepo },
+        {
+          provide: getRepositoryToken(Resolution),
+          useValue: mockResolutionRepo,
+        },
+        {
+          provide: getRepositoryToken(BookingRequest),
+          useValue: mockBookingRepo,
+        },
+        {
+          provide: getRepositoryToken(UserAccount),
+          useValue: mockUserAccountRepo,
+        },
+        {
+          provide: getRepositoryToken(CustomerProfile),
+          useValue: mockCustomerProfileRepo,
+        },
+        {
+          provide: getRepositoryToken(WelperProfile),
+          useValue: mockWelperProfileRepo,
+        },
         { provide: getRepositoryToken(Message), useValue: mockMessageRepo },
         { provide: DataSource, useValue: mockDataSource },
         { provide: PaymentService, useValue: mockPaymentService },
@@ -128,8 +147,14 @@ describe('DisputeService', () => {
             recalculateBatchTotals: jest.fn().mockResolvedValue(undefined),
           },
         },
-        { provide: ApplicationSettingsService, useValue: mockApplicationSettings },
-        { provide: AdminAuditService, useValue: { record: jest.fn().mockResolvedValue(undefined) } },
+        {
+          provide: ApplicationSettingsService,
+          useValue: mockApplicationSettings,
+        },
+        {
+          provide: AdminAuditService,
+          useValue: { record: jest.fn().mockResolvedValue(undefined) },
+        },
         {
           provide: S3UrlPresignerService,
           useValue: mockS3Presigner,
@@ -172,7 +197,7 @@ describe('DisputeService', () => {
             })),
       );
       const bookingSave = jest.fn().mockImplementation((b: BookingRequest) => Promise.resolve(b));
-      const disputeCreate = jest.fn((partial: Partial<Dispute>) => ({ ...partial } as Dispute));
+      const disputeCreate = jest.fn((partial: Partial<Dispute>) => ({ ...partial }) as Dispute);
 
       mockQueryRunner.manager.getRepository.mockImplementation((entity: unknown) => {
         if (entity === BookingRequest) {
@@ -227,7 +252,9 @@ describe('DisputeService', () => {
       expect(recipient).toBe('welp-1'); // counterparty, NOT the filer
       expect(params.category).toBe(NotificationCategory.DISPUTE);
       expect(params.disputeEmailType).toBe('dispute_filed');
-      expect(params.disputeEmailVariables).toMatchObject({ subject: createDto.subject });
+      expect(params.disputeEmailVariables).toMatchObject({
+        subject: createDto.subject,
+      });
       expect(params.metadata).toMatchObject({
         disputeId: 'dispute-new',
         bookingId: 'booking-1',
@@ -260,17 +287,15 @@ describe('DisputeService', () => {
       setupTxMocks({ booking });
       mockNotificationService.emitForUser.mockRejectedValueOnce(new Error('email service down'));
 
-      await expect(
-        service.create('booking-1', 'cust-1', 'Customer', createDto),
-      ).resolves.toMatchObject({ status: 'open' });
+      await expect(service.create('booking-1', 'cust-1', 'Customer', createDto)).resolves.toMatchObject({
+        status: 'open',
+      });
     });
 
     it('throws NotFoundException when booking missing', async () => {
       setupTxMocks({ booking: null });
 
-      await expect(service.create('missing', 'cust-1', 'Customer', createDto)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.create('missing', 'cust-1', 'Customer', createDto)).rejects.toThrow(NotFoundException);
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
     });
 
@@ -284,9 +309,7 @@ describe('DisputeService', () => {
 
       setupTxMocks({ booking });
 
-      await expect(service.create('booking-1', 'stranger', 'Customer', createDto)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(service.create('booking-1', 'stranger', 'Customer', createDto)).rejects.toThrow(ForbiddenException);
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
     });
 
@@ -300,9 +323,7 @@ describe('DisputeService', () => {
 
       setupTxMocks({ booking });
 
-      await expect(service.create('booking-1', 'cust-1', 'Customer', createDto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.create('booking-1', 'cust-1', 'Customer', createDto)).rejects.toThrow(BadRequestException);
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
     });
 
@@ -413,9 +434,7 @@ describe('DisputeService', () => {
         existingOpenDispute: { id: 'existing' } as Dispute,
       });
 
-      await expect(service.create('booking-1', 'cust-1', 'Customer', createDto)).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(service.create('booking-1', 'cust-1', 'Customer', createDto)).rejects.toThrow(ConflictException);
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
     });
 
@@ -434,9 +453,7 @@ describe('DisputeService', () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date('2026-05-30T10:11:00.000Z'));
 
-      await expect(service.create('booking-1', 'cust-1', 'Customer', createDto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(service.create('booking-1', 'cust-1', 'Customer', createDto)).rejects.toThrow(BadRequestException);
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
 
       jest.useRealTimers();
@@ -470,7 +487,10 @@ describe('DisputeService', () => {
       booking?: BookingRequest | null;
     }) {
       const d = opts.dispute
-        ? ({ ...opts.dispute, status: opts.disputeStatus ?? opts.dispute.status } as Dispute)
+        ? ({
+            ...opts.dispute,
+            status: opts.disputeStatus ?? opts.dispute.status,
+          } as Dispute)
         : null;
 
       const disputeQb = {
@@ -479,8 +499,7 @@ describe('DisputeService', () => {
         getOne: jest.fn().mockResolvedValue(d),
       };
 
-      const defaultBooking =
-        opts.booking !== undefined ? opts.booking : freshDisputedBooking();
+      const defaultBooking = opts.booking !== undefined ? opts.booking : freshDisputedBooking();
       const bookingQb = {
         setLock: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
@@ -488,7 +507,7 @@ describe('DisputeService', () => {
       };
 
       const resolutionFindOne = jest.fn().mockResolvedValue(opts.existingResolution ?? null);
-      const resolutionCreate = jest.fn((partial: Partial<Resolution>) => ({ ...partial } as Resolution));
+      const resolutionCreate = jest.fn((partial: Partial<Resolution>) => ({ ...partial }) as Resolution);
       const resolutionSave = jest.fn().mockImplementation((r: Resolution) =>
         Promise.resolve({
           ...r,
@@ -556,6 +575,51 @@ describe('DisputeService', () => {
       expect(saved.cancellationReason).toBe('Full refund issued');
       expect(result.stripeRefund.status).toBe('succeeded');
       expect(mockPaymentService.refundCapturedAmount).toHaveBeenCalled();
+      expect(mockResolutionRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          refundStatus: 'succeeded',
+          refundsCreated: 1,
+        }),
+      );
+    });
+
+    it('persists a partial Stripe refund outcome for admin follow-up', async () => {
+      setupResolutionTxMocks({ dispute: baseDispute });
+      mockPaymentService.refundCapturedAmount.mockResolvedValueOnce({
+        ok: false,
+        refundsCreated: 1,
+        message: 'second charge failed',
+        partialFailure: true,
+      });
+
+      const result = await service.createResolution('dispute-1', adminId, {
+        resolutionType: 'refund',
+        bookingOutcome: 'cancelled',
+      });
+
+      expect(result.stripeRefund.status).toBe('partial');
+      expect(mockResolutionRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          refundStatus: 'partial',
+          refundMessage: 'second charge failed',
+          refundsCreated: 1,
+        }),
+      );
+    });
+
+    it('does not roll back after post-commit outcome persistence fails', async () => {
+      setupResolutionTxMocks({ dispute: baseDispute });
+      mockResolutionRepo.save.mockRejectedValueOnce(new Error('database unavailable'));
+
+      await expect(
+        service.createResolution('dispute-1', adminId, {
+          resolutionType: 'refund',
+          bookingOutcome: 'cancelled',
+        }),
+      ).rejects.toThrow('database unavailable');
+
+      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+      expect(mockQueryRunner.rollbackTransaction).not.toHaveBeenCalled();
     });
 
     it('uses default cancellation reason when cancelled without notes', async () => {
@@ -577,7 +641,9 @@ describe('DisputeService', () => {
       setupResolutionTxMocks({ dispute: null });
 
       await expect(
-        service.createResolution('missing', adminId, { resolutionType: 'no_action' }),
+        service.createResolution('missing', adminId, {
+          resolutionType: 'no_action',
+        }),
       ).rejects.toThrow(NotFoundException);
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
     });
@@ -589,7 +655,9 @@ describe('DisputeService', () => {
       });
 
       await expect(
-        service.createResolution('dispute-1', adminId, { resolutionType: 'no_action' }),
+        service.createResolution('dispute-1', adminId, {
+          resolutionType: 'no_action',
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -600,7 +668,9 @@ describe('DisputeService', () => {
       });
 
       await expect(
-        service.createResolution('dispute-1', adminId, { resolutionType: 'no_action' }),
+        service.createResolution('dispute-1', adminId, {
+          resolutionType: 'no_action',
+        }),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -614,7 +684,9 @@ describe('DisputeService', () => {
       });
 
       await expect(
-        service.createResolution('dispute-1', adminId, { resolutionType: 'no_action' }),
+        service.createResolution('dispute-1', adminId, {
+          resolutionType: 'no_action',
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -648,7 +720,9 @@ describe('DisputeService', () => {
       });
 
       await expect(
-        service.createResolution('dispute-1', adminId, { resolutionType: 'no_action' }),
+        service.createResolution('dispute-1', adminId, {
+          resolutionType: 'no_action',
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -657,7 +731,9 @@ describe('DisputeService', () => {
       mockPaymentService.getTotalCapturedForBooking.mockResolvedValueOnce(null);
 
       await expect(
-        service.createResolution('dispute-1', adminId, { resolutionType: 'refund' }),
+        service.createResolution('dispute-1', adminId, {
+          resolutionType: 'refund',
+        }),
       ).rejects.toThrow(BadRequestException);
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
     });
@@ -679,14 +755,72 @@ describe('DisputeService', () => {
     });
   });
 
+  describe('retryResolutionRefund', () => {
+    it('retries with the existing resolution idempotency key and persists success', async () => {
+      mockDisputeRepo.findOne.mockResolvedValue({
+        id: 'dispute-1',
+        bookingId: 'booking-1',
+      });
+      mockResolutionRepo.findOne.mockResolvedValue({
+        id: 'res-1',
+        disputeId: 'dispute-1',
+        resolutionType: 'partial_refund',
+        refundAmount: 25,
+        refundStatus: 'failed',
+      });
+      mockPaymentService.refundCapturedAmount.mockResolvedValueOnce({
+        ok: true,
+        refundsCreated: 1,
+      });
+
+      const result = await service.retryResolutionRefund('dispute-1', 'admin-1');
+
+      expect(result.status).toBe('succeeded');
+      expect(mockPaymentService.refundCapturedAmount).toHaveBeenCalledWith('booking-1', 'res-1', 2500);
+      expect(mockResolutionRepo.save).toHaveBeenCalledWith(expect.objectContaining({ refundStatus: 'succeeded' }));
+    });
+
+    it('does not retry a successful refund', async () => {
+      mockDisputeRepo.findOne.mockResolvedValue({
+        id: 'dispute-1',
+        bookingId: 'booking-1',
+      });
+      mockResolutionRepo.findOne.mockResolvedValue({
+        id: 'res-1',
+        disputeId: 'dispute-1',
+        resolutionType: 'refund',
+        refundStatus: 'succeeded',
+      });
+
+      await expect(service.retryResolutionRefund('dispute-1', 'admin-1')).rejects.toThrow(BadRequestException);
+      expect(mockPaymentService.refundCapturedAmount).not.toHaveBeenCalled();
+    });
+
+    it('rejects a legacy partial refund with no valid amount', async () => {
+      mockDisputeRepo.findOne.mockResolvedValue({
+        id: 'dispute-1',
+        bookingId: 'booking-1',
+      });
+      mockResolutionRepo.findOne.mockResolvedValue({
+        id: 'res-1',
+        disputeId: 'dispute-1',
+        resolutionType: 'partial_refund',
+        refundAmount: null,
+        refundStatus: 'failed',
+      });
+
+      await expect(service.retryResolutionRefund('dispute-1', 'admin-1')).rejects.toThrow(
+        'Partial refund amount is missing or invalid',
+      );
+      expect(mockPaymentService.refundCapturedAmount).not.toHaveBeenCalled();
+    });
+  });
+
   /**
    * Wave 2 (BFF): the filer-can-withdraw safety contract.
    */
   describe('withdraw', () => {
-    function setupWithdrawTxMocks(opts: {
-      dispute: Dispute | null;
-      booking?: BookingRequest | null;
-    }) {
+    function setupWithdrawTxMocks(opts: { dispute: Dispute | null; booking?: BookingRequest | null }) {
       const disputeQb = {
         setLock: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
@@ -767,7 +901,10 @@ describe('DisputeService', () => {
     });
 
     it('already-resolved dispute cannot be withdrawn', async () => {
-      const dispute = { ...openDispute(), status: 'resolved' as const } as Dispute;
+      const dispute = {
+        ...openDispute(),
+        status: 'resolved' as const,
+      } as Dispute;
       setupWithdrawTxMocks({ dispute });
 
       await expect(service.withdraw('dispute-1', 'cust-1')).rejects.toThrow(BadRequestException);
@@ -775,7 +912,10 @@ describe('DisputeService', () => {
     });
 
     it('escalated dispute cannot be withdrawn (admin already involved)', async () => {
-      const dispute = { ...openDispute(), status: 'escalated' as const } as Dispute;
+      const dispute = {
+        ...openDispute(),
+        status: 'escalated' as const,
+      } as Dispute;
       setupWithdrawTxMocks({ dispute });
 
       await expect(service.withdraw('dispute-1', 'cust-1')).rejects.toThrow(BadRequestException);
@@ -830,10 +970,7 @@ describe('DisputeService', () => {
       expect(result.key).toMatch(/^disputes\/user-42\/[a-z0-9-]+\.pdf$/i);
       // Service hands the SAME key to the presigner (no rewriting between
       // signing and the response).
-      expect(mockS3Presigner.presignPut).toHaveBeenCalledWith(
-        result.key,
-        'application/pdf',
-      );
+      expect(mockS3Presigner.presignPut).toHaveBeenCalledWith(result.key, 'application/pdf');
     });
 
     it('falls back to a content-type-derived extension when filename has none', async () => {

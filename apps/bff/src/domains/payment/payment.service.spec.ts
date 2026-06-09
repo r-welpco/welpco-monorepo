@@ -3,13 +3,10 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { PaymentService } from './payment.service';
-import {
-  BookingPayment,
-  BookingPaymentKind,
-  BookingPaymentRecordStatus,
-} from './entities/booking-payment.entity';
+import { BookingPayment, BookingPaymentKind, BookingPaymentRecordStatus } from './entities/booking-payment.entity';
 import { ProcessedWebhookEvent } from './entities/processed-webhook-event.entity';
 import { BookingRequest, BookingRequestStatus } from '../booking/entities/booking-request.entity';
+import { BookingServiceReceipt } from '../booking/entities/booking-service-receipt.entity';
 import { UserAccount } from '../user-management/entities/user-account.entity';
 import { CustomerProfileService } from '../profile-management/customer-profile/customer-profile.service';
 import { ApplicationSettingsService } from './application-settings.service';
@@ -37,6 +34,9 @@ describe('PaymentService', () => {
     save: jest.fn(),
     create: jest.fn(),
     createQueryBuilder: jest.fn(),
+  };
+  const mockReceiptRepo = {
+    findOne: jest.fn(),
   };
 
   const mockUserRepo = {
@@ -80,36 +80,84 @@ describe('PaymentService', () => {
 
   const mockWelperPayoutLedger = {
     createLedgerForPaymentReleased: jest.fn().mockResolvedValue(null),
+    upsertLedgerForReleasedBooking: jest.fn().mockResolvedValue(null),
     applyRefundDelta: jest.fn().mockResolvedValue(undefined),
     syncStripeFeesForBooking: jest.fn().mockResolvedValue({ totalFeeCents: 0, allSynced: true }),
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    mockDataSource.transaction.mockImplementation(async (fn: (m: unknown) => Promise<unknown>) =>
-      fn({
-        getRepository: () => ({
-          createQueryBuilder: mockBookingPaymentRepo.createQueryBuilder,
-          findOne: mockBookingRepo.findOne,
-          save: mockBookingRepo.save,
-        }),
-      }),
-    );
+    mockReceiptRepo.findOne.mockResolvedValue({
+      bookingId: 'b1',
+      subtotalCents: 885,
+      taxCents: 115,
+      totalCents: 1000,
+    });
+    mockDataSource.transaction.mockImplementation(async (fn: (m: unknown) => Promise<unknown>) => {
+      const bookingQb = {
+        setLock: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn(() => mockBookingRepo.findOne()),
+      };
+      const receiptQb = {
+        setLock: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn(() => mockReceiptRepo.findOne()),
+      };
+      const paymentQb = {
+        setLock: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn(() => mockBookingPaymentRepo.find()),
+      };
+      return fn({
+        getRepository: (entity: unknown) => {
+          if (entity === BookingRequest) {
+            return {
+              createQueryBuilder: jest.fn(() => bookingQb),
+              save: mockBookingRepo.save,
+            };
+          }
+          if (entity === BookingServiceReceipt) {
+            return { createQueryBuilder: jest.fn(() => receiptQb) };
+          }
+          if (entity === BookingPayment) {
+            return { createQueryBuilder: jest.fn(() => paymentQb) };
+          }
+          return {};
+        },
+      });
+    });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PaymentService,
         { provide: ConfigService, useValue: mockConfig },
         { provide: DataSource, useValue: mockDataSource },
-        { provide: getRepositoryToken(BookingPayment), useValue: mockBookingPaymentRepo },
-        { provide: getRepositoryToken(ProcessedWebhookEvent), useValue: { findOne: jest.fn(), save: jest.fn(), create: jest.fn() } },
+        {
+          provide: getRepositoryToken(BookingPayment),
+          useValue: mockBookingPaymentRepo,
+        },
+        {
+          provide: getRepositoryToken(ProcessedWebhookEvent),
+          useValue: { findOne: jest.fn(), save: jest.fn(), create: jest.fn() },
+        },
         { provide: getRepositoryToken(UserAccount), useValue: mockUserRepo },
-        { provide: getRepositoryToken(BookingRequest), useValue: mockBookingRepo },
-        { provide: ApplicationSettingsService, useValue: mockApplicationSettings },
+        {
+          provide: getRepositoryToken(BookingRequest),
+          useValue: mockBookingRepo,
+        },
+        {
+          provide: ApplicationSettingsService,
+          useValue: mockApplicationSettings,
+        },
         { provide: BookingTaxService, useValue: mockBookingTaxService },
         { provide: CustomerProfileService, useValue: mockCustomerProfile },
         { provide: NotificationService, useValue: mockNotificationService },
-        { provide: WelperPayoutLedgerService, useValue: mockWelperPayoutLedger },
+        {
+          provide: WelperPayoutLedgerService,
+          useValue: mockWelperPayoutLedger,
+        },
       ],
     }).compile();
 
@@ -137,6 +185,8 @@ describe('PaymentService', () => {
           ...row,
           status: BookingPaymentRecordStatus.CAPTURED,
           paymentKind: BookingPaymentKind.HOLD,
+          capturedAt: new Date(),
+          capturedAmountCents: 1000,
         } as BookingPayment,
       ]);
 
@@ -156,8 +206,11 @@ describe('PaymentService', () => {
       await service.syncPaymentIntentFromWebhook(pi);
 
       expect(mockBookingRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({ status: BookingRequestStatus.PAYMENT_RELEASED }),
+        expect.objectContaining({
+          status: BookingRequestStatus.PAYMENT_RELEASED,
+        }),
       );
+      expect(mockWelperPayoutLedger.upsertLedgerForReleasedBooking).toHaveBeenCalled();
     });
 
     it('NOTIFICATIONS-001: emits PAYMENT capture notifications to BOTH customer and welper', async () => {
@@ -176,9 +229,16 @@ describe('PaymentService', () => {
       mockBookingPaymentRepo.findOne.mockResolvedValue(row as BookingPayment);
       mockBookingPaymentRepo.save.mockImplementation((r) => Promise.resolve(r as BookingPayment));
       mockBookingPaymentRepo.find.mockResolvedValue([]);
-      mockBookingRepo.findOne.mockResolvedValue({ id: bookingId, status: BookingRequestStatus.PAYMENT_RELEASED } as BookingRequest);
+      mockBookingRepo.findOne.mockResolvedValue({
+        id: bookingId,
+        status: BookingRequestStatus.PAYMENT_RELEASED,
+      } as BookingRequest);
 
-      const pi = { id: 'pi_emit', status: 'succeeded', amount_received: 5000 } as Stripe.PaymentIntent;
+      const pi = {
+        id: 'pi_emit',
+        status: 'succeeded',
+        amount_received: 5000,
+      } as Stripe.PaymentIntent;
       await service.syncPaymentIntentFromWebhook(pi);
 
       expect(mockNotificationService.emitForUser).toHaveBeenCalledTimes(2);
@@ -210,10 +270,17 @@ describe('PaymentService', () => {
       mockBookingPaymentRepo.findOne.mockResolvedValue(row as BookingPayment);
       mockBookingPaymentRepo.save.mockImplementation((r) => Promise.resolve(r as BookingPayment));
       mockBookingPaymentRepo.find.mockResolvedValue([]);
-      mockBookingRepo.findOne.mockResolvedValue({ id: bookingId, status: BookingRequestStatus.PAYMENT_RELEASED } as BookingRequest);
+      mockBookingRepo.findOne.mockResolvedValue({
+        id: bookingId,
+        status: BookingRequestStatus.PAYMENT_RELEASED,
+      } as BookingRequest);
       mockNotificationService.emitForUser.mockRejectedValueOnce(new Error('email service down'));
 
-      const pi = { id: 'pi_fail_emit', status: 'succeeded', amount_received: 1000 } as Stripe.PaymentIntent;
+      const pi = {
+        id: 'pi_fail_emit',
+        status: 'succeeded',
+        amount_received: 1000,
+      } as Stripe.PaymentIntent;
       await expect(service.syncPaymentIntentFromWebhook(pi)).resolves.toBeUndefined();
     });
 
@@ -236,10 +303,103 @@ describe('PaymentService', () => {
         status: BookingRequestStatus.PAYMENT_RELEASED,
       } as BookingRequest);
 
-      const pi = { id: 'pi_1', status: 'succeeded', amount_received: 1000 } as Stripe.PaymentIntent;
+      const pi = {
+        id: 'pi_1',
+        status: 'succeeded',
+        amount_received: 1000,
+      } as Stripe.PaymentIntent;
       await service.syncPaymentIntentFromWebhook(pi);
 
       expect(mockBookingRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('does not release when a failed receipt delta leaves the receipt underpaid', async () => {
+      const bookingId = 'b-underpaid';
+      const hold = {
+        bookingId,
+        stripePaymentIntentId: 'pi_hold',
+        status: BookingPaymentRecordStatus.CAPTURED,
+        amountCents: 1000,
+        capturedAmountCents: 1000,
+        capturedAt: new Date(),
+        paymentKind: BookingPaymentKind.HOLD,
+      } as BookingPayment;
+      const delta = {
+        bookingId,
+        stripePaymentIntentId: 'pi_delta',
+        status: BookingPaymentRecordStatus.FAILED,
+        amountCents: 500,
+        capturedAt: null,
+        paymentKind: BookingPaymentKind.DELTA_RECEIPT,
+      } as BookingPayment;
+      mockBookingPaymentRepo.findOne.mockResolvedValue(hold);
+      mockBookingPaymentRepo.save.mockImplementation((row) => Promise.resolve(row as BookingPayment));
+      mockBookingPaymentRepo.find.mockResolvedValue([hold, delta]);
+      mockBookingRepo.findOne.mockResolvedValue({
+        id: bookingId,
+        status: BookingRequestStatus.COMPLETED,
+      } as BookingRequest);
+      mockReceiptRepo.findOne.mockResolvedValue({
+        bookingId,
+        subtotalCents: 1327,
+        taxCents: 173,
+        totalCents: 1500,
+      });
+
+      await service.syncPaymentIntentFromWebhook({
+        id: 'pi_hold',
+        status: 'succeeded',
+        amount_received: 1000,
+      } as Stripe.PaymentIntent);
+
+      expect(mockBookingRepo.save).not.toHaveBeenCalled();
+      expect(mockWelperPayoutLedger.upsertLedgerForReleasedBooking).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('saved payment method ownership', () => {
+    it('rejects setting a payment method owned by another Stripe customer', async () => {
+      mockUserRepo.findOne.mockResolvedValue({
+        id: 'user-1',
+        stripeCustomerId: 'cus_owner',
+      });
+      const retrieve = jest.fn().mockResolvedValue({
+        id: 'pm_other',
+        customer: 'cus_other',
+      });
+      const attach = jest.fn();
+      (service as unknown as { stripe: unknown }).stripe = {
+        paymentMethods: { retrieve, attach },
+        customers: { update: jest.fn() },
+      };
+
+      await expect(service.setDefaultPaymentMethod('user-1', 'pm_other')).rejects.toThrow(
+        'Payment method does not belong to this account',
+      );
+      expect(attach).not.toHaveBeenCalled();
+    });
+
+    it('rejects detaching a payment method owned by another Stripe customer', async () => {
+      mockUserRepo.findOne.mockResolvedValue({
+        id: 'user-1',
+        stripeCustomerId: 'cus_owner',
+        stripeDefaultPaymentMethodId: null,
+      });
+      const detach = jest.fn();
+      (service as unknown as { stripe: unknown }).stripe = {
+        paymentMethods: {
+          retrieve: jest.fn().mockResolvedValue({
+            id: 'pm_other',
+            customer: 'cus_other',
+          }),
+          detach,
+        },
+      };
+
+      await expect(service.detachPaymentMethod('user-1', 'pm_other')).rejects.toThrow(
+        'Payment method does not belong to this account',
+      );
+      expect(detach).not.toHaveBeenCalled();
     });
   });
 });

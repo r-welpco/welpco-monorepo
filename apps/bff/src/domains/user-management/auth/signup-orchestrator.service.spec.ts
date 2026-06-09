@@ -747,24 +747,21 @@ describe('SignupOrchestratorService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('accepts minor welper identity when age is 14–17', async () => {
+    it('rejects welper identity when under 18 (minor signup coming soon)', async () => {
       userRepo.findOne.mockResolvedValue(
         mockUser({ selectedRole: SelectedRole.WELPER }),
       );
       welperRepo.findOne.mockResolvedValue(mockWelper());
-      await service.submitIdentityStep('user-1', {
-        firstName: 'Alex',
-        lastName: 'Lee',
-        phone: '+14165551234',
-        dateOfBirth: '2010-06-01',
-        tosAcceptedAt: new Date().toISOString(),
-        privacyAcceptedAt: new Date().toISOString(),
-      });
-      expect(welperRepo.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          dateOfBirth: new Date('2010-06-01'),
+      await expect(
+        service.submitIdentityStep('user-1', {
+          firstName: 'Alex',
+          lastName: 'Lee',
+          phone: '+14165551234',
+          dateOfBirth: '2010-06-01',
+          tosAcceptedAt: new Date().toISOString(),
+          privacyAcceptedAt: new Date().toISOString(),
         }),
-      );
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('rejects customer identity when under 18', async () => {

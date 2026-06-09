@@ -48,11 +48,14 @@
         "weeklyPayouts": "Paiements hebdomadaires (vendredi)",
         "community": "Communauté",
         "faq": "FAQ",
-        "contactUs": "Nous joindre"
+        "contactUs": "Nous joindre",
+        "refundPolicy": "Politique de remboursement",
+        "cancellationPolicy": "Politique d'annulation"
       },
       "copyright": "© 2026 Welpco — Construit pour la communauté",
       "terms": "Conditions",
       "privacy": "Confidentialité",
+      "codeOfConduct": "Code de conduite",
       "cookies": "Témoins"
     },
     "home": {
@@ -203,7 +206,7 @@
         ]
       },
       "minors": {
-        "badge": "Nouveau · avril 2026",
+        "badge": "Bientôt disponible",
         "titleLine1": "Comptes prestataires",
         "titleLine2": "pour les mineurs.",
         "body": "Les Welpers de 14 ans et plus peuvent s'inscrire sous un compte géré par un tuteur. Pas de vérification des antécédents; le tuteur approuve chaque réservation.",
@@ -916,7 +919,13 @@
           "countryPlaceholder": "Pays",
           "phonePlaceholder": "416 555 1234",
           "dateOfBirth": "Date de naissance",
-          "dobHint": "Les clients doivent avoir 18 ans ou plus. Les Welpers peuvent s'inscrire dès 14 ans avec l'approbation d'un tuteur.",
+          "dobHint": "Les clients et les Welpers doivent avoir 18 ans ou plus pour s'inscrire.",
+          "minorComingSoon": {
+            "title": "Bientôt disponible",
+            "description": "L'inscription Welper pour les moins de 18 ans n'est pas encore disponible. Revenez bientôt, ou choisissez Client si vous réservez des services pour votre foyer.",
+            "confirmLabel": "OK",
+            "changeRoleLabel": "Choisir un autre rôle"
+          },
           "tosPrefix": "J'accepte les",
           "tosLink": "Conditions d'utilisation",
           "privacyPrefix": "J'ai lu la",
@@ -1304,6 +1313,7 @@
       "requiredCompleteLive": "Vous pouvez recevoir des réservations. Terminez les étapes recommandées ci-dessous pour être vérifié et recevoir vos paiements.",
       "requiredCompleteLiveMinor": "Vous pouvez recevoir des réservations. Terminez les étapes recommandées ci-dessous pour recevoir vos paiements.",
       "optional": "facultatif",
+      "recommendedBadge": "Recommandé",
       "statusDone": "Terminé",
       "statusTodo": "À faire",
       "statusLinkSent": "Lien envoyé",
@@ -1414,6 +1424,7 @@
       "greeting": "Bon retour, {name}.",
       "loading": "Chargement du tableau de bord…",
       "setupIncomplete": "Terminez la configuration ci-dessous pour apparaître dans la recherche.",
+      "recommendedSetupRemaining": "Complétez les étapes recommandées ci-dessous pour la vérification et les paiements.",
       "pendingJobs": "{count, plural, one {# mandat attend votre réponse.} other {# mandats attendent votre réponse.}}",
       "activeJobs": "{count, plural, one {Vous avez # mandat actif.} other {Vous avez # mandats actifs.}}",
       "noJobsDiscoverable": "Aucun mandat actif — vous êtes visible, les clients vous contacteront.",

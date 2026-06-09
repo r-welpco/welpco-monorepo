@@ -332,10 +332,9 @@
               "type": "list",
               "items": [
                 "Certaines fonctionnalités du Site peuvent nécessiter des frais, incluant notamment des frais de service applicables aux transactions effectuées via la plateforme.",
-                "Welpco applique généralement des frais de service équivalents à 25 % du montant du service fixé par le Prestataire. Ces frais sont ajoutés au tarif affiché du Prestataire et sont payés par le Client lors de la transaction.",
-                "Le Prestataire reçoit l’intégralité du montant qu’il a fixé pour le service (son tarif horaire multiplié par les heures facturées). Welpco ne déduit pas les frais de traitement des paiements des gains du Prestataire; Welpco absorbe les frais de traitement Stripe sur le compte plateforme.",
-                "Les versements aux Prestataires sont effectués chaque vendredi (America/Toronto), au moins sept (7) jours après le déblocage du paiement client pour une réservation terminée, sous réserve de l’activation de Stripe Connect et de l’absence de litige ouvert ou de remboursement intégral.",
-                "Certains services, tels que les vérifications d’antécédents, peuvent également être assujettis à des frais distincts. Ces frais sont clairement indiqués avant leur facturation et sont, sauf indication contraire, non remboursables.",
+                "Welpco applique généralement des frais de service équivalents à 20 % du montant du service fixé par le Prestataire. Ces frais sont ajoutés au prix affiché et sont payés par le Client lors de la transaction.",
+                "Le Prestataire reçoit le montant qu'il a fixé pour le service, sous réserve des frais applicables et des modalités du fournisseur de paiement.",
+                "Certains services, tels que les vérifications d'antécédents, peuvent également être assujettis à des frais distincts. Ces frais sont clairement indiqués avant leur facturation et sont, sauf indication contraire, non remboursables.",
                 "En utilisant le Site, vous acceptez de payer tous les frais applicables et reconnaissez que ceux-ci peuvent être modifiés en tout temps par Welpco, avec effet lors de leur publication ou lors de la prochaine transaction."
               ]
             },
@@ -346,7 +345,7 @@
             {
               "type": "list",
               "items": [
-                "Les paiements effectués via la plateforme sont traités par des fournisseurs de services de paiement tiers, notamment Stripe. Welpco n’est pas responsable des délais de traitement, des interruptions de service ou des frais additionnels pouvant être imposés par ces fournisseurs."
+                "Les paiements effectués via la plateforme sont traités par des fournisseurs de services de paiement tiers, notamment Stripe. Welpco n'est pas responsable des délais de traitement, des interruptions de service ou des frais additionnels pouvant être imposés par ces fournisseurs."
               ]
             }
           ]
@@ -359,10 +358,10 @@
             {
               "type": "list",
               "items": [
-                "En utilisant les services payants du Site, vous acceptez de payer tous les frais applicables, incluant le prix du service fixé par le Prestataire ainsi que les frais de service de Welpco, tels qu’indiqués au moment de la transaction.",
+                "En utilisant les services payants du Site, vous acceptez de payer tous les frais applicables, incluant le prix du service fixé par le Prestataire ainsi que les frais de service de Welpco, tels qu'indiqués au moment de la transaction.",
                 "Les paiements sont effectués via des méthodes de paiement sécurisées proposées sur le Site et sont traités par un fournisseur de services de paiement tiers, notamment Stripe.",
-                "Selon le fonctionnement de la plateforme, les fonds du Client peuvent être temporairement retenus jusqu’à la confirmation de la réalisation du service. Après capture, les gains du Prestataire deviennent admissibles au versement hebdomadaire du vendredi, au moins sept (7) jours après le déblocage du paiement, via Stripe Connect vers le compte connecté du Prestataire.",
-                "L’utilisateur reconnaît que Welpco ne contrôle pas les délais de traitement des paiements et ne peut être tenue responsable des retards, interruptions ou frais supplémentaires imposés par le fournisseur de paiement."
+                "Selon le fonctionnement de la plateforme, les fonds peuvent être temporairement retenus jusqu'à la confirmation de la réalisation du service, après quoi ils sont transférés au Prestataire, sous réserve des délais et conditions du fournisseur de paiement.",
+                "L'utilisateur reconnaît que Welpco ne contrôle pas les délais de traitement des paiements et ne peut être tenue responsable des retards, interruptions ou frais supplémentaires imposés par le fournisseur de paiement."
               ]
             }
           ]
@@ -376,9 +375,8 @@
               "type": "list",
               "items": [
                 "Welpco applique des frais de service sur les transactions effectuées via la plateforme.",
-                "Ces frais de service sont généralement équivalents à 25 % du montant du service fixé par le Prestataire et sont ajoutés au prix payable par le Client au moment de la transaction.",
-                "Le Prestataire reçoit son montant de service complet; Welpco absorbe les frais de traitement des paiements et ne les déduit pas des versements au Prestataire.",
-                "Les versements hebdomadaires ont lieu le vendredi (America/Toronto) une fois la période de retenue minimale et les autres conditions d’admissibilité remplies.",
+                "Ces frais de service sont généralement équivalents à 20 % du montant du service fixé par le Prestataire et sont ajoutés au prix payable par le Client au moment de la transaction.",
+                "Le Prestataire reçoit le montant qu'il a fixé pour le service, sous réserve des conditions applicables du fournisseur de paiement.",
                 "Les détails concernant les frais applicables, incluant tout frais additionnel, sont clairement indiqués au moment de la transaction ou sur le Site.",
                 "Welpco se réserve le droit de modifier ses frais de service à tout moment, lesquels prendront effet lors de leur publication ou lors de la prochaine transaction."
               ]
@@ -401,30 +399,12 @@
         {
           "type": "subsection",
           "id": "8.5",
-          "title": "Politique d'annulation",
+          "title": "Annulation",
           "blocks": [
             {
-              "type": "paragraph",
-              "text": "Les Welpers et les clients peuvent annuler un service sans frais jusqu'à 24 heures avant l'heure prévue du service."
-            },
-            {
-              "type": "paragraph",
-              "text": "Si le client annule moins de 24 heures avant l'heure prévue du service :"
-            },
-            {
               "type": "list",
               "items": [
-                "Une heure de rémunération sera retenue par Welpco afin de payer le Welper."
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Si le Welper annule moins de 24 heures avant l'heure prévue du service :"
-            },
-            {
-              "type": "list",
-              "items": [
-                "Welpco effectuera un remboursement complet au client."
+                "Vous pouvez annuler votre abonnement ou vos services payants à tout moment en suivant les instructions sur le Site. Les annulations prennent effet à la fin de la période d'abonnement en cours."
               ]
             }
           ]
@@ -435,52 +415,10 @@
           "title": "Politique de remboursement",
           "blocks": [
             {
-              "type": "paragraph",
-              "text": "Si un client ne reçoit pas le service qu'il a payé en raison de l'annulation ou de l'absence du Welper, le client recevra un remboursement complet."
-            },
-            {
-              "type": "paragraph",
-              "text": "Si le client n'est pas satisfait du service reçu, il peut communiquer directement avec nous via l'application ou le site web et soumettre sa plainte en fournissant toute preuve nécessaire, notamment :"
-            },
-            {
               "type": "list",
               "items": [
-                "Des photos du résultat du service reçu."
+                "Sauf disposition contraire de la loi ou indication spécifique lors de l'achat, les frais payés ne sont pas remboursables. En cas de litige concernant un paiement, veuillez contacter notre service client."
               ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Welpco évaluera alors la plainte et communiquera sa décision au client, qui pourra inclure l'une des mesures suivantes :"
-            },
-            {
-              "type": "list",
-              "items": [
-                "Un crédit applicable à une transaction future;",
-                "La désignation par Welpco d'un autre Welper pour compléter ou refaire le service sans frais pour le client."
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Dans tous les cas, les clients peuvent attribuer une note et laisser un avis sur les Welpers une fois le travail terminé. Ces avis seront visibles par tous les clients."
-            },
-            {
-              "type": "paragraph",
-              "text": "De la même façon, les Welpers peuvent attribuer une note et laisser un avis basé sur leur expérience avec les clients."
-            },
-            {
-              "type": "paragraph",
-              "text": "Si le Welper se présente à l'heure prévue et que le service exige la présence du client, mais que celui-ci est absent, le service sera annulé si le client ne communique pas son absence ou son retard au Welper. Dans ce cas :"
-            },
-            {
-              "type": "list",
-              "items": [
-                "Une heure de rémunération sera conservée afin de payer le Welper;",
-                "Le reste du paiement sera remboursé au client."
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Il s'agit d'un processus transparent visant à favoriser une expérience positive tant pour les clients que pour les Welpers."
             }
           ]
         }
@@ -932,7 +870,7 @@
         },
         {
           "type": "paragraph",
-          "text": "SOCIÉTÉ WELPCO INC."
+          "text": "Société Welpco inc."
         },
         {
           "type": "paragraph",
@@ -941,6 +879,14 @@
         {
           "type": "paragraph",
           "text": "Boischatel (Québec) G0A 1H0"
+        },
+        {
+          "type": "paragraph",
+          "text": "[Numéro de téléphone]"
+        },
+        {
+          "type": "paragraph",
+          "text": "[Adresse courriel de contact]"
         }
       ]
     }

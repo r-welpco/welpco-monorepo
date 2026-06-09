@@ -4,7 +4,7 @@ import { Button, Flex, Text } from "@welpco/ui";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AdminErrorCallout, AdminSuccessCallout } from "@/components/admin-callout";
-import { approvePayoutBatch, buildPayoutBatch } from "@/lib/services/admin-payouts-service";
+import { approvePayoutBatch, buildPayoutBatch, refreshPendingPayoutFees } from "@/lib/services/admin-payouts-service";
 import { formatAdminMoneyCents } from "@/lib/admin-format";
 
 export function PayoutBuildAction({
@@ -62,6 +62,40 @@ export function PayoutBuildAction({
   );
 }
 
+export function PayoutFeeRefreshAction() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function refresh() {
+    setLoading(true);
+    setMessage(null);
+    setError(null);
+    try {
+      const result = await refreshPendingPayoutFees();
+      setMessage(
+        `Checked ${result.scanned} pending line(s); ${result.recovered} recovered, ${result.stillPending} still pending.`,
+      );
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Fee refresh failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Flex direction="column" gap="2" align="start">
+      {error ? <AdminErrorCallout message={error} /> : null}
+      {message ? <AdminSuccessCallout message={message} /> : null}
+      <Button type="button" variant="soft" disabled={loading} onClick={() => void refresh()}>
+        {loading ? "Refreshing..." : "Refresh pending Stripe fees"}
+      </Button>
+    </Flex>
+  );
+}
+
 export function PayoutApproveAction({
   batchId,
   status,
@@ -90,16 +124,20 @@ export function PayoutApproveAction({
     try {
       const batch = await approvePayoutBatch(batchId);
       const summary = batch.executionSummary as
-        | { transfers?: Array<{ welperId: string; transferId?: string; error?: string }> }
+        | {
+            transfers?: Array<{
+              welperId: string;
+              transferId?: string;
+              error?: string;
+            }>;
+          }
         | null
         | undefined;
       const transfers = summary?.transfers ?? [];
       const succeeded = transfers.filter((t) => t.transferId && !t.error).length;
       const failed = transfers.filter((t) => t.error).length;
       if (batch.status === "partial") {
-        setSuccess(
-          `Batch partial: ${succeeded} transfer(s) succeeded, ${failed} failed. Review details below.`,
-        );
+        setSuccess(`Batch partial: ${succeeded} transfer(s) succeeded, ${failed} failed. Review details below.`);
       } else if (batch.status === "failed") {
         setSuccess(`Batch failed: no transfers completed (${failed} failure(s)).`);
       } else {

@@ -1,20 +1,8 @@
 import { apiClient } from "@/lib/api/client";
 
-export type PayoutBatchStatus =
-  | "draft"
-  | "review"
-  | "approved"
-  | "executing"
-  | "completed"
-  | "partial"
-  | "failed";
+export type PayoutBatchStatus = "draft" | "review" | "approved" | "executing" | "completed" | "partial" | "failed";
 
-export type WelperPayoutLedgerStatus =
-  | "pending"
-  | "scheduled"
-  | "transferred"
-  | "excluded"
-  | "failed";
+export type WelperPayoutLedgerStatus = "pending" | "scheduled" | "transferred" | "excluded" | "failed";
 
 export interface PayoutBatchLine {
   ledgerId: string;
@@ -32,6 +20,7 @@ export interface PayoutBatchLine {
   platformNetCents: number;
   status: WelperPayoutLedgerStatus;
   exclusionReason: string | null;
+  stripeTransferId: string | null;
 }
 
 export interface PayoutWelperRollup {
@@ -107,7 +96,13 @@ export async function buildPayoutBatch(payoutFriday?: string): Promise<PayoutBat
 }
 
 export async function approvePayoutBatch(id: string): Promise<PayoutBatchReview> {
-  return apiClient.post<PayoutBatchReview>(
-    `/api/admin/payouts/batches/${encodeURIComponent(id)}/approve`,
-  );
+  return apiClient.post<PayoutBatchReview>(`/api/admin/payouts/batches/${encodeURIComponent(id)}/approve`);
+}
+
+export async function refreshPendingPayoutFees(): Promise<{
+  scanned: number;
+  recovered: number;
+  stillPending: number;
+}> {
+  return apiClient.post("/api/admin/payouts/refresh-pending-fees");
 }

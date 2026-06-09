@@ -250,6 +250,7 @@ export type WelperHomeLabels = {
   greeting: (name: string) => string;
   loading: string;
   setupIncomplete: string;
+  recommendedSetupRemaining: string;
   pendingJobs: (count: number) => string;
   activeJobs: (count: number) => string;
   noJobsDiscoverable: string;
@@ -350,6 +351,7 @@ export function useWelperHomeLabels(): WelperHomeLabels {
     greeting: (name) => t("greeting", { name }),
     loading: t("loading"),
     setupIncomplete: t("setupIncomplete"),
+    recommendedSetupRemaining: t("recommendedSetupRemaining"),
     pendingJobs: (count) => t("pendingJobs", { count }),
     activeJobs: (count) => t("activeJobs", { count }),
     noJobsDiscoverable: t("noJobsDiscoverable"),

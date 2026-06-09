@@ -1,37 +1,25 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { createStripeClient } from './stripe-client';
 import { BookingRequest, BookingRequestStatus } from '../booking/entities/booking-request.entity';
+import { BookingServiceReceipt } from '../booking/entities/booking-service-receipt.entity';
 import { validateTransition } from '../booking/booking-state-machine';
 import { UserAccount } from '../user-management/entities/user-account.entity';
 import { CustomerProfileService } from '../profile-management/customer-profile/customer-profile.service';
 import { ApplicationSettingsService } from './application-settings.service';
 import { BookingTaxService } from './booking-tax.service';
 import type { BookingTaxQuote } from './booking-tax.types';
-import {
-  BookingPayment,
-  BookingPaymentKind,
-  BookingPaymentRecordStatus,
-} from './entities/booking-payment.entity';
+import { BookingPayment, BookingPaymentKind, BookingPaymentRecordStatus } from './entities/booking-payment.entity';
 import { ProcessedWebhookEvent } from './entities/processed-webhook-event.entity';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
 import { getBookingNotificationCopy } from '@welpco/email';
-import {
-  buildBookingActionUrl,
-  getFrontendBaseUrl,
-} from '../notification/notification-locale.helper';
+import { buildBookingActionUrl, getFrontendBaseUrl } from '../notification/notification-locale.helper';
 import { WelperPayoutLedgerService } from './welper-payout-ledger.service';
-import { syncStripeFeeForPaymentIntent } from './stripe-fee.util';
+import { isStripeFeeSynced, syncStripeFeeForPaymentIntent } from './stripe-fee.util';
 
 export const PAYMENT_METHOD_REQUIRED_CODE = 'PAYMENT_METHOD_REQUIRED';
 /** Saved card cannot be charged off-session (e.g. SCA). Welper cannot complete accept until customer fixes card or pays another way. */
@@ -114,11 +102,10 @@ export class PaymentService {
   }
 
   /** Customer completes SCA for a receipt balance charge (delta PaymentIntent). */
-  async getClientSecretForReceiptDeltaIfRequired(
-    bookingId: string,
-    customerId: string,
-  ): Promise<string | null> {
-    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
+  async getClientSecretForReceiptDeltaIfRequired(bookingId: string, customerId: string): Promise<string | null> {
+    const booking = await this.bookingRepo.findOne({
+      where: { id: bookingId },
+    });
     if (!booking || booking.customerId !== customerId) {
       return null;
     }
@@ -202,7 +189,9 @@ export class PaymentService {
     if (si.status !== 'succeeded' || typeof si.payment_method !== 'string') return;
     const customerId = typeof si.customer === 'string' ? si.customer : si.customer?.id;
     if (!customerId) return;
-    const user = await this.userRepo.findOne({ where: { stripeCustomerId: customerId } });
+    const user = await this.userRepo.findOne({
+      where: { stripeCustomerId: customerId },
+    });
     if (!user) return;
     await stripe.customers.update(customerId, {
       invoice_settings: { default_payment_method: si.payment_method },
@@ -232,14 +221,18 @@ export class PaymentService {
   async setDefaultPaymentMethod(userId: string, paymentMethodId: string): Promise<void> {
     const stripe = this.requireStripe();
     const user = await this.ensureStripeCustomer(userId);
+    const paymentMethod = await this.requireOwnedPaymentMethod(stripe, user.stripeCustomerId!, paymentMethodId, true);
     try {
-      await stripe.paymentMethods.attach(paymentMethodId, { customer: user.stripeCustomerId! });
-    } catch (e) {
-      const err = e as Stripe.errors.StripeError;
-      if (err.type === 'StripeInvalidRequestError' && err.message) {
-        throw new BadRequestException(err.message);
+      if (!paymentMethod.customer) {
+        await stripe.paymentMethods.attach(paymentMethodId, {
+          customer: user.stripeCustomerId!,
+        });
       }
-      throw e;
+    } catch (e) {
+      this.logger.warn(
+        `Could not attach payment method ${paymentMethodId} for user ${userId}: ${(e as Error).message}`,
+      );
+      throw new BadRequestException('Could not save this payment method');
     }
     await stripe.customers.update(user.stripeCustomerId!, {
       invoice_settings: { default_payment_method: paymentMethodId },
@@ -253,6 +246,7 @@ export class PaymentService {
     const stripe = this.requireStripe();
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user?.stripeCustomerId) return;
+    await this.requireOwnedPaymentMethod(stripe, user.stripeCustomerId, paymentMethodId, false);
     if (user.stripeDefaultPaymentMethodId === paymentMethodId) {
       user.stripeDefaultPaymentMethodId = null;
       await this.userRepo.save(user);
@@ -264,6 +258,27 @@ export class PaymentService {
     await this.customerProfileService.refreshProfileCompletionFromPayment(userId);
   }
 
+  private async requireOwnedPaymentMethod(
+    stripe: Stripe,
+    stripeCustomerId: string,
+    paymentMethodId: string,
+    allowUnattached: boolean,
+  ): Promise<Stripe.PaymentMethod> {
+    let paymentMethod: Stripe.PaymentMethod;
+    try {
+      paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
+    } catch (err) {
+      this.logger.warn(`Payment method lookup failed for ${paymentMethodId}: ${(err as Error).message}`);
+      throw new BadRequestException('Payment method is unavailable');
+    }
+    const ownerId =
+      typeof paymentMethod.customer === 'string' ? paymentMethod.customer : (paymentMethod.customer?.id ?? null);
+    if (ownerId !== stripeCustomerId && !(allowUnattached && ownerId == null)) {
+      throw new ForbiddenException('Payment method does not belong to this account');
+    }
+    return paymentMethod;
+  }
+
   /**
    * Place a manual-capture hold while the booking is still PENDING, before it becomes ACCEPTED.
    * Used when the welper accepts: authorization must succeed (requires_capture) or accept is aborted.
@@ -271,7 +286,9 @@ export class PaymentService {
    */
   async authorizeHoldBeforeWelperAccept(bookingId: string): Promise<void> {
     const stripe = this.requireStripe();
-    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
+    const booking = await this.bookingRepo.findOne({
+      where: { id: bookingId },
+    });
     if (!booking) {
       throw new NotFoundException('Booking not found');
     }
@@ -378,7 +395,9 @@ export class PaymentService {
     if (role !== 'customer') {
       throw new ForbiddenException('Only the customer can authorize payment for this booking');
     }
-    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
+    const booking = await this.bookingRepo.findOne({
+      where: { id: bookingId },
+    });
     if (!booking) throw new NotFoundException('Booking not found');
     if (booking.customerId !== userId) {
       throw new ForbiddenException('You are not the customer for this booking');
@@ -547,29 +566,98 @@ export class PaymentService {
   }
 
   async tryCompletePaymentReleasedForBooking(bookingId: string): Promise<void> {
-    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
-    if (!booking || booking.status !== BookingRequestStatus.COMPLETED) return;
-
-    const rows = await this.bookingPaymentRepo.find({ where: { bookingId } });
-    const relevant = rows.filter(
-      (r) =>
-        r.paymentKind === BookingPaymentKind.HOLD || r.paymentKind === BookingPaymentKind.DELTA_RECEIPT,
-    );
-    const pending = relevant.filter(
-      (r) =>
-        r.status === BookingPaymentRecordStatus.AUTHORIZED ||
-        r.status === BookingPaymentRecordStatus.PENDING ||
-        r.status === BookingPaymentRecordStatus.REQUIRES_ACTION,
-    );
-    if (pending.length > 0) return;
-
-    validateTransition(booking.status, BookingRequestStatus.PAYMENT_RELEASED);
-    booking.status = BookingRequestStatus.PAYMENT_RELEASED;
-    booking.paymentReleasedAt = new Date();
-    await this.bookingRepo.save(booking);
     await this.syncCapturedPaymentStripeFees(bookingId);
-    await this.welperPayoutLedgerService.createLedgerForPaymentReleased(bookingId);
-    await this.emitBookingPaymentReleased(booking);
+
+    const released = await this.dataSource.transaction(async (manager) => {
+      const bookingRepo = manager.getRepository(BookingRequest);
+      const receiptRepo = manager.getRepository(BookingServiceReceipt);
+      const paymentRepo = manager.getRepository(BookingPayment);
+
+      const booking = await bookingRepo
+        .createQueryBuilder('booking')
+        .setLock('pessimistic_write')
+        .where('booking.id = :bookingId', { bookingId })
+        .getOne();
+      if (
+        !booking ||
+        (booking.status !== BookingRequestStatus.COMPLETED && booking.status !== BookingRequestStatus.PAYMENT_RELEASED)
+      ) {
+        return null;
+      }
+
+      const receipt = await receiptRepo
+        .createQueryBuilder('receipt')
+        .setLock('pessimistic_read')
+        .where('receipt.booking_id = :bookingId', { bookingId })
+        .getOne();
+      if (!receipt) {
+        this.logger.warn(`Cannot release booking ${bookingId}: service receipt is missing`);
+        return null;
+      }
+
+      const rows = await paymentRepo
+        .createQueryBuilder('payment')
+        .setLock('pessimistic_write')
+        .where('payment.booking_id = :bookingId', { bookingId })
+        .andWhere('payment.payment_kind IN (:...kinds)', {
+          kinds: [BookingPaymentKind.HOLD, BookingPaymentKind.DELTA_RECEIPT],
+        })
+        .getMany();
+
+      const unsettled = rows.some((row) =>
+        [
+          BookingPaymentRecordStatus.AUTHORIZED,
+          BookingPaymentRecordStatus.PENDING,
+          BookingPaymentRecordStatus.REQUIRES_ACTION,
+          BookingPaymentRecordStatus.FAILED,
+        ].includes(row.status),
+      );
+      if (unsettled) {
+        return null;
+      }
+
+      const capturedRows = rows.filter(
+        (row) => row.status === BookingPaymentRecordStatus.CAPTURED && row.capturedAt != null,
+      );
+      const capturedTotalCents = capturedRows.reduce(
+        (sum, row) => sum + (row.capturedAmountCents ?? row.amountCents),
+        0,
+      );
+      if (capturedTotalCents < receipt.totalCents) {
+        this.logger.warn(
+          `Cannot release booking ${bookingId}: captured ${capturedTotalCents} cents for a ${receipt.totalCents} cent receipt`,
+        );
+        return null;
+      }
+
+      const newlyReleased = booking.status === BookingRequestStatus.COMPLETED;
+      if (newlyReleased) {
+        validateTransition(booking.status, BookingRequestStatus.PAYMENT_RELEASED);
+        booking.status = BookingRequestStatus.PAYMENT_RELEASED;
+        booking.paymentReleasedAt = new Date();
+        await bookingRepo.save(booking);
+      } else if (!booking.paymentReleasedAt) {
+        booking.paymentReleasedAt = new Date();
+        await bookingRepo.save(booking);
+      }
+
+      const allFeesSynced =
+        capturedRows.length > 0 &&
+        capturedRows.every((row) => isStripeFeeSynced(row.stripeFeeCents, row.stripeBalanceTransactionId));
+      const totalFeeCents = capturedRows.reduce((sum, row) => sum + (row.stripeFeeCents ?? 0), 0);
+      await this.welperPayoutLedgerService.upsertLedgerForReleasedBooking(
+        booking,
+        receipt,
+        { totalFeeCents, allSynced: allFeesSynced },
+        manager,
+      );
+
+      return { booking, newlyReleased };
+    });
+
+    if (released?.newlyReleased) {
+      await this.emitBookingPaymentReleased(released.booking);
+    }
   }
 
   private async syncCapturedPaymentStripeFees(bookingId: string): Promise<void> {
@@ -614,10 +702,7 @@ export class PaymentService {
       }
       if (this.stripe && row.stripeFeeCents == null) {
         try {
-          const { feeCents, balanceTransactionId, synced } = await syncStripeFeeForPaymentIntent(
-            this.stripe,
-            pi.id,
-          );
+          const { feeCents, balanceTransactionId, synced } = await syncStripeFeeForPaymentIntent(this.stripe, pi.id);
           if (synced) {
             row.stripeFeeCents = feeCents;
             row.stripeBalanceTransactionId = balanceTransactionId;
@@ -662,7 +747,11 @@ export class PaymentService {
           category: NotificationCategory.BOOKING,
           title: copy.title,
           body: copy.body,
-          metadata: { bookingId: booking.id, actionUrl, kind: 'booking_payment_released' },
+          metadata: {
+            bookingId: booking.id,
+            actionUrl,
+            kind: 'booking_payment_released',
+          },
           bookingEmailType: 'booking_payment_released',
           bookingEmailVariables: variables,
         });
@@ -754,12 +843,11 @@ export class PaymentService {
     await this.bookingPaymentRepo.save(row);
   }
 
-  async onBookingCanceled(
-    bookingId: string,
-    options?: { chargeLateCancellationFee?: boolean },
-  ): Promise<void> {
+  async onBookingCanceled(bookingId: string, options?: { chargeLateCancellationFee?: boolean }): Promise<void> {
     const stripe = this.stripe;
-    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
+    const booking = await this.bookingRepo.findOne({
+      where: { id: bookingId },
+    });
     const rows = await this.bookingPaymentRepo.find({ where: { bookingId } });
     const chargeLateFee = options?.chargeLateCancellationFee === true && booking;
 
@@ -788,14 +876,10 @@ export class PaymentService {
             row.capturedAt = new Date();
             row.capturedAmountCents = captureCents;
             await this.bookingPaymentRepo.save(row);
-            this.logger.log(
-              `Late cancellation fee captured ${captureCents} cents for booking ${bookingId}`,
-            );
+            this.logger.log(`Late cancellation fee captured ${captureCents} cents for booking ${bookingId}`);
             continue;
           } catch (e) {
-            this.logger.warn(
-              `Late cancellation capture failed for booking ${bookingId}: ${(e as Error).message}`,
-            );
+            this.logger.warn(`Late cancellation capture failed for booking ${bookingId}: ${(e as Error).message}`);
           }
         }
       }
@@ -824,7 +908,11 @@ export class PaymentService {
     receiptId: string;
   }): Promise<{
     primaryCapturedCents: number;
-    deltaPayment?: { clientSecret: string | null; paymentIntentId: string; requiresAction: boolean };
+    deltaPayment?: {
+      clientSecret: string | null;
+      paymentIntentId: string;
+      requiresAction: boolean;
+    };
   }> {
     const stripe = this.requireStripe();
     const { bookingId, receiptTotalCents, receiptId, customerId, welperId } = params;
@@ -932,10 +1020,9 @@ export class PaymentService {
       if (!preparedDeltaPi || !deltaRow) {
         throw new BadRequestException('Additional charge was not initialized');
       }
-      const pi = await stripe.paymentIntents.confirm(
-        preparedDeltaPi.id,
-        { off_session: true } as Stripe.PaymentIntentConfirmParams,
-      );
+      const pi = await stripe.paymentIntents.confirm(preparedDeltaPi.id, {
+        off_session: true,
+      } as Stripe.PaymentIntentConfirmParams);
 
       deltaRow.status = this.mapStripePiStatusToRecord(pi.status);
       deltaRow.capturedAmountCents = pi.status === 'succeeded' ? deltaCents : null;
@@ -988,7 +1075,9 @@ export class PaymentService {
               welpcoPaymentKind: BookingPaymentKind.DELTA_RECEIPT,
             },
           },
-          { idempotencyKey: BOOKING_PI_RECEIPT_DELTA_SCA_KEY(bookingId, receiptId) },
+          {
+            idempotencyKey: BOOKING_PI_RECEIPT_DELTA_SCA_KEY(bookingId, receiptId),
+          },
         );
         if (deltaRow) {
           deltaRow.stripePaymentIntentId = pi.id;
@@ -1014,7 +1103,9 @@ export class PaymentService {
         await this.bookingPaymentRepo.save(deltaRow);
         await this.emitPaymentFailed(deltaRow, e?.message ?? 'Additional charge failed');
       }
-      this.logger.warn(`Additional receipt charge failed after hold capture for booking ${bookingId}: ${e?.message ?? String(err)}`);
+      this.logger.warn(
+        `Additional receipt charge failed after hold capture for booking ${bookingId}: ${e?.message ?? String(err)}`,
+      );
       return { primaryCapturedCents: captureFromHoldCents };
     }
   }
@@ -1033,7 +1124,9 @@ export class PaymentService {
           .where('bp.captured_at IS NULL')
           .andWhere('bp.capture_eligible_at IS NOT NULL')
           .andWhere('bp.capture_eligible_at <= :now', { now })
-          .andWhere('bp.status = :st', { st: BookingPaymentRecordStatus.AUTHORIZED })
+          .andWhere('bp.status = :st', {
+            st: BookingPaymentRecordStatus.AUTHORIZED,
+          })
           .andWhere('bp.payment_kind = :pk', { pk: BookingPaymentKind.HOLD })
           .orderBy('bp.capture_eligible_at', 'ASC')
           .getOne();
@@ -1060,7 +1153,11 @@ export class PaymentService {
         row.capturedAmountCents = row.amountCents;
         await paymentRepo.save(row);
 
-        return { type: 'captured' as const, bookingId: booking.id, paymentRow: row };
+        return {
+          type: 'captured' as const,
+          bookingId: booking.id,
+          paymentRow: row,
+        };
       });
 
       if (outcome === 'none') break;
@@ -1119,18 +1216,14 @@ export class PaymentService {
           updated += 1;
         }
       } catch (e) {
-        this.logger.warn(
-          `reconcileStalePaymentRows: PI ${row.stripePaymentIntentId} failed: ${(e as Error).message}`,
-        );
+        this.logger.warn(`reconcileStalePaymentRows: PI ${row.stripePaymentIntentId} failed: ${(e as Error).message}`);
       }
     }
     return { scanned: rows.length, updated };
   }
 
   /** Sum of captured payment rows for admin refund guidance (disputes). */
-  async getTotalCapturedForBooking(
-    bookingId: string,
-  ): Promise<{ totalCents: number; currency: string } | null> {
+  async getTotalCapturedForBooking(bookingId: string): Promise<{ totalCents: number; currency: string } | null> {
     const rows = await this.bookingPaymentRepo.find({
       where: { bookingId },
       order: { createdAt: 'ASC' },
@@ -1164,8 +1257,7 @@ export class PaymentService {
       };
     }
     const stripe = this.stripe;
-    const idem = (suffix: string) =>
-      `resolution-refund-${resolutionId}-${suffix}`.slice(0, 255);
+    const idem = (suffix: string) => `resolution-refund-${resolutionId}-${suffix}`.slice(0, 255);
 
     const rows = await this.bookingPaymentRepo.find({
       where: { bookingId },
@@ -1379,10 +1471,14 @@ export class PaymentService {
       qb.andWhere('bp.status = :st', { st: filters.status });
     }
     if (filters.capturedDateFrom) {
-      qb.andWhere('bp.captured_at IS NOT NULL AND bp.captured_at >= :cdf', { cdf: filters.capturedDateFrom });
+      qb.andWhere('bp.captured_at IS NOT NULL AND bp.captured_at >= :cdf', {
+        cdf: filters.capturedDateFrom,
+      });
     }
     if (filters.capturedDateTo) {
-      qb.andWhere('bp.captured_at IS NOT NULL AND bp.captured_at <= :cdt', { cdt: filters.capturedDateTo });
+      qb.andWhere('bp.captured_at IS NOT NULL AND bp.captured_at <= :cdt', {
+        cdt: filters.capturedDateTo,
+      });
     }
 
     const total = await qb.clone().getCount();
@@ -1418,7 +1514,10 @@ export class PaymentService {
     // We "claim" the event by inserting its ID first. If processing fails, we
     // delete the claim so a retry can run again.
     try {
-      await this.webhookEventRepo.insert({ eventId: event.id, eventType: event.type });
+      await this.webhookEventRepo.insert({
+        eventId: event.id,
+        eventType: event.type,
+      });
     } catch (e: unknown) {
       const msg = (e as { message?: string })?.message ?? '';
       // Postgres duplicate key, or any unique constraint violation on event_id.
@@ -1433,11 +1532,12 @@ export class PaymentService {
       switch (event.type) {
         case 'payment_method.detached': {
           const pm = event.data.object as Stripe.PaymentMethod;
-          const customerId =
-            typeof pm.customer === 'string' ? pm.customer : pm.customer?.id;
+          const customerId = typeof pm.customer === 'string' ? pm.customer : pm.customer?.id;
           if (!customerId || !pm.id) break;
 
-          const user = await this.userRepo.findOne({ where: { stripeCustomerId: customerId } });
+          const user = await this.userRepo.findOne({
+            where: { stripeCustomerId: customerId },
+          });
           if (!user) break;
 
           // If the detached method was the default we track locally, clear it.
@@ -1489,9 +1589,7 @@ export class PaymentService {
       try {
         await this.webhookEventRepo.delete({ eventId: event.id });
       } catch (cleanupErr) {
-        this.logger.warn(
-          `Failed to release webhook claim for ${event.id}: ${(cleanupErr as Error).message}`,
-        );
+        this.logger.warn(`Failed to release webhook claim for ${event.id}: ${(cleanupErr as Error).message}`);
       }
       throw err;
     }
@@ -1507,21 +1605,13 @@ export class PaymentService {
       order: { createdAt: 'ASC' },
     });
     const relevant = rows.filter(
-      (r) =>
-        r.paymentKind === BookingPaymentKind.HOLD || r.paymentKind === BookingPaymentKind.DELTA_RECEIPT,
+      (r) => r.paymentKind === BookingPaymentKind.HOLD || r.paymentKind === BookingPaymentKind.DELTA_RECEIPT,
     );
     if (relevant.length === 0) {
       return { phase: 'none', captureEligibleAt: null, capturedAt: null };
     }
     const nonCanceled = relevant.filter((r) => r.status !== BookingPaymentRecordStatus.CANCELED);
-    type Phase =
-      | 'none'
-      | 'pending'
-      | 'requires_action'
-      | 'authorized'
-      | 'captured'
-      | 'canceled'
-      | 'failed';
+    type Phase = 'none' | 'pending' | 'requires_action' | 'authorized' | 'captured' | 'canceled' | 'failed';
     const pickPhase = (): Phase => {
       if (nonCanceled.some((r) => r.status === BookingPaymentRecordStatus.FAILED)) {
         return 'failed';

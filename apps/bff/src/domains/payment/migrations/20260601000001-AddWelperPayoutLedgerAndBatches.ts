@@ -1,11 +1,4 @@
-import {
-  MigrationInterface,
-  QueryRunner,
-  Table,
-  TableColumn,
-  TableForeignKey,
-  TableIndex,
-} from 'typeorm';
+import { MigrationInterface, QueryRunner, Table, TableColumn, TableForeignKey, TableIndex } from 'typeorm';
 
 export class AddWelperPayoutLedgerAndBatches20260601000001 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -208,7 +201,7 @@ export class AddWelperPayoutLedgerAndBatches20260601000001 implements MigrationI
           {
             name: 'stripe_fee_cents',
             type: 'integer',
-            default: 0,
+            isNullable: true,
           },
           {
             name: 'status',

@@ -1,33 +1,14 @@
-import {
-  Badge,
-  Button,
-  Card,
-  Flex,
-  Grid,
-  Heading,
-  Text,
-} from "@welpco/ui";
+import { Badge, Button, Card, Flex, Grid, Heading, Text } from "@welpco/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  AdminInfoCallout,
-  AdminSuccessCallout,
-  AdminWarningCallout,
-} from "@/components/admin-callout";
+import { AdminInfoCallout, AdminSuccessCallout, AdminWarningCallout } from "@/components/admin-callout";
 import { AdminTimeline } from "@/components/admin-timeline";
 import { DetailRow, DetailTable } from "@/components/detail-rows";
-import {
-  formatAdminDateTime,
-  formatAdminMoneyCents,
-  formatAdminStatusLabel,
-} from "@/lib/admin-format";
+import { formatAdminDateTime, formatAdminMoneyCents, formatAdminStatusLabel } from "@/lib/admin-format";
 import { buildDisputeTimeline } from "@/lib/dispute-detail-utils";
-import {
-  getDisputeById,
-  type DisputeItem,
-  type DisputeParticipantSummary,
-} from "@/lib/services/dispute-service";
+import { getDisputeById, type DisputeItem, type DisputeParticipantSummary } from "@/lib/services/dispute-service";
 import { ResolutionForm } from "./resolution-form";
+import { RefundRetryAction } from "./refund-retry-action";
 
 export const dynamic = "force-dynamic";
 
@@ -35,13 +16,7 @@ function participantName(p: DisputeParticipantSummary): string {
   return [p.firstName, p.lastName].filter(Boolean).join(" ") || "—";
 }
 
-function ParticipantCard({
-  title,
-  participant,
-}: {
-  title: string;
-  participant: DisputeParticipantSummary;
-}) {
+function ParticipantCard({ title, participant }: { title: string; participant: DisputeParticipantSummary }) {
   return (
     <Card size="2" title={title}>
       <DetailTable>
@@ -115,8 +90,8 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
         <AdminWarningCallout
           message={
             <>
-              <Text weight="bold">Cancelled while disputed.</Text> This booking was cancelled before
-              the dispute was closed. Record a resolution to close the dispute.
+              <Text weight="bold">Cancelled while disputed.</Text> This booking was cancelled before the dispute was
+              closed. Record a resolution to close the dispute.
             </>
           }
         />
@@ -127,11 +102,8 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
           message={
             <>
               <Text weight="bold">Captured payments on file:</Text>{" "}
-              {formatAdminMoneyCents(
-                dispute.capturedPayment.totalCents,
-                dispute.capturedPayment.currency,
-              )}
-              . Partial refunds apply to the latest capture first.
+              {formatAdminMoneyCents(dispute.capturedPayment.totalCents, dispute.capturedPayment.currency)}. Partial
+              refunds apply to the latest capture first.
             </>
           }
         />
@@ -175,9 +147,7 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
       </Card>
 
       <Grid columns={{ initial: "1", md: "2" }} gap="4">
-        {dispute.customer ? (
-          <ParticipantCard title="Customer" participant={dispute.customer} />
-        ) : null}
+        {dispute.customer ? <ParticipantCard title="Customer" participant={dispute.customer} /> : null}
         {dispute.welper ? <ParticipantCard title="Welper" participant={dispute.welper} /> : null}
       </Grid>
 
@@ -215,13 +185,19 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
 
       {dispute.resolution ? (
         <Card size="2" title="Resolution on file">
+          {dispute.resolution.refundStatus === "failed" || dispute.resolution.refundStatus === "partial" ? (
+            <AdminWarningCallout
+              message={
+                <>
+                  <Text weight="bold">Stripe refund {dispute.resolution.refundStatus}.</Text>{" "}
+                  {dispute.resolution.refundMessage ?? "Verify the payment in Stripe Dashboard before retrying."}
+                </>
+              }
+            />
+          ) : null}
           <DetailTable>
-            <DetailRow label="Type">
-              {formatAdminStatusLabel(dispute.resolution.resolutionType)}
-            </DetailRow>
-            <DetailRow label="Resolved at">
-              {formatAdminDateTime(dispute.resolution.resolvedAt)}
-            </DetailRow>
+            <DetailRow label="Type">{formatAdminStatusLabel(dispute.resolution.resolutionType)}</DetailRow>
+            <DetailRow label="Resolved at">{formatAdminDateTime(dispute.resolution.resolvedAt)}</DetailRow>
             {dispute.resolution.resolvedById ? (
               <DetailRow label="Resolved by">
                 <Link href={`/users/${dispute.resolution.resolvedById}`}>
@@ -232,8 +208,17 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
               </DetailRow>
             ) : null}
             {dispute.resolution.refundAmount != null ? (
-              <DetailRow label="Refund amount (recorded)">
-                {dispute.resolution.refundAmount}
+              <DetailRow label="Refund amount (recorded)">{dispute.resolution.refundAmount}</DetailRow>
+            ) : null}
+            {dispute.resolution.refundStatus ? (
+              <DetailRow label="Stripe refund">{formatAdminStatusLabel(dispute.resolution.refundStatus)}</DetailRow>
+            ) : null}
+            {dispute.resolution.refundsCreated != null ? (
+              <DetailRow label="Refund operations">{dispute.resolution.refundsCreated}</DetailRow>
+            ) : null}
+            {dispute.resolution.refundAttemptedAt ? (
+              <DetailRow label="Last refund attempt">
+                {formatAdminDateTime(dispute.resolution.refundAttemptedAt)}
               </DetailRow>
             ) : null}
             {dispute.resolution.notes ? (
@@ -244,6 +229,11 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
               </DetailRow>
             ) : null}
           </DetailTable>
+          {dispute.resolution.refundStatus === "failed" || dispute.resolution.refundStatus === "partial" ? (
+            <Flex mt="3">
+              <RefundRetryAction disputeId={dispute.id} />
+            </Flex>
+          ) : null}
         </Card>
       ) : null}
 

@@ -12,7 +12,8 @@ import { Flex } from "@welpco/ui/flex";
 import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { CheckCircle2, Circle, CircleDashed } from "lucide-react";
+import { Badge } from "@welpco/ui/badge";
+import { CheckCircle2, Circle, CircleDashed, ShieldCheck } from "lucide-react";
 import type { WelperSetupTaskDto } from "@welpco/types";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
 import { getWelperSetupProgress } from "@/lib/dashboard/welper-setup-progress";
@@ -78,6 +79,10 @@ function setupTaskOptionalHint(
     return t("optionalHints.welperPayout");
   }
   return undefined;
+}
+
+function showOptionalSuffix(task: WelperSetupTaskDto): boolean {
+  return !task.required && task.id !== "welperPayout";
 }
 
 interface WelperSetupChecklistProps {
@@ -255,12 +260,23 @@ function SetupTaskRow({
   const resend = useResendVerification();
   const [resendNote, setResendNote] = useState<string | null>(null);
   const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
-  const Icon = task.completed ? CheckCircle2 : task.required ? Circle : CircleDashed;
+  const isBackgroundCheck =
+    task.id === "welperBackgroundCheck" && !task.completed;
+  const Icon = task.completed
+    ? CheckCircle2
+    : isBackgroundCheck
+      ? ShieldCheck
+      : task.required
+        ? Circle
+        : CircleDashed;
+  const iconSize = isBackgroundCheck ? 22 : 20;
   const iconColor = task.completed
     ? "var(--green-9)"
-    : task.required
-      ? "var(--amber-9)"
-      : "var(--gray-8)";
+    : isBackgroundCheck
+      ? "var(--blue-9)"
+      : task.required
+        ? "var(--amber-9)"
+        : "var(--gray-8)";
 
   return (
     <li>
@@ -274,21 +290,34 @@ function SetupTaskRow({
         }}
       >
         <Flex align="center" gap="3" style={{ minWidth: 0 }}>
-          <Icon size={20} color={iconColor} aria-hidden />
+          <Icon size={iconSize} color={iconColor} aria-hidden />
           <Box style={{ minWidth: 0 }}>
-            <Text size="2" weight="medium" as="p">
-              {label}
-              {!task.required ? (
-                <Text as="span" size="1" color="gray" ml="2">
-                  ({t("optional")})
-                </Text>
+            <Flex align="center" gap="2" wrap="wrap">
+              <Text size="2" weight="medium" as="span">
+                {label}
+                {showOptionalSuffix(task) ? (
+                  <Text as="span" size="1" color="gray" ml="2">
+                    ({t("optional")})
+                  </Text>
+                ) : null}
+              </Text>
+              {isBackgroundCheck ? (
+                <Badge color="blue" variant="solid" size="2" highContrast>
+                  {t("recommendedBadge")}
+                </Badge>
               ) : null}
-            </Text>
+            </Flex>
             <Text size="1" color="gray" as="p">
               {statusLabel}
             </Text>
             {optionalHint ? (
-              <Text size="1" color="gray" as="p" mt="1">
+              <Text
+                size={isBackgroundCheck ? "2" : "1"}
+                weight={isBackgroundCheck ? "medium" : "regular"}
+                color={isBackgroundCheck ? undefined : "gray"}
+                as="p"
+                mt="1"
+              >
                 {optionalHint}
               </Text>
             ) : null}

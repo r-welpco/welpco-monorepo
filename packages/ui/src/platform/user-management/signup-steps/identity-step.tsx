@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
@@ -21,6 +21,14 @@ import {
 } from "@welpco/ui/select";
 import { Text } from "@welpco/ui/text";
 import { TextField } from "@welpco/ui/text-field";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@welpco/ui/alert-dialog";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
   DEFAULT_IDENTITY_LABELS,
@@ -34,7 +42,7 @@ import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite 
  * Captures identity fields shared by both customer and welper roles:
  *   - first name + last name
  *   - phone (validated client-side via libphonenumber-js; the BFF re-validates)
- *   - date of birth (18+ for customers; 14+ for welpers, with guardian approval after signup)
+ *   - date of birth (18+ for customers and welpers; under-18 welpers see a coming-soon modal)
  *   - ToS + Privacy Policy acceptance (both required)
  *
  * Mobile-first single-task layout. Required-field markers per bible §16.3.
@@ -137,6 +145,7 @@ export function IdentityStep({
   const labels = labelsProp ?? DEFAULT_IDENTITY_LABELS;
   const schema = useMemo(() => createSchema(labels), [labels]);
   const selectedRole = state.selectedRole;
+  const [minorModalOpen, setMinorModalOpen] = useState(false);
 
   const filled = state.filledData.identity;
   const parsedExisting = filled?.phone
@@ -184,11 +193,8 @@ export function IdentityStep({
       return;
     }
 
-    if (selectedRole === "welper" && age < 14) {
-      form.setError("dateOfBirth", {
-        type: "manual",
-        message: labels.validation.dobTooYoung,
-      });
+    if (selectedRole === "welper" && age < 18) {
+      setMinorModalOpen(true);
       return;
     }
 
@@ -212,6 +218,38 @@ export function IdentityStep({
   });
 
   return (
+    <>
+      <AlertDialog open={minorModalOpen} onOpenChange={setMinorModalOpen}>
+        <AlertDialogContent size="2">
+          <AlertDialogTitle>{labels.minorComingSoon.title}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {labels.minorComingSoon.description}
+          </AlertDialogDescription>
+          <Flex gap="3" mt="4" justify="end" wrap="wrap">
+            {onBack && labels.minorComingSoon.changeRoleLabel ? (
+              <AlertDialogCancel asChild>
+                <Button
+                  type="button"
+                  variant="soft"
+                  color="gray"
+                  onClick={() => {
+                    setMinorModalOpen(false);
+                    onBack();
+                  }}
+                >
+                  {labels.minorComingSoon.changeRoleLabel}
+                </Button>
+              </AlertDialogCancel>
+            ) : null}
+            <AlertDialogAction asChild>
+              <Button type="button" color={SEMANTIC_COLOR.primary}>
+                {labels.minorComingSoon.confirmLabel}
+              </Button>
+            </AlertDialogAction>
+          </Flex>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Card
       size="4"
       variant="surface"
@@ -520,5 +558,6 @@ export function IdentityStep({
         </form>
       </Flex>
     </Card>
+    </>
   );
 }

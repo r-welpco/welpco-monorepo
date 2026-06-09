@@ -49,6 +49,8 @@ export function Footer() {
       links: [
         { labelKey: "faq", href: "/faq" },
         { labelKey: "contactUs", href: "/contact" },
+        { labelKey: "refundPolicy", href: "/legal/refund" },
+        { labelKey: "cancellationPolicy", href: "/legal/cancellation" },
       ],
     },
   ];
@@ -219,6 +221,9 @@ export function Footer() {
             </Link>
             <Link href="/legal/privacy" style={{ color: "inherit", textDecoration: "none" }}>
               {t("privacy")}
+            </Link>
+            <Link href="/legal/code-of-conduct" style={{ color: "inherit", textDecoration: "none" }}>
+              {t("codeOfConduct")}
             </Link>
             <Link href="/legal/privacy#cookies" style={{ color: "inherit", textDecoration: "none" }}>
               {t("cookies")}

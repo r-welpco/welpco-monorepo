@@ -48,11 +48,14 @@
         "weeklyPayouts": "Weekly payouts (Friday)",
         "community": "Community",
         "faq": "FAQ",
-        "contactUs": "Contact us"
+        "contactUs": "Contact us",
+        "refundPolicy": "Refund policy",
+        "cancellationPolicy": "Cancellation policy"
       },
       "copyright": "© 2026 Welpco — Built for community",
       "terms": "Terms",
       "privacy": "Privacy",
+      "codeOfConduct": "Code of conduct",
       "cookies": "Cookies"
     },
     "home": {
@@ -203,7 +206,7 @@
         ]
       },
       "minors": {
-        "badge": "New · April 2026",
+        "badge": "Coming soon",
         "titleLine1": "Service-provider accounts",
         "titleLine2": "for minors.",
         "body": "Welpers aged 14 and up can now sign up under a guardian-managed account. Background checks are waived; guardians review every booking.",
@@ -917,7 +920,13 @@
           "countryPlaceholder": "Country",
           "phonePlaceholder": "416 555 1234",
           "dateOfBirth": "Date of birth",
-          "dobHint": "Customers must be 18+. Welpers can sign up from age 14 with guardian approval.",
+          "dobHint": "Customers and Welpers must be 18 or older to sign up.",
+          "minorComingSoon": {
+            "title": "Coming soon",
+            "description": "Welper sign-up for users under 18 isn't available yet. Check back soon, or choose Customer if you're booking services for your household.",
+            "confirmLabel": "OK",
+            "changeRoleLabel": "Choose a different role"
+          },
           "tosPrefix": "I agree to the",
           "tosLink": "Terms of Service",
           "privacyPrefix": "I've read the",
@@ -1305,6 +1314,7 @@
       "requiredCompleteLive": "You're ready to take bookings. Finish the recommended steps below to get verified and receive payouts.",
       "requiredCompleteLiveMinor": "You're ready to take bookings. Finish the recommended steps below to receive payouts.",
       "optional": "optional",
+      "recommendedBadge": "Recommended",
       "statusDone": "Done",
       "statusTodo": "Not started",
       "statusLinkSent": "Link sent",
@@ -1415,6 +1425,7 @@
       "greeting": "Welcome back, {name}.",
       "loading": "Loading your dashboard…",
       "setupIncomplete": "Finish your setup below to appear in customer search.",
+      "recommendedSetupRemaining": "Complete the recommended steps below for verification and payouts.",
       "pendingJobs": "{count, plural, one {# job needs your answer.} other {# jobs need your answer.}}",
       "activeJobs": "{count, plural, one {You have # active job.} other {You have # active jobs.}}",
       "noJobsDiscoverable": "No active jobs right now — you're discoverable, customers will reach out.",

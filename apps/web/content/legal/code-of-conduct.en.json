@@ -1,0 +1,347 @@
+{
+  "meta": {
+    "title": "Welpco — Code of Conduct",
+    "description": "Welpco code of conduct for Clients and Welpers."
+  },
+  "hero": {
+    "title": "Welpco Code of Conduct",
+    "intro": "At Welpco, we are committed to creating a safe, respectful, and trustworthy platform for both Clients and Welpers. Everyone using Welpco is expected to follow this Code of Conduct when communicating, booking, providing, or receiving services through the platform."
+  },
+  "sections": [
+    {
+      "numeral": "01",
+      "id": "respectful-behaviour",
+      "title": "Respectful Behaviour",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "All users must treat each other with respect, professionalism, and courtesy."
+        },
+        {
+          "type": "paragraph",
+          "text": "Users must not engage in:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Harassment, intimidation, threats, or abusive language",
+            "Discrimination based on age, gender, race, religion, disability, sexual orientation, nationality, or any other protected characteristic",
+            "Inappropriate, sexual, offensive, or disrespectful comments",
+            "Bullying, pressure, or manipulation"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Welpco has zero tolerance for behaviour that makes another user feel unsafe or uncomfortable."
+        }
+      ]
+    },
+    {
+      "numeral": "02",
+      "id": "safety-first",
+      "title": "Safety First",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Clients and Welpers must act in a way that protects their own safety and the safety of others."
+        },
+        {
+          "type": "paragraph",
+          "text": "Users must not:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Request or perform unsafe, illegal, or inappropriate tasks",
+            "Bring unauthorized individuals to a job without prior approval",
+            "Enter private areas that are not related to the requested service",
+            "Share personal information unnecessarily outside the platform",
+            "Use the platform for dating, personal relationships, or any purpose unrelated to services"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "If a user ever feels unsafe, they should leave the situation immediately and contact Welpco."
+        }
+      ]
+    },
+    {
+      "numeral": "03",
+      "id": "honest-information",
+      "title": "Honest and Accurate Information",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "All users must provide truthful and accurate information when creating a profile, booking a service, or communicating through the platform."
+        },
+        {
+          "type": "paragraph",
+          "text": "Users must not:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Create fake profiles",
+            "Misrepresent their identity, experience, skills, availability, or qualifications",
+            "Use another person's account",
+            "Provide false payment, contact, or verification information"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Welpco may suspend or remove any account that contains misleading or false information."
+        }
+      ]
+    },
+    {
+      "numeral": "04",
+      "id": "professional-communication",
+      "title": "Professional Communication",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "All communication between Clients and Welpers should remain professional and related to the service."
+        },
+        {
+          "type": "paragraph",
+          "text": "Users must:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Communicate clearly and respectfully",
+            "Respond in a timely manner when possible",
+            "Keep all service-related communication on the Welpco platform when available",
+            "Avoid spam, excessive messages, or inappropriate requests"
+          ]
+        }
+      ]
+    },
+    {
+      "numeral": "05",
+      "id": "commitment-to-bookings",
+      "title": "Commitment to Bookings",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Clients and Welpers are expected to respect confirmed bookings."
+        },
+        {
+          "type": "subsection",
+          "id": "5.1",
+          "title": "Welpers should:",
+          "blocks": [
+            {
+              "type": "list",
+              "items": [
+                "Arrive on time",
+                "Be prepared to complete the agreed service",
+                "Notify the Client as soon as possible if they are delayed or unable to attend",
+                "Complete the service professionally and to the best of their ability"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "subsection",
+          "id": "5.2",
+          "title": "Clients should:",
+          "blocks": [
+            {
+              "type": "list",
+              "items": [
+                "Provide accurate service details",
+                "Be available at the scheduled time",
+                "Provide a safe and respectful environment",
+                "Pay through the Welpco platform as required"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Repeated cancellations, no-shows, or unreliable behaviour may result in account restrictions."
+        }
+      ]
+    },
+    {
+      "numeral": "06",
+      "id": "payments-and-platform-use",
+      "title": "Payments and Platform Use",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "All payments must be completed through the Welpco platform unless otherwise authorized by Welpco."
+        },
+        {
+          "type": "paragraph",
+          "text": "Users must not:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Try to avoid platform fees",
+            "Request cash payments for services booked through Welpco",
+            "Encourage another user to complete the transaction outside the platform",
+            "Use the platform to promote unrelated businesses, products, or services"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Violating payment rules may result in suspension or removal from the platform."
+        }
+      ]
+    },
+    {
+      "numeral": "07",
+      "id": "privacy-and-confidentiality",
+      "title": "Privacy and Confidentiality",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Users must respect each other's privacy."
+        },
+        {
+          "type": "paragraph",
+          "text": "Users must not:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Share another user's personal information without permission",
+            "Take photos, videos, or recordings without consent",
+            "Post about another user or a service experience online in a way that identifies them without permission",
+            "Misuse contact information obtained through Welpco"
+          ]
+        }
+      ]
+    },
+    {
+      "numeral": "08",
+      "id": "property-and-belongings",
+      "title": "Property and Belongings",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Welpers must treat Clients' homes, property, pets, and belongings with care and respect."
+        },
+        {
+          "type": "paragraph",
+          "text": "Clients must also respect the personal belongings, tools, and equipment of Welpers."
+        },
+        {
+          "type": "paragraph",
+          "text": "Any damage, loss, or incident should be reported as soon as possible."
+        }
+      ]
+    },
+    {
+      "numeral": "09",
+      "id": "prohibited-conduct",
+      "title": "Prohibited Conduct",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "The following behaviours are strictly prohibited on Welpco:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Violence, threats, harassment, or intimidation",
+            "Sexual misconduct or inappropriate behaviour",
+            "Fraud, theft, or dishonesty",
+            "Illegal activity",
+            "Discrimination or hate speech",
+            "Drug or alcohol impairment during a service",
+            "Unsafe work conditions",
+            "Requests for services that are illegal, dangerous, or inappropriate",
+            "Attempts to bypass the Welpco platform for payment or communication in bad faith"
+          ]
+        }
+      ]
+    },
+    {
+      "numeral": "10",
+      "id": "reviews-and-feedback",
+      "title": "Reviews and Feedback",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Reviews must be honest, respectful, and based on a real service experience."
+        },
+        {
+          "type": "paragraph",
+          "text": "Users must not:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Leave fake reviews",
+            "Threaten negative reviews to pressure another user",
+            "Use offensive, discriminatory, or defamatory language",
+            "Share private information in a review"
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Welpco may remove reviews that violate this Code of Conduct."
+        }
+      ]
+    },
+    {
+      "numeral": "11",
+      "id": "account-suspension",
+      "title": "Account Suspension or Removal",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Welpco may investigate reports of misconduct and may take action at its discretion, including:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Issuing a warning",
+            "Temporarily restricting access",
+            "Removing content or reviews",
+            "Suspending or closing an account",
+            "Reporting serious incidents to the appropriate authorities, when necessary"
+          ]
+        }
+      ]
+    },
+    {
+      "numeral": "12",
+      "id": "reporting-concerns",
+      "title": "Reporting Concerns",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Users are encouraged to report any behaviour that violates this Code of Conduct or makes them feel unsafe."
+        },
+        {
+          "type": "paragraph",
+          "text": "To report a concern, contact Welpco at:"
+        },
+        {
+          "type": "paragraph",
+          "text": "support@welpco.com"
+        },
+        {
+          "type": "paragraph",
+          "text": "Welpco will review reports and take appropriate action based on the situation."
+        }
+      ]
+    },
+    {
+      "numeral": "13",
+      "id": "shared-commitment",
+      "title": "Our Shared Commitment",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "By using Welpco, all users agree to help maintain a respectful, safe, and reliable community. Trust is essential to the Welpco experience, and every Client and Welper plays a role in protecting it."
+        }
+      ]
+    }
+  ]
+}

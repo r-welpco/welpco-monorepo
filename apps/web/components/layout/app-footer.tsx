@@ -5,14 +5,9 @@ import { Facebook, Instagram, Linkedin } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
-import { Separator } from "@welpco/ui/separator";
-import { Text } from "@welpco/ui/text";
 import { MarketingLogo } from "@/components/features/marketing/shared/marketing-logo";
 import { marketingHref } from "@/lib/i18n/marketing-href";
 import type { Locale } from "@/i18n/routing";
-
-/** Matches dashboard main column in layout-client.tsx */
-const DASHBOARD_CONTENT_MAX_WIDTH = "1200px";
 
 const SOCIAL_LINKS = [
   {
@@ -38,11 +33,11 @@ type FooterLink = {
 };
 
 function FooterLinkItem({ href, children }: { href: string; children: ReactNode }) {
-  const opensNewTab = href.startsWith("http") || href.startsWith("/");
   return (
     <a
       href={href}
-      {...(opensNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      target="_blank"
+      rel="noopener noreferrer"
       style={{
         color: "var(--gray-11)",
         textDecoration: "none",
@@ -75,12 +70,18 @@ export function AppFooter() {
   const links: FooterLink[] = [
     { label: t("links.faq"), href: marketingHref(locale, "/faq") },
     { label: t("links.contactUs"), href: marketingHref(locale, "/contact") },
+    { label: t("links.refundPolicy"), href: marketingHref(locale, "/legal/refund") },
+    {
+      label: t("links.cancellationPolicy"),
+      href: marketingHref(locale, "/legal/cancellation"),
+    },
     { label: t("links.aboutUs"), href: marketingHref(locale, "/about") },
-    { label: t("links.howItWorks"), href: marketingHref(locale, "/how-it-works") },
     { label: t("terms"), href: marketingHref(locale, "/legal/terms") },
     { label: t("privacy"), href: marketingHref(locale, "/legal/privacy") },
-    { label: t("cookies"), href: marketingHref(locale, "/legal/privacy#cookies") },
-    { label: "support@welpco.com", href: "mailto:support@welpco.com" },
+    {
+      label: t("codeOfConduct"),
+      href: marketingHref(locale, "/legal/code-of-conduct"),
+    },
   ];
 
   return (
@@ -92,6 +93,7 @@ export function AppFooter() {
         backgroundColor: "var(--gray-2)",
         position: "relative",
         zIndex: 1,
+        width: "100%",
       }}
     >
       <footer aria-labelledby="app-footer-heading">
@@ -111,71 +113,78 @@ export function AppFooter() {
         </h2>
         <Box
           px={{ initial: "4", sm: "6" }}
-          py={{ initial: "4", sm: "5" }}
+          py="3"
           style={{
             width: "100%",
-            maxWidth: DASHBOARD_CONTENT_MAX_WIDTH,
-            margin: "0 auto",
             minWidth: 0,
           }}
         >
-          <Flex direction="column" gap="3">
-            <Flex
-              direction={{ initial: "column", sm: "row" }}
-              gap={{ initial: "3", sm: "4" }}
-              align={{ initial: "start", sm: "center" }}
-              wrap="wrap"
-            >
-              <MarketingLogo height={24} variant="light" />
-              <nav aria-label={tApp("heading")} style={{ minWidth: 0, flex: 1 }}>
-                <Flex gap="3" wrap="wrap" align="center">
-                  {links.map((link) => (
-                    <FooterLinkItem key={link.label} href={link.href}>
-                      {link.label}
-                    </FooterLinkItem>
-                  ))}
-                </Flex>
-              </nav>
-            </Flex>
+          <Flex
+            align="center"
+            justify="between"
+            gap="4"
+            style={{
+              width: "100%",
+              minWidth: 0,
+            }}
+          >
+            <Box style={{ flexShrink: 0 }}>
+              <MarketingLogo height={22} variant="light" />
+            </Box>
 
-            <Separator size="4" />
-
-            <Flex
-              justify="between"
-              align="center"
-              direction={{ initial: "column", sm: "row" }}
-              gap="2"
+            <nav
+              aria-label={tApp("heading")}
+              style={{
+                flex: "1 1 auto",
+                minWidth: 0,
+                display: "flex",
+                justifyContent: "center",
+                overflowX: "auto",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+              }}
             >
-              <Text size="1" color="gray" highContrast>
-                {t("copyright")}
-              </Text>
-              <nav aria-label={tA11y("siteFooter")}>
-                <Flex gap="2" align="center">
-                  {SOCIAL_LINKS.map(({ label, href, Icon }) => (
-                    <a
-                      key={label}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={label}
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: "var(--radius-2)",
-                        border: "1px solid var(--gray-a6)",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "var(--gray-11)",
-                        textDecoration: "none",
-                      }}
-                    >
-                      <Icon size={14} strokeWidth={1.75} aria-hidden />
-                    </a>
-                  ))}
-                </Flex>
-              </nav>
-            </Flex>
+              <Flex
+                gap={{ initial: "3", sm: "4" }}
+                align="center"
+                justify="center"
+                wrap="nowrap"
+                style={{ minWidth: "min-content" }}
+              >
+                {links.map((link) => (
+                  <FooterLinkItem key={link.label} href={link.href}>
+                    {link.label}
+                  </FooterLinkItem>
+                ))}
+              </Flex>
+            </nav>
+
+            <nav aria-label={tA11y("siteFooter")} style={{ flexShrink: 0 }}>
+              <Flex gap="2" align="center" justify="end">
+                {SOCIAL_LINKS.map(({ label, href, Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "var(--radius-2)",
+                      border: "1px solid var(--gray-a6)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--gray-11)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    <Icon size={14} strokeWidth={1.75} aria-hidden />
+                  </a>
+                ))}
+              </Flex>
+            </nav>
           </Flex>
         </Box>
       </footer>

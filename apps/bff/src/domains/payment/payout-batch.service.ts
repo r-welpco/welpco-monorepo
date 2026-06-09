@@ -1,19 +1,11 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, IsNull, Repository } from 'typeorm';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { PayoutBatch } from './entities/payout-batch.entity';
 import { WelperPayoutLedger } from './entities/welper-payout-ledger.entity';
-import {
-  PayoutBatchStatus,
-  WelperPayoutLedgerStatus,
-} from './entities/payout-ledger-status.enum';
+import { PayoutBatchStatus, WelperPayoutLedgerStatus } from './entities/payout-ledger-status.enum';
 import { WelperPayoutLedgerService } from './welper-payout-ledger.service';
 import { StripeConnectService } from './stripe-connect.service';
 import { createStripeClient } from './stripe-client';
@@ -29,9 +21,7 @@ import { BookingRequest, BookingRequestStatus } from '../booking/entities/bookin
 import { PayoutMethodChoice } from '../profile-management/entities/payout-method-choice.enum';
 import { E2E_STRIPE_CONNECT_ACCOUNT_PREFIX } from '../../common/signup-e2e-bypass';
 import { buildTransferIdempotencyKey } from './payout-idempotency.util';
-import {
-  computeTotalsFromLines,
-} from './payout-batch-totals.util';
+import { computeTotalsFromLines } from './payout-batch-totals.util';
 
 export type PayoutBatchLineDto = {
   ledgerId: string;
@@ -49,6 +39,7 @@ export type PayoutBatchLineDto = {
   platformNetCents: number;
   status: WelperPayoutLedgerStatus;
   exclusionReason: string | null;
+  stripeTransferId: string | null;
 };
 
 export type PayoutWelperRollupDto = {
@@ -102,7 +93,6 @@ type TransferResult = {
   amountCents: number;
   transferId?: string;
   error?: string;
-  dbPersistError?: string;
 };
 
 @Injectable()
@@ -135,11 +125,7 @@ export class PayoutBatchService {
     const existing = await this.batchRepo.findOne({
       where: {
         payoutFriday,
-        status: In([
-          PayoutBatchStatus.REVIEW,
-          PayoutBatchStatus.APPROVED,
-          PayoutBatchStatus.EXECUTING,
-        ]),
+        status: In([PayoutBatchStatus.REVIEW, PayoutBatchStatus.APPROVED, PayoutBatchStatus.EXECUTING]),
       },
       order: { createdAt: 'DESC' },
     });
@@ -180,17 +166,25 @@ export class PayoutBatchService {
       },
       order: { paymentReleasedAt: 'ASC' },
     });
+    const candidateLines = pending.filter(
+      (line) =>
+        line.welperNetCents > 0 &&
+        line.exclusionReason !== 'stripe_fee_pending' &&
+        isEligibleForPayoutFriday(line.paymentReleasedAt, payoutFriday),
+    );
+    if (candidateLines.length === 0) return [];
+
+    const bookings = await this.bookingRepo.find({
+      where: {
+        id: In([...new Set(candidateLines.map((line) => line.bookingId))]),
+      },
+    });
+    const bookingStatusById = new Map(bookings.map((booking) => [booking.id, booking.status]));
     const eligible: WelperPayoutLedger[] = [];
-    for (const line of pending) {
-      if (line.welperNetCents <= 0) continue;
-      if (line.exclusionReason === 'stripe_fee_pending') continue;
-      if (!isEligibleForPayoutFriday(line.paymentReleasedAt, payoutFriday)) continue;
-      const booking = await this.bookingRepo.findOne({ where: { id: line.bookingId } });
-      if (!booking || booking.status === BookingRequestStatus.DISPUTED) continue;
-      if (
-        booking.status !== BookingRequestStatus.PAYMENT_RELEASED &&
-        booking.status !== BookingRequestStatus.COMPLETED
-      ) {
+    for (const line of candidateLines) {
+      const bookingStatus = bookingStatusById.get(line.bookingId);
+      if (!bookingStatus || bookingStatus === BookingRequestStatus.DISPUTED) continue;
+      if (bookingStatus !== BookingRequestStatus.PAYMENT_RELEASED && bookingStatus !== BookingRequestStatus.COMPLETED) {
         continue;
       }
       eligible.push(line);
@@ -233,23 +227,20 @@ export class PayoutBatchService {
       const existing = await batchRepo.findOne({
         where: {
           payoutFriday: friday,
-          status: In([
-            PayoutBatchStatus.REVIEW,
-            PayoutBatchStatus.APPROVED,
-            PayoutBatchStatus.EXECUTING,
-          ]),
+          status: In([PayoutBatchStatus.REVIEW, PayoutBatchStatus.APPROVED, PayoutBatchStatus.EXECUTING]),
         },
         lock: { mode: 'pessimistic_write' },
       });
 
       if (existing) {
         if (existing.status !== PayoutBatchStatus.REVIEW) {
-          throw new BadRequestException(
-            `A batch for ${friday} is already ${existing.status} and cannot be rebuilt`,
-          );
+          throw new BadRequestException(`A batch for ${friday} is already ${existing.status} and cannot be rebuilt`);
         }
         await ledgerRepo.update(
-          { payoutBatchId: existing.id, status: WelperPayoutLedgerStatus.SCHEDULED },
+          {
+            payoutBatchId: existing.id,
+            status: WelperPayoutLedgerStatus.SCHEDULED,
+          },
           { status: WelperPayoutLedgerStatus.PENDING, payoutBatchId: null },
         );
         await batchRepo.remove(existing);
@@ -296,6 +287,10 @@ export class PayoutBatchService {
     return this.listBatchSummaries(limit, payoutFriday);
   }
 
+  async refreshPendingStripeFees() {
+    return this.ledgerService.refreshPendingStripeFees();
+  }
+
   private toBatchSummaryDto(batch: PayoutBatch): PayoutBatchSummaryDto {
     return {
       id: batch.id,
@@ -314,10 +309,7 @@ export class PayoutBatchService {
     };
   }
 
-  async getBatchReview(
-    batchId: string,
-    options?: { liveConnectCheck?: boolean },
-  ): Promise<PayoutBatchReviewDto> {
+  async getBatchReview(batchId: string, options?: { liveConnectCheck?: boolean }): Promise<PayoutBatchReviewDto> {
     const liveConnectCheck = options?.liveConnectCheck ?? false;
     const batch = await this.batchRepo.findOne({ where: { id: batchId } });
     if (!batch) throw new NotFoundException('Payout batch not found');
@@ -350,9 +342,7 @@ export class PayoutBatchService {
   ): Promise<PayoutWelperRollupDto[]> {
     const welperIds = [...new Set(lines.map((l) => l.welperId))];
     const [users, profiles] = await Promise.all([
-      welperIds.length
-        ? this.userRepo.find({ where: { id: In(welperIds) } })
-        : Promise.resolve([] as UserAccount[]),
+      welperIds.length ? this.userRepo.find({ where: { id: In(welperIds) } }) : Promise.resolve([] as UserAccount[]),
       welperIds.length
         ? this.welperProfileRepo.find({ where: { welperId: In(welperIds) } })
         : Promise.resolve([] as WelperProfile[]),
@@ -362,21 +352,23 @@ export class PayoutBatchService {
 
     const connectStatusByWelper = new Map<string, Awaited<ReturnType<StripeConnectService['getStatus']>>>();
     if (liveConnectCheck) {
-      await Promise.all(
-        welperIds.map(async (welperId) => {
-          try {
-            connectStatusByWelper.set(welperId, await this.stripeConnect.getStatus(welperId));
-          } catch {
-            connectStatusByWelper.set(welperId, {
-              hasAccount: false,
-              onboardingComplete: false,
-              chargesEnabled: false,
-              payoutsEnabled: false,
-              detailsSubmitted: false,
-            });
-          }
-        }),
-      );
+      for (let start = 0; start < welperIds.length; start += 5) {
+        await Promise.all(
+          welperIds.slice(start, start + 5).map(async (welperId) => {
+            try {
+              connectStatusByWelper.set(welperId, await this.stripeConnect.getStatus(welperId));
+            } catch {
+              connectStatusByWelper.set(welperId, {
+                hasAccount: false,
+                onboardingComplete: false,
+                chargesEnabled: false,
+                payoutsEnabled: false,
+                detailsSubmitted: false,
+              });
+            }
+          }),
+        );
+      }
     }
 
     const welperMap = new Map<string, PayoutWelperRollupDto>();
@@ -386,9 +378,7 @@ export class PayoutBatchService {
         const user = userById.get(line.welperId);
         const profile = profileByWelperId.get(line.welperId);
         const connectId = profile?.stripeConnectAccountId ?? null;
-        const connectStatus = liveConnectCheck
-          ? connectStatusByWelper.get(line.welperId)
-          : null;
+        const connectStatus = liveConnectCheck ? connectStatusByWelper.get(line.welperId) : null;
         rollup = {
           welperId: line.welperId,
           welperEmail: user?.email ?? null,
@@ -426,6 +416,7 @@ export class PayoutBatchService {
         platformNetCents: line.platformGrossCents - (line.stripeFeeCents ?? 0),
         status: line.status,
         exclusionReason: line.exclusionReason,
+        stripeTransferId: line.stripeTransferId,
       };
       rollup.lines.push(lineDto);
       rollup.bookingCount += 1;
@@ -469,7 +460,10 @@ export class PayoutBatchService {
       }
 
       const lines = await ledgerRepo.find({
-        where: { payoutBatchId: batchId, status: WelperPayoutLedgerStatus.SCHEDULED },
+        where: {
+          payoutBatchId: batchId,
+          status: WelperPayoutLedgerStatus.SCHEDULED,
+        },
         lock: { mode: 'pessimistic_write' },
       });
 
@@ -485,7 +479,9 @@ export class PayoutBatchService {
             `Booking ${line.bookingId} has not met the 7-day hold for ${lockedBatch.payoutFriday}`,
           );
         }
-        const booking = await bookingRepo.findOne({ where: { id: line.bookingId } });
+        const booking = await bookingRepo.findOne({
+          where: { id: line.bookingId },
+        });
         if (!booking || booking.status === BookingRequestStatus.DISPUTED) {
           throw new BadRequestException(`Booking ${line.bookingId} is disputed or missing`);
         }
@@ -499,13 +495,13 @@ export class PayoutBatchService {
       return lines;
     });
 
-    const review = await this.getBatchReview(batchId, { liveConnectCheck: true });
+    const review = await this.getBatchReview(batchId, {
+      liveConnectCheck: true,
+    });
     const notReady = review.welpers.filter((w) => w.welperNetCents > 0 && !w.connectReady);
     if (notReady.length > 0) {
       await this.batchRepo.update({ id: batchId }, { status: PayoutBatchStatus.REVIEW });
-      throw new BadRequestException(
-        `${notReady.length} welper(s) are not Connect-ready for payout`,
-      );
+      throw new BadRequestException(`${notReady.length} welper(s) are not Connect-ready for payout`);
     }
 
     const linesByWelper = new Map<string, WelperPayoutLedger[]>();
@@ -530,7 +526,9 @@ export class PayoutBatchService {
         continue;
       }
 
-      const profile = await this.welperProfileRepo.findOne({ where: { welperId } });
+      const profile = await this.welperProfileRepo.findOne({
+        where: { welperId },
+      });
       const accountId = profile?.stripeConnectAccountId;
       if (!accountId) {
         transferResults.push({
@@ -542,49 +540,15 @@ export class PayoutBatchService {
         continue;
       }
 
-      const idempotencyKey = buildTransferIdempotencyKey(
-        welperId,
-        lines.map((l) => l.id),
-      );
-
-      if (
-        process.env.NODE_ENV !== 'production' &&
-        accountId.startsWith(E2E_STRIPE_CONNECT_ACCOUNT_PREFIX)
-      ) {
-        const transferId = `e2e_tr_${batchId}_${welperId}`;
-        transferResults.push({ welperId, amountCents: welperNetCents, transferId });
-        try {
-          await this.markWelperLinesTransferred(batchId, welperId, transferId);
-        } catch (dbErr) {
-          this.logger.error(
-            `CRITICAL: e2e transfer ${transferId} succeeded but DB persist failed welper=${welperId}: ${(dbErr as Error).message}`,
-          );
-          transferResults[transferResults.length - 1]!.dbPersistError = (dbErr as Error).message;
-        }
-        continue;
-      }
-
-      let transferId: string;
       try {
-        const transfer = await this.stripe.transfers.create(
-          {
-            amount: welperNetCents,
-            currency: 'cad',
-            destination: accountId,
-            transfer_group: batchId,
-            metadata: {
-              batchId,
-              welperId,
-              payoutFriday: batch.payoutFriday,
-            },
-          },
-          { idempotencyKey },
-        );
-        transferId = transfer.id;
+        const transfer = await this.transferWelperLinesAtomically(batch, welperId, lines, accountId);
+        transferResults.push({
+          welperId,
+          amountCents: transfer.amountCents,
+          transferId: transfer.transferId,
+        });
       } catch (err) {
-        this.logger.error(
-          `Transfer failed welper=${welperId} batch=${batchId}: ${(err as Error).message}`,
-        );
+        this.logger.error(`Transfer failed welper=${welperId} batch=${batchId}: ${(err as Error).message}`);
         transferResults.push({
           welperId,
           amountCents: welperNetCents,
@@ -592,17 +556,6 @@ export class PayoutBatchService {
         });
         await this.markWelperLinesFailed(batchId, welperId);
         continue;
-      }
-
-      transferResults.push({ welperId, amountCents: welperNetCents, transferId });
-      try {
-        await this.markWelperLinesTransferred(batchId, welperId, transferId);
-      } catch (dbErr) {
-        this.logger.error(
-          `CRITICAL: Stripe transfer ${transferId} succeeded but DB persist failed welper=${welperId}: ${(dbErr as Error).message}`,
-        );
-        const last = transferResults[transferResults.length - 1];
-        if (last) last.dbPersistError = (dbErr as Error).message;
       }
     }
 
@@ -624,11 +577,106 @@ export class PayoutBatchService {
     return this.getBatchReview(batchId);
   }
 
-  private async markWelperLinesTransferred(
-    batchId: string,
+  /**
+   * Keep the booking and ledger locks until Stripe accepts the transfer and the
+   * transfer id is persisted. Dispute creation locks these rows in the same
+   * order, so exactly one side can cross the payout boundary first.
+   */
+  private async transferWelperLinesAtomically(
+    batch: PayoutBatch,
     welperId: string,
-    transferId: string,
-  ): Promise<void> {
+    expectedLines: WelperPayoutLedger[],
+    accountId: string,
+  ): Promise<{ transferId: string; amountCents: number }> {
+    if (!this.stripe) {
+      throw new BadRequestException('Stripe is not configured');
+    }
+
+    const expectedLineIds = expectedLines.map((line) => line.id).sort();
+    const bookingIds = [...new Set(expectedLines.map((line) => line.bookingId))].sort();
+
+    return this.dataSource.transaction(async (manager) => {
+      const bookingRepo = manager.getRepository(BookingRequest);
+      const ledgerRepo = manager.getRepository(WelperPayoutLedger);
+
+      const bookings = await bookingRepo
+        .createQueryBuilder('booking')
+        .setLock('pessimistic_write')
+        .where('booking.id IN (:...bookingIds)', { bookingIds })
+        .orderBy('booking.id', 'ASC')
+        .getMany();
+      if (bookings.length !== bookingIds.length) {
+        throw new BadRequestException('A payout booking is missing');
+      }
+      if (
+        bookings.some(
+          (booking) =>
+            booking.status !== BookingRequestStatus.PAYMENT_RELEASED &&
+            booking.status !== BookingRequestStatus.COMPLETED,
+        )
+      ) {
+        throw new BadRequestException('A payout booking is disputed or no longer payable');
+      }
+
+      const lines = await ledgerRepo
+        .createQueryBuilder('ledger')
+        .setLock('pessimistic_write')
+        .where('ledger.id IN (:...lineIds)', { lineIds: expectedLineIds })
+        .orderBy('ledger.id', 'ASC')
+        .getMany();
+      if (
+        lines.length !== expectedLineIds.length ||
+        lines.some(
+          (line) =>
+            line.payoutBatchId !== batch.id ||
+            line.welperId !== welperId ||
+            line.status !== WelperPayoutLedgerStatus.SCHEDULED ||
+            !!line.stripeTransferId,
+        )
+      ) {
+        throw new BadRequestException('Payout lines changed before transfer');
+      }
+
+      const amountCents = lines.reduce((sum, line) => sum + line.welperNetCents, 0);
+      if (amountCents <= 0) {
+        throw new BadRequestException('Payout amount must be positive');
+      }
+
+      const idempotencyKey = buildTransferIdempotencyKey(
+        welperId,
+        lines.map((line) => line.id),
+      );
+      const transferId =
+        process.env.NODE_ENV !== 'production' && accountId.startsWith(E2E_STRIPE_CONNECT_ACCOUNT_PREFIX)
+          ? `e2e_tr_${batch.id}_${welperId}`
+          : (
+              await this.stripe!.transfers.create(
+                {
+                  amount: amountCents,
+                  currency: 'cad',
+                  destination: accountId,
+                  transfer_group: batch.id,
+                  metadata: {
+                    batchId: batch.id,
+                    welperId,
+                    payoutFriday: batch.payoutFriday,
+                  },
+                },
+                { idempotencyKey },
+              )
+            ).id;
+
+      for (const line of lines) {
+        line.status = WelperPayoutLedgerStatus.TRANSFERRED;
+        line.stripeTransferId = transferId;
+        await ledgerRepo.save(line);
+      }
+
+      return { transferId, amountCents };
+    });
+  }
+
+  private async markWelperLinesTransferred(batchId: string, welperId: string, transferId: string): Promise<void> {
     await this.ledgerRepo.update(
       {
         payoutBatchId: batchId,
@@ -662,7 +710,9 @@ export class PayoutBatchService {
     const rows: string[] = [header];
     for (const welper of review.welpers) {
       for (const line of welper.lines) {
-        const ledger = await this.ledgerRepo.findOne({ where: { id: line.ledgerId } });
+        const ledger = await this.ledgerRepo.findOne({
+          where: { id: line.ledgerId },
+        });
         rows.push(
           [
             welper.welperId,
@@ -693,9 +743,7 @@ export class PayoutBatchService {
     const batchId = transfer.transfer_group ?? transfer.metadata?.batchId;
     const welperId = transfer.metadata?.welperId;
     if (!batchId || !welperId) return;
-    this.logger.warn(
-      `Transfer reversed: transfer=${transfer.id} batch=${batchId} welper=${welperId}`,
-    );
+    this.logger.warn(`Transfer reversed: transfer=${transfer.id} batch=${batchId} welper=${welperId}`);
     await this.ledgerRepo.update(
       {
         payoutBatchId: batchId,

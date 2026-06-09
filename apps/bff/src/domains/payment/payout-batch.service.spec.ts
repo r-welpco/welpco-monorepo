@@ -11,10 +11,7 @@ import { StripeConnectService } from './stripe-connect.service';
 import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
 import { UserAccount } from '../user-management/entities/user-account.entity';
 import { BookingRequest, BookingRequestStatus } from '../booking/entities/booking-request.entity';
-import {
-  PayoutBatchStatus,
-  WelperPayoutLedgerStatus,
-} from './entities/payout-ledger-status.enum';
+import { PayoutBatchStatus, WelperPayoutLedgerStatus } from './entities/payout-ledger-status.enum';
 import { PayoutMethodChoice } from '../profile-management/entities/payout-method-choice.enum';
 import * as payoutEligibility from './payout-eligibility';
 import { buildTransferIdempotencyKey } from './payout-idempotency.util';
@@ -45,9 +42,14 @@ describe('PayoutBatchService', () => {
     findOne: jest.fn(),
     find: jest.fn(),
   };
-  const mockBookingRepo = { findOne: jest.fn(), count: jest.fn().mockResolvedValue(0) };
+  const mockBookingRepo = {
+    findOne: jest.fn(),
+    find: jest.fn(),
+    count: jest.fn().mockResolvedValue(0),
+  };
   const mockLedgerService = {
     releaseScheduledLinesFromBatch: jest.fn(),
+    refreshPendingStripeFees: jest.fn(),
   };
   const mockStripeConnect = {
     getStatus: jest.fn().mockResolvedValue({ onboardingComplete: true, payoutsEnabled: true }),
@@ -95,6 +97,13 @@ describe('PayoutBatchService', () => {
             return {
               find: jest.fn().mockResolvedValue(lines),
               findOne: jest.fn(),
+              save: jest.fn(async (line) => line),
+              createQueryBuilder: jest.fn(() => ({
+                setLock: jest.fn().mockReturnThis(),
+                where: jest.fn().mockReturnThis(),
+                orderBy: jest.fn().mockReturnThis(),
+                getMany: jest.fn().mockResolvedValue(lines),
+              })),
             };
           }
           if (entity === BookingRequest) {
@@ -103,6 +112,12 @@ describe('PayoutBatchService', () => {
                 id: 'b1',
                 status: BookingRequestStatus.PAYMENT_RELEASED,
               }),
+              createQueryBuilder: jest.fn(() => ({
+                setLock: jest.fn().mockReturnThis(),
+                where: jest.fn().mockReturnThis(),
+                orderBy: jest.fn().mockReturnThis(),
+                getMany: jest.fn().mockResolvedValue([{ id: 'b1', status: BookingRequestStatus.PAYMENT_RELEASED }]),
+              })),
             };
           }
           return {};
@@ -113,6 +128,9 @@ describe('PayoutBatchService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    scheduledLine.status = WelperPayoutLedgerStatus.SCHEDULED;
+    scheduledLine.stripeTransferId = null;
+    scheduledLine.payoutBatchId = 'batch-1';
     jest.spyOn(payoutEligibility, 'isPayoutFridayReached').mockReturnValue(true);
     transfersCreate.mockResolvedValue({ id: 'tr_test_1' });
     mockStripeConnect.getStatus.mockResolvedValue({
@@ -128,20 +146,32 @@ describe('PayoutBatchService', () => {
         payoutMethodChoice: PayoutMethodChoice.STRIPE,
       },
     ]);
+    mockBookingRepo.find.mockResolvedValue([{ id: 'b1', status: BookingRequestStatus.PAYMENT_RELEASED }]);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PayoutBatchService,
         {
           provide: ConfigService,
-          useValue: { get: jest.fn((k: string) => (k === 'STRIPE_SECRET_KEY' ? 'sk_test' : undefined)) },
+          useValue: {
+            get: jest.fn((k: string) => (k === 'STRIPE_SECRET_KEY' ? 'sk_test' : undefined)),
+          },
         },
         { provide: DataSource, useValue: mockDataSource },
         { provide: getRepositoryToken(PayoutBatch), useValue: mockBatchRepo },
-        { provide: getRepositoryToken(WelperPayoutLedger), useValue: mockLedgerRepo },
-        { provide: getRepositoryToken(WelperProfile), useValue: mockWelperProfileRepo },
+        {
+          provide: getRepositoryToken(WelperPayoutLedger),
+          useValue: mockLedgerRepo,
+        },
+        {
+          provide: getRepositoryToken(WelperProfile),
+          useValue: mockWelperProfileRepo,
+        },
         { provide: getRepositoryToken(UserAccount), useValue: mockUserRepo },
-        { provide: getRepositoryToken(BookingRequest), useValue: mockBookingRepo },
+        {
+          provide: getRepositoryToken(BookingRequest),
+          useValue: mockBookingRepo,
+        },
         { provide: WelperPayoutLedgerService, useValue: mockLedgerService },
         { provide: StripeConnectService, useValue: mockStripeConnect },
       ],
@@ -166,9 +196,7 @@ describe('PayoutBatchService', () => {
         payoutFriday: '2026-06-12',
       });
 
-      await expect(service.approveAndExecute('batch-1', 'admin-1')).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
+      await expect(service.approveAndExecute('batch-1', 'admin-1')).rejects.toBeInstanceOf(BadRequestException);
       expect(transfersCreate).not.toHaveBeenCalled();
     });
 
@@ -197,9 +225,7 @@ describe('PayoutBatchService', () => {
         payoutsEnabled: false,
       });
 
-      await expect(service.approveAndExecute('batch-1', 'admin-1')).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
+      await expect(service.approveAndExecute('batch-1', 'admin-1')).rejects.toBeInstanceOf(BadRequestException);
       expect(transfersCreate).not.toHaveBeenCalled();
     });
 
@@ -216,9 +242,7 @@ describe('PayoutBatchService', () => {
         payoutsEnabled: false,
       });
 
-      await expect(service.approveAndExecute('batch-1', 'admin-1')).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
+      await expect(service.approveAndExecute('batch-1', 'admin-1')).rejects.toBeInstanceOf(BadRequestException);
     });
 
     it('creates Stripe transfers per welper when Connect-ready', async () => {
@@ -250,7 +274,65 @@ describe('PayoutBatchService', () => {
         }),
       );
       expect(result.welpers[0]?.welperNetCents).toBe(10000);
-      expect(mockLedgerRepo.update).toHaveBeenCalled();
+      expect(result.welpers[0]?.lines[0]?.status).toBe(WelperPayoutLedgerStatus.TRANSFERRED);
+    });
+
+    it('does not transfer when a dispute wins the booking lock first', async () => {
+      mockBatchRepo.findOne.mockResolvedValue({
+        id: 'batch-1',
+        status: PayoutBatchStatus.REVIEW,
+        payoutFriday: '2026-06-12',
+      });
+      mockApproveTransaction();
+      mockLedgerRepo.find.mockResolvedValue([scheduledLine]);
+      mockWelperProfileRepo.findOne.mockResolvedValue({
+        welperId: 'w1',
+        stripeConnectAccountId: 'acct_real_123',
+        payoutMethodChoice: PayoutMethodChoice.STRIPE,
+      });
+
+      const originalTransaction = mockDataSource.transaction.getMockImplementation()!;
+      let transactionNumber = 0;
+      mockDataSource.transaction.mockImplementation(async (fn) => {
+        transactionNumber += 1;
+        if (transactionNumber === 1) {
+          return originalTransaction(fn);
+        }
+        return fn({
+          getRepository: jest.fn((entity) => {
+            if (entity === BookingRequest) {
+              return {
+                createQueryBuilder: jest.fn(() => ({
+                  setLock: jest.fn().mockReturnThis(),
+                  where: jest.fn().mockReturnThis(),
+                  orderBy: jest.fn().mockReturnThis(),
+                  getMany: jest.fn().mockResolvedValue([{ id: 'b1', status: BookingRequestStatus.DISPUTED }]),
+                })),
+              };
+            }
+            if (entity === WelperPayoutLedger) {
+              return {
+                createQueryBuilder: jest.fn(() => ({
+                  setLock: jest.fn().mockReturnThis(),
+                  where: jest.fn().mockReturnThis(),
+                  orderBy: jest.fn().mockReturnThis(),
+                  getMany: jest.fn().mockResolvedValue([scheduledLine]),
+                })),
+              };
+            }
+            return {};
+          }),
+        });
+      });
+
+      const result = await service.approveAndExecute('batch-1', 'admin-1');
+
+      expect(transfersCreate).not.toHaveBeenCalled();
+      expect(result.status).toBeDefined();
+      expect(mockLedgerRepo.update).toHaveBeenCalledWith(
+        expect.objectContaining({ welperId: 'w1' }),
+        expect.objectContaining({ status: WelperPayoutLedgerStatus.FAILED }),
+      );
     });
   });
 
@@ -319,7 +401,13 @@ describe('PayoutBatchService', () => {
       });
       mockLedgerRepo.find.mockImplementation(async (opts) => {
         if (opts?.where?.payoutBatchId === 'batch-1') {
-          return [{ ...line, status: WelperPayoutLedgerStatus.SCHEDULED, payoutBatchId: 'batch-1' }];
+          return [
+            {
+              ...line,
+              status: WelperPayoutLedgerStatus.SCHEDULED,
+              payoutBatchId: 'batch-1',
+            },
+          ];
         }
         return [line];
       });
@@ -353,6 +441,20 @@ describe('PayoutBatchService', () => {
 
     it('rejects non-Friday payout dates', async () => {
       await expect(service.buildDraftBatch('2026-06-06')).rejects.toBeInstanceOf(BadRequestException);
+    });
+  });
+
+  it('delegates manual Stripe fee refresh to the payout ledger service', async () => {
+    mockLedgerService.refreshPendingStripeFees.mockResolvedValue({
+      scanned: 3,
+      recovered: 2,
+      stillPending: 1,
+    });
+
+    await expect(service.refreshPendingStripeFees()).resolves.toEqual({
+      scanned: 3,
+      recovered: 2,
+      stillPending: 1,
     });
   });
 });

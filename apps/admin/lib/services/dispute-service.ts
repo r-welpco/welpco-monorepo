@@ -1,12 +1,6 @@
 import { apiClient } from "@/lib/api/client";
 
-export type DisputeStatusApi =
-  | "open"
-  | "in-review"
-  | "escalated"
-  | "resolved"
-  | "closed"
-  | "withdrawn";
+export type DisputeStatusApi = "open" | "in-review" | "escalated" | "resolved" | "closed" | "withdrawn";
 
 export interface DisputeParticipantSummary {
   userId: string;
@@ -24,6 +18,10 @@ export interface DisputeResolutionSummary {
   refundAmount?: number | null;
   resolvedAt: string;
   resolvedById?: string | null;
+  refundStatus?: "succeeded" | "failed" | "partial" | "skipped" | "not_applicable" | null;
+  refundMessage?: string | null;
+  refundsCreated?: number | null;
+  refundAttemptedAt?: string | null;
 }
 
 export interface CapturedPaymentHint {
@@ -69,12 +67,7 @@ export interface DisputesListResponse {
   totalPages: number;
 }
 
-export type DisputeResolutionType =
-  | "refund"
-  | "partial_refund"
-  | "warning"
-  | "no_action"
-  | "closed";
+export type DisputeResolutionType = "refund" | "partial_refund" | "warning" | "no_action" | "closed";
 
 export interface CreateDisputeResolutionParams {
   resolutionType: DisputeResolutionType;
@@ -84,7 +77,7 @@ export interface CreateDisputeResolutionParams {
 }
 
 export type StripeRefundOutcome = {
-  status: "succeeded" | "failed" | "skipped" | "not_applicable";
+  status: "succeeded" | "failed" | "partial" | "skipped" | "not_applicable";
   refundsCreated?: number;
   message?: string;
 };
@@ -101,11 +94,7 @@ export interface CreateDisputeResolutionResponse {
   stripeRefund: StripeRefundOutcome;
 }
 
-export async function listDisputes(
-  page = 1,
-  limit = 50,
-  status?: string
-): Promise<DisputesListResponse> {
+export async function listDisputes(page = 1, limit = 50, status?: string): Promise<DisputesListResponse> {
   return apiClient.get<DisputesListResponse>("/api/disputes", {
     params: { page, limit, status: status?.trim() || undefined },
   });
@@ -117,10 +106,14 @@ export async function getDisputeById(disputeId: string): Promise<DisputeItem> {
 
 export async function createDisputeResolution(
   disputeId: string,
-  params: CreateDisputeResolutionParams
+  params: CreateDisputeResolutionParams,
 ): Promise<CreateDisputeResolutionResponse> {
   return apiClient.post<CreateDisputeResolutionResponse>(
     `/api/disputes/${encodeURIComponent(disputeId)}/resolution`,
-    params
+    params,
   );
+}
+
+export async function retryDisputeRefund(disputeId: string): Promise<StripeRefundOutcome> {
+  return apiClient.post<StripeRefundOutcome>(`/api/disputes/${encodeURIComponent(disputeId)}/resolution/refund/retry`);
 }

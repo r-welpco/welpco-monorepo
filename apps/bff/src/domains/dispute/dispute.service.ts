@@ -43,10 +43,7 @@ import {
   type DisputeEmailType,
   type DisputeEmailVariables,
 } from '@welpco/email';
-import {
-  buildBookingActionUrl,
-  getFrontendBaseUrl,
-} from '../notification/notification-locale.helper';
+import { buildBookingActionUrl, getFrontendBaseUrl } from '../notification/notification-locale.helper';
 import { Message } from '../communication/entities';
 
 const OPEN_STATUSES: string[] = ['open', 'in_review', 'escalated'];
@@ -64,7 +61,7 @@ const EVIDENCE_ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'heic
 const WITHDRAWABLE_STATUSES: string[] = ['open', 'in_review'];
 
 export type StripeRefundOutcome = {
-  status: 'succeeded' | 'failed' | 'skipped' | 'not_applicable';
+  status: 'succeeded' | 'failed' | 'partial' | 'skipped' | 'not_applicable';
   refundsCreated?: number;
   message?: string;
 };
@@ -104,7 +101,12 @@ export class DisputeService {
     recipientIds: ReadonlyArray<string | null | undefined>,
     emailType: DisputeEmailType,
     variables: DisputeEmailVariables,
-    metadata: { disputeId: string; bookingId: string; status: string; kind?: string },
+    metadata: {
+      disputeId: string;
+      bookingId: string;
+      status: string;
+      kind?: string;
+    },
   ): Promise<void> {
     const seen = new Set<string>();
     for (const id of recipientIds) {
@@ -149,9 +151,7 @@ export class DisputeService {
           metadata: { ...metadata, kind: 'dispute_resolved' },
         });
       } catch (err) {
-        this.logger.warn(
-          `Failed to emit dispute resolved notification for ${id}: ${(err as Error).message}`,
-        );
+        this.logger.warn(`Failed to emit dispute resolved notification for ${id}: ${(err as Error).message}`);
       }
     }
   }
@@ -177,9 +177,7 @@ export class DisputeService {
           bookingEmailVariables: variables,
         });
       } catch (err) {
-        this.logger.warn(
-          `Failed to emit booking ${emailType} after dispute for ${userId}: ${(err as Error).message}`,
-        );
+        this.logger.warn(`Failed to emit booking ${emailType} after dispute for ${userId}: ${(err as Error).message}`);
       }
     }
   }
@@ -198,15 +196,18 @@ export class DisputeService {
    * presigner) so a transient AWS hiccup doesn't take down the whole dispute
    * read.
    */
-  private async signEvidence(
-    evidence: Dispute['evidence'],
-  ): Promise<DisputeResponseDto['evidence']> {
+  private async signEvidence(evidence: Dispute['evidence']): Promise<DisputeResponseDto['evidence']> {
     if (!evidence || !Array.isArray(evidence) || evidence.length === 0) {
       return evidence ?? undefined;
     }
     return Promise.all(
       evidence.map(async (item) => {
-        const base: { type: string; key?: string; id?: string; signedUrl?: string | null } = {
+        const base: {
+          type: string;
+          key?: string;
+          id?: string;
+          signedUrl?: string | null;
+        } = {
           type: item.type,
         };
         if (item.key !== undefined) base.key = item.key;
@@ -270,11 +271,15 @@ export class DisputeService {
     role: 'customer' | 'welper',
   ): Promise<DisputeParticipantSummaryDto> {
     const summary: DisputeParticipantSummaryDto = { userId, role };
-    const account = await this.userAccountRepo.findOne({ where: { id: userId } });
+    const account = await this.userAccountRepo.findOne({
+      where: { id: userId },
+    });
     if (account?.email) summary.email = account.email;
 
     if (role === 'customer') {
-      const profile = await this.customerProfileRepo.findOne({ where: { customerId: userId } });
+      const profile = await this.customerProfileRepo.findOne({
+        where: { customerId: userId },
+      });
       if (profile) {
         if (profile.firstName) summary.firstName = profile.firstName;
         if (profile.lastName) summary.lastName = profile.lastName;
@@ -282,7 +287,9 @@ export class DisputeService {
         if (phone) summary.phoneDisplay = phone;
       }
     } else {
-      const profile = await this.welperProfileRepo.findOne({ where: { welperId: userId } });
+      const profile = await this.welperProfileRepo.findOne({
+        where: { welperId: userId },
+      });
       if (profile) {
         if (profile.firstName) summary.firstName = profile.firstName;
         if (profile.lastName) summary.lastName = profile.lastName;
@@ -293,10 +300,7 @@ export class DisputeService {
     return summary;
   }
 
-  private assertEvidenceBelongsToFiler(
-    userId: string,
-    evidence: CreateDisputeDto['evidence'],
-  ): void {
+  private assertEvidenceBelongsToFiler(userId: string, evidence: CreateDisputeDto['evidence']): void {
     if (!evidence) return;
     const ownedPrefix = `${EVIDENCE_KEY_PREFIX}${userId}/`;
 
@@ -357,6 +361,10 @@ export class DisputeService {
       refundAmount: r.refundAmount != null ? Number(r.refundAmount) : null,
       resolvedAt: r.resolvedAt!.toISOString(),
       resolvedById: r.resolvedById ?? null,
+      refundStatus: r.refundStatus,
+      refundMessage: r.refundMessage,
+      refundsCreated: r.refundsCreated,
+      refundAttemptedAt: r.refundAttemptedAt?.toISOString() ?? null,
     };
   }
 
@@ -384,10 +392,7 @@ export class DisputeService {
       if (booking.customerId !== userId && booking.welperId !== userId) {
         throw new ForbiddenException('You are not authorized to file a dispute for this booking');
       }
-      const filerType =
-        booking.customerId === userId
-          ? ('customer' as const)
-          : ('welper' as const);
+      const filerType = booking.customerId === userId ? ('customer' as const) : ('welper' as const);
       validateTransition(booking.status, BookingRequestStatus.DISPUTED);
 
       const reportWindowMinutes = await this.applicationSettings.getDisputeReportWindowMinutes();
@@ -423,10 +428,7 @@ export class DisputeService {
       booking.status = BookingRequestStatus.DISPUTED;
       await bookingRepo.save(booking);
 
-      const detachedBatchId = await this.welperPayoutLedgerService.excludeForDispute(
-        bookingId,
-        queryRunner.manager,
-      );
+      const detachedBatchId = await this.welperPayoutLedgerService.excludeForDispute(bookingId, queryRunner.manager);
 
       await queryRunner.commitTransaction();
 
@@ -438,13 +440,16 @@ export class DisputeService {
       // filed. Filer already knows; we don't ping them. Body keeps the
       // dispute subject in plain language so the recipient can triage from
       // the bell without opening the page.
-      const counterpartyId =
-        booking.customerId === userId ? booking.welperId : booking.customerId;
+      const counterpartyId = booking.customerId === userId ? booking.welperId : booking.customerId;
       await this.emitDisputeNotifications(
         [counterpartyId],
         'dispute_filed',
         { subject: dto.subject },
-        { disputeId: savedDispute.id, bookingId: savedDispute.bookingId, status: 'open' },
+        {
+          disputeId: savedDispute.id,
+          bookingId: savedDispute.bookingId,
+          status: 'open',
+        },
       );
 
       return await this.toDto(savedDispute);
@@ -457,7 +462,9 @@ export class DisputeService {
   }
 
   async findByBooking(bookingId: string, userId: string): Promise<DisputeResponseDto | null> {
-    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
+    const booking = await this.bookingRepo.findOne({
+      where: { id: bookingId },
+    });
     if (!booking) {
       throw new NotFoundException('Booking not found');
     }
@@ -478,7 +485,13 @@ export class DisputeService {
     limit = 20,
     /** DB dispute status (e.g. in_review). Only applied for admin list when provided. */
     statusDb?: string,
-  ): Promise<{ data: DisputeResponseDto[]; total: number; page: number; limit: number; totalPages: number }> {
+  ): Promise<{
+    data: DisputeResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     page = Math.max(1, page);
     limit = Math.min(Math.max(1, limit), 100);
     const qb = this.disputeRepo
@@ -492,9 +505,10 @@ export class DisputeService {
     }
 
     if (accountType.toLowerCase() !== 'admin') {
-      qb
-        .innerJoin(BookingRequest, 'b', 'b.id = d.booking_id')
-        .where('(b.customer_id = :userId OR b.welper_id = :userId)', { userId });
+      qb.innerJoin(BookingRequest, 'b', 'b.id = d.booking_id').where(
+        '(b.customer_id = :userId OR b.welper_id = :userId)',
+        { userId },
+      );
     }
 
     const [disputes, total] = await qb.getManyAndCount();
@@ -526,11 +540,7 @@ export class DisputeService {
     };
   }
 
-  async findById(
-    disputeId: string,
-    userId: string,
-    accountType?: string,
-  ): Promise<DisputeResponseDto> {
+  async findById(disputeId: string, userId: string, accountType?: string): Promise<DisputeResponseDto> {
     const dispute = await this.disputeRepo.findOne({
       where: { id: disputeId },
       relations: [],
@@ -538,9 +548,14 @@ export class DisputeService {
     if (!dispute) {
       throw new NotFoundException('Dispute not found');
     }
-    const booking = await this.bookingRepo.findOne({ where: { id: dispute.bookingId } });
+    const booking = await this.bookingRepo.findOne({
+      where: { id: dispute.bookingId },
+    });
     if (accountType?.toLowerCase() === 'admin') {
-      const dto = await this.toDto(dispute, { booking, includeStaffFlags: true });
+      const dto = await this.toDto(dispute, {
+        booking,
+        includeStaffFlags: true,
+      });
       if (booking) {
         const [customer, welper, resolutionRow, captured] = await Promise.all([
           this.buildParticipantSummary(booking.customerId, 'customer'),
@@ -580,9 +595,7 @@ export class DisputeService {
     dto: DisputeEvidencePresignRequestDto,
   ): Promise<DisputeEvidencePresignResponseDto> {
     if (!this.s3Presigner.isConfigured()) {
-      throw new ServiceUnavailableException(
-        'Evidence upload is not available right now. Try again in a few minutes.',
-      );
+      throw new ServiceUnavailableException('Evidence upload is not available right now. Try again in a few minutes.');
     }
 
     // Pull a clean extension. The DTO `fileName` is a hint — we sanitise; if
@@ -592,9 +605,7 @@ export class DisputeService {
 
     const uploadUrl = await this.s3Presigner.presignPut(key, dto.contentType);
     if (!uploadUrl) {
-      throw new ServiceUnavailableException(
-        'Could not generate an upload URL. Try again in a few minutes.',
-      );
+      throw new ServiceUnavailableException('Could not generate an upload URL. Try again in a few minutes.');
     }
 
     return {
@@ -647,6 +658,7 @@ export class DisputeService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+    let transactionCommitted = false;
     try {
       const disputeRepo = queryRunner.manager.getRepository(Dispute);
       const resolutionRepo = queryRunner.manager.getRepository(Resolution);
@@ -677,8 +689,7 @@ export class DisputeService {
         throw new NotFoundException('Booking not found for this dispute');
       }
       const canResolveAfterParticipantCancel =
-        booking.status === BookingRequestStatus.CANCELLED &&
-        RESOLVABLE_STATUSES.includes(dispute.status);
+        booking.status === BookingRequestStatus.CANCELLED && RESOLVABLE_STATUSES.includes(dispute.status);
 
       if (booking.status !== BookingRequestStatus.DISPUTED && !canResolveAfterParticipantCancel) {
         throw new BadRequestException(
@@ -724,8 +735,10 @@ export class DisputeService {
 
       if (booking.status === BookingRequestStatus.CANCELLED) {
         await queryRunner.commitTransaction();
+        transactionCommitted = true;
         const refundResult = await this.runStripeRefundForResolution(booking.id, dto, saved.id);
         const stripeRefund = this.toStripeRefundOutcome(dto, refundResult);
+        await this.persistRefundOutcome(saved, stripeRefund);
         await this.adminAuditService.record(adminUserId, 'dispute.resolution', {
           disputeId,
           bookingId: booking.id,
@@ -760,9 +773,7 @@ export class DisputeService {
 
       const bookingOutcome = dto.bookingOutcome ?? 'completed';
       const nextStatus =
-        bookingOutcome === 'cancelled'
-          ? BookingRequestStatus.CANCELLED
-          : BookingRequestStatus.COMPLETED;
+        bookingOutcome === 'cancelled' ? BookingRequestStatus.CANCELLED : BookingRequestStatus.COMPLETED;
       validateTransition(booking.status, nextStatus);
 
       booking.status = nextStatus;
@@ -771,15 +782,15 @@ export class DisputeService {
         booking.cancelledBy = adminUserId;
         const reasonFromNotes = dto.notes?.trim();
         booking.cancellationReason =
-          reasonFromNotes && reasonFromNotes.length > 0
-            ? reasonFromNotes
-            : 'Resolved as cancelled (dispute)';
+          reasonFromNotes && reasonFromNotes.length > 0 ? reasonFromNotes : 'Resolved as cancelled (dispute)';
       }
       await bookingRepo.save(booking);
 
       await queryRunner.commitTransaction();
+      transactionCommitted = true;
       const refundResult = await this.runStripeRefundForResolution(booking.id, dto, saved.id);
       const stripeRefund = this.toStripeRefundOutcome(dto, refundResult);
+      await this.persistRefundOutcome(saved, stripeRefund);
       await this.adminAuditService.record(adminUserId, 'dispute.resolution', {
         disputeId,
         bookingId: booking.id,
@@ -819,7 +830,9 @@ export class DisputeService {
         stripeRefund,
       };
     } catch (e) {
-      await queryRunner.rollbackTransaction();
+      if (!transactionCommitted) {
+        await queryRunner.rollbackTransaction();
+      }
       throw e;
     } finally {
       await queryRunner.release();
@@ -844,10 +857,7 @@ export class DisputeService {
    * is the filer, not staff). This matches the pattern used by
    * `createResolution`'s `dispute.resolution` record.
    */
-  async withdraw(
-    disputeId: string,
-    userId: string,
-  ): Promise<DisputeResponseDto> {
+  async withdraw(disputeId: string, userId: string): Promise<DisputeResponseDto> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -914,16 +924,14 @@ export class DisputeService {
         disputeId,
         bookingId: dispute.bookingId,
         previousStatus,
-        bookingRestoredToCompleted:
-          booking?.status === BookingRequestStatus.COMPLETED,
+        bookingRestoredToCompleted: booking?.status === BookingRequestStatus.COMPLETED,
       });
 
       // NOTIFICATIONS-001 (Wave 2 withdraw path): the COUNTERPARTY needs to
       // know the report was retracted — they may have been preparing a
       // response. Filer doesn't get pinged for their own action.
       if (booking) {
-        const counterpartyId =
-          booking.customerId === userId ? booking.welperId : booking.customerId;
+        const counterpartyId = booking.customerId === userId ? booking.welperId : booking.customerId;
         await this.emitDisputeNotifications(
           [counterpartyId],
           'dispute_withdrawn',
@@ -954,9 +962,7 @@ export class DisputeService {
     }
     try {
       const partialCents =
-        dto.resolutionType === 'partial_refund'
-          ? majorCurrencyUnitsToCents(dto.refundAmount!)
-          : undefined;
+        dto.resolutionType === 'partial_refund' ? majorCurrencyUnitsToCents(dto.refundAmount!) : undefined;
       return await this.paymentService.refundCapturedAmount(bookingId, resolutionId, partialCents);
     } catch (e) {
       const message = (e as Error).message;
@@ -965,10 +971,7 @@ export class DisputeService {
     }
   }
 
-  private toStripeRefundOutcome(
-    dto: CreateResolutionDto,
-    result: RefundCapturedResult | null,
-  ): StripeRefundOutcome {
+  private toStripeRefundOutcome(dto: CreateResolutionDto, result: RefundCapturedResult | null): StripeRefundOutcome {
     if (dto.resolutionType !== 'refund' && dto.resolutionType !== 'partial_refund') {
       return { status: 'not_applicable' };
     }
@@ -981,10 +984,71 @@ export class DisputeService {
     if (result.ok) {
       return { status: 'succeeded', refundsCreated: result.refundsCreated };
     }
+    if (result.partialFailure) {
+      return {
+        status: 'partial',
+        message: result.message,
+        refundsCreated: result.refundsCreated,
+      };
+    }
     return {
       status: 'failed',
       message: result.message,
       refundsCreated: result.refundsCreated,
     };
+  }
+
+  private async persistRefundOutcome(resolution: Resolution, outcome: StripeRefundOutcome): Promise<void> {
+    resolution.refundStatus = outcome.status;
+    resolution.refundMessage = outcome.message ?? null;
+    resolution.refundsCreated = outcome.refundsCreated ?? 0;
+    resolution.refundAttemptedAt = outcome.status === 'not_applicable' ? null : new Date();
+    await this.resolutionRepo.save(resolution);
+  }
+
+  async retryResolutionRefund(disputeId: string, adminUserId: string): Promise<StripeRefundOutcome> {
+    const dispute = await this.disputeRepo.findOne({
+      where: { id: disputeId },
+    });
+    if (!dispute) {
+      throw new NotFoundException('Dispute not found');
+    }
+    const resolution = await this.resolutionRepo.findOne({
+      where: { disputeId },
+    });
+    if (!resolution) {
+      throw new NotFoundException('Resolution not found');
+    }
+    if (resolution.resolutionType !== 'refund' && resolution.resolutionType !== 'partial_refund') {
+      throw new BadRequestException('This resolution does not include a refund');
+    }
+    if (resolution.refundStatus === 'succeeded') {
+      throw new BadRequestException('Refund already succeeded');
+    }
+    if (resolution.refundStatus === 'skipped') {
+      throw new BadRequestException('Refund was skipped because no refundable payment was found');
+    }
+    if (
+      resolution.resolutionType === 'partial_refund' &&
+      (resolution.refundAmount == null || Number(resolution.refundAmount) <= 0)
+    ) {
+      throw new BadRequestException('Partial refund amount is missing or invalid');
+    }
+
+    const dto: CreateResolutionDto = {
+      resolutionType: resolution.resolutionType,
+      refundAmount: resolution.resolutionType === 'partial_refund' ? Number(resolution.refundAmount) : undefined,
+    };
+    const result = await this.runStripeRefundForResolution(dispute.bookingId, dto, resolution.id);
+    const outcome = this.toStripeRefundOutcome(dto, result);
+    await this.persistRefundOutcome(resolution, outcome);
+    await this.adminAuditService.record(adminUserId, 'dispute.refund_retry', {
+      disputeId,
+      bookingId: dispute.bookingId,
+      resolutionId: resolution.id,
+      refundStatus: outcome.status,
+      refundsCreated: outcome.refundsCreated ?? 0,
+    });
+    return outcome;
   }
 }

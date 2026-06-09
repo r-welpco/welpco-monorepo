@@ -12,7 +12,6 @@ import { Skeleton } from "@welpco/ui/skeleton";
 import { Separator } from "@welpco/ui/separator";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { customerWelperDisplayName } from "./customer-welper-display-name";
-import { MinorTrustBadge } from "./minor-trust-badge";
 import { VerifiedTrustBadge } from "./verified-trust-badge";
 import { WeeklyAvailabilityStrip } from "./weekly-availability-strip";
 import type {
@@ -138,13 +137,6 @@ export function WelperProfileDialog({
                       {displayName}
                     </Heading>
                     {profile.verified === true ? <VerifiedTrustBadge size="2" /> : null}
-                    {profile.isMinor === true ? (
-                      <MinorTrustBadge
-                        size="2"
-                        label={l?.minorBadge ?? "Minor"}
-                        tooltip={l?.minorBadgeTooltip ?? "Welper is under 18"}
-                      />
-                    ) : null}
                   </Flex>
                   <Text size="2" color="gray" highContrast>
                     {profile.bio || (l?.noBio ?? "No bio provided.")}

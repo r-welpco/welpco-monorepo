@@ -9,7 +9,6 @@ import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { VerifiedTrustBadge } from "./verified-trust-badge";
-import { MinorTrustBadge } from "./minor-trust-badge";
 import { WeeklyAvailabilityStrip } from "./weekly-availability-strip";
 import type {
   WeeklyAvailabilityDisplayLabels,
@@ -93,14 +92,7 @@ export function WelperProfileCardCompact({
                 <Heading size="4" weight="bold" trim="start">
                   {name}
                 </Heading>
-                {verified === true && <VerifiedTrustBadge size="1" />}
-                {isMinor === true && (
-                  <MinorTrustBadge
-                    size="1"
-                    label={minorBadgeLabel}
-                    tooltip={minorBadgeTooltip}
-                  />
-                )}
+                {verified === true && <VerifiedTrustBadge size="2" />}
               </Flex>
               <Text size="2" color="gray" highContrast>
                 {`${title} \u00B7 ${location}`}

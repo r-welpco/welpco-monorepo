@@ -193,7 +193,7 @@ const en = {
         ],
       },
       minors: {
-        badge: "New · April 2026",
+        badge: "Coming soon",
         titleLine1: "Service-provider accounts",
         titleLine2: "for minors.",
         body: "Welpers aged 14 and up can now sign up under a guardian-managed account. Background checks are waived; guardians review every booking.",

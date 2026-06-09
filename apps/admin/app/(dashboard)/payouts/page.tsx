@@ -15,7 +15,7 @@ import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { formatAdminMoneyCents, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
 import { getPayoutUpcoming, listPayoutBatches } from "@/lib/services/admin-payouts-service";
-import { PayoutBuildAction } from "./payout-batch-actions";
+import { PayoutBuildAction, PayoutFeeRefreshAction } from "./payout-batch-actions";
 import { PayoutWelpersTable } from "./payout-welpers-table";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +63,8 @@ export default async function PayoutsPage() {
       />
 
       {err ? <AdminErrorCallout message={err} /> : null}
+
+      <PayoutFeeRefreshAction />
 
       <Card style={{ padding: "1.25rem" }}>
         <Flex direction="column" gap="3">
@@ -132,7 +134,17 @@ export default async function PayoutsPage() {
                 <TableRow key={b.id}>
                   <TableCell>{b.payoutFriday}</TableCell>
                   <TableCell>
-                    <Badge color={b.status === "completed" ? "green" : b.status === "failed" ? "red" : b.status === "partial" ? "orange" : "gray"}>
+                    <Badge
+                      color={
+                        b.status === "completed"
+                          ? "green"
+                          : b.status === "failed"
+                            ? "red"
+                            : b.status === "partial"
+                              ? "orange"
+                              : "gray"
+                      }
+                    >
                       {formatAdminStatusLabel(b.status)}
                     </Badge>
                   </TableCell>

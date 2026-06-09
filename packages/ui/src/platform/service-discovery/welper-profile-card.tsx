@@ -11,7 +11,6 @@ import { Heading } from "@welpco/ui/heading";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { MapPin, Star } from "lucide-react";
 import { VerifiedTrustBadge } from "./verified-trust-badge";
-import { MinorTrustBadge } from "./minor-trust-badge";
 import { WeeklyAvailabilityStrip } from "./weekly-availability-strip";
 import type {
   WeeklyAvailabilityDisplayLabels,
@@ -117,9 +116,6 @@ export function WelperProfileCard({
                 {name}
               </Heading>
               {verified === true && <VerifiedTrustBadge />}
-              {isMinor === true && (
-                <MinorTrustBadge label={minorBadgeLabel} tooltip={minorBadgeTooltip} />
-              )}
             </Flex>
             <Text size="2" weight="medium" as="div" mb="1">
               {title}

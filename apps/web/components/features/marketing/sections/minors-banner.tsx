@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { MarketingImage } from "../shared/marketing-image";
 
 /**
- * MinorsBanner — guardian-managed minors call-out (April 2026).
+ * MinorsBanner — guardian-managed minors call-out (coming soon).
  */
 
 export function MinorsBanner() {
