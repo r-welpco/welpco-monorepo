@@ -26,9 +26,13 @@ export class FavoriteService {
 
   async findByCustomerId(
     customerId: string,
+    userId: string,
     page: number = 1,
     limit: number = 20,
   ): Promise<{ data: FavoriteWelper[]; total: number; page: number; limit: number; totalPages: number }> {
+    if (customerId !== userId) {
+      throw new ForbiddenException('You can only view your own favorites');
+    }
     const [data, total] = await this.favoriteRepository.findAndCount({
       where: { customerId },
       order: { createdAt: 'DESC' },
@@ -171,4 +175,3 @@ export class FavoriteService {
     throw new NotFoundException('Favorite not found');
   }
 }
-

@@ -69,6 +69,13 @@ export class UserAccount {
   emailVerified!: boolean;
 
   /**
+   * Increment to invalidate every access and refresh token previously issued
+   * for this account.
+   */
+  @Column({ name: 'auth_version', type: 'integer', default: 0 })
+  authVersion!: number;
+
+  /**
    * Day 15 — Signup ↔ onboarding merge, Phase 1.
    *
    * Flips to `true` on `POST /auth/signup/finish` once every role-required

@@ -7,6 +7,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -54,6 +55,8 @@ export class CustomerProfileController {
   }
 
   @Get(':customerId')
+  @UseGuards(RolesGuard)
+  @Roles(AccountType.CUSTOMER, AccountType.ADMIN)
   @ApiOperation({ summary: 'Get customer profile' })
   @ApiParam({ name: 'customerId', description: 'Customer ID' })
   @ApiResponse({
@@ -62,11 +65,22 @@ export class CustomerProfileController {
     type: CustomerProfileResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Customer profile not found' })
-  async getCustomerProfile(@Param('customerId') customerId: string) {
+  async getCustomerProfile(
+    @Param('customerId') customerId: string,
+    @CurrentUser() user: { userId: string; effectiveRole: string },
+  ) {
+    if (
+      user.effectiveRole !== 'admin' &&
+      (user.effectiveRole !== 'customer' || user.userId !== customerId)
+    ) {
+      throw new ForbiddenException('You can only view your own full profile');
+    }
     return this.customerProfileService.findByCustomerId(customerId);
   }
 
   @Put(':customerId')
+  @UseGuards(RolesGuard)
+  @Roles(AccountType.CUSTOMER)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update customer profile' })
   @ApiParam({ name: 'customerId', description: 'Customer ID' })
@@ -90,6 +104,8 @@ export class CustomerProfileController {
   }
 
   @Put(':customerId/onboarding-complete')
+  @UseGuards(RolesGuard)
+  @Roles(AccountType.CUSTOMER)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Mark onboarding as complete' })
   @ApiParam({ name: 'customerId', description: 'Customer ID' })
@@ -110,4 +126,3 @@ export class CustomerProfileController {
     );
   }
 }
-

@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { performClientSignOut } from "@/lib/auth/client-sign-out";
-import { roleFromSelectedRole } from "@/lib/auth/session-role";
 import { Box } from "@welpco/ui/box";
 import { Button } from "@welpco/ui/button";
 import { Card } from "@welpco/ui/card";
@@ -13,7 +12,7 @@ import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { Link } from "@welpco/ui/link";
 import { Text } from "@welpco/ui/text";
-import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { FORM_SPACING } from "@welpco/ui/tokens";
 import { hasFrenchPrefix } from "@/i18n/locale-routes";
 import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { hasPlatformAccess } from "@/lib/auth/platform-access";
@@ -54,37 +53,22 @@ export default function CompletePageClient() {
     }
   }, [status, signupCompleted, router]);
 
-  const roleFromSignup = roleFromSelectedRole(signupState?.selectedRole);
   const sessionSyncStartedRef = useRef(false);
 
   useEffect(() => {
     if (!signupCompleted || status !== "authenticated") return;
     if (sessionSyncStartedRef.current) return;
 
-    const sessionPatch: {
-      signupCompleted?: boolean;
-      role?: "welper" | "customer";
-    } = {};
-
-    if (session?.user?.signupCompleted !== true) {
-      sessionPatch.signupCompleted = true;
-    }
-    if (roleFromSignup && session?.user?.role !== roleFromSignup) {
-      sessionPatch.role = roleFromSignup;
-    }
-
-    if (Object.keys(sessionPatch).length === 0) {
+    if (session?.user?.signupCompleted === true) {
       return;
     }
 
     sessionSyncStartedRef.current = true;
-    void updateSession({ user: sessionPatch });
+    void updateSession({ user: { signupCompleted: true } });
   }, [
     signupCompleted,
     status,
     session?.user?.signupCompleted,
-    session?.user?.role,
-    roleFromSignup,
     updateSession,
   ]);
 

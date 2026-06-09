@@ -39,12 +39,14 @@ import { Dispute } from '../domains/dispute/entities/dispute.entity';
 import { SupportTicket } from '../domains/dispute/entities/support-ticket.entity';
 import { Resolution } from '../domains/dispute/entities/resolution.entity';
 import { ApplicationSetting, BookingPayment, ProcessedWebhookEvent } from '../domains/payment/entities';
+import { PayoutBatch } from '../domains/payment/entities/payout-batch.entity';
+import { WelperPayoutLedger } from '../domains/payment/entities/welper-payout-ledger.entity';
 import { BackgroundCheckOrder } from '../domains/safety-verification/entities';
 import { MinorGuardianConsent } from '../domains/safety-verification/entities/minor-guardian-consent.entity';
 import { JobPosting, JobApplication } from '../domains/job-posting/entities';
 import { postgresSslOption } from './db-cli-options';
 
-const allEntities = [
+export const allEntities = [
   UserAccount,
   VerificationStatus,
   ReferralCode,
@@ -76,6 +78,8 @@ const allEntities = [
   ApplicationSetting,
   BookingPayment,
   ProcessedWebhookEvent,
+  PayoutBatch,
+  WelperPayoutLedger,
   BackgroundCheckOrder,
   MinorGuardianConsent,
   AdminAuditLog,

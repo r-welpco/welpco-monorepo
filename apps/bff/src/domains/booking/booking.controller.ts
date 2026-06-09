@@ -17,7 +17,14 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
-import { JwtAuthGuard, CurrentUser, Roles, RolesGuard } from '../../common/auth';
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  Roles,
+  RolesGuard,
+  SignupCompletedGuard,
+  customerWelperRoleForAuthUser,
+} from '../../common/auth';
 import { EmailVerifiedGuard } from '../../common/guards/email-verified.guard';
 import { BookingService } from './booking.service';
 import { CreateBookingRequestDto } from './dto/create-booking-request.dto';
@@ -33,11 +40,12 @@ interface AuthUser {
   userId: string;
   email: string;
   accountType: string;
+  effectiveRole?: string;
 }
 
 @ApiTags('Bookings')
 @Controller('bookings')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, SignupCompletedGuard)
 @ApiBearerAuth('JWT-auth')
 export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
@@ -51,7 +59,11 @@ export class BookingController {
     @CurrentUser() user: AuthUser,
     @Query() query: BookingListQueryDto,
   ) {
-    return this.bookingService.findAll(user.userId, user.accountType, query);
+    return this.bookingService.findAll(
+      user.userId,
+      customerWelperRoleForAuthUser(user),
+      query,
+    );
   }
 
   @Get(':id/service-receipt')
@@ -62,7 +74,11 @@ export class BookingController {
     @CurrentUser() user: AuthUser,
     @Param('id') bookingId: string,
   ): Promise<ServiceReceiptDraftDto> {
-    return this.bookingService.getServiceReceiptDraft(bookingId, user.userId, user.accountType);
+    return this.bookingService.getServiceReceiptDraft(
+      bookingId,
+      user.userId,
+      customerWelperRoleForAuthUser(user),
+    );
   }
 
   @Post(':id/service-receipt')
@@ -93,7 +109,11 @@ export class BookingController {
     @CurrentUser() user: AuthUser,
     @Param('id') bookingId: string,
   ) {
-    return this.bookingService.findById(bookingId, user.userId, user.accountType);
+    return this.bookingService.findById(
+      bookingId,
+      user.userId,
+      customerWelperRoleForAuthUser(user),
+    );
   }
 
   // ─── Create ───────────────────────────────────────────────────────────
@@ -131,7 +151,7 @@ export class BookingController {
     return this.bookingService.createPaymentIntentForBooking(
       bookingId,
       user.userId,
-      user.accountType,
+      customerWelperRoleForAuthUser(user),
     );
   }
 
@@ -150,7 +170,11 @@ export class BookingController {
     @CurrentUser() user: AuthUser,
     @Param('id') bookingId: string,
   ) {
-    return this.bookingService.accept(bookingId, user.userId, user.accountType);
+    return this.bookingService.accept(
+      bookingId,
+      user.userId,
+      customerWelperRoleForAuthUser(user),
+    );
   }
 
   @Patch(':id/decline')
@@ -223,7 +247,7 @@ export class BookingController {
     return this.bookingService.cancel(
       bookingId,
       user.userId,
-      user.accountType,
+      customerWelperRoleForAuthUser(user),
       dto.reason,
       dto.timezoneOffsetMinutes,
     );

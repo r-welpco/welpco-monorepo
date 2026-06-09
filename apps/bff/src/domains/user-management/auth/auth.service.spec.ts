@@ -455,6 +455,7 @@ describe('AuthService', () => {
           sub: user.id,
           email: user.email,
           accountType: user.accountType,
+          authVersion: 0,
         },
         {
           secret: 'test-secret',
@@ -491,6 +492,42 @@ describe('AuthService', () => {
       mockUserRepository.findOne.mockResolvedValue(user);
 
       await expect(service.refreshToken(refreshToken)).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should allow pending users to refresh while signup is in progress', async () => {
+      const payload = { sub: userId, authVersion: 0 };
+      const user = {
+        id: userId,
+        email: 'user@example.com',
+        accountType: AccountType.CUSTOMER,
+        status: AccountStatus.PENDING,
+        authVersion: 0,
+      };
+
+      mockJwtService.verify.mockReturnValue(payload);
+      mockUserRepository.findOne.mockResolvedValue(user);
+      mockJwtService.sign
+        .mockReturnValueOnce('new-access-token')
+        .mockReturnValueOnce('new-refresh-token');
+
+      await expect(service.refreshToken(refreshToken)).resolves.toEqual({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+      });
+    });
+
+    it('should reject a refresh token issued before authVersion changed', async () => {
+      mockJwtService.verify.mockReturnValue({ sub: userId, authVersion: 1 });
+      mockUserRepository.findOne.mockResolvedValue({
+        id: userId,
+        accountType: AccountType.CUSTOMER,
+        status: AccountStatus.ACTIVE,
+        authVersion: 2,
+      });
+
+      await expect(service.refreshToken(refreshToken)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 

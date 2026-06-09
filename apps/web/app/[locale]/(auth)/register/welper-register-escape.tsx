@@ -7,8 +7,6 @@ import { Flex } from "@welpco/ui/flex";
 import { Spinner } from "@welpco/ui/spinner";
 import { ApiClientError } from "@/lib/api/client";
 import { completeSignupAndRedirect } from "@/lib/auth/complete-signup-and-redirect";
-import { refreshBffTokensInSession } from "@/lib/auth/refresh-session-tokens";
-import { roleFromSelectedRole } from "@/lib/auth/session-role";
 import { safeNextPath } from "@/lib/auth/safe-next";
 import { clearTokenCache } from "@/lib/api/get-token";
 import {
@@ -40,15 +38,9 @@ export function WelperRegisterEscape({
       const dashboardPath = safeNextPath(nextRaw, "/dashboard");
 
       if (state.signupCompleted) {
-        const role = roleFromSelectedRole(state.selectedRole);
-        if (role) {
-          await updateSession({
-            user: { signupCompleted: true, role },
-          });
-          await refreshBffTokensInSession(updateSession);
-          clearTokenCache();
-          router.refresh?.();
-        }
+        await updateSession({ user: { signupCompleted: true } });
+        clearTokenCache();
+        router.refresh?.();
         router.replace(dashboardPath);
         return;
       }

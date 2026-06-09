@@ -14,6 +14,7 @@ import { BookingServiceReceipt } from './entities/booking-service-receipt.entity
 import { CreateBookingRequestDto } from './dto/create-booking-request.dto';
 import { BookingListQueryDto } from './dto/booking-list-query.dto';
 import { BookingResponseDto } from './dto/booking-response.dto';
+import { computeWelperGrossCentsFromCustomerSubtotal } from './booking-pricing';
 import { SubmitServiceReceiptDto } from './dto/submit-service-receipt.dto';
 import {
   ConfirmServiceReceiptResponseDto,
@@ -483,6 +484,15 @@ export class BookingService {
     }
     const receipt = await this.serviceReceiptRepo.findOne({ where: { bookingId } });
     dto.serviceReceipt = receipt ? await this.toServiceReceiptDto(receipt) : null;
+    if (
+      receipt &&
+      (dto.status === BookingRequestStatus.COMPLETED ||
+        dto.status === BookingRequestStatus.PAYMENT_RELEASED)
+    ) {
+      dto.welperEarningsCents = computeWelperGrossCentsFromCustomerSubtotal(receipt.subtotalCents);
+    } else {
+      dto.welperEarningsCents = null;
+    }
   }
 
   private async attachDisputeReportWindow(

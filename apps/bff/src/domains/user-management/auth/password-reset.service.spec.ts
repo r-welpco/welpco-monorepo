@@ -18,6 +18,7 @@ describe('PasswordResetService', () => {
     id: 'user-1',
     email: 'test@example.com',
     passwordHash: 'old-hash',
+    authVersion: 0,
   } as UserAccount;
 
   beforeEach(async () => {
@@ -133,6 +134,7 @@ describe('PasswordResetService', () => {
         `password-reset:token:${token}`,
       );
       expect(userRepository.save).toHaveBeenCalled();
+      expect(mockUser.authVersion).toBe(1);
       expect(cacheService.del).toHaveBeenCalled();
       expect(eventPublisher.publishPasswordResetCompleted).toHaveBeenCalled();
     });
@@ -155,4 +157,3 @@ describe('PasswordResetService', () => {
     });
   });
 });
-

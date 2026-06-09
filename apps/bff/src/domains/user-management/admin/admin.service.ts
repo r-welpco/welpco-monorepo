@@ -377,6 +377,9 @@ export class AdminService {
     const now = new Date();
 
     user.status = dto.status;
+    if (dto.status !== previousStatus) {
+      user.authVersion = (user.authVersion ?? 0) + 1;
+    }
     user.statusChangedAt = now;
     user.statusChangedByAdminId = actorAdminId;
 

@@ -16,7 +16,11 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
-import { JwtAuthGuard, CurrentUser } from '../../common/auth';
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  SignupCompletedGuard,
+} from '../../common/auth';
 import { CommunicationService } from './communication.service';
 import { SendMessageDto } from './dto/send-message.dto';
 import { MessagesQueryDto } from './dto/messages-query.dto';
@@ -25,11 +29,12 @@ interface AuthUser {
   userId: string;
   email: string;
   accountType: string;
+  effectiveRole: string;
 }
 
 @ApiTags('Booking Chat')
 @Controller('bookings/:bookingId/chat')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, SignupCompletedGuard)
 @ApiBearerAuth('JWT-auth')
 export class CommunicationController {
   constructor(private readonly communicationService: CommunicationService) {}
@@ -47,7 +52,7 @@ export class CommunicationController {
     return this.communicationService.getOrCreateThread(
       bookingId,
       user.userId,
-      user.accountType,
+      user.effectiveRole,
     );
   }
 
@@ -64,7 +69,7 @@ export class CommunicationController {
     return this.communicationService.getMessages(
       bookingId,
       user.userId,
-      user.accountType,
+      user.effectiveRole,
       query,
     );
   }
@@ -85,7 +90,7 @@ export class CommunicationController {
     return this.communicationService.sendMessage(
       bookingId,
       user.userId,
-      user.accountType,
+      user.effectiveRole,
       dto,
     );
   }
@@ -114,7 +119,7 @@ export class CommunicationController {
     return this.communicationService.markThreadRead(
       bookingId,
       user.userId,
-      user.accountType,
+      user.effectiveRole,
     );
   }
 }

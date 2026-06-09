@@ -21,7 +21,12 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
-import { JwtAuthGuard, RolesGuard, Roles } from '../../common/auth';
+import {
+  JwtAuthGuard,
+  RolesGuard,
+  Roles,
+  SignupCompletedGuard,
+} from '../../common/auth';
 import { CurrentUser, CurrentUserData } from '../../common/auth/decorators/current-user.decorator';
 import { AccountType } from '../user-management/entities/user-account.entity';
 import { DisputeService } from './dispute.service';
@@ -45,7 +50,7 @@ function disputeStatusQueryToDb(q: string): string | undefined {
 
 @ApiTags('Disputes')
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, SignupCompletedGuard)
 @ApiBearerAuth('JWT-auth')
 export class DisputeController {
   constructor(private readonly disputeService: DisputeService) {}
@@ -87,7 +92,12 @@ export class DisputeController {
     @Param('bookingId') bookingId: string,
     @Body() dto: CreateDisputeDto,
   ): Promise<DisputeResponseDto> {
-    return this.disputeService.create(bookingId, user.userId, user.accountType, dto);
+    return this.disputeService.create(
+      bookingId,
+      user.userId,
+      user.effectiveRole,
+      dto,
+    );
   }
 
   @Get('bookings/:bookingId/dispute')
@@ -125,10 +135,16 @@ export class DisputeController {
     @Query('status') status?: string,
   ) {
     const statusDb =
-      user.accountType?.toLowerCase() === 'admin' && status
+      user.effectiveRole === 'admin' && status
         ? disputeStatusQueryToDb(status)
         : undefined;
-    return this.disputeService.findMine(user.userId, user.accountType, page, limit, statusDb);
+    return this.disputeService.findMine(
+      user.userId,
+      user.effectiveRole,
+      page,
+      limit,
+      statusDb,
+    );
   }
 
   @Get('disputes/:id')
@@ -144,7 +160,7 @@ export class DisputeController {
     @CurrentUser() user: CurrentUserData,
     @Param('id') id: string,
   ): Promise<DisputeResponseDto> {
-    return this.disputeService.findById(id, user.userId, user.accountType);
+    return this.disputeService.findById(id, user.userId, user.effectiveRole);
   }
 
   /**

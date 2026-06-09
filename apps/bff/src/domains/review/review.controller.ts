@@ -21,7 +21,7 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../common/auth';
+import { JwtAuthGuard, SignupCompletedGuard } from '../../common/auth';
 import { CurrentUser, CurrentUserData } from '../../common/auth/decorators/current-user.decorator';
 import { ReviewService } from './review.service';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -29,7 +29,7 @@ import { ReviewResponseDto } from './dto/review-response.dto';
 
 @ApiTags('Reviews')
 @Controller()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, SignupCompletedGuard)
 @ApiBearerAuth('JWT-auth')
 export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
@@ -48,7 +48,12 @@ export class ReviewController {
     @Param('bookingId') bookingId: string,
     @Body() dto: CreateReviewDto,
   ): Promise<ReviewResponseDto> {
-    return this.reviewService.create(bookingId, user.userId, user.accountType, dto);
+    return this.reviewService.create(
+      bookingId,
+      user.userId,
+      user.effectiveRole,
+      dto,
+    );
   }
 
   @Patch('bookings/:bookingId/review')
@@ -64,7 +69,12 @@ export class ReviewController {
     @Param('bookingId') bookingId: string,
     @Body() dto: CreateReviewDto,
   ): Promise<ReviewResponseDto> {
-    return this.reviewService.update(bookingId, user.userId, user.accountType, dto);
+    return this.reviewService.update(
+      bookingId,
+      user.userId,
+      user.effectiveRole,
+      dto,
+    );
   }
 
   @Get('bookings/:bookingId/review')

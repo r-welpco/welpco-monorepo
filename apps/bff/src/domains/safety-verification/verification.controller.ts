@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/auth/guards/roles.guard';
+import { Roles } from '../../common/auth/decorators/roles.decorator';
 import { CurrentUser, CurrentUserData } from '../../common/auth/decorators/current-user.decorator';
 import { BackgroundCheckService } from './background-check.service';
 import { BackgroundCheckPaymentService } from './background-check-payment.service';
@@ -35,7 +37,8 @@ export class VerificationController {
   }
 
   @Get('status')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Background check payment and Certn status for current welper' })
   async getStatus(@CurrentUser() user: CurrentUserData) {
@@ -43,7 +46,8 @@ export class VerificationController {
   }
 
   @Post('checkout-session')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Stripe Checkout session for background check fee' })
   async createCheckoutSession(
@@ -59,7 +63,8 @@ export class VerificationController {
   }
 
   @Post('confirm-return')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -78,7 +83,8 @@ export class VerificationController {
   }
 
   @Post('retry-invite')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -90,7 +96,8 @@ export class VerificationController {
   }
 
   @Post('resend-invite-email')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

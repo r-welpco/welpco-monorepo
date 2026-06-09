@@ -123,8 +123,9 @@ describe('DisputeService', () => {
         {
           provide: WelperPayoutLedgerService,
           useValue: {
-            excludeForDispute: jest.fn().mockResolvedValue(undefined),
+            excludeForDispute: jest.fn().mockResolvedValue(null),
             restoreAfterDisputeResolved: jest.fn().mockResolvedValue(undefined),
+            recalculateBatchTotals: jest.fn().mockResolvedValue(undefined),
           },
         },
         { provide: ApplicationSettingsService, useValue: mockApplicationSettings },

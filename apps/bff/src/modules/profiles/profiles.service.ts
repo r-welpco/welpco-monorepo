@@ -9,6 +9,10 @@ import { FavoriteService } from '../../domains/profile-management/favorite/favor
 import { AvailabilityService } from '../../domains/profile-management/availability/availability.service';
 import { UsersService } from '../../domains/user-management/users/users.service';
 import { SignupOrchestratorService } from '../../domains/user-management/auth/signup-orchestrator.service';
+import {
+  customerWelperRoleForAuthUser,
+  roleFromAccountType,
+} from '../../common/auth/effective-role.util';
 import { DayOfWeek } from '../../domains/profile-management/entities/day-of-week.enum';
 import { RecurringPattern } from '../../domains/profile-management/entities/recurring-pattern.enum';
 import { ProfileVisibility } from '../../domains/profile-management/entities/profile-visibility.enum';
@@ -32,7 +36,7 @@ export class ProfilesService {
   ) {}
 
   async getSetupChecklist(userId: string, accountType: string) {
-    const role = this.getRole(accountType);
+    const role = await this.resolveUserRole(userId, accountType);
     if (role === 'welper') {
       return this.signupOrchestrator.getWelperSetupChecklist(userId);
     }
@@ -43,12 +47,19 @@ export class ProfilesService {
     return this.signupOrchestrator.getWelperSetupChecklist(userId);
   }
 
-  private getRole(accountType: string): 'customer' | 'welper' {
-    return accountType.toLowerCase() === 'welper' ? 'welper' : 'customer';
+  private async resolveUserRole(
+    userId: string,
+    accountTypeFallback: string,
+  ): Promise<'customer' | 'welper'> {
+    const user = await this.usersService.findById(userId);
+    return customerWelperRoleForAuthUser({
+      effectiveRole: roleFromAccountType(user.accountType),
+      accountType: accountTypeFallback,
+    });
   }
 
   async getMyProfile(userId: string, accountType: string) {
-    const role = this.getRole(accountType);
+    const role = await this.resolveUserRole(userId, accountType);
     if (role === 'customer') {
       const profile = await this.customerProfileService.findByCustomerId(userId);
       const user = await this.usersService.findById(userId);
@@ -63,7 +74,7 @@ export class ProfilesService {
   }
 
   async updateMyProfile(userId: string, accountType: string, data: UpdateMyProfileDto) {
-    const role = this.getRole(accountType);
+    const role = await this.resolveUserRole(userId, accountType);
     const filteredData = this.filterProfileUpdateData(data, role);
     if (role === 'customer') {
       const updated = await this.customerProfileService.update(userId, filteredData, userId);
@@ -123,7 +134,7 @@ export class ProfilesService {
   }
 
   async completeOnboarding(userId: string, accountType: string) {
-    const role = this.getRole(accountType);
+    const role = await this.resolveUserRole(userId, accountType);
     if (role === 'customer') {
       return this.customerProfileService.markOnboardingComplete(userId, userId);
     }
@@ -131,7 +142,7 @@ export class ProfilesService {
   }
 
   async getMyServicePreferences(userId: string, accountType: string) {
-    if (this.getRole(accountType) !== 'customer') {
+    if ((await this.resolveUserRole(userId, accountType)) !== 'customer') {
       throw new ForbiddenException('Service preferences are only available for customers');
     }
     return this.customerProfileService.getServicePreferencesForCustomer(userId);
@@ -150,7 +161,7 @@ export class ProfilesService {
       notifyAvailability?: boolean;
     },
   ) {
-    if (this.getRole(accountType) !== 'customer') {
+    if ((await this.resolveUserRole(userId, accountType)) !== 'customer') {
       throw new ForbiddenException('Service preferences are only available for customers');
     }
     return this.customerProfileService.updateServicePreferences(userId, userId, data);
@@ -173,7 +184,7 @@ export class ProfilesService {
   }
 
   async getFavoriteWelpers(userId: string, page = 1, limit = 50) {
-    return this.favoriteService.findByCustomerId(userId, page, limit);
+    return this.favoriteService.findByCustomerId(userId, userId, page, limit);
   }
 
   async addFavoriteWelper(userId: string, welperId: string) {

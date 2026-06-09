@@ -1,3 +1,4 @@
+import { requireRole } from "@/lib/auth/server-auth";
 import NewBookingPageClient from "./page-client";
 
 export default async function NewBookingPage({
@@ -10,6 +11,7 @@ export default async function NewBookingPage({
     applicationId?: string;
   }>;
 }) {
+  await requireRole("customer");
   const params = await searchParams;
   return (
     <NewBookingPageClient

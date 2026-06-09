@@ -37,7 +37,7 @@ export class StripeWebhookController {
   @ApiOperation({
     summary: 'Stripe webhook (signature verified)',
     description:
-      'Configure events including checkout.session.completed (background check), payment_intent.*, setup_intent.succeeded, charge.refunded, transfer.created, and transfer.failed.',
+      'Configure events including checkout.session.completed (background check), payment_intent.*, setup_intent.succeeded, charge.refunded, transfer.created, transfer.reversed, and payout.failed.',
   })
   async handleStripe(
     @Req() req: RequestWithRawBody,
@@ -82,9 +82,14 @@ export class StripeWebhookController {
         await this.payoutBatchService.handleTransferWebhook(
           event.data.object as Stripe.Transfer,
         );
-      } else if (event.type === 'transfer.failed') {
-        await this.payoutBatchService.handleTransferFailed(
+      } else if (event.type === 'transfer.reversed') {
+        await this.payoutBatchService.handleTransferReversed(
           event.data.object as Stripe.Transfer,
+        );
+      } else if (event.type === 'payout.failed') {
+        const payout = event.data.object as Stripe.Payout;
+        this.logger.warn(
+          `Stripe Connect payout.failed: id=${payout.id} amount=${payout.amount} destination=${typeof payout.destination === 'string' ? payout.destination : payout.destination?.id ?? 'unknown'}`,
         );
       }
     } catch (e) {

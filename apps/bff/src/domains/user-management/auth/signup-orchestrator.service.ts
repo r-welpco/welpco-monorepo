@@ -853,7 +853,17 @@ export class SignupOrchestratorService {
           dto.role === SelectedRole.WELPER
             ? AccountType.WELPER
             : AccountType.CUSTOMER;
+        user.authVersion = (user.authVersion ?? 0) + 1;
         await manager.getRepository(UserAccount).save(user);
+        if (dto.role === SelectedRole.WELPER) {
+          await manager.getRepository(CustomerProfile).delete({
+            customerId: user.id,
+          });
+        } else {
+          await manager.getRepository(WelperProfile).delete({
+            welperId: user.id,
+          });
+        }
         await this.profileCreationService.createProfileForUser(
           user.id,
           user.email,
@@ -871,7 +881,17 @@ export class SignupOrchestratorService {
           dto.role === SelectedRole.WELPER
             ? AccountType.WELPER
             : AccountType.CUSTOMER;
+        user.authVersion = (user.authVersion ?? 0) + 1;
         await manager.getRepository(UserAccount).save(user);
+        if (dto.role === SelectedRole.WELPER) {
+          await manager.getRepository(CustomerProfile).delete({
+            customerId: user.id,
+          });
+        } else {
+          await manager.getRepository(WelperProfile).delete({
+            welperId: user.id,
+          });
+        }
         // Create the matching profile shell so subsequent step writes have a
         // row to upsert into.
         await this.profileCreationService.createProfileForUser(

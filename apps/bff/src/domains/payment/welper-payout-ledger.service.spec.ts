@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { WelperPayoutLedgerService } from './welper-payout-ledger.service';
+import { WelperPayoutLedgerService, STRIPE_FEE_PENDING_REASON } from './welper-payout-ledger.service';
 import { WelperPayoutLedger } from './entities/welper-payout-ledger.entity';
+import { PayoutBatch } from './entities/payout-batch.entity';
 import { BookingRequest, BookingRequestStatus } from '../booking/entities/booking-request.entity';
 import { BookingServiceReceipt } from '../booking/entities/booking-service-receipt.entity';
 import { BookingPayment } from './entities/booking-payment.entity';
@@ -13,9 +14,14 @@ describe('WelperPayoutLedgerService', () => {
 
   const mockLedgerRepo = {
     findOne: jest.fn(),
+    find: jest.fn(),
     save: jest.fn(async (row: WelperPayoutLedger) => row),
     create: jest.fn((row: Partial<WelperPayoutLedger>) => ({ id: 'ledger-1', ...row })),
     update: jest.fn(),
+  };
+  const mockBatchRepo = {
+    findOne: jest.fn(),
+    save: jest.fn(async (x) => x),
   };
   const mockBookingRepo = { findOne: jest.fn() };
   const mockReceiptRepo = { findOne: jest.fn() };
@@ -31,6 +37,7 @@ describe('WelperPayoutLedgerService', () => {
           useValue: { get: jest.fn(() => undefined) },
         },
         { provide: getRepositoryToken(WelperPayoutLedger), useValue: mockLedgerRepo },
+        { provide: getRepositoryToken(PayoutBatch), useValue: mockBatchRepo },
         { provide: getRepositoryToken(BookingRequest), useValue: mockBookingRepo },
         { provide: getRepositoryToken(BookingServiceReceipt), useValue: mockReceiptRepo },
         { provide: getRepositoryToken(BookingPayment), useValue: mockBookingPaymentRepo },
@@ -89,6 +96,23 @@ describe('WelperPayoutLedgerService', () => {
       expect(result).toBe(existing);
       expect(mockLedgerRepo.save).not.toHaveBeenCalled();
     });
+
+    it('excludes ledger when Stripe fees are not synced', async () => {
+      mockLedgerRepo.findOne.mockResolvedValue(null);
+      mockBookingPaymentRepo.find.mockResolvedValue([
+        {
+          stripePaymentIntentId: 'pi_1',
+          stripeFeeCents: null,
+          stripeBalanceTransactionId: null,
+        },
+      ]);
+
+      const result = await service.createLedgerForPaymentReleased('booking-1');
+
+      expect(result?.status).toBe(WelperPayoutLedgerStatus.EXCLUDED);
+      expect(result?.exclusionReason).toBe(STRIPE_FEE_PENDING_REASON);
+      expect(result?.stripeFeeCents).toBeNull();
+    });
   });
 
   describe('applyRefundDelta', () => {
@@ -110,6 +134,28 @@ describe('WelperPayoutLedgerService', () => {
       expect(saved.welperRefundCents).toBe(10000);
       expect(saved.welperNetCents).toBe(0);
       expect(saved.status).toBe(WelperPayoutLedgerStatus.EXCLUDED);
+    });
+  });
+
+  describe('excludeForDispute', () => {
+    it('returns batch id when detaching a scheduled line', async () => {
+      mockLedgerRepo.findOne.mockResolvedValue({
+        id: 'ledger-1',
+        bookingId: 'booking-1',
+        status: WelperPayoutLedgerStatus.SCHEDULED,
+        payoutBatchId: 'batch-1',
+      });
+
+      const batchId = await service.excludeForDispute('booking-1');
+
+      expect(batchId).toBe('batch-1');
+      expect(mockLedgerRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: WelperPayoutLedgerStatus.EXCLUDED,
+          exclusionReason: 'dispute_open',
+          payoutBatchId: null,
+        }),
+      );
     });
   });
 });

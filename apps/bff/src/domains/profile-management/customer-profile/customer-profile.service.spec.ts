@@ -6,6 +6,7 @@ import { CustomerProfile } from '../entities/customer-profile.entity';
 import { UserAccount } from '../../user-management/entities/user-account.entity';
 import { EventPublisherService } from '../events/event-publisher.service';
 import { ProfileCompletionStatus } from '../entities/profile-completion-status.enum';
+import { CustomerProfileAggregatesService } from './customer-profile-aggregates.service';
 
 describe('CustomerProfileService', () => {
   let service: CustomerProfileService;
@@ -47,6 +48,10 @@ describe('CustomerProfileService', () => {
         {
           provide: EventPublisherService,
           useValue: mockEventPublisher,
+        },
+        {
+          provide: CustomerProfileAggregatesService,
+          useValue: { getAggregates: jest.fn() },
         },
       ],
     }).compile();
@@ -414,4 +419,3 @@ describe('CustomerProfileService', () => {
     });
   });
 });
-

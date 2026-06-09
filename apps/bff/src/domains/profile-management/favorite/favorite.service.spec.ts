@@ -95,7 +95,12 @@ describe('FavoriteService', () => {
 
       mockFavoriteRepository.findAndCount.mockResolvedValue([data, total]);
 
-      const result = await service.findByCustomerId(customerId, page, limit);
+      const result = await service.findByCustomerId(
+        customerId,
+        customerId,
+        page,
+        limit,
+      );
 
       expect(result.data).toEqual(data);
       expect(result.total).toBe(total);
@@ -254,4 +259,3 @@ describe('FavoriteService', () => {
     });
   });
 });
-

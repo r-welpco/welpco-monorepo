@@ -296,8 +296,9 @@ export default function NewBookingPageClient({
   }, [durationMinutes, selectedOffering]);
 
   const profileOkForBooking =
-    user?.role !== "customer" ||
-    (myProfileLoaded && myCustomerProfile?.profileCompletionStatusLabel === "Complete");
+    user?.role === "customer" &&
+    myProfileLoaded &&
+    myCustomerProfile?.profileCompletionStatusLabel === "Complete";
 
   const canSubmit = useMemo(
     () =>

@@ -16,7 +16,14 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
-import { JwtAuthGuard, CurrentUser, Roles, RolesGuard } from '../../common/auth';
+import {
+  JwtAuthGuard,
+  CurrentUser,
+  Roles,
+  RolesGuard,
+  SignupCompletedGuard,
+  customerWelperRoleForAuthUser,
+} from '../../common/auth';
 import { EmailVerifiedGuard } from '../../common/guards/email-verified.guard';
 import { JobPostingService } from './job-posting.service';
 import { CreateJobPostingDto } from './dto/create-job-posting.dto';
@@ -30,11 +37,12 @@ interface AuthUser {
   userId: string;
   email: string;
   accountType: string;
+  effectiveRole?: string;
 }
 
 @ApiTags('Jobs')
 @Controller('jobs')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, SignupCompletedGuard)
 @ApiBearerAuth('JWT-auth')
 export class JobPostingController {
   constructor(private readonly jobPostingService: JobPostingService) {}
@@ -83,7 +91,7 @@ export class JobPostingController {
   @ApiOperation({ summary: 'Get job posting detail (role-scoped)' })
   @ApiParam({ name: 'id', description: 'Job posting ID' })
   async getById(@CurrentUser() user: AuthUser, @Param('id') id: string) {
-    const role = user.accountType?.toLowerCase();
+    const role = customerWelperRoleForAuthUser(user);
     if (role === 'customer') {
       return this.jobPostingService.findByIdForCustomer(user.userId, id);
     }

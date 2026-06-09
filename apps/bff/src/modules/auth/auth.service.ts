@@ -27,6 +27,7 @@ import {
 } from '../../domains/user-management/auth/signup-orchestrator.service';
 import { AuthService as DomainAuthService } from '../../domains/user-management/auth/auth.service';
 import type { UserAccount } from '../../domains/user-management/entities/user-account.entity';
+import { UsersService } from '../../domains/user-management/users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -36,6 +37,7 @@ export class AuthService {
     private readonly customerProfileService: CustomerProfileService,
     private readonly welperProfileService: WelperProfileService,
     private readonly signupOrchestrator: SignupOrchestratorService,
+    private readonly usersService: UsersService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -149,8 +151,19 @@ export class AuthService {
     return this.signupOrchestrator.getState(userId);
   }
 
-  submitSelectRoleStep(userId: string, dto: SelectRoleStepDto) {
-    return this.signupOrchestrator.submitSelectRoleStep(userId, dto);
+  async submitSelectRoleStep(
+    userId: string,
+    dto: SelectRoleStepDto,
+  ): Promise<
+    SignupState & { accessToken: string; refreshToken: string }
+  > {
+    const signupState = await this.signupOrchestrator.submitSelectRoleStep(
+      userId,
+      dto,
+    );
+    const user = await this.usersService.findById(userId);
+    const tokens = await this.domainAuthService.generateTokensFor(user);
+    return { ...signupState, ...tokens };
   }
   submitIdentityStep(userId: string, dto: IdentityStepDto) {
     return this.signupOrchestrator.submitIdentityStep(userId, dto);

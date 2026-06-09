@@ -11,5 +11,6 @@ export enum PayoutBatchStatus {
   APPROVED = 'approved',
   EXECUTING = 'executing',
   COMPLETED = 'completed',
+  PARTIAL = 'partial',
   FAILED = 'failed',
 }

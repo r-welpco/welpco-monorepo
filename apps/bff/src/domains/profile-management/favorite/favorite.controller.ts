@@ -21,11 +21,17 @@ import {
 import { FavoriteService } from './favorite.service';
 import { CreateFavoriteDto } from './dto/create-favorite.dto';
 import { FavoriteResponseDto } from './dto/favorite-response.dto';
-import { CurrentUser, JwtAuthGuard } from '../../../common/auth';
+import {
+  CurrentUser,
+  JwtAuthGuard,
+  Roles,
+  RolesGuard,
+} from '../../../common/auth';
 
 @ApiTags('Favorites')
 @Controller('profiles/customer/:customerId/favorites')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('customer')
 @ApiBearerAuth()
 export class FavoriteController {
   constructor(private readonly favoriteService: FavoriteService) {}
@@ -42,12 +48,18 @@ export class FavoriteController {
   })
   async getFavorites(
     @Param('customerId') customerId: string,
+    @CurrentUser() user: { userId: string },
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
     const pageNum = page ? Math.max(1, parseInt(page, 10)) : 1;
     const limitNum = limit ? Math.min(100, Math.max(1, parseInt(limit, 10))) : 20;
-    return this.favoriteService.findByCustomerId(customerId, pageNum, limitNum);
+    return this.favoriteService.findByCustomerId(
+      customerId,
+      user.userId,
+      pageNum,
+      limitNum,
+    );
   }
 
   @Post()
@@ -89,4 +101,3 @@ export class FavoriteController {
     await this.favoriteService.remove(customerId, welperId, user.userId);
   }
 }
-

@@ -1,6 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
+import { roleFromAccountType } from '../effective-role.util';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -21,8 +22,13 @@ export class RolesGuard implements CanActivate {
     if (!user) {
       return false;
     }
+    const effectiveRole =
+      user.effectiveRole ?? roleFromAccountType(user.accountType);
+    if (!effectiveRole) {
+      return false;
+    }
     return requiredRoles.some(
-      (role) => role.toLowerCase() === user.accountType?.toLowerCase(),
+      (role) => role.toLowerCase() === String(effectiveRole).toLowerCase(),
     );
   }
 }

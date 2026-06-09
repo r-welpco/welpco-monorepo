@@ -167,12 +167,26 @@ describe('ReviewService', () => {
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('throws Forbidden when caller is the booking welper but accountType says customer', async () => {
+    it('allows welper review when caller is booking welper regardless of stale accountType', async () => {
       bookingRepo.findOne.mockResolvedValue(completedBooking);
+      reviewRepo.findOne.mockResolvedValue(null);
+      reviewRepo.create.mockImplementation((x) => x as Review);
+      reviewRepo.save.mockImplementation(
+        async (x) =>
+          ({
+            ...x,
+            id: 'rev-1',
+            createdAt: new Date('2026-01-01T00:00:00.000Z'),
+          }) as Review,
+      );
+      mockAggregateQb({ avgRating: null, count: '0' });
+      welperProfileRepo.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.create(BOOKING_ID, WELPER_ID, 'Customer', { rating: 5 }),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      const result = await service.create(BOOKING_ID, WELPER_ID, 'Customer', {
+        rating: 5,
+      });
+
+      expect(result.reviewerType).toBe(ReviewerType.WELPER);
     });
 
     it('throws Forbidden when caller is neither customer nor welper of the booking', async () => {

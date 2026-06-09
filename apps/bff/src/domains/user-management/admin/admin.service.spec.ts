@@ -7,6 +7,18 @@ import { UserAccount, AccountType, AccountStatus } from '../entities/user-accoun
 import { VerificationStatus, BackgroundCheckStatus } from '../entities/verification-status.entity';
 import { UsersService } from '../users/users.service';
 import { EventPublisherService } from '../events/event-publisher.service';
+import {
+  CustomerProfile,
+  ServiceOffering,
+  WelperProfile,
+} from '../../profile-management/entities';
+import { Review } from '../../review/entities/review.entity';
+import { Notification } from '../../notification/entities/notification.entity';
+import { ReferralCode } from '../entities/referral-code.entity';
+import { Referral } from '../entities/referral.entity';
+import { BackgroundCheckOrder } from '../../safety-verification/entities/background-check-order.entity';
+import { BackgroundCheckService } from '../../safety-verification/background-check.service';
+import { SignupOrchestratorService } from '../auth/signup-orchestrator.service';
 
 describe('AdminService', () => {
   let service: AdminService;
@@ -42,6 +54,19 @@ describe('AdminService', () => {
             save: jest.fn(),
           },
         },
+        ...[
+          CustomerProfile,
+          WelperProfile,
+          ServiceOffering,
+          Review,
+          Notification,
+          ReferralCode,
+          Referral,
+          BackgroundCheckOrder,
+        ].map((entity) => ({
+          provide: getRepositoryToken(entity),
+          useValue: {},
+        })),
         {
           provide: UsersService,
           useValue: {
@@ -51,6 +76,14 @@ describe('AdminService', () => {
         },
         {
           provide: EventPublisherService,
+          useValue: {},
+        },
+        {
+          provide: BackgroundCheckService,
+          useValue: {},
+        },
+        {
+          provide: SignupOrchestratorService,
           useValue: {},
         },
       ],
@@ -126,4 +159,3 @@ describe('AdminService', () => {
     });
   });
 });
-

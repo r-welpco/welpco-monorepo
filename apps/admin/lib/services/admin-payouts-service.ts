@@ -6,6 +6,7 @@ export type PayoutBatchStatus =
   | "approved"
   | "executing"
   | "completed"
+  | "partial"
   | "failed";
 
 export type WelperPayoutLedgerStatus =
@@ -48,7 +49,7 @@ export interface PayoutWelperRollup {
   lines: PayoutBatchLine[];
 }
 
-export interface PayoutBatchReview {
+export interface PayoutBatchSummary {
   id: string;
   payoutFriday: string;
   status: PayoutBatchStatus;
@@ -62,6 +63,9 @@ export interface PayoutBatchReview {
   approvedBy: string | null;
   approvedAt: string | null;
   executedAt: string | null;
+}
+
+export interface PayoutBatchReview extends PayoutBatchSummary {
   executionSummary: Record<string, unknown> | null;
   welpers: PayoutWelperRollup[];
 }
@@ -73,6 +77,7 @@ export interface PayoutUpcomingPreview {
   eligibleWelperNetCents: number;
   existingBatchId: string | null;
   existingBatchStatus: PayoutBatchStatus | null;
+  welpers: PayoutWelperRollup[];
 }
 
 export async function getPayoutUpcoming(): Promise<PayoutUpcomingPreview> {
@@ -82,8 +87,8 @@ export async function getPayoutUpcoming(): Promise<PayoutUpcomingPreview> {
 export async function listPayoutBatches(params?: {
   payoutFriday?: string;
   limit?: number;
-}): Promise<{ data: PayoutBatchReview[] }> {
-  return apiClient.get<{ data: PayoutBatchReview[] }>("/api/admin/payouts/batches", {
+}): Promise<{ data: PayoutBatchSummary[] }> {
+  return apiClient.get<{ data: PayoutBatchSummary[] }>("/api/admin/payouts/batches", {
     params: {
       payoutFriday: params?.payoutFriday?.trim() || undefined,
       limit: params?.limit,

@@ -7,6 +7,8 @@ import { ServiceOfferingService } from '../../domains/profile-management/service
 import { FavoriteService } from '../../domains/profile-management/favorite/favorite.service';
 import { AvailabilityService } from '../../domains/profile-management/availability/availability.service';
 import { UsersService } from '../../domains/user-management/users/users.service';
+import { SignupOrchestratorService } from '../../domains/user-management/auth/signup-orchestrator.service';
+import { AccountType } from '../../domains/user-management/entities/user-account.entity';
 
 describe('ProfilesService', () => {
   let service: ProfilesService;
@@ -16,6 +18,10 @@ describe('ProfilesService', () => {
       WelperProfileService,
       'findByWelperId' | 'findHydratedByWelperId' | 'hydrate' | 'update' | 'markOnboardingComplete'
     >
+  >;
+  let usersService: jest.Mocked<Pick<UsersService, 'findById'>>;
+  let signupOrchestrator: jest.Mocked<
+    Pick<SignupOrchestratorService, 'getCustomerSetupChecklist' | 'getWelperSetupChecklist'>
   >;
 
   beforeEach(async () => {
@@ -59,7 +65,13 @@ describe('ProfilesService', () => {
       findById: jest.fn().mockResolvedValue({
         id: 'user-1',
         stripeDefaultPaymentMethodId: null,
+        accountType: AccountType.CUSTOMER,
       }),
+    };
+
+    const mockSignupOrchestrator = {
+      getCustomerSetupChecklist: jest.fn(),
+      getWelperSetupChecklist: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -71,12 +83,36 @@ describe('ProfilesService', () => {
         { provide: FavoriteService, useValue: mockFavoriteService },
         { provide: AvailabilityService, useValue: mockAvailabilityService },
         { provide: UsersService, useValue: mockUsersService },
+        { provide: SignupOrchestratorService, useValue: mockSignupOrchestrator },
       ],
     }).compile();
 
     service = module.get<ProfilesService>(ProfilesService);
     customerProfileService = module.get(CustomerProfileService);
     welperProfileService = module.get(WelperProfileService);
+    usersService = module.get(UsersService);
+    signupOrchestrator = module.get(SignupOrchestratorService);
+  });
+
+  describe('getSetupChecklist', () => {
+    it('routes welpers by the current database account type', async () => {
+      usersService.findById.mockResolvedValue({
+        id: 'user-1',
+        accountType: AccountType.WELPER,
+      } as any);
+      signupOrchestrator.getWelperSetupChecklist.mockResolvedValue({
+        setupTasks: [],
+        setupComplete: false,
+        allSetupComplete: false,
+        discoverable: false,
+        isMinorWelper: false,
+      });
+
+      await service.getSetupChecklist('user-1', 'Customer');
+
+      expect(signupOrchestrator.getWelperSetupChecklist).toHaveBeenCalledWith('user-1');
+      expect(signupOrchestrator.getCustomerSetupChecklist).not.toHaveBeenCalled();
+    });
   });
 
   describe('getMyProfile', () => {
@@ -96,6 +132,10 @@ describe('ProfilesService', () => {
     });
 
     it('should get hydrated welper profile (Wave 1 trust signals) when user is welper', async () => {
+      usersService.findById.mockResolvedValue({
+        id: 'user-1',
+        accountType: AccountType.WELPER,
+      } as any);
       const mockHydrated = {
         welperId: 'user-1',
         bio: 'Test bio',
@@ -116,6 +156,10 @@ describe('ProfilesService', () => {
     });
 
     it('should handle lowercase accountType', async () => {
+      usersService.findById.mockResolvedValue({
+        id: 'user-1',
+        accountType: AccountType.WELPER,
+      } as any);
       welperProfileService.findHydratedByWelperId.mockResolvedValue({} as any);
 
       await service.getMyProfile('user-1', 'welper');

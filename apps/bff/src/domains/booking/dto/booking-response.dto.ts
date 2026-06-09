@@ -17,6 +17,11 @@ export class BookingResponseDto {
   @ApiPropertyOptional() hourlyRate!: number | null;
   @ApiPropertyOptional() totalPrice!: number | null;
 
+  @ApiPropertyOptional({
+    description: 'Welper pre-tax service earnings in cents (from receipt subtotal share)',
+  })
+  welperEarningsCents?: number | null;
+
   @ApiPropertyOptional() address!: Record<string, string> | null;
   @ApiPropertyOptional() notes!: string | null;
 

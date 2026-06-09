@@ -122,8 +122,12 @@ export function computeWelperStatsFromBookings(
   const active = bookings.filter((b) => ACTIVE_STATUSES.has(b.status)).length;
   const completed = bookings.filter((b) => COMPLETED_STATUSES.has(b.status));
   const completedCount = completed.length;
-  const earnings = completed.reduce((sum, b) => sum + (typeof b.totalPrice === "number" ? b.totalPrice : 0), 0);
-  const earningsLabel = earnings > 0 ? `$${earnings.toFixed(2)}` : "$0.00";
+  const earningsCents = completed.reduce(
+    (sum, b) => sum + (typeof b.welperEarningsCents === "number" ? b.welperEarningsCents : 0),
+    0,
+  );
+  const earningsLabel =
+    earningsCents > 0 ? `$${(earningsCents / 100).toFixed(2)}` : "$0.00";
 
   // Rating tile intentionally omitted: BFF doesn't surface a welper-aggregate
   // rating yet, and a placeholder em-dash reads as "we have nothing for you"

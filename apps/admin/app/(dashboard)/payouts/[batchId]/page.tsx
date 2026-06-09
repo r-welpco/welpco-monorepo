@@ -22,6 +22,7 @@ import {
 } from "@/lib/admin-format";
 import { getPayoutBatch } from "@/lib/services/admin-payouts-service";
 import { PayoutApproveAction } from "../payout-batch-actions";
+import { PayoutLineDetailsButton, PayoutWelperDetailsButton } from "../payout-computation-details-modal";
 import { PayoutBatchExportClient } from "./payout-batch-export-client";
 
 export const dynamic = "force-dynamic";
@@ -68,7 +69,7 @@ export default async function PayoutBatchPage({
             <Text size="2" color="gray">
               Batch {shortId(batch.id)}
             </Text>
-            <Badge color={batch.status === "completed" ? "green" : batch.status === "failed" ? "red" : "gray"}>
+            <Badge color={batch.status === "completed" ? "green" : batch.status === "failed" ? "red" : batch.status === "partial" ? "orange" : "gray"}>
               {formatAdminStatusLabel(batch.status)}
             </Badge>
             {batch.executedAt ? (
@@ -120,6 +121,7 @@ export default async function PayoutBatchPage({
             <Badge color={welper.connectReady ? "green" : "red"}>
               {welper.connectReady ? "Connect ready" : "Connect missing"}
             </Badge>
+            <PayoutWelperDetailsButton welper={welper} />
           </Flex>
 
           <Table>
@@ -130,6 +132,7 @@ export default async function PayoutBatchPage({
                 <TableColumnHeaderCell>Welper net</TableColumnHeaderCell>
                 <TableColumnHeaderCell>Platform net</TableColumnHeaderCell>
                 <TableColumnHeaderCell>Status</TableColumnHeaderCell>
+                <TableColumnHeaderCell>Details</TableColumnHeaderCell>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -144,6 +147,12 @@ export default async function PayoutBatchPage({
                   <TableCell>
                     {formatAdminStatusLabel(line.status)}
                     {line.exclusionReason ? ` (${line.exclusionReason})` : ""}
+                  </TableCell>
+                  <TableCell>
+                    <PayoutLineDetailsButton
+                      line={line}
+                      welperLabel={welper.welperEmail ?? welper.welperId}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

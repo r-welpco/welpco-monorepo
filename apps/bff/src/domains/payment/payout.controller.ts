@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/auth/guards/roles.guard';
+import { Roles } from '../../common/auth/decorators/roles.decorator';
 import {
   CurrentUser,
   CurrentUserData,
@@ -27,7 +29,8 @@ export class PayoutController {
   constructor(private readonly stripeConnect: StripeConnectService) {}
 
   @Get('status')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Stripe Connect Express onboarding status for current welper' })
   async getStatus(@CurrentUser() user: CurrentUserData) {
@@ -35,7 +38,8 @@ export class PayoutController {
   }
 
   @Post('sync')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -46,7 +50,8 @@ export class PayoutController {
   }
 
   @Post('account-link')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

@@ -83,6 +83,7 @@ export interface BookingItem {
 
   hourlyRate: number | null;
   totalPrice: number | null;
+  welperEarningsCents?: number | null;
 
   address: Record<string, string> | null;
   notes: string | null;

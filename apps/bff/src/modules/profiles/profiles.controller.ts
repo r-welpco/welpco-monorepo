@@ -32,6 +32,7 @@ interface AuthUser {
   userId: string;
   email: string;
   accountType: string;
+  effectiveRole: string;
 }
 
 @ApiTags('Profiles')
@@ -114,7 +115,8 @@ export class ProfilesController {
   }
 
   @Get('me/services')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get service offerings for current welper' })
   @ApiResponse({ status: 200, description: 'Service offerings retrieved successfully' })
@@ -124,7 +126,8 @@ export class ProfilesController {
   }
 
   @Post('me/services')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create service offering for current welper' })
@@ -135,7 +138,8 @@ export class ProfilesController {
   }
 
   @Put('me/services/:serviceId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update service offering for current welper' })
@@ -152,7 +156,8 @@ export class ProfilesController {
   }
 
   @Delete('me/services/:serviceId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete service offering for current welper' })
@@ -165,7 +170,8 @@ export class ProfilesController {
   }
 
   @Get('me/favorites')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('customer')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get favorite welpers for current customer' })
   @ApiResponse({ status: 200, description: 'Favorite welpers retrieved successfully' })
@@ -175,7 +181,8 @@ export class ProfilesController {
   }
 
   @Post('me/favorites')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('customer')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Add favorite welper' })
@@ -186,7 +193,8 @@ export class ProfilesController {
   }
 
   @Delete('me/favorites/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('customer')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Remove favorite welper by favorite row ID or welper ID' })
@@ -199,7 +207,8 @@ export class ProfilesController {
   }
 
   @Get('me/availability')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get availability schedule for current welper' })
   @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (default: 1)' })
@@ -218,7 +227,8 @@ export class ProfilesController {
   }
 
   @Put('me/availability')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update availability schedule for current welper' })
@@ -230,7 +240,8 @@ export class ProfilesController {
   }
 
   @Get('me/availability/exceptions')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get availability exceptions for current welper' })
   @ApiQuery({ name: 'calendarId', required: false, type: String, description: 'Filter by calendar ID' })
@@ -241,7 +252,8 @@ export class ProfilesController {
   }
 
   @Post('me/availability/exceptions')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Add availability exception for current welper' })
@@ -253,7 +265,8 @@ export class ProfilesController {
   }
 
   @Delete('me/availability/exceptions/:id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('welper')
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Remove availability exception' })

@@ -137,11 +137,16 @@ export async function getSignupState(): Promise<SignupStateDto> {
   return apiClient.get<SignupStateDto>("/api/auth/signup/state");
 }
 
+export type SelectRoleStepResponseDto = SignupStateDto & {
+  accessToken?: string;
+  refreshToken?: string;
+};
+
 /** Lock the user's role choice (customer or welper). One-way once set. */
 export async function submitSelectRoleStep(
   params: SelectRoleStepParams,
-): Promise<SignupStateDto> {
-  return apiClient.post<SignupStateDto>(
+): Promise<SelectRoleStepResponseDto> {
+  return apiClient.post<SelectRoleStepResponseDto>(
     "/api/auth/signup/step/select-role",
     params,
   );

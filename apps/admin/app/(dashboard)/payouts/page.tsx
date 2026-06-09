@@ -16,6 +16,7 @@ import { AdminPageHeader } from "@/components/admin-page-header";
 import { formatAdminMoneyCents, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
 import { getPayoutUpcoming, listPayoutBatches } from "@/lib/services/admin-payouts-service";
 import { PayoutBuildAction } from "./payout-batch-actions";
+import { PayoutWelpersTable } from "./payout-welpers-table";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,7 @@ export default async function PayoutsPage() {
       eligibleWelperNetCents: 0,
       existingBatchId: null,
       existingBatchStatus: null,
+      welpers: [],
     };
   }
 
@@ -91,6 +93,21 @@ export default async function PayoutsPage() {
         </Flex>
       </Card>
 
+      <PayoutWelpersTable
+        welpers={upcoming.welpers}
+        batchId={upcoming.existingBatchStatus === "review" ? upcoming.existingBatchId : null}
+        title={
+          upcoming.existingBatchStatus === "review"
+            ? "Welpers in current batch (review)"
+            : "Eligible welpers (upcoming Friday)"
+        }
+        emptyMessage={
+          upcoming.existingBatchStatus === "review"
+            ? "No welpers in this batch."
+            : "No eligible payout lines yet. Ensure bookings are payment_released and past the 7-day hold."
+        }
+      />
+
       <Card style={{ padding: "1.25rem" }}>
         <Text size="3" weight="medium" style={{ display: "block", marginBottom: "0.75rem" }}>
           Recent batches
@@ -115,7 +132,7 @@ export default async function PayoutsPage() {
                 <TableRow key={b.id}>
                   <TableCell>{b.payoutFriday}</TableCell>
                   <TableCell>
-                    <Badge color={b.status === "completed" ? "green" : b.status === "failed" ? "red" : "gray"}>
+                    <Badge color={b.status === "completed" ? "green" : b.status === "failed" ? "red" : b.status === "partial" ? "orange" : "gray"}>
                       {formatAdminStatusLabel(b.status)}
                     </Badge>
                   </TableCell>

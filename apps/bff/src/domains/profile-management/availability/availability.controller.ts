@@ -20,7 +20,12 @@ import {
 import { AvailabilityService } from './availability.service';
 import { UpdateAvailabilityDto } from './dto/update-availability.dto';
 import { AvailabilityResponseDto } from './dto/availability-response.dto';
-import { CurrentUser, JwtAuthGuard } from '../../../common/auth';
+import {
+  CurrentUser,
+  JwtAuthGuard,
+  Roles,
+  RolesGuard,
+} from '../../../common/auth';
 
 @ApiTags('Availability')
 @Controller('profiles/welper/:welperId/availability')
@@ -55,6 +60,8 @@ export class AvailabilityController {
   }
 
   @Put()
+  @UseGuards(RolesGuard)
+  @Roles('welper')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update availability calendar' })
   @ApiParam({ name: 'welperId', description: 'Welper ID' })
@@ -73,4 +80,3 @@ export class AvailabilityController {
     return this.availabilityService.update(welperId, updateDto, user.userId);
   }
 }
-

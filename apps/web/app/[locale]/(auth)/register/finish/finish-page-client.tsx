@@ -16,8 +16,6 @@ import { Text } from "@welpco/ui/text";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { ApiClientError } from "@/lib/api/client";
 import { completeSignupAndRedirect } from "@/lib/auth/complete-signup-and-redirect";
-import { refreshBffTokensInSession } from "@/lib/auth/refresh-session-tokens";
-import { roleFromSelectedRole } from "@/lib/auth/session-role";
 import { clearTokenCache } from "@/lib/api/get-token";
 import { safeNextPath } from "@/lib/auth/safe-next";
 import {
@@ -77,13 +75,9 @@ export default function FinishPageClient() {
     if (signupState.signupCompleted) {
       autoStarted.current = true;
       void (async () => {
-        const role = roleFromSelectedRole(signupState.selectedRole);
-        if (role) {
-          await updateSession({ user: { signupCompleted: true, role } });
-          await refreshBffTokensInSession(updateSession);
-          clearTokenCache();
-          router.refresh?.();
-        }
+        await updateSession({ user: { signupCompleted: true } });
+        clearTokenCache();
+        router.refresh?.();
         router.replace(safeNextPath(nextRaw, "/dashboard"));
       })();
       return;
@@ -97,7 +91,9 @@ export default function FinishPageClient() {
       return;
     }
     autoStarted.current = true;
-    void goToDashboard();
+    queueMicrotask(() => {
+      void goToDashboard();
+    });
   }, [signupState, stateLoading, router, goToDashboard, nextRaw, updateSession]);
 
   return (

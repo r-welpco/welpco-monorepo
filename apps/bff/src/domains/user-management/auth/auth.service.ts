@@ -201,6 +201,12 @@ export class AuthService {
     if (user.status === AccountStatus.DEACTIVATED) {
       throw new UnauthorizedException('Account is deactivated');
     }
+    if (
+      user.accountType === AccountType.ADMIN &&
+      user.status !== AccountStatus.ACTIVE
+    ) {
+      throw new UnauthorizedException('Admin account is inactive');
+    }
 
     // Day 15 — Phase 3 of the signup ↔ onboarding merge. Login no longer
     // throws on unverified email. The signup-merge plan moves the verification
@@ -340,6 +346,7 @@ export class AuthService {
 
     // Update password
     user.passwordHash = passwordHash;
+    user.authVersion = (user.authVersion ?? 0) + 1;
     await this.userRepository.save(user);
   }
 
@@ -364,14 +371,28 @@ export class AuthService {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      if (user.status !== AccountStatus.ACTIVE) {
+      if (
+        user.status === AccountStatus.SUSPENDED ||
+        user.status === AccountStatus.DEACTIVATED
+      ) {
         this.logger.warn(`Refresh token for inactive user: ${user.id} status=${user.status}`);
         throw new UnauthorizedException('Invalid refresh token');
       }
+      if (user.accountType === AccountType.GUARDIAN) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      if (
+        user.accountType === AccountType.ADMIN &&
+        user.status !== AccountStatus.ACTIVE
+      ) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+      if ((payload.authVersion ?? 0) !== (user.authVersion ?? 0)) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
 
-      // Rotate: issue both a new access token AND a new refresh token.
-      // The old refresh token is still valid until it expires (stateless JWT),
-      // but the client should discard it in favour of the new one.
+      // Issue a fresh pair. authVersion revokes all older pairs after a
+      // password, role, or account-status security change.
       return this.generateTokens(user);
     } catch (error) {
       if (error instanceof UnauthorizedException) {
@@ -419,6 +440,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       accountType: user.accountType,
+      authVersion: user.authVersion ?? 0,
     };
 
     const accessToken = this.jwtService.sign(

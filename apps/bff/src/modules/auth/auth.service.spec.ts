@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { CustomerProfileService } from '../../domains/profile-management/customer-profile/customer-profile.service';
 import { WelperProfileService } from '../../domains/profile-management/welper-profile/welper-profile.service';
 import { SignupOrchestratorService } from '../../domains/user-management/auth/signup-orchestrator.service';
+import { UsersService } from '../../domains/user-management/users/users.service';
 import { LoginDto, RegisterDto, VerifyEmailDto, RefreshTokenDto, RequestResetPasswordDto, ConfirmResetPasswordDto, ChangePasswordDto } from './dto';
 
 describe('AuthService', () => {
@@ -32,6 +33,10 @@ describe('AuthService', () => {
       confirmResetPassword: jest.fn(),
       changePassword: jest.fn(),
       refreshToken: jest.fn(),
+      generateTokensFor: jest.fn().mockResolvedValue({
+        accessToken: 'new-access',
+        refreshToken: 'new-refresh',
+      }),
     };
 
     const mockCustomerProfileService = {
@@ -44,6 +49,10 @@ describe('AuthService', () => {
 
     const mockJwtService = {
       verify: jest.fn().mockReturnValue({ sub: 'user-1', userId: 'user-1' }),
+    };
+
+    const mockUsersService = {
+      findById: jest.fn().mockResolvedValue({ id: 'user-1' }),
     };
 
     const mockSignupOrchestratorService = {
@@ -69,6 +78,7 @@ describe('AuthService', () => {
         { provide: WelperProfileService, useValue: mockWelperProfileService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: SignupOrchestratorService, useValue: mockSignupOrchestratorService },
+        { provide: UsersService, useValue: mockUsersService },
       ],
     }).compile();
 

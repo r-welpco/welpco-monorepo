@@ -150,6 +150,7 @@ export class PasswordResetService {
 
     // Update password
     user.passwordHash = passwordHash;
+    user.authVersion = (user.authVersion ?? 0) + 1;
     await this.userRepository.save(user);
 
     // Delete token (invalidate after use)
@@ -163,4 +164,3 @@ export class PasswordResetService {
     });
   }
 }
-

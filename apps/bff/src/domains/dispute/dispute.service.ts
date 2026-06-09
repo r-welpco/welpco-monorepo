@@ -366,7 +366,6 @@ export class DisputeService {
     accountType: string,
     dto: CreateDisputeDto,
   ): Promise<DisputeResponseDto> {
-    const filerType = accountType.toLowerCase() === 'welper' ? 'welper' : 'customer';
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -385,6 +384,10 @@ export class DisputeService {
       if (booking.customerId !== userId && booking.welperId !== userId) {
         throw new ForbiddenException('You are not authorized to file a dispute for this booking');
       }
+      const filerType =
+        booking.customerId === userId
+          ? ('customer' as const)
+          : ('welper' as const);
       validateTransition(booking.status, BookingRequestStatus.DISPUTED);
 
       const reportWindowMinutes = await this.applicationSettings.getDisputeReportWindowMinutes();
@@ -420,9 +423,16 @@ export class DisputeService {
       booking.status = BookingRequestStatus.DISPUTED;
       await bookingRepo.save(booking);
 
+      const detachedBatchId = await this.welperPayoutLedgerService.excludeForDispute(
+        bookingId,
+        queryRunner.manager,
+      );
+
       await queryRunner.commitTransaction();
 
-      await this.welperPayoutLedgerService.excludeForDispute(bookingId);
+      if (detachedBatchId) {
+        await this.welperPayoutLedgerService.recalculateBatchTotals(detachedBatchId);
+      }
 
       // NOTIFICATIONS-001: notify the OTHER party that a problem report was
       // filed. Filer already knows; we don't ping them. Body keeps the

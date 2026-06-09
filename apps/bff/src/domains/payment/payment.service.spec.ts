@@ -16,6 +16,7 @@ import { ApplicationSettingsService } from './application-settings.service';
 import { BookingTaxService } from './booking-tax.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
+import { WelperPayoutLedgerService } from './welper-payout-ledger.service';
 import type Stripe from 'stripe';
 
 describe('PaymentService', () => {
@@ -77,6 +78,12 @@ describe('PaymentService', () => {
     resolveLocaleForUser: jest.fn().mockResolvedValue('en'),
   };
 
+  const mockWelperPayoutLedger = {
+    createLedgerForPaymentReleased: jest.fn().mockResolvedValue(null),
+    applyRefundDelta: jest.fn().mockResolvedValue(undefined),
+    syncStripeFeesForBooking: jest.fn().mockResolvedValue({ totalFeeCents: 0, allSynced: true }),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     mockDataSource.transaction.mockImplementation(async (fn: (m: unknown) => Promise<unknown>) =>
@@ -102,6 +109,7 @@ describe('PaymentService', () => {
         { provide: BookingTaxService, useValue: mockBookingTaxService },
         { provide: CustomerProfileService, useValue: mockCustomerProfile },
         { provide: NotificationService, useValue: mockNotificationService },
+        { provide: WelperPayoutLedgerService, useValue: mockWelperPayoutLedger },
       ],
     }).compile();
 

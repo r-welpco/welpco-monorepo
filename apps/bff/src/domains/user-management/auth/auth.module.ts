@@ -11,8 +11,6 @@ import {
 } from '../../../common/auth';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { AbilitiesFactory } from './abilities.factory';
-import { PermissionsGuard } from './guards/permissions.guard';
 import { RateLimitGuard } from './guards/rate-limit.guard';
 import {
   UserAccount,
@@ -81,14 +79,11 @@ import { PaymentModule } from '../../payment/payment.module';
     JwtStrategy,
     JwtAuthGuard,
     RolesGuard,
-    AbilitiesFactory,
-    PermissionsGuard,
     RateLimitGuard,
   ],
   exports: [
     AuthService,
     'DomainAuthService',
-    AbilitiesFactory,
     AccountLockoutService,
     EmailVerificationService,
     PasswordResetService,
@@ -105,4 +100,3 @@ export class AuthModule {
     };
   }
 }
-

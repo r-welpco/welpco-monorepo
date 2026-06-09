@@ -2,6 +2,21 @@ import type { NextAuthConfig } from "next-auth";
 
 const NEXT_PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
+type AdminRefreshResult =
+  | { accessToken?: string; refreshToken?: string }
+  | null
+  | undefined;
+
+function adminRefreshMap(): Map<string, Promise<AdminRefreshResult>> {
+  const globals = globalThis as typeof globalThis & {
+    __adminRefreshByUser?: Map<string, Promise<AdminRefreshResult>>;
+  };
+  if (!globals.__adminRefreshByUser) {
+    globals.__adminRefreshByUser = new Map();
+  }
+  return globals.__adminRefreshByUser;
+}
+
 export const authConfig: NextAuthConfig = {
   pages: {
     signIn: "/login",
@@ -63,15 +78,20 @@ export const authConfig: NextAuthConfig = {
         return token;
       }
 
-      let refreshPromise = (globalThis as { __adminRefreshPromise?: Promise<{ accessToken?: string; refreshToken?: string } | null> })
-        .__adminRefreshPromise;
+      const refreshTokenForRequest = token.refreshToken as string;
+      const refreshKey =
+        typeof token.id === "string" && token.id.length > 0
+          ? token.id
+          : `rt:${refreshTokenForRequest.slice(0, 48)}`;
+      const refreshes = adminRefreshMap();
+      let refreshPromise = refreshes.get(refreshKey);
       if (!refreshPromise) {
         refreshPromise = (async () => {
           try {
             const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/auth/refresh`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ refreshToken: token.refreshToken }),
+              body: JSON.stringify({ refreshToken: refreshTokenForRequest }),
             });
             if (response.ok) {
               return await response.json();
@@ -83,10 +103,10 @@ export const authConfig: NextAuthConfig = {
           } catch {
             return undefined;
           } finally {
-            delete (globalThis as { __adminRefreshPromise?: unknown }).__adminRefreshPromise;
+            refreshes.delete(refreshKey);
           }
         })();
-        (globalThis as { __adminRefreshPromise?: typeof refreshPromise }).__adminRefreshPromise = refreshPromise;
+        refreshes.set(refreshKey, refreshPromise);
       }
 
       const result = await refreshPromise;
@@ -106,7 +126,7 @@ export const authConfig: NextAuthConfig = {
       } else if (result?.accessToken) {
         token.accessToken = result.accessToken;
         token.accessTokenExpires = Date.now() + 15 * 60 * 1000;
-        // Store rotated refresh token (the backend invalidates the old one on each refresh)
+        // Keep the newest refresh token in the encrypted NextAuth JWT.
         if (result.refreshToken) {
           token.refreshToken = result.refreshToken;
         }
@@ -120,7 +140,6 @@ export const authConfig: NextAuthConfig = {
           ...session,
           user: undefined,
           accessToken: undefined,
-          refreshToken: undefined,
         } as unknown as typeof session;
       }
       if (session.user && token) {
@@ -134,7 +153,6 @@ export const authConfig: NextAuthConfig = {
         session.user.emailVerified = Boolean(token.emailVerified) as unknown as typeof session.user.emailVerified;
         session.user.onboardingCompleted = token.onboardingCompleted as boolean;
         session.accessToken = token.accessToken as string;
-        session.refreshToken = token.refreshToken as string;
       }
       if (trigger === "update" && token && session.user && token.accessToken) {
         session.accessToken = token.accessToken as string;

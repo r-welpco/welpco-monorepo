@@ -2,9 +2,7 @@ import type { Session } from "next-auth";
 import { getSession } from "next-auth/react";
 import type { SignupStateDto } from "@welpco/types";
 import { clearTokenCache } from "@/lib/api/get-token";
-import { refreshBffTokensInSession } from "@/lib/auth/refresh-session-tokens";
 import { safeNextPath } from "@/lib/auth/safe-next";
-import { roleFromSelectedRole } from "@/lib/auth/session-role";
 import { finishSignup } from "@/lib/services/signup-service";
 
 type SignupRedirectRouter = {
@@ -22,27 +20,18 @@ export async function completeSignupAndRedirect(options: {
     user?: {
       signupCompleted: boolean;
       platformAccessEnabled?: boolean;
-      role?: string;
     };
-    accessToken?: string;
-    refreshToken?: string;
   }) => Promise<Session | null>;
   router: SignupRedirectRouter;
 }): Promise<SignupStateDto> {
   const finalState = await finishSignup();
-  const role = roleFromSelectedRole(finalState.selectedRole) ?? "customer";
 
   await options.updateSession({
     user: {
       signupCompleted: true,
       platformAccessEnabled: finalState.platformAccessEnabled,
-      role,
     },
   });
-
-  await refreshBffTokensInSession(
-    options.updateSession as (data?: unknown) => Promise<Session | null>,
-  );
 
   clearTokenCache();
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import { isClientSigningOut } from "@/lib/auth/client-sign-out";
 import { useAuthStore } from "@/stores/authStore";
 import type { User } from "@/types";
@@ -22,8 +23,10 @@ export interface DashboardServerUser {
  * `user` reference (memoized fallback when the client store is empty).
  */
 export function useDashboardUser(serverUser: DashboardServerUser): { user: User } {
+  const { data: session } = useSession();
   const clientUser = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
+  const sessionRole = session?.user?.role as "customer" | "welper" | undefined;
 
   useEffect(() => {
     if (isClientSigningOut()) return;
@@ -82,12 +85,13 @@ export function useDashboardUser(serverUser: DashboardServerUser): { user: User 
 
   const user = useMemo((): User => {
     const base = clientUser ?? fallbackUser;
-    const serverRole = serverUser.role as "customer" | "welper";
-    if (serverRole && base.role !== serverRole) {
-      return { ...base, role: serverRole };
+    const authoritativeRole =
+      sessionRole ?? (serverUser.role as "customer" | "welper" | undefined);
+    if (authoritativeRole && base.role !== authoritativeRole) {
+      return { ...base, role: authoritativeRole };
     }
     return base;
-  }, [clientUser, fallbackUser, serverUser.role]);
+  }, [clientUser, fallbackUser, serverUser.role, sessionRole]);
 
   return { user };
 }

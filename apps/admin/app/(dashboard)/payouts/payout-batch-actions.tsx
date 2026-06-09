@@ -89,7 +89,22 @@ export function PayoutApproveAction({
     setLoading(true);
     try {
       const batch = await approvePayoutBatch(batchId);
-      setSuccess(`Batch ${batch.status}. Transfers executed for ${welperCount} welper(s).`);
+      const summary = batch.executionSummary as
+        | { transfers?: Array<{ welperId: string; transferId?: string; error?: string }> }
+        | null
+        | undefined;
+      const transfers = summary?.transfers ?? [];
+      const succeeded = transfers.filter((t) => t.transferId && !t.error).length;
+      const failed = transfers.filter((t) => t.error).length;
+      if (batch.status === "partial") {
+        setSuccess(
+          `Batch partial: ${succeeded} transfer(s) succeeded, ${failed} failed. Review details below.`,
+        );
+      } else if (batch.status === "failed") {
+        setSuccess(`Batch failed: no transfers completed (${failed} failure(s)).`);
+      } else {
+        setSuccess(`Batch ${batch.status}: ${succeeded} transfer(s) completed.`);
+      }
       setConfirmOpen(false);
       router.refresh();
     } catch (e) {

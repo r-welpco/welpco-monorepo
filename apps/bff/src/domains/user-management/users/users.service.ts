@@ -62,6 +62,9 @@ export class UsersService {
     const oldStatus = user.status;
 
     user.status = newStatus;
+    if (newStatus !== oldStatus) {
+      user.authVersion = (user.authVersion ?? 0) + 1;
+    }
     const updatedUser = await this.userRepository.save(user);
 
     // Publish event
@@ -79,6 +82,7 @@ export class UsersService {
     const user = await this.findById(userId);
     const oldStatus = user.status;
     user.status = AccountStatus.DEACTIVATED;
+    user.authVersion = (user.authVersion ?? 0) + 1;
     await this.userRepository.save(user);
 
     // Publish event
@@ -90,4 +94,3 @@ export class UsersService {
     });
   }
 }
-

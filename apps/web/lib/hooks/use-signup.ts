@@ -34,6 +34,7 @@ import {
   type WelperBioStepParams,
   type WelperOfferingStepParams,
   type WelperServiceAreaStepParams,
+  type SelectRoleStepResponseDto,
 } from "@/lib/services/signup-service";
 import {
   confirmBackgroundCheckReturn,
@@ -102,7 +103,6 @@ export function useSignupState() {
  */
 export function useBeginSignup() {
   const queryClient = useQueryClient();
-  const { update: updateSession } = useSession();
   return useMutation<BeginSignupResponseDto, Error, BeginSignupParams>({
     mutationFn: async (params) => {
       const response = await beginSignup(params);
@@ -120,11 +120,6 @@ export function useBeginSignup() {
         throw new Error(signInResult.error);
       }
 
-      // Keep tokens from begin authoritative for the JWT callback.
-      await updateSession({
-        accessToken: response.accessToken,
-        refreshToken: response.refreshToken,
-      });
       clearTokenCache();
 
       return response;
@@ -155,7 +150,28 @@ function useStepMutation<TParams>(
 }
 
 export function useCompleteSelectRoleStep() {
-  return useStepMutation<SelectRoleStepParams>(submitSelectRoleStep);
+  const queryClient = useQueryClient();
+  const { update: updateSession } = useSession();
+  return useMutation<SelectRoleStepResponseDto, Error, SelectRoleStepParams>({
+    mutationFn: submitSelectRoleStep,
+    onSuccess: async (state) => {
+      const sessionPatch: {
+        accessToken?: string;
+        refreshToken?: string;
+      } = {};
+      if (typeof state.accessToken === "string") {
+        sessionPatch.accessToken = state.accessToken;
+      }
+      if (typeof state.refreshToken === "string") {
+        sessionPatch.refreshToken = state.refreshToken;
+      }
+      await updateSession(sessionPatch);
+      clearTokenCache();
+      queryClient.setQueryData<SignupStateDto>(SIGNUP_STATE_KEY, state);
+      queryClient.invalidateQueries({ queryKey: SIGNUP_STATE_KEY });
+      queryClient.invalidateQueries({ queryKey: SETUP_CHECKLIST_KEY_PREFIX });
+    },
+  });
 }
 
 export function useCompleteIdentityStep() {

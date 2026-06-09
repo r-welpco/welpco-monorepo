@@ -46,8 +46,8 @@ export class WelperPayoutLedger extends BaseEntity {
   @Column({ name: 'platform_gross_cents', type: 'int' })
   platformGrossCents!: number;
 
-  @Column({ name: 'stripe_fee_cents', type: 'int', default: 0 })
-  stripeFeeCents!: number;
+  @Column({ name: 'stripe_fee_cents', type: 'int', nullable: true })
+  stripeFeeCents!: number | null;
 
   @Column({ type: 'varchar', length: 32, default: WelperPayoutLedgerStatus.PENDING })
   status!: WelperPayoutLedgerStatus;

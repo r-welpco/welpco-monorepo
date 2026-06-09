@@ -19,6 +19,7 @@ function authRefreshApiOrigin(): string {
  * Keeps refresh aligned with BFF JWT_EXPIRES_IN even if it differs from the 15m default.
  */
 type AccessTokenPayload = {
+  sub?: string;
   exp?: number;
   accountType?: string;
 };
@@ -79,6 +80,37 @@ function getRefreshPromiseMap(): Map<string, Promise<WelpcoRefreshPayload>> {
   return globalThis.__welpcoRefreshByUserKey;
 }
 
+type SignupSessionState = {
+  emailVerified?: boolean;
+  signupCompleted?: boolean;
+  platformAccessEnabled?: boolean;
+};
+
+async function validatedSignupSessionState(
+  accessToken: string,
+  expectedUserId: string,
+): Promise<SignupSessionState | null> {
+  const payload = decodeAccessTokenPayload(accessToken);
+  if (payload?.sub !== expectedUserId) {
+    return null;
+  }
+  try {
+    const response = await fetch(
+      `${authRefreshApiOrigin()}/api/auth/signup/state`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) {
+      return null;
+    }
+    return (await response.json()) as SignupSessionState;
+  } catch {
+    return null;
+  }
+}
+
 export const authConfig: NextAuthConfig = {
   pages: {
     signIn: "/login",
@@ -88,7 +120,7 @@ export const authConfig: NextAuthConfig = {
   trustHost: true,
   providers: [],
   callbacks: {
-    async jwt({ token, user, account: _account, trigger, session }) {
+    async jwt({ token, user, trigger, session }) {
       // Safety check: if token is null/undefined, return empty token
       if (!token) {
         return {} as JWT;
@@ -147,42 +179,32 @@ export const authConfig: NextAuthConfig = {
           refreshToken?: string;
           user?: typeof session.user;
         } | null;
-        if (typeof sessionData?.accessToken === "string") {
-          token.accessToken = sessionData.accessToken;
-          applyRoleFromAccessToken(token, sessionData.accessToken);
-          token.accessTokenExpires =
-            decodeAccessTokenExpMs(sessionData.accessToken) ??
-            Date.now() + 15 * 60 * 1000;
-        }
-        if (typeof sessionData?.refreshToken === "string") {
-          token.refreshToken = sessionData.refreshToken;
-        }
-        // Persist updated session fields into the JWT token
-        if (session?.user) {
-          if (typeof session.user.role === "string") {
-            token.role = session.user.role;
-            token.accountType =
-              session.user.role === "welper" ? "Welper" : "Customer";
+        const candidateAccessToken =
+          typeof sessionData?.accessToken === "string"
+            ? sessionData.accessToken
+            : typeof token.accessToken === "string"
+              ? token.accessToken
+              : undefined;
+        const expectedUserId = (token.id ?? token.sub) as string | undefined;
+        if (candidateAccessToken && expectedUserId) {
+          const signupState = await validatedSignupSessionState(
+            candidateAccessToken,
+            expectedUserId,
+          );
+          if (signupState) {
+            token.accessToken = candidateAccessToken;
+            applyRoleFromAccessToken(token, candidateAccessToken);
+            token.accessTokenExpires =
+              decodeAccessTokenExpMs(candidateAccessToken) ??
+              Date.now() + 15 * 60 * 1000;
+            if (typeof sessionData?.refreshToken === "string") {
+              token.refreshToken = sessionData.refreshToken;
+            }
+            token.emailVerified = Boolean(signupState.emailVerified);
+            token.signupCompleted = Boolean(signupState.signupCompleted);
+            token.onboardingCompleted = Boolean(signupState.signupCompleted);
+            token.platformAccessEnabled = signupState.platformAccessEnabled;
           }
-          if (typeof session.user.emailVerified !== "undefined") {
-            token.emailVerified = session.user.emailVerified as boolean;
-          }
-          if (typeof session.user.onboardingCompleted !== "undefined") {
-            token.onboardingCompleted = session.user.onboardingCompleted as boolean;
-          }
-          if (typeof session.user.signupCompleted !== "undefined") {
-            token.signupCompleted = session.user.signupCompleted as boolean;
-          }
-          if (typeof session.user.platformAccessEnabled !== "undefined") {
-            token.platformAccessEnabled =
-              session.user.platformAccessEnabled as boolean;
-          }
-        }
-        // Access token was updated via update() call
-        // The new token should already be in the token object
-        if (token.accessToken) {
-          const updateExp = decodeAccessTokenExpMs(token.accessToken as string);
-          token.accessTokenExpires = updateExp ?? Date.now() + 15 * 60 * 1000;
         }
       }
 
@@ -211,10 +233,7 @@ export const authConfig: NextAuthConfig = {
           ? now >= accessTokenExpires - 5 * 60 * 1000
           : false);
 
-      // Do not clobber role/signup fields set via `updateSession` on the same request.
-      if (trigger !== "update") {
-        applyRoleFromAccessToken(token, token.accessToken as string | undefined);
-      }
+      applyRoleFromAccessToken(token, token.accessToken as string | undefined);
 
       if (!isExpiringSoon) {
         return token;
@@ -307,9 +326,9 @@ export const authConfig: NextAuthConfig = {
         session.user.platformAccessEnabled = token.platformAccessEnabled as
           | boolean
           | undefined;
-        // Store access token and refresh token in session for API client
+        // Access tokens are needed by the browser API client. Refresh tokens
+        // remain only in the encrypted HttpOnly NextAuth JWT cookie.
         session.accessToken = token.accessToken as string;
-        session.refreshToken = token.refreshToken as string;
       }
       
       // Handle session update trigger (from update() call)
@@ -345,4 +364,3 @@ export const authConfig: NextAuthConfig = {
     },
   },
 };
-

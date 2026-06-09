@@ -578,15 +578,17 @@ export class PaymentService {
       where: { bookingId, status: BookingPaymentRecordStatus.CAPTURED },
     });
     for (const row of rows) {
-      if (row.stripeFeeCents != null) continue;
+      if (row.stripeFeeCents != null && row.stripeBalanceTransactionId) continue;
       try {
-        const { feeCents, balanceTransactionId } = await syncStripeFeeForPaymentIntent(
+        const { feeCents, balanceTransactionId, synced } = await syncStripeFeeForPaymentIntent(
           this.stripe,
           row.stripePaymentIntentId,
         );
-        row.stripeFeeCents = feeCents;
-        row.stripeBalanceTransactionId = balanceTransactionId;
-        await this.bookingPaymentRepo.save(row);
+        if (synced) {
+          row.stripeFeeCents = feeCents;
+          row.stripeBalanceTransactionId = balanceTransactionId;
+          await this.bookingPaymentRepo.save(row);
+        }
       } catch (err) {
         this.logger.warn(
           `Fee sync on payment release failed for ${row.stripePaymentIntentId}: ${(err as Error).message}`,
@@ -612,12 +614,14 @@ export class PaymentService {
       }
       if (this.stripe && row.stripeFeeCents == null) {
         try {
-          const { feeCents, balanceTransactionId } = await syncStripeFeeForPaymentIntent(
+          const { feeCents, balanceTransactionId, synced } = await syncStripeFeeForPaymentIntent(
             this.stripe,
             pi.id,
           );
-          row.stripeFeeCents = feeCents;
-          row.stripeBalanceTransactionId = balanceTransactionId;
+          if (synced) {
+            row.stripeFeeCents = feeCents;
+            row.stripeBalanceTransactionId = balanceTransactionId;
+          }
         } catch {
           // non-fatal; ledger sync retries later
         }

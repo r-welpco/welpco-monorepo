@@ -157,3 +157,16 @@ export async function requireOnboardingComplete(): Promise<NonNullable<AuthCheck
 
 /** Preferred name for the same gate. */
 export const requireSignupComplete = requireOnboardingComplete;
+
+/**
+ * Require signup completion and a specific dashboard role.
+ */
+export async function requireRole(
+  role: "customer" | "welper",
+): Promise<NonNullable<AuthCheckResult["user"]>> {
+  const user = await requireOnboardingComplete();
+  if (user.role !== role) {
+    await localizedRedirect("/dashboard");
+  }
+  return user;
+}

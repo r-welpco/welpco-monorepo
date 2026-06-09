@@ -41,18 +41,11 @@ export class ReviewService {
   private assertParticipant(
     booking: BookingRequest,
     userId: string,
-    accountType: string,
   ): { isCustomer: boolean; isWelper: boolean } {
-    const isCustomer = accountType === 'Customer' || accountType === 'customer';
-    const isWelper = accountType === 'Welper' || accountType === 'welper';
+    const isCustomer = booking.customerId === userId;
+    const isWelper = booking.welperId === userId;
     if (!isCustomer && !isWelper) {
-      throw new ForbiddenException('Only customer or welper can submit a review');
-    }
-    if (isCustomer && booking.customerId !== userId) {
-      throw new ForbiddenException('You are not the customer of this booking');
-    }
-    if (isWelper && booking.welperId !== userId) {
-      throw new ForbiddenException('You are not the welper of this booking');
+      throw new ForbiddenException('You are not a participant of this booking');
     }
     return { isCustomer, isWelper };
   }
@@ -94,7 +87,7 @@ export class ReviewService {
       throw new BadRequestException('Reviews are only available once the booking is finished');
     }
 
-    const { isCustomer } = this.assertParticipant(booking, userId, accountType);
+    const { isCustomer } = this.assertParticipant(booking, userId);
 
     const reviewerId = userId;
     const revieweeId = isCustomer ? booking.welperId : booking.customerId;
@@ -161,7 +154,7 @@ export class ReviewService {
       throw new BadRequestException('Reviews are only available once the booking is finished');
     }
 
-    this.assertParticipant(booking, userId, accountType);
+    this.assertParticipant(booking, userId);
 
     const existing = await this.reviewRepo.findOne({
       where: { bookingId, reviewerId: userId },

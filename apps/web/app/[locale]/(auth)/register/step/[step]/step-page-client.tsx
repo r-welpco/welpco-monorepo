@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { useSession } from "next-auth/react";
-import { refreshBffTokensInSession } from "@/lib/auth/refresh-session-tokens";
 import { localizedPath } from "@/i18n/locale-routes";
 import {
   useIdentityStepLabels,
@@ -66,7 +65,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
   const locale = useLocale() as Locale;
   const searchParams = useSearchParams();
   const nextRaw = searchParams.get("next");
-  const { status, update: updateSession } = useSession();
+  const { status } = useSession();
   const isAuthenticated = status === "authenticated";
   const tPage = useTranslations("auth.register.steps.page");
   const tCommon = useTranslations("auth.common");
@@ -231,8 +230,6 @@ export default function StepPageClient({ slug }: { slug: string }) {
         onSubmit={(values: { role: SelectedRole }) =>
           guard(async () => {
             const next = await completeSelectRole.mutateAsync(values);
-            await updateSession({ user: { role: values.role } });
-            await refreshBffTokensInSession(updateSession);
             advanceTo(next.nextStep);
           })
         }

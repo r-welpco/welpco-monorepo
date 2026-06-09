@@ -23,7 +23,12 @@ import { ServiceOfferingService } from './service-offering.service';
 import { CreateServiceOfferingDto } from './dto/create-service-offering.dto';
 import { UpdateServiceOfferingDto } from './dto/update-service-offering.dto';
 import { ServiceOfferingResponseDto } from './dto/service-offering-response.dto';
-import { CurrentUser, JwtAuthGuard } from '../../../common/auth';
+import {
+  CurrentUser,
+  JwtAuthGuard,
+  Roles,
+  RolesGuard,
+} from '../../../common/auth';
 
 @ApiTags('Service Offerings')
 @Controller('profiles/welper/:welperId/services')
@@ -58,6 +63,8 @@ export class ServiceOfferingController {
   }
 
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('welper')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Add service offering' })
   @ApiParam({ name: 'welperId', description: 'Welper ID' })
@@ -76,6 +83,8 @@ export class ServiceOfferingController {
   }
 
   @Put(':serviceId')
+  @UseGuards(RolesGuard)
+  @Roles('welper')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update service offering' })
   @ApiParam({ name: 'welperId', description: 'Welper ID' })
@@ -102,6 +111,8 @@ export class ServiceOfferingController {
   }
 
   @Delete(':serviceId')
+  @UseGuards(RolesGuard)
+  @Roles('welper')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete service offering' })
   @ApiParam({ name: 'welperId', description: 'Welper ID' })
@@ -120,4 +131,3 @@ export class ServiceOfferingController {
     await this.serviceOfferingService.delete(welperId, serviceId, user.userId);
   }
 }
-
