@@ -227,7 +227,7 @@ export function IdentityStep({
           </AlertDialogDescription>
           <Flex gap="3" mt="4" justify="end" wrap="wrap">
             {onBack && labels.minorComingSoon.changeRoleLabel ? (
-              <AlertDialogCancel asChild>
+              <AlertDialogCancel>
                 <Button
                   type="button"
                   variant="soft"
@@ -241,7 +241,7 @@ export function IdentityStep({
                 </Button>
               </AlertDialogCancel>
             ) : null}
-            <AlertDialogAction asChild>
+            <AlertDialogAction>
               <Button type="button" color={SEMANTIC_COLOR.primary}>
                 {labels.minorComingSoon.confirmLabel}
               </Button>
