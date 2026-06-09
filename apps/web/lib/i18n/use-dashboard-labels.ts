@@ -807,6 +807,7 @@ export function useWelperProfileLabels() {
     serviceArea: {
       title: t("serviceArea.title"),
       description: t("serviceArea.description"),
+      saved: t("serviceArea.saved"),
     },
   };
 }

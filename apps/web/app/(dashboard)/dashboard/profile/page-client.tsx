@@ -899,6 +899,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 defaultArea={radiusServiceAreaForForm(welperProfile?.serviceArea)}
                 loading={isLoading || updateWelperProfileMutation.isPending}
                 onSave={handleServiceAreaSave}
+                saveSuccessMessage={welperProfileLabels.serviceArea.saved}
                 title={welperProfileLabels.serviceArea.title}
                 description={welperProfileLabels.serviceArea.description}
                 selectorLabels={welperServiceAreaLabels.selector}

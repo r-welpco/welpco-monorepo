@@ -16,8 +16,9 @@ import type { AddressInputLabels } from "./address-input";
 export interface ServiceAreaCardProps {
   defaultArea?: ServiceArea;
   loading?: boolean;
-  onSave?: (area: ServiceArea) => void;
+  onSave?: (area: ServiceArea) => void | Promise<void>;
   error?: string;
+  saveSuccessMessage?: string;
   title?: string;
   description?: string;
   selectorLabels?: ServiceAreaSelectorLabels;
@@ -30,6 +31,7 @@ export function ServiceAreaCard({
   loading,
   onSave,
   error,
+  saveSuccessMessage,
   title = "Service Area",
   description = "Define the geographic area where you provide services. This helps customers find you when searching for services in their area.",
   selectorLabels,
@@ -60,6 +62,7 @@ export function ServiceAreaCard({
           defaultArea={defaultArea}
           loading={loading}
           onSave={onSave}
+          saveSuccessMessage={saveSuccessMessage}
           noCard={true}
           selectorLabels={selectorLabels}
           addressLabels={addressLabels}

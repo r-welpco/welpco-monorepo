@@ -1916,7 +1916,8 @@
       },
       "serviceArea": {
         "title": "Zone de service",
-        "description": "Définissez la zone géographique où vous offrez vos services. Cela aide les clients à vous trouver lors de leurs recherches."
+        "description": "Définissez la zone géographique où vous offrez vos services. Cela aide les clients à vous trouver lors de leurs recherches.",
+        "saved": "Zone de service enregistrée."
       },
       "offerings": {
         "listTitle": "Offres de service",

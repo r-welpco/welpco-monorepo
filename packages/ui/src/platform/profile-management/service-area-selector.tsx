@@ -74,7 +74,9 @@ function formatLabel(
 export interface ServiceAreaSelectorProps {
   defaultArea?: ServiceArea;
   loading?: boolean;
-  onSave?: (area: ServiceArea) => void;
+  onSave?: (area: ServiceArea) => void | Promise<void>;
+  /** Shown after a successful explicit save (when `showSaveButton` is true). */
+  saveSuccessMessage?: string;
   allowOverride?: boolean;
   defaultServiceArea?: ServiceArea;
   noCard?: boolean; // If true, don't render the card wrapper
@@ -101,9 +103,11 @@ export function ServiceAreaSelector({
   selectorLabels: selectorLabelsProp,
   addressLabels,
   provinceLabels,
+  saveSuccessMessage,
   showAddressCountry = true,
 }: ServiceAreaSelectorProps) {
   const selectorLabels = selectorLabelsProp ?? DEFAULT_SELECTOR_LABELS;
+  const [saveSucceeded, setSaveSucceeded] = useState(false);
   const [centerAddress, setCenterAddress] = useState<AddressValues>(
     defaultArea?.centerAddress || {
       streetAddress: "",
@@ -134,12 +138,17 @@ export function ServiceAreaSelector({
     setIsDirty(false);
   }, [defaultArea, showSaveButton]);
 
+  const markDirty = () => {
+    setSaveSucceeded(false);
+    setIsDirty(true);
+  };
+
   /** Fire onSave immediately (used when showSaveButton is false, e.g. inside a form) */
   const fireImmediate = (area: ServiceArea) => {
     if (!showSaveButton) {
       onSave?.(area);
     } else {
-      setIsDirty(true);
+      markDirty();
     }
   };
 
@@ -181,22 +190,30 @@ export function ServiceAreaSelector({
     }
   };
 
-  const handleSave = () => {
-    if (useDefault && defaultServiceArea) {
-      onSave?.({
-        ...defaultServiceArea,
-        centerAddress: defaultServiceArea.centerAddress
-          ? withDefaultCountry(defaultServiceArea.centerAddress)
-          : undefined,
-      });
-    } else {
-      onSave?.({
-        type: "radius",
-        centerAddress: withDefaultCountry(centerAddress),
-        radiusKm: parseRadiusKm(radiusInput) ?? SERVICE_AREA_RADIUS_KM_DEFAULT,
-      });
+  const handleSave = async () => {
+    const area =
+      useDefault && defaultServiceArea
+        ? {
+            ...defaultServiceArea,
+            centerAddress: defaultServiceArea.centerAddress
+              ? withDefaultCountry(defaultServiceArea.centerAddress)
+              : undefined,
+          }
+        : {
+            type: "radius" as const,
+            centerAddress: withDefaultCountry(centerAddress),
+            radiusKm: parseRadiusKm(radiusInput) ?? SERVICE_AREA_RADIUS_KM_DEFAULT,
+          };
+
+    try {
+      await onSave?.(area);
+      setIsDirty(false);
+      if (saveSuccessMessage) {
+        setSaveSucceeded(true);
+      }
+    } catch {
+      markDirty();
     }
-    setIsDirty(false);
   };
 
   const handleUseDefaultToggle = (checked: boolean) => {
@@ -212,7 +229,7 @@ export function ServiceAreaSelector({
         });
       }
     } else {
-      setIsDirty(true);
+      markDirty();
     }
   };
 
@@ -372,6 +389,12 @@ export function ServiceAreaSelector({
         </>
       )}
 
+      {showSaveButton && saveSucceeded && saveSuccessMessage ? (
+        <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
+          <Callout.Text>{saveSuccessMessage}</Callout.Text>
+        </Callout.Root>
+      ) : null}
+
       {/* Save button — only fires API call when clicked */}
       {showSaveButton && (
         <Flex justify="end">
@@ -380,7 +403,7 @@ export function ServiceAreaSelector({
             size="2"
             color={SEMANTIC_COLOR.primary}
             disabled={loading || !isDirty}
-            onClick={handleSave}
+            onClick={() => void handleSave()}
           >
             {loading
               ? (selectorLabels.saving ?? selectorLabels.override?.saving ?? "Saving…")

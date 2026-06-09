@@ -1917,7 +1917,8 @@
       },
       "serviceArea": {
         "title": "Service area",
-        "description": "Define the geographic area where you provide services. This helps customers find you when searching for services in their area."
+        "description": "Define the geographic area where you provide services. This helps customers find you when searching for services in their area.",
+        "saved": "Service area saved."
       },
       "offerings": {
         "listTitle": "Service offerings",
