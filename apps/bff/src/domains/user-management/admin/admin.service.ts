@@ -11,6 +11,7 @@ import { CustomerProfile } from '../../profile-management/entities/customer-prof
 import { WelperProfile } from '../../profile-management/entities/welper-profile.entity';
 import { ServiceOffering } from '../../profile-management/entities/service-offering.entity';
 import { ProfileCompletionStatus } from '../../profile-management/entities/profile-completion-status.enum';
+import { ProfileVisibility } from '../../profile-management/entities/profile-visibility.enum';
 import { Review } from '../../review/entities/review.entity';
 import { Notification } from '../../notification/entities/notification.entity';
 import { ReferralCode } from '../entities/referral-code.entity';
@@ -37,6 +38,8 @@ export type AdminUserListRow = UserAccount & {
   signupStepsCompleted: number | null;
   signupStepsRequired: number | null;
   profilePhotoUrl: string | null;
+  /** Welper only: ready to appear in search and receive job requests. */
+  discoverable: boolean | null;
 };
 
 export type AdminUsersSortBy = 'createdAt' | 'email' | 'status' | 'lastLoginAt' | 'signupSteps';
@@ -132,6 +135,38 @@ export class AdminService {
     };
   }
 
+  private isWelperDiscoverable(
+    user: UserAccount,
+    profileVisibility: ProfileVisibility | null | undefined,
+  ): boolean | null {
+    if (user.accountType !== AccountType.WELPER) return null;
+    return (
+      user.signupCompleted === true &&
+      user.emailVerified === true &&
+      user.status === AccountStatus.ACTIVE &&
+      profileVisibility === ProfileVisibility.PUBLIC
+    );
+  }
+
+  private async loadWelperProfileVisibilityByUserIds(
+    users: UserAccount[],
+  ): Promise<Map<string, ProfileVisibility | null>> {
+    const visibilityByUserId = new Map<string, ProfileVisibility | null>();
+    const welperIds = users
+      .filter((u) => u.accountType === AccountType.WELPER)
+      .map((u) => u.id);
+    if (welperIds.length === 0) return visibilityByUserId;
+
+    const rows = await this.welperProfileRepository.find({
+      where: { welperId: In(welperIds) },
+      select: ['welperId', 'profileVisibility'],
+    });
+    for (const row of rows) {
+      visibilityByUserId.set(row.welperId, row.profileVisibility);
+    }
+    return visibilityByUserId;
+  }
+
   private async loadProfilePhotoUrlsByUserIds(
     users: UserAccount[],
   ): Promise<Map<string, string | null>> {
@@ -171,6 +206,7 @@ export class AdminService {
       users.map((u) => u.id),
     );
     const photoByUserId = await this.loadProfilePhotoUrlsByUserIds(users);
+    const visibilityByUserId = await this.loadWelperProfileVisibilityByUserIds(users);
     const signupCounts = await Promise.all(
       users.map((user) => this.getSignupStepCountsForList(user)),
     );
@@ -179,6 +215,7 @@ export class AdminService {
       const payment = paymentMap.get(user.id);
       const isWelper = user.accountType === AccountType.WELPER;
       const steps = signupCounts[index];
+      const profileVisibility = visibilityByUserId.get(user.id);
       return {
         ...user,
         backgroundCheckPaid: isWelper ? (payment?.paid ?? false) : null,
@@ -187,6 +224,7 @@ export class AdminService {
         signupStepsCompleted: steps.completed,
         signupStepsRequired: steps.required,
         profilePhotoUrl: photoByUserId.get(user.id) ?? null,
+        discoverable: this.isWelperDiscoverable(user, profileVisibility),
       };
     });
   }
@@ -216,6 +254,7 @@ export class AdminService {
     status?: AccountStatus;
     emailVerified?: boolean;
     signupCompleted?: boolean;
+    discoverable?: boolean;
     backgroundCheckStatus?: BackgroundCheckStatus;
     search?: string;
     limit?: number;
@@ -265,6 +304,36 @@ export class AdminService {
       queryBuilder.andWhere('user.signupCompleted = :signupCompleted', {
         signupCompleted: filters.signupCompleted,
       });
+    }
+
+    if (filters?.discoverable !== undefined) {
+      queryBuilder.andWhere('user.accountType = :welperType', {
+        welperType: AccountType.WELPER,
+      });
+      queryBuilder.leftJoin(
+        WelperProfile,
+        'welperProfile',
+        'welperProfile.welper_id = user.id',
+      );
+      if (filters.discoverable) {
+        queryBuilder
+          .andWhere('user.signupCompleted = true')
+          .andWhere('user.emailVerified = true')
+          .andWhere('user.status = :discoverableActive', {
+            discoverableActive: AccountStatus.ACTIVE,
+          })
+          .andWhere('welperProfile.profileVisibility = :discoverablePublic', {
+            discoverablePublic: ProfileVisibility.PUBLIC,
+          });
+      } else {
+        queryBuilder.andWhere(
+          `(user.signupCompleted = false OR user.emailVerified = false OR user.status != :discoverableActive OR welperProfile.profileVisibility IS NULL OR welperProfile.profileVisibility != :discoverablePublic)`,
+          {
+            discoverableActive: AccountStatus.ACTIVE,
+            discoverablePublic: ProfileVisibility.PUBLIC,
+          },
+        );
+      }
     }
 
     if (filters?.backgroundCheckStatus) {

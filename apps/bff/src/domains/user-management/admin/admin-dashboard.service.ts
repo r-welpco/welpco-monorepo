@@ -12,6 +12,8 @@ import { BookingRequest, BookingRequestStatus } from '../../booking/entities/boo
 import { BookingPayment } from '../../payment/entities/booking-payment.entity';
 import { ServiceCategory } from '../../content-management/entities/service-category.entity';
 import { ServiceOffering } from '../../profile-management/entities/service-offering.entity';
+import { WelperProfile } from '../../profile-management/entities/welper-profile.entity';
+import { ProfileVisibility } from '../../profile-management/entities/profile-visibility.enum';
 
 export interface WelpersPerSubcategoryRow {
   subcategoryId: string;
@@ -40,6 +42,7 @@ export interface AdminDashboardSnapshot {
     welpers: number;
     welpersPending: number;
     welpersSignupIncomplete: number;
+    welpersDiscoverable: number;
     welpersBgInProgress: number;
     welpersBgFailed: number;
   };
@@ -84,6 +87,8 @@ export class AdminDashboardService {
     private readonly serviceCategoryRepository: Repository<ServiceCategory>,
     @InjectRepository(ServiceOffering)
     private readonly serviceOfferingRepository: Repository<ServiceOffering>,
+    @InjectRepository(WelperProfile)
+    private readonly welperProfileRepository: Repository<WelperProfile>,
   ) {}
 
   async getSnapshot(): Promise<AdminDashboardSnapshot> {
@@ -101,6 +106,7 @@ export class AdminDashboardService {
       welpers,
       welpersPending,
       welpersSignupIncomplete,
+      welpersDiscoverable,
       welpersBgInProgress,
       welpersBgFailed,
       disputesOpen,
@@ -131,6 +137,7 @@ export class AdminDashboardService {
           signupCompleted: false,
         },
       }),
+      this.countDiscoverableWelpers(),
       this.verificationRepository
         .createQueryBuilder('vs')
         .innerJoin(UserAccount, 'u', 'u.id = vs.user_id')
@@ -185,6 +192,7 @@ export class AdminDashboardService {
         welpers,
         welpersPending,
         welpersSignupIncomplete,
+        welpersDiscoverable,
         welpersBgInProgress,
         welpersBgFailed,
       },
@@ -209,6 +217,22 @@ export class AdminDashboardService {
       },
       welpersPerCategory,
     };
+  }
+
+  /**
+   * Welpers who finished required go-live setup and can appear in search / receive jobs.
+   * Mirrors signup `discoverable`: active account, signup + email verified, public profile.
+   */
+  private async countDiscoverableWelpers(): Promise<number> {
+    return this.userRepository
+      .createQueryBuilder('u')
+      .innerJoin(WelperProfile, 'wp', 'wp.welper_id = u.id')
+      .where('u.account_type = :welper', { welper: AccountType.WELPER })
+      .andWhere('u.status = :active', { active: AccountStatus.ACTIVE })
+      .andWhere('u.signup_completed = true')
+      .andWhere('u.email_verified = true')
+      .andWhere('wp.profile_visibility = :public', { public: ProfileVisibility.PUBLIC })
+      .getCount();
   }
 
   /**

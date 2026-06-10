@@ -293,12 +293,21 @@ export function DashboardLive() {
       {snap ? (
         <>
           <SectionTitle>Platform overview</SectionTitle>
-          <Grid columns={{ initial: "1", sm: "2" }} gap="3">
+          <Grid columns={{ initial: "1", sm: "2", md: "3" }} gap="3">
             <Link href="/users?accountType=Customer" style={{ textDecoration: "none", color: "inherit" }}>
               <StatCard label="Total customers" value={snap.users.customers} />
             </Link>
             <Link href="/users?accountType=Welper" style={{ textDecoration: "none", color: "inherit" }}>
               <StatCard label="Total welpers" value={snap.users.welpers} />
+            </Link>
+            <Link
+              href="/users?accountType=Welper&discoverable=true"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <StatCard
+                label="Welpers ready for jobs"
+                value={snap.users.welpersDiscoverable}
+              />
             </Link>
           </Grid>
 

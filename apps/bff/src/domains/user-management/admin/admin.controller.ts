@@ -74,6 +74,13 @@ export class AdminController {
   @ApiQuery({ name: 'emailVerified', type: Boolean, required: false })
   @ApiQuery({ name: 'signupCompleted', type: Boolean, required: false })
   @ApiQuery({
+    name: 'discoverable',
+    type: Boolean,
+    required: false,
+    description:
+      'Welper only: true = finished go-live setup and ready for search/jobs',
+  })
+  @ApiQuery({
     name: 'backgroundCheckStatus',
     enum: BackgroundCheckStatus,
     required: false,
@@ -100,6 +107,7 @@ export class AdminController {
     @Query('status') status?: AccountStatus,
     @Query('emailVerified') emailVerified?: string,
     @Query('signupCompleted') signupCompleted?: string,
+    @Query('discoverable') discoverable?: string,
     @Query('backgroundCheckStatus')
     backgroundCheckStatus?: BackgroundCheckStatus,
     @Query('search') search?: string,
@@ -124,6 +132,8 @@ export class AdminController {
       status,
       emailVerified: emailVerified === 'true' ? true : emailVerified === 'false' ? false : undefined,
       signupCompleted: signupCompleted === 'true' ? true : signupCompleted === 'false' ? false : undefined,
+      discoverable:
+        discoverable === 'true' ? true : discoverable === 'false' ? false : undefined,
       backgroundCheckStatus: bgStatus,
       search: search?.trim() || undefined,
       limit: limit ? parseInt(limit, 10) : undefined,

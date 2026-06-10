@@ -30,6 +30,8 @@ export interface AdminUserRow {
   signupStepsCompleted?: number | null;
   signupStepsRequired?: number | null;
   profilePhotoUrl?: string | null;
+  /** Welper only: finished go-live setup and ready for search/jobs. */
+  discoverable?: boolean | null;
 }
 
 export type AdminUsersSortBy = "createdAt" | "email" | "status" | "lastLoginAt" | "signupSteps";
@@ -100,6 +102,7 @@ export async function listAdminUsers(params?: {
   status?: string;
   emailVerified?: boolean;
   signupCompleted?: boolean;
+  discoverable?: boolean;
   backgroundCheckStatus?: string;
   search?: string;
   sortBy?: AdminUsersSortBy;
@@ -113,6 +116,7 @@ export async function listAdminUsers(params?: {
       status: params?.status,
       emailVerified: params?.emailVerified,
       signupCompleted: params?.signupCompleted,
+      discoverable: params?.discoverable,
       backgroundCheckStatus: params?.backgroundCheckStatus,
       search: params?.search?.trim() || undefined,
       sortBy: params?.sortBy,

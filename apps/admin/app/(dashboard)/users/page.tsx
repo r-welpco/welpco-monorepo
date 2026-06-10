@@ -40,6 +40,10 @@ const STATUSES = ["", "Pending", "Active", "Suspended", "Deactivated"] as const;
 
 const QUICK_PRESETS: { label: string; query: Record<string, string> }[] = [
   {
+    label: "Welpers · ready for jobs",
+    query: { accountType: "Welper", discoverable: "true" },
+  },
+  {
     label: "Welpers · Pending",
     query: { accountType: "Welper", status: "Pending" },
   },
@@ -65,6 +69,7 @@ export default async function AdminUsersPage({
     status?: string;
     emailVerified?: string;
     signupCompleted?: string;
+    discoverable?: string;
     backgroundCheckStatus?: string;
     search?: string;
     offset?: string;
@@ -93,6 +98,10 @@ export default async function AdminUsersPage({
   if (sp.signupCompleted === "true") signupCompleted = true;
   else if (sp.signupCompleted === "false") signupCompleted = false;
 
+  let discoverable: boolean | undefined;
+  if (sp.discoverable === "true") discoverable = true;
+  else if (sp.discoverable === "false") discoverable = false;
+
   const backgroundCheckStatus =
     sp.backgroundCheckStatus &&
     BACKGROUND_CHECK_STATUSES.includes(
@@ -118,6 +127,7 @@ export default async function AdminUsersPage({
       status,
       emailVerified,
       signupCompleted,
+      discoverable,
       backgroundCheckStatus,
       search,
       sortBy,
@@ -140,6 +150,7 @@ export default async function AdminUsersPage({
       status,
       emailVerified: sp.emailVerified,
       signupCompleted: sp.signupCompleted,
+      discoverable: sp.discoverable,
       backgroundCheckStatus,
       search,
       sortBy,
@@ -153,6 +164,9 @@ export default async function AdminUsersPage({
     }
     if (merged.signupCompleted === "true" || merged.signupCompleted === "false") {
       q.set("signupCompleted", merged.signupCompleted);
+    }
+    if (merged.discoverable === "true" || merged.discoverable === "false") {
+      q.set("discoverable", merged.discoverable);
     }
     if (merged.backgroundCheckStatus) q.set("backgroundCheckStatus", merged.backgroundCheckStatus);
     if (merged.search) q.set("search", merged.search);
@@ -230,6 +244,13 @@ export default async function AdminUsersPage({
                 <option value="false">No</option>
               </select>
             </NativeFormField>
+            <NativeFormField label="Discoverable">
+              <select name="discoverable" defaultValue={sp.discoverable ?? ""} {...nativeSelectProps()}>
+                <option value="">All</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </NativeFormField>
             <NativeFormField label="BG status">
               <select
                 name="backgroundCheckStatus"
@@ -279,6 +300,7 @@ export default async function AdminUsersPage({
                 <Link href={sortHref("status")}>Status{sortIndicator("status")}</Link>
               </TableColumnHeaderCell>
               <TableColumnHeaderCell>Signup</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Discoverable</TableColumnHeaderCell>
               <TableColumnHeaderCell>
                 <Link href={sortHref("signupSteps")}>
                   Onboarding{sortIndicator("signupSteps")}
@@ -297,7 +319,7 @@ export default async function AdminUsersPage({
           <TableBody>
             {data.users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12}>
+                <TableCell colSpan={13}>
                   <Text color="gray">No users.</Text>
                 </TableCell>
               </TableRow>
@@ -313,6 +335,9 @@ export default async function AdminUsersPage({
                   </TableCell>
                   <TableCell>{u.status}</TableCell>
                   <TableCell>{u.signupCompleted ? "Yes" : "No"}</TableCell>
+                  <TableCell>
+                    {u.discoverable == null ? "—" : u.discoverable ? "Yes" : "No"}
+                  </TableCell>
                   <TableCell>{formatSignupStepsProgress(u)}</TableCell>
                   <TableCell>{u.emailVerified ? "Yes" : "No"}</TableCell>
                   <TableCell>

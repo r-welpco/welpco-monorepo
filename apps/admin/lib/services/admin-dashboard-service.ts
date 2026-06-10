@@ -27,6 +27,7 @@ export interface AdminDashboardSnapshot {
     welpers: number;
     welpersPending: number;
     welpersSignupIncomplete: number;
+    welpersDiscoverable: number;
     welpersBgInProgress: number;
     welpersBgFailed: number;
   };
