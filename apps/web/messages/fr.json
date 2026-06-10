@@ -1350,6 +1350,27 @@
       "resendSent": "Envoyé. Vérifiez votre boîte dans une minute ou deux.",
       "resendFailed": "Impossible de renvoyer le courriel. Réessayez dans un instant.",
       "allCompleteDiscoverable": "Configuration terminée — vous êtes visible dans la recherche.",
+      "welperSections": {
+        "progress": "{done} sur {total} étapes terminées",
+        "goLive": {
+          "title": "Mise en ligne — apparaître dans la recherche et recevoir des mandats",
+          "complete": "Vous êtes en ligne — les clients peuvent vous trouver et vous envoyer des demandes.",
+          "compactProgress": "Mise en ligne — {done} sur {total} étapes"
+        },
+        "payout": {
+          "title": "Paiement hebdomadaire — connecter Stripe",
+          "subtitle": "Nécessaire pour recevoir vos paiements une fois les mandats terminés.",
+          "complete": "Stripe est connecté — vous êtes prêt à recevoir vos paiements."
+        },
+        "trust": {
+          "title": "Badge de confiance — vérification des antécédents (recommandé)",
+          "subtitle": "Ajoute un badge vérifié à votre profil pour une meilleure visibilité et la confiance des clients.",
+          "complete": "Vérification terminée — badge vérifié sur votre profil."
+        },
+        "beyondA": {
+          "compactProgress": "Étapes recommandées restantes — paiement ou vérification des antécédents"
+        }
+      },
       "header": {
         "title": "Terminer la configuration",
         "subtitle": "{done} sur {total} étapes — complétez le reste pour réserver",

@@ -8,15 +8,19 @@ import type { Locale } from "@/i18n/routing";
 import { Box } from "@welpco/ui/box";
 import { Button } from "@welpco/ui/button";
 import { Callout } from "@welpco/ui/callout";
+import { Card } from "@welpco/ui/card";
 import { Flex } from "@welpco/ui/flex";
 import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { Badge } from "@welpco/ui/badge";
 import { CheckCircle2, Circle, CircleDashed, ShieldCheck } from "lucide-react";
 import type { WelperSetupTaskDto } from "@welpco/types";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
-import { getWelperSetupProgress } from "@/lib/dashboard/welper-setup-progress";
+import {
+  buildWelperSetupGroupedView,
+  type WelperSetupSectionView,
+  type WelperSetupTaskWithStep,
+} from "@/lib/dashboard/welper-setup-groups";
 import {
   WELPER_SETUP_TASK_LABEL_KEYS,
   welperTaskActionHref,
@@ -63,30 +67,17 @@ function setupTaskStatusLabel(
 function setupTaskOptionalHint(
   task: WelperSetupTaskDto,
   t: ReturnType<typeof useTranslations<"dashboard.setup">>,
-  bg: BackgroundCheckStatusResponse | undefined,
   guardian: GuardianConsentStatusResponse | undefined,
 ): string | undefined {
-  if (task.completed || task.required) return undefined;
-  if (task.id === "welperBackgroundCheck") {
-    if (isBackgroundCheckLinkSent(bg)) return undefined;
-    return t("optionalHints.welperBackgroundCheck");
-  }
+  if (task.completed) return undefined;
   if (task.id === "welperGuardian") {
     if (guardian?.status === "pending") return undefined;
     return t("optionalHints.welperGuardian");
   }
-  if (task.id === "welperPayout") {
-    return t("optionalHints.welperPayout");
-  }
   return undefined;
 }
 
-function showOptionalSuffix(task: WelperSetupTaskDto): boolean {
-  return !task.required && task.id !== "welperPayout";
-}
-
 interface WelperSetupChecklistProps {
-  /** Compact layout for dashboard home callout area. */
   variant?: "full" | "compact";
 }
 
@@ -96,15 +87,14 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
   const { data: session, status: sessionStatus } = useSession();
   const sessionRole = session?.user?.role;
   const isWelperSession = sessionRole === "welper";
-  const { data: raw, isPending, isError, refetch } = useWelperSetupChecklist(
-    isWelperSession,
-  );
+  const { data: raw, isPending, isError, refetch } = useWelperSetupChecklist(isWelperSession);
 
   useEffect(() => {
     if (isWelperSession && isError) {
       void refetch();
     }
   }, [isWelperSession, isError, refetch]);
+
   const { data: backgroundCheck } = useBackgroundCheckStatus();
   const { data: guardianConsent } = useGuardianConsentStatus(isWelperSession);
 
@@ -112,6 +102,11 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
   const data = useMemo(
     () => (raw ? normalizeWelperSetupChecklist(raw, emailVerified) : undefined),
     [raw, emailVerified],
+  );
+
+  const grouped = useMemo(
+    () => (data ? buildWelperSetupGroupedView(data.setupTasks) : undefined),
+    [data],
   );
 
   if (sessionStatus === "authenticated" && !isWelperSession) {
@@ -130,7 +125,7 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
     );
   }
 
-  if (isError || !data) {
+  if (isError || !data || !grouped) {
     return (
       <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface">
         <Callout.Text>{t("loadError")}</Callout.Text>
@@ -138,14 +133,7 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
     );
   }
 
-  const progress = getWelperSetupProgress(data.setupTasks);
-  const { requiredTasks, requiredComplete, allComplete, pendingOptionalTasks } = progress;
-  const completedRequired = requiredTasks.filter((task) => task.completed).length;
-  const progressPct = Math.round(
-    (completedRequired / Math.max(requiredTasks.length, 1)) * 100,
-  );
-
-  if (allComplete) {
+  if (grouped.allComplete) {
     if (variant === "compact") return null;
     return (
       <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
@@ -156,11 +144,12 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
 
   if (variant === "compact") {
     const nextTask =
-      progress.pendingActionTasks[0] ??
+      firstPendingFromGrouped(grouped) ??
       data.setupTasks.find((task: WelperSetupTaskDto) => !task.completed);
+    const { goLive } = grouped;
     return (
       <Callout.Root
-        color={requiredComplete ? SEMANTIC_COLOR.primary : SEMANTIC_COLOR.warning}
+        color={grouped.sectionAComplete ? SEMANTIC_COLOR.primary : SEMANTIC_COLOR.warning}
         variant="surface"
         role="status"
       >
@@ -172,22 +161,22 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
           direction={{ initial: "column", sm: "row" }}
         >
           <Callout.Text>
-            {requiredComplete
-              ? t("compactOptionalProgress", { total: pendingOptionalTasks.length })
-              : t("compactProgress", {
-                  done: completedRequired,
-                  total: requiredTasks.length,
-                })}
+            {!grouped.sectionAComplete
+              ? t("welperSections.goLive.compactProgress", {
+                  done: goLive.completedCount,
+                  total: goLive.totalCount,
+                })
+              : t("welperSections.beyondA.compactProgress")}
           </Callout.Text>
           {nextTask ? (
             <Button
               size="2"
-              color={requiredComplete ? SEMANTIC_COLOR.primary : SEMANTIC_COLOR.warning}
+              color={grouped.sectionAComplete ? SEMANTIC_COLOR.primary : SEMANTIC_COLOR.warning}
               variant="soft"
               asChild
             >
               <Link href={welperTaskActionHref(nextTask, locale, session?.user?.email ?? undefined)}>
-                {requiredComplete ? t("continueRecommended") : t("continueSetup")}
+                {!grouped.sectionAComplete ? t("continueSetup") : t("continueRecommended")}
               </Link>
             </Button>
           ) : null}
@@ -196,60 +185,172 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
     );
   }
 
-  return (
-    <Box>
-      <Flex direction="column" gap="4">
-        {requiredComplete ? (
-          <Callout.Root color={SEMANTIC_COLOR.primary} variant="surface" role="status">
-            <Callout.Text>
-              {raw?.isMinorWelper ? t("requiredCompleteLiveMinor") : t("requiredCompleteLive")}
-            </Callout.Text>
-          </Callout.Root>
-        ) : (
-          <Box>
-            <Text size="2" weight="medium" mb="2" as="p">
-              {t("progress", { done: completedRequired, total: requiredTasks.length })}
-            </Text>
-            <Progress
-              value={progressPct}
-              size="2"
-              color={SEMANTIC_COLOR.primary}
-              aria-label={t("progressAria", { percent: progressPct })}
-            />
-          </Box>
-        )}
+  const sectionAComplete = grouped.sectionAComplete;
 
-        <Flex direction="column" gap="2" asChild>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-            {data.setupTasks
-              .filter((task: WelperSetupTaskDto) => !task.completed)
-              .map((task: WelperSetupTaskDto) => (
-              <SetupTaskRow
-                key={task.id}
-                task={task}
-                label={setupTaskLabel(task, t)}
-                statusLabel={setupTaskStatusLabel(task, t, backgroundCheck, guardianConsent)}
-                optionalHint={setupTaskOptionalHint(task, t, backgroundCheck, guardianConsent)}
-                locale={locale}
-                sessionEmail={session?.user?.email ?? undefined}
+  return (
+    <Flex direction="column" gap="4">
+      <WelperSetupSectionCard
+        section={grouped.goLive}
+        title={t("welperSections.goLive.title")}
+        completeMessage={t("welperSections.goLive.complete")}
+        showTasks={!sectionAComplete}
+        backgroundCheck={backgroundCheck}
+        guardianConsent={guardianConsent}
+        locale={locale}
+        sessionEmail={session?.user?.email ?? undefined}
+      />
+
+      {grouped.payout && !grouped.payout.complete ? (
+        <WelperSetupSectionCard
+          section={grouped.payout}
+          title={t("welperSections.payout.title")}
+          subtitle={t("welperSections.payout.subtitle")}
+          completeMessage={t("welperSections.payout.complete")}
+          showTasks
+          backgroundCheck={backgroundCheck}
+          guardianConsent={guardianConsent}
+          locale={locale}
+          sessionEmail={session?.user?.email ?? undefined}
+        />
+      ) : null}
+
+      {grouped.trust && !grouped.trust.complete ? (
+        <WelperSetupSectionCard
+          section={grouped.trust}
+          title={t("welperSections.trust.title")}
+          subtitle={t("welperSections.trust.subtitle")}
+          completeMessage={t("welperSections.trust.complete")}
+          showTasks
+          backgroundCheck={backgroundCheck}
+          guardianConsent={guardianConsent}
+          locale={locale}
+          sessionEmail={session?.user?.email ?? undefined}
+        />
+      ) : null}
+    </Flex>
+  );
+}
+
+function firstPendingFromGrouped(
+  grouped: ReturnType<typeof buildWelperSetupGroupedView>,
+): WelperSetupTaskDto | undefined {
+  if (!grouped.sectionAComplete) {
+    return grouped.goLive.tasks.find((t) => !t.completed);
+  }
+  return (
+    grouped.payout?.tasks.find((t) => !t.completed) ??
+    grouped.trust?.tasks.find((t) => !t.completed)
+  );
+}
+
+function WelperSetupSectionCard({
+  section,
+  title,
+  subtitle,
+  completeMessage,
+  showTasks,
+  backgroundCheck,
+  guardianConsent,
+  locale,
+  sessionEmail,
+}: {
+  section: WelperSetupSectionView;
+  title: string;
+  subtitle?: string;
+  completeMessage?: string;
+  showTasks: boolean;
+  backgroundCheck: BackgroundCheckStatusResponse | undefined;
+  guardianConsent: GuardianConsentStatusResponse | undefined;
+  locale: Locale;
+  sessionEmail?: string;
+}) {
+  const t = useTranslations("dashboard.setup");
+  const progressPct = Math.round(
+    (section.completedCount / Math.max(section.totalCount, 1)) * 100,
+  );
+
+  return (
+    <Card size="3" variant="surface">
+      <Flex direction="column" gap="3">
+        <Box style={{ minWidth: 0 }}>
+          <Text size="3" weight="bold" as="p" mb={subtitle && !section.complete ? "1" : "0"}>
+            {title}
+          </Text>
+          {subtitle && !section.complete ? (
+            <Text size="2" color="gray" as="p">
+              {subtitle}
+            </Text>
+          ) : null}
+        </Box>
+
+        {section.complete && completeMessage ? (
+          <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
+            <Callout.Text>{completeMessage}</Callout.Text>
+          </Callout.Root>
+        ) : null}
+
+        {showTasks && !section.complete ? (
+          <>
+            <Box>
+              <Text size="2" weight="medium" mb="2" as="p">
+                {section.id === "goLive"
+                  ? t("progress", {
+                      done: section.completedCount,
+                      total: section.totalCount,
+                    })
+                  : t("welperSections.progress", {
+                      done: section.completedCount,
+                      total: section.totalCount,
+                    })}
+              </Text>
+              <Progress
+                value={progressPct}
+                size="2"
+                color={SEMANTIC_COLOR.primary}
+                aria-label={t("progressAria", { percent: progressPct })}
               />
-            ))}
-          </ul>
-        </Flex>
+            </Box>
+            <Flex direction="column" gap="2" asChild>
+              <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+                {section.tasks
+                  .filter((task) => !task.completed)
+                  .map((task) => (
+                    <SetupTaskRow
+                      key={task.id}
+                      task={task}
+                      stepNumber={task.stepNumber}
+                      label={setupTaskLabel(task, t)}
+                      statusLabel={setupTaskStatusLabel(
+                        task,
+                        t,
+                        backgroundCheck,
+                        guardianConsent,
+                      )}
+                      optionalHint={setupTaskOptionalHint(task, t, guardianConsent)}
+                      locale={locale}
+                      sessionEmail={sessionEmail}
+                    />
+                  ))}
+              </ul>
+            </Flex>
+          </>
+        ) : null}
       </Flex>
-    </Box>
+    </Card>
   );
 }
 
 function SetupTaskRow({
   task,
+  stepNumber,
   label,
   statusLabel,
   optionalHint,
   locale,
   sessionEmail,
 }: {
-  task: WelperSetupTaskDto;
+  task: WelperSetupTaskWithStep;
+  stepNumber: number;
   label: string;
   statusLabel: string;
   optionalHint?: string;
@@ -260,8 +361,7 @@ function SetupTaskRow({
   const resend = useResendVerification();
   const [resendNote, setResendNote] = useState<string | null>(null);
   const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
-  const isBackgroundCheck =
-    task.id === "welperBackgroundCheck" && !task.completed;
+  const isBackgroundCheck = task.id === "welperBackgroundCheck" && !task.completed;
   const Icon = task.completed
     ? CheckCircle2
     : isBackgroundCheck
@@ -285,39 +385,19 @@ function SetupTaskRow({
         justify="between"
         gap="3"
         py="2"
-        style={{
-          borderBottom: "1px solid var(--gray-a5)",
-        }}
+        style={{ borderBottom: "1px solid var(--gray-a5)" }}
       >
         <Flex align="center" gap="3" style={{ minWidth: 0 }}>
           <Icon size={iconSize} color={iconColor} aria-hidden />
           <Box style={{ minWidth: 0 }}>
-            <Flex align="center" gap="2" wrap="wrap">
-              <Text size="2" weight="medium" as="span">
-                {label}
-                {showOptionalSuffix(task) ? (
-                  <Text as="span" size="1" color="gray" ml="2">
-                    ({t("optional")})
-                  </Text>
-                ) : null}
-              </Text>
-              {isBackgroundCheck ? (
-                <Badge color="blue" variant="solid" size="2" highContrast>
-                  {t("recommendedBadge")}
-                </Badge>
-              ) : null}
-            </Flex>
+            <Text size="2" weight="medium" as="p">
+              {stepNumber}. {label}
+            </Text>
             <Text size="1" color="gray" as="p">
               {statusLabel}
             </Text>
             {optionalHint ? (
-              <Text
-                size={isBackgroundCheck ? "2" : "1"}
-                weight={isBackgroundCheck ? "medium" : "regular"}
-                color={isBackgroundCheck ? undefined : "gray"}
-                as="p"
-                mt="1"
-              >
+              <Text size="2" weight="medium" as="p" mt="1">
                 {optionalHint}
               </Text>
             ) : null}

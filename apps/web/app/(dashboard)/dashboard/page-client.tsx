@@ -16,6 +16,7 @@ import { CustomerSetupChecklist } from "@/components/features/dashboard/customer
 import { WelperSetupChecklist } from "@/components/features/dashboard/welper-setup-checklist";
 import { normalizeCustomerSetupChecklist } from "@/lib/dashboard/normalize-customer-setup-checklist";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
+import { buildWelperSetupGroupedView } from "@/lib/dashboard/welper-setup-groups";
 import { useCustomerSetupChecklist, useWelperSetupChecklist } from "@/lib/hooks/use-signup";
 import { useDashboardUser } from "@/lib/hooks/use-dashboard-user";
 import { useCustomerProfile, useFavoriteWelpers, useWelperProfile } from "@/lib/hooks/use-profile";
@@ -100,11 +101,20 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
       !normalizedCustomerSetup ||
       !normalizedCustomerSetup.setupComplete);
 
-  const welperRequiredSetupIncomplete =
+  const welperGroupedSetup = useMemo(
+    () =>
+      normalizedWelperSetup
+        ? buildWelperSetupGroupedView(normalizedWelperSetup.setupTasks)
+        : undefined,
+    [normalizedWelperSetup],
+  );
+
+  /** Section A (go live) — bookings and dashboard extras unlock when this is complete. */
+  const welperSectionAIncomplete =
     userRole === "welper" &&
     ((welperSetupPending && !welperSetup) ||
-      !normalizedWelperSetup ||
-      !normalizedWelperSetup.setupComplete);
+      !welperGroupedSetup ||
+      !welperGroupedSetup.sectionAComplete);
 
   const welperChecklistVisible =
     userRole === "welper" &&
@@ -117,7 +127,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     isLoading: bookingsLoading,
   } = useBookings(
     { page: 1, limit: BOOKINGS_DASHBOARD_LIMIT, role: bookingsRole ?? "customer" },
-    { enabled: !!bookingsRole && !welperRequiredSetupIncomplete && !customerSetupIncomplete },
+    { enabled: !!bookingsRole && !welperSectionAIncomplete && !customerSetupIncomplete },
   );
 
   const { data: customerProfile } = useCustomerProfile(user.id, userRole === "customer");
@@ -158,7 +168,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
 
   const welperShowSetupChecklist = welperChecklistVisible;
   const customerShowSetupChecklist = userRole === "customer" && customerSetupIncomplete;
-  const hideDashboardExtras = welperRequiredSetupIncomplete || customerSetupIncomplete;
+  const hideDashboardExtras = welperSectionAIncomplete || customerSetupIncomplete;
 
   // The single concrete state line below the greeting. Avoids generic
   // "here's what's happening" copy — names a number when there is one.
@@ -177,11 +187,11 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
         if (active > 0) {
           return welperHome.activeJobs(active);
         }
-        return welperRequiredSetupIncomplete
+        return welperSectionAIncomplete
           ? welperHome.setupIncomplete
           : welperHome.recommendedSetupRemaining;
       }
-      if (welperRequiredSetupIncomplete) {
+      if (welperSectionAIncomplete) {
         return welperHome.setupIncomplete;
       }
       if (pendingForWelper > 0) {
@@ -211,7 +221,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     upcomingCount,
     pendingForWelper,
     bookings,
-    welperRequiredSetupIncomplete,
+    welperSectionAIncomplete,
     customerSetupIncomplete,
     customerShowSetupChecklist,
     welperShowSetupChecklist,

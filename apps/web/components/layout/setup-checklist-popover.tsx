@@ -17,7 +17,7 @@ import { ListChecks, ChevronRight } from "lucide-react";
 import type { CustomerSetupTaskDto, WelperSetupTaskDto } from "@welpco/types";
 import { normalizeCustomerSetupChecklist } from "@/lib/dashboard/normalize-customer-setup-checklist";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
-import { getWelperSetupProgress } from "@/lib/dashboard/welper-setup-progress";
+import { buildWelperSetupGroupedView } from "@/lib/dashboard/welper-setup-groups";
 import {
   CUSTOMER_SETUP_TASK_LABEL_KEYS,
   WELPER_SETUP_TASK_LABEL_KEYS,
@@ -100,40 +100,52 @@ export function SetupChecklistPopover({
 
   const data = isCustomer ? customerData : welperData;
 
-  const welperProgress = useMemo(() => {
+  const welperGrouped = useMemo(() => {
     if (isCustomer || !welperData) return undefined;
-    return getWelperSetupProgress(welperData.setupTasks);
+    return buildWelperSetupGroupedView(welperData.setupTasks);
   }, [isCustomer, welperData]);
 
   const requiredTasks = useMemo(() => {
     if (isCustomer) {
       return data?.setupTasks.filter((task) => task.required) ?? [];
     }
-    return welperProgress?.requiredTasks ?? [];
-  }, [isCustomer, data, welperProgress]);
+    return welperGrouped?.goLive.tasks ?? [];
+  }, [isCustomer, data, welperGrouped]);
 
   const pendingTasks = useMemo(() => {
     if (isCustomer) {
       return requiredTasks.filter((task) => !task.completed);
     }
-    if (!welperProgress) return [];
-    return welperProgress.pendingActionTasks;
-  }, [isCustomer, requiredTasks, welperProgress]);
+    if (!welperGrouped) return [];
+    const pending: WelperSetupTaskDto[] = [];
+    for (const task of welperGrouped.goLive.tasks) {
+      if (!task.completed) pending.push(task);
+    }
+    if (welperGrouped.payout) {
+      for (const task of welperGrouped.payout.tasks) {
+        if (!task.completed) pending.push(task);
+      }
+    }
+    if (welperGrouped.trust) {
+      for (const task of welperGrouped.trust.tasks) {
+        if (!task.completed) pending.push(task);
+      }
+    }
+    return pending;
+  }, [isCustomer, requiredTasks, welperGrouped]);
 
   const completedRequired = isCustomer
     ? requiredTasks.length - pendingTasks.length
-    : welperProgress?.requiredComplete
-      ? requiredTasks.length
-      : requiredTasks.length - pendingTasks.length;
+    : (welperGrouped?.goLive.completedCount ?? 0);
   const remainingCount = isCustomer
     ? pendingTasks.length
-    : welperProgress?.allComplete
+    : welperGrouped?.allComplete
       ? 0
-      : (welperProgress?.pendingActionTasks.length ?? 0);
+      : pendingTasks.length;
   const progressPct = Math.round(
     (completedRequired / Math.max(requiredTasks.length, 1)) * 100,
   );
-  const welperAllComplete = !isCustomer && (welperProgress?.allComplete ?? false);
+  const welperAllComplete = !isCustomer && (welperGrouped?.allComplete ?? false);
 
   if (isInitialLoad || !data || (isCustomer && data.setupComplete) || welperAllComplete) {
     return null;
@@ -174,9 +186,9 @@ export function SetupChecklistPopover({
                       done: completedRequired,
                       total: requiredTasks.length,
                     })
-                  : welperProgress?.requiredComplete
+                  : welperGrouped?.sectionAComplete
                     ? t("header.subtitleOptional", {
-                        count: welperProgress.pendingOptionalTasks.length,
+                        count: pendingTasks.length,
                       })
                     : t("header.subtitle", {
                         done: completedRequired,

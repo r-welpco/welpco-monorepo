@@ -1351,6 +1351,27 @@
       "resendSent": "Sent. Check your inbox in a minute or two.",
       "resendFailed": "We couldn't resend the email. Try again in a moment.",
       "allCompleteDiscoverable": "Setup complete — you're visible in customer search.",
+      "welperSections": {
+        "progress": "{done} of {total} steps done",
+        "goLive": {
+          "title": "Go live — appear in search and receive jobs",
+          "complete": "You're live — customers can find you and send job requests.",
+          "compactProgress": "Go live — {done} of {total} steps done"
+        },
+        "payout": {
+          "title": "Weekly payout — connect Stripe",
+          "subtitle": "Required to receive payments for completed jobs.",
+          "complete": "Stripe is connected — you're set up to receive payouts."
+        },
+        "trust": {
+          "title": "Trust badge — background check (recommended)",
+          "subtitle": "Adds a verified badge to your profile for better visibility and customer confidence.",
+          "complete": "Background check complete — verified badge on your profile."
+        },
+        "beyondA": {
+          "compactProgress": "Recommended steps remaining — payout or background check"
+        }
+      },
       "header": {
         "title": "Finish setup",
         "subtitle": "{done} of {total} steps done — complete the rest to start booking",

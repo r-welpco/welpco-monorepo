@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import type { CustomerSetupTaskDto, WelperSetupTaskDto } from "@welpco/types";
 import { normalizeCustomerSetupChecklist } from "@/lib/dashboard/normalize-customer-setup-checklist";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
-import { getWelperSetupProgress } from "@/lib/dashboard/welper-setup-progress";
+import { buildWelperSetupGroupedView, firstPendingSectionATask } from "@/lib/dashboard/welper-setup-groups";
 import {
   useCustomerSetupChecklist,
   useWelperSetupChecklist,
@@ -64,15 +64,14 @@ export function useSetupReadiness(role: "customer" | "welper"): SetupReadinessSt
     }
 
     const data = normalizeWelperSetupChecklist(rawWelper, emailVerified);
-    const progress = getWelperSetupProgress(data.setupTasks);
-    const pendingRequired = progress.requiredTasks.filter((task) => !task.completed);
+    const grouped = buildWelperSetupGroupedView(data.setupTasks);
 
     return {
       isLoading,
-      requiredIncomplete: !data.setupComplete,
-      completedRequired: progress.requiredTasks.length - pendingRequired.length,
-      totalRequired: progress.requiredTasks.length,
-      nextTask: pendingRequired[0],
+      requiredIncomplete: !grouped.sectionAComplete,
+      completedRequired: grouped.goLive.completedCount,
+      totalRequired: grouped.goLive.totalCount,
+      nextTask: firstPendingSectionATask(data.setupTasks),
     };
   }, [
     isCustomer,
