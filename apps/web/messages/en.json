@@ -1355,7 +1355,7 @@
         "progress": "{done} of {total} steps done",
         "goLive": {
           "title": "Go live — appear in search and receive jobs",
-          "complete": "You're live — customers can find you and send job requests.",
+          "complete": "You're live — customers can find you and send job requests. Check the Marketplace tab for new opportunities.",
           "compactProgress": "Go live — {done} of {total} steps done"
         },
         "payout": {

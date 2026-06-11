@@ -1354,7 +1354,7 @@
         "progress": "{done} sur {total} étapes terminées",
         "goLive": {
           "title": "Mise en ligne — apparaître dans la recherche et recevoir des mandats",
-          "complete": "Vous êtes en ligne — les clients peuvent vous trouver et vous envoyer des demandes.",
+          "complete": "Vous êtes en ligne — les clients peuvent vous trouver et vous envoyer des demandes. Consultez l'onglet Marketplace pour découvrir de nouvelles opportunités.",
           "compactProgress": "Mise en ligne — {done} sur {total} étapes"
         },
         "payout": {
