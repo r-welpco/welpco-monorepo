@@ -12,8 +12,8 @@ import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { Switch } from "@welpco/ui/switch";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { useForm, Controller } from "react-hook-form";
-import { useEffect } from "react";
+import { useForm, Controller, type UseFormReturn } from "react-hook-form";
+import { useEffect, useMemo, useRef } from "react";
 import { z } from "zod";
 import { WELPER_BIO_MAX_LENGTH, WELPER_BIO_MIN_LENGTH } from "./bio-limits";
 
@@ -63,6 +63,58 @@ const schema = z.object({
 
 export type WelperProfileValues = z.infer<typeof schema>;
 
+function mergeWelperProfileDefaults(
+  partial?: Partial<WelperProfileValues>,
+): WelperProfileValues {
+  return {
+    firstName: "",
+    lastName: "",
+    phone: "",
+    bio: "",
+    profileVisibility: "Public",
+    photoUrl: null,
+    ...partial,
+  };
+}
+
+function welperProfileSnapshot(values: Partial<WelperProfileValues>): string {
+  return JSON.stringify(mergeWelperProfileDefaults(values));
+}
+
+function useSyncedWelperProfileDefaults(
+  form: UseFormReturn<WelperProfileValues>,
+  defaultValues: Partial<WelperProfileValues> | undefined,
+) {
+  const syncedSnapshotRef = useRef<string | null>(null);
+  const serverSnapshot = useMemo(() => {
+    if (!defaultValues) return null;
+    return welperProfileSnapshot(defaultValues);
+  }, [
+    defaultValues?.firstName,
+    defaultValues?.lastName,
+    defaultValues?.phone,
+    defaultValues?.bio,
+    defaultValues?.profileVisibility,
+    defaultValues?.photoUrl,
+  ]);
+
+  useEffect(() => {
+    if (!defaultValues || !serverSnapshot) return;
+    if (serverSnapshot === syncedSnapshotRef.current) return;
+    if (syncedSnapshotRef.current === null || !form.formState.isDirty) {
+      form.reset(mergeWelperProfileDefaults(defaultValues));
+      syncedSnapshotRef.current = serverSnapshot;
+    }
+  }, [defaultValues, serverSnapshot, form]);
+
+  return {
+    markSynced: (values: WelperProfileValues) => {
+      form.reset(values);
+      syncedSnapshotRef.current = welperProfileSnapshot(values);
+    },
+  };
+}
+
 export function WelperProfileForm({
   defaultValues,
   loading,
@@ -94,37 +146,15 @@ export function WelperProfileForm({
   };
   const form = useForm<WelperProfileValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      phone: "",
-      bio: "",
-      profileVisibility: "Public",
-      photoUrl: null,
-      ...defaultValues,
-    },
+    defaultValues: mergeWelperProfileDefaults(defaultValues),
   });
 
-  // Reset form when defaultValues change (e.g. after async profile fetch)
-  useEffect(() => {
-    if (defaultValues) {
-      form.reset({
-        firstName: "",
-        lastName: "",
-        phone: "",
-        bio: "",
-        profileVisibility: "Public",
-        photoUrl: null,
-        ...defaultValues,
-      });
-    }
-  }, [defaultValues, form]);
+  const { markSynced } = useSyncedWelperProfileDefaults(form, defaultValues);
 
-  const handleSubmit = form.handleSubmit(
-    async (values: WelperProfileValues) => {
-      await onSubmit?.(values);
-    }
-  );
+  const handleSubmit = form.handleSubmit(async (values: WelperProfileValues) => {
+    await onSubmit?.(values);
+    markSynced(values);
+  });
 
   return (
     <Card

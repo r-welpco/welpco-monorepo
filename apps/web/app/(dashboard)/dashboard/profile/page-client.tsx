@@ -487,6 +487,50 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
     }
   }, []);
 
+  const customerProfileFormDefaults = useMemo(() => {
+    if (!customerProfile) return undefined;
+    return {
+      firstName: customerProfile.firstName || "",
+      lastName: customerProfile.lastName || "",
+      phone: customerProfile.phone || "",
+      address: customerProfile.address,
+    };
+  }, [
+    customerProfile?.firstName,
+    customerProfile?.lastName,
+    customerProfile?.phone,
+    customerProfile?.address?.streetAddress,
+    customerProfile?.address?.city,
+    customerProfile?.address?.stateProvince,
+    customerProfile?.address?.zipPostalCode,
+    customerProfile?.address?.country,
+    customerProfile?.updatedAt,
+  ]);
+
+  const welperProfileFormDefaults = useMemo(() => {
+    if (!welperProfile) return undefined;
+    return {
+      firstName: welperProfile.firstName || "",
+      lastName: welperProfile.lastName || "",
+      phone:
+        welperProfile.phoneNumber?.formatted ||
+        welperProfile.phoneNumber?.number ||
+        "",
+      photoUrl: welperProfile.photoUrl || null,
+      bio: welperProfile.bio || "",
+      profileVisibility: welperProfile.profileVisibility,
+    };
+  }, [
+    welperProfile?.firstName,
+    welperProfile?.lastName,
+    welperProfile?.phoneNumber?.formatted,
+    welperProfile?.phoneNumber?.number,
+    welperProfile?.photoUrl,
+    welperProfile?.bio,
+    welperProfile?.profileVisibility,
+    welperProfile?.updatedAt,
+  ]);
+
   // Conditional render - no early returns before this so hook order is stable
   if (!user) {
     return (
@@ -585,16 +629,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 />
                 <CustomerProfileForm
                   labels={customerProfileLabels.form}
-                  defaultValues={
-                    customerProfile
-                      ? {
-                          firstName: customerProfile.firstName || "",
-                          lastName: customerProfile.lastName || "",
-                          phone: customerProfile.phone || "",
-                          address: customerProfile.address,
-                        }
-                      : undefined
-                  }
+                  defaultValues={customerProfileFormDefaults}
                   loading={isLoading || updateCustomerProfileMutation.isPending}
                   error={error instanceof Error ? error.message : updateCustomerProfileMutation.error instanceof Error ? updateCustomerProfileMutation.error.message : undefined}
                   onSubmit={handleCustomerProfileSubmit}
@@ -708,18 +743,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                   }
                 />
                 <WelperProfileForm
-                  defaultValues={
-                    welperProfile
-                      ? {
-                          firstName: welperProfile.firstName || "",
-                          lastName: welperProfile.lastName || "",
-                          phone: welperProfile.phoneNumber?.formatted || welperProfile.phoneNumber?.number || "",
-                          photoUrl: welperProfile.photoUrl || null,
-                          bio: welperProfile.bio || "",
-                          profileVisibility: welperProfile.profileVisibility,
-                        }
-                      : undefined
-                  }
+                  defaultValues={welperProfileFormDefaults}
                   loading={isLoading || updateWelperProfileMutation.isPending}
                   error={error instanceof Error ? error.message : updateWelperProfileMutation.error instanceof Error ? updateWelperProfileMutation.error.message : undefined}
                   onSubmit={handleWelperProfileSubmit}

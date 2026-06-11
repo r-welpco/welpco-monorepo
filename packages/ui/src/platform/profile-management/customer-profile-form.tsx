@@ -10,8 +10,8 @@ import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { useForm, Controller } from "react-hook-form";
-import { useEffect, useMemo } from "react";
+import { useForm, Controller, type UseFormReturn } from "react-hook-form";
+import { useEffect, useMemo, useRef } from "react";
 import { z } from "zod";
 import { AddressInput, type AddressInputLabels, type AddressValues } from "./address-input";
 import { CANADIAN_PROVINCE_CODES } from "./canadian-provinces";
@@ -100,6 +100,66 @@ function createCustomerProfileSchema(v: CustomerProfileFormValidationLabels) {
 
 export type CustomerProfileValues = z.infer<ReturnType<typeof createCustomerProfileSchema>>;
 
+const EMPTY_ADDRESS: AddressValues = {
+  streetAddress: "",
+  city: "",
+  stateProvince: "",
+  zipPostalCode: "",
+  country: "",
+};
+
+function mergeCustomerProfileDefaults(
+  partial?: Partial<CustomerProfileValues>,
+): CustomerProfileValues {
+  return {
+    firstName: partial?.firstName ?? "",
+    lastName: partial?.lastName ?? "",
+    phone: partial?.phone ?? "",
+    address: { ...EMPTY_ADDRESS, ...partial?.address },
+  };
+}
+
+function customerProfileSnapshot(values: Partial<CustomerProfileValues>): string {
+  return JSON.stringify(mergeCustomerProfileDefaults(values));
+}
+
+/** Sync server profile into the form without clobbering in-progress edits. */
+function useSyncedCustomerProfileDefaults(
+  form: UseFormReturn<CustomerProfileValues>,
+  defaultValues: Partial<CustomerProfileValues> | undefined,
+) {
+  const syncedSnapshotRef = useRef<string | null>(null);
+  const serverSnapshot = useMemo(() => {
+    if (!defaultValues) return null;
+    return customerProfileSnapshot(defaultValues);
+  }, [
+    defaultValues?.firstName,
+    defaultValues?.lastName,
+    defaultValues?.phone,
+    defaultValues?.address?.streetAddress,
+    defaultValues?.address?.city,
+    defaultValues?.address?.stateProvince,
+    defaultValues?.address?.zipPostalCode,
+    defaultValues?.address?.country,
+  ]);
+
+  useEffect(() => {
+    if (!defaultValues || !serverSnapshot) return;
+    if (serverSnapshot === syncedSnapshotRef.current) return;
+    if (syncedSnapshotRef.current === null || !form.formState.isDirty) {
+      form.reset(mergeCustomerProfileDefaults(defaultValues));
+      syncedSnapshotRef.current = serverSnapshot;
+    }
+  }, [defaultValues, serverSnapshot, form]);
+
+  return {
+    markSynced: (values: CustomerProfileValues) => {
+      form.reset(values);
+      syncedSnapshotRef.current = customerProfileSnapshot(values);
+    },
+  };
+}
+
 export interface CustomerProfileFormProps {
   defaultValues?: Partial<CustomerProfileValues>;
   loading?: boolean;
@@ -116,49 +176,22 @@ export function CustomerProfileForm({
   labels: labelsProp,
 }: CustomerProfileFormProps) {
   const labels = labelsProp ?? DEFAULT_LABELS;
+  const validationKey = JSON.stringify(labels.validation);
   const schema = useMemo(
     () => createCustomerProfileSchema(labels.validation),
-    [labels.validation],
+    [validationKey],
   );
 
   const form = useForm<CustomerProfileValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      phone: "",
-      address: {
-        streetAddress: "",
-        city: "",
-        stateProvince: "",
-        zipPostalCode: "",
-        country: "",
-      },
-      ...defaultValues,
-    },
+    defaultValues: mergeCustomerProfileDefaults(defaultValues),
   });
 
-  // Reset form when defaultValues arrive async (mirrors WelperProfileForm).
-  useEffect(() => {
-    if (defaultValues) {
-      form.reset({
-        firstName: "",
-        lastName: "",
-        phone: "",
-        address: {
-          streetAddress: "",
-          city: "",
-          stateProvince: "",
-          zipPostalCode: "",
-          country: "",
-        },
-        ...defaultValues,
-      });
-    }
-  }, [defaultValues, form]);
+  const { markSynced } = useSyncedCustomerProfileDefaults(form, defaultValues);
 
   const handleSubmit = form.handleSubmit(async (values: CustomerProfileValues) => {
     await onSubmit?.(values);
+    markSynced(values);
   });
 
   return (
