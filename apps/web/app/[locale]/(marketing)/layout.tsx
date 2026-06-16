@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import "./tokens.css";
 import "./responsive.css";
 import { MarketingTopNavGate } from "./marketing-top-nav-gate";
+import { ZohoSalesIQProvider } from "@/components/providers/zoho-salesiq-provider";
 import { Footer } from "@/components/features/marketing/shared/footer";
 
 /**
@@ -142,22 +143,28 @@ export async function generateMetadata({
 
 export default async function MarketingLayout({
   children,
+  params,
 }: Readonly<{
   children: React.ReactNode;
+  params: Promise<MarketingLayoutParams>;
 }>) {
-  const t = await getTranslations("marketing.a11y");
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "marketing.a11y" });
 
   return (
-    <div
-      className={`welpco ${fraunces.variable} ${interTight.variable} ${jetbrainsMono.variable} ${plusJakartaSans.variable} ${plusJakartaSansItalic.variable} ${uncutSans.variable}`}
-      style={{ background: "var(--bg)", minHeight: "100vh" }}
-    >
-      <a className="welpco-skip-link" href="#main-content">
-        {t("skipToContent")}
-      </a>
-      <MarketingTopNavGate />
-      <main id="main-content">{children}</main>
-      <Footer />
-    </div>
+    <>
+      <div
+        className={`welpco ${fraunces.variable} ${interTight.variable} ${jetbrainsMono.variable} ${plusJakartaSans.variable} ${plusJakartaSansItalic.variable} ${uncutSans.variable}`}
+        style={{ background: "var(--bg)", minHeight: "100vh" }}
+      >
+        <a className="welpco-skip-link" href="#main-content">
+          {t("skipToContent")}
+        </a>
+        <MarketingTopNavGate />
+        <main id="main-content">{children}</main>
+        <Footer />
+      </div>
+      <ZohoSalesIQProvider locale={locale} />
+    </>
   );
 }

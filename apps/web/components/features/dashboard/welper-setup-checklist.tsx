@@ -13,7 +13,7 @@ import { Flex } from "@welpco/ui/flex";
 import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { CheckCircle2, Circle, CircleDashed, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Circle, CircleDashed } from "lucide-react";
 import type { WelperSetupTaskDto } from "@welpco/types";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
 import {
@@ -265,6 +265,7 @@ function WelperSetupSectionCard({
   sessionEmail?: string;
 }) {
   const t = useTranslations("dashboard.setup");
+  const showProgress = section.id === "goLive";
   const progressPct = Math.round(
     (section.completedCount / Math.max(section.totalCount, 1)) * 100,
   );
@@ -291,25 +292,22 @@ function WelperSetupSectionCard({
 
         {showTasks && !section.complete ? (
           <>
-            <Box>
-              <Text size="2" weight="medium" mb="2" as="p">
-                {section.id === "goLive"
-                  ? t("progress", {
-                      done: section.completedCount,
-                      total: section.totalCount,
-                    })
-                  : t("welperSections.progress", {
-                      done: section.completedCount,
-                      total: section.totalCount,
-                    })}
-              </Text>
-              <Progress
-                value={progressPct}
-                size="2"
-                color={SEMANTIC_COLOR.primary}
-                aria-label={t("progressAria", { percent: progressPct })}
-              />
-            </Box>
+            {showProgress ? (
+              <Box>
+                <Text size="2" weight="medium" mb="2" as="p">
+                  {t("progress", {
+                    done: section.completedCount,
+                    total: section.totalCount,
+                  })}
+                </Text>
+                <Progress
+                  value={progressPct}
+                  size="2"
+                  color={SEMANTIC_COLOR.primary}
+                  aria-label={t("progressAria", { percent: progressPct })}
+                />
+              </Box>
+            ) : null}
             <Flex direction="column" gap="2" asChild>
               <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
                 {section.tasks
@@ -329,6 +327,9 @@ function WelperSetupSectionCard({
                       optionalHint={setupTaskOptionalHint(task, t, guardianConsent)}
                       locale={locale}
                       sessionEmail={sessionEmail}
+                      showDivider={showProgress}
+                      showStepNumber={showProgress}
+                      showTaskLabel={showProgress}
                     />
                   ))}
               </ul>
@@ -348,6 +349,9 @@ function SetupTaskRow({
   optionalHint,
   locale,
   sessionEmail,
+  showDivider = true,
+  showStepNumber = true,
+  showTaskLabel = true,
 }: {
   task: WelperSetupTaskWithStep;
   stepNumber: number;
@@ -356,27 +360,24 @@ function SetupTaskRow({
   optionalHint?: string;
   locale: Locale;
   sessionEmail?: string;
+  showDivider?: boolean;
+  showStepNumber?: boolean;
+  showTaskLabel?: boolean;
 }) {
   const t = useTranslations("dashboard.setup");
   const resend = useResendVerification();
   const [resendNote, setResendNote] = useState<string | null>(null);
   const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
-  const isBackgroundCheck = task.id === "welperBackgroundCheck" && !task.completed;
   const Icon = task.completed
     ? CheckCircle2
-    : isBackgroundCheck
-      ? ShieldCheck
-      : task.required
-        ? Circle
-        : CircleDashed;
-  const iconSize = isBackgroundCheck ? 22 : 20;
+    : task.required
+      ? Circle
+      : CircleDashed;
   const iconColor = task.completed
     ? "var(--green-9)"
-    : isBackgroundCheck
-      ? "var(--blue-9)"
-      : task.required
-        ? "var(--amber-9)"
-        : "var(--gray-8)";
+    : task.required
+      ? "var(--amber-9)"
+      : "var(--gray-8)";
 
   return (
     <li>
@@ -384,15 +385,17 @@ function SetupTaskRow({
         align="center"
         justify="between"
         gap="3"
-        py="2"
-        style={{ borderBottom: "1px solid var(--gray-a5)" }}
+        py={showDivider ? "2" : "0"}
+        style={showDivider ? { borderBottom: "1px solid var(--gray-a5)" } : undefined}
       >
         <Flex align="center" gap="3" style={{ minWidth: 0 }}>
-          <Icon size={iconSize} color={iconColor} aria-hidden />
+          <Icon size={20} color={iconColor} aria-hidden />
           <Box style={{ minWidth: 0 }}>
-            <Text size="2" weight="medium" as="p">
-              {stepNumber}. {label}
-            </Text>
+            {showTaskLabel ? (
+              <Text size="2" weight="medium" as="p">
+                {showStepNumber ? `${stepNumber}. ${label}` : label}
+              </Text>
+            ) : null}
             <Text size="1" color="gray" as="p">
               {statusLabel}
             </Text>

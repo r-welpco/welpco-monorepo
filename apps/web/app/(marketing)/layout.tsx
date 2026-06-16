@@ -1,5 +1,6 @@
 import { NextIntlClientProvider, type AbstractIntlMessages } from "next-intl";
 import "../[locale]/(marketing)/tokens.css";
+import { ZohoSalesIQProvider } from "@/components/providers/zoho-salesiq-provider";
 import { Footer } from "@/components/features/marketing/shared/footer";
 import en from "@/messages/en.json";
 
@@ -18,6 +19,7 @@ export default function MarketingBlogLegalLayout({
         <main id="main-content">{children}</main>
         <Footer />
       </div>
+      <ZohoSalesIQProvider locale="en" />
     </NextIntlClientProvider>
   );
 }
