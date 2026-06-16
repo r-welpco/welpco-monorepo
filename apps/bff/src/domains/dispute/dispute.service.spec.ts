@@ -56,8 +56,26 @@ describe('DisputeService', () => {
   };
 
   const mockPaymentService = {
-    refundCapturedAmount: jest.fn().mockResolvedValue({ ok: true, refundsCreated: 1 }),
     getTotalCapturedForBooking: jest.fn().mockResolvedValue({ totalCents: 10_000, currency: 'cad' }),
+    getRefundDecisionSnapshot: jest.fn().mockResolvedValue({
+      capturedTotalCents: 10_000,
+      refundedBaselineCents: 0,
+      additionalRefundTargetCents: 10_000,
+      currency: 'cad',
+      allocation: [
+        {
+          paymentIntentId: 'pi_1',
+          chargeId: 'ch_1',
+          capturedCents: 10_000,
+          refundedCents: 0,
+          refundableCents: 10_000,
+          recommendedRefundCents: 10_000,
+          stripeDashboardUrl: 'https://dashboard.stripe.com/test/payments/pi_1',
+        },
+      ],
+    }),
+    reconcileExternalRefunds: jest.fn().mockResolvedValue(undefined),
+    getRecoveryTaskForResolution: jest.fn().mockResolvedValue(null),
   };
 
   const mockApplicationSettings = {
@@ -111,6 +129,24 @@ describe('DisputeService', () => {
     mockQueryRunner.rollbackTransaction.mockResolvedValue(undefined);
     mockQueryRunner.release.mockResolvedValue(undefined);
     mockResolutionRepo.save.mockImplementation(async (resolution: Resolution) => resolution);
+    mockPaymentService.getRefundDecisionSnapshot.mockResolvedValue({
+      capturedTotalCents: 10_000,
+      refundedBaselineCents: 0,
+      additionalRefundTargetCents: 10_000,
+      currency: 'cad',
+      allocation: [
+        {
+          paymentIntentId: 'pi_1',
+          chargeId: 'ch_1',
+          capturedCents: 10_000,
+          refundedCents: 0,
+          refundableCents: 10_000,
+          recommendedRefundCents: 10_000,
+          stripeDashboardUrl: 'https://dashboard.stripe.com/test/payments/pi_1',
+        },
+      ],
+    });
+    mockPaymentService.reconcileExternalRefunds.mockResolvedValue(undefined);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -540,6 +576,7 @@ describe('DisputeService', () => {
         }
         return {};
       });
+      return { resolutionSave, disputeSave, bookingSave };
     }
 
     it('resolves with default completed outcome', async () => {
@@ -556,68 +593,62 @@ describe('DisputeService', () => {
       expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
     });
 
-    it('resolves with cancelled outcome and sets cancel fields', async () => {
-      setupResolutionTxMocks({ dispute: baseDispute });
+    it('records a refund decision and keeps the booking disputed until Stripe confirms it', async () => {
+      const { resolutionSave, disputeSave, bookingSave } = setupResolutionTxMocks({ dispute: baseDispute });
 
       const result = await service.createResolution('dispute-1', adminId, {
         resolutionType: 'refund',
         bookingOutcome: 'cancelled',
-        notes: 'Full refund issued',
+        notes: 'Full refund approved',
       });
 
-      expect(result.bookingStatus).toBe('cancelled');
-      const bookingRepo = mockQueryRunner.manager.getRepository(BookingRequest) as {
-        save: jest.Mock;
-      };
-      const saved = bookingRepo.save.mock.calls[0][0] as BookingRequest;
-      expect(saved.status).toBe(BookingRequestStatus.CANCELLED);
-      expect(saved.cancelledBy).toBe(adminId);
-      expect(saved.cancellationReason).toBe('Full refund issued');
-      expect(result.stripeRefund.status).toBe('succeeded');
-      expect(mockPaymentService.refundCapturedAmount).toHaveBeenCalled();
-      expect(mockResolutionRepo.save).toHaveBeenCalledWith(
+      expect(result.bookingStatus).toBe('disputed');
+      expect(result.workflowStatus).toBe('awaiting_refund');
+      expect(result.stripeRefund.status).toBe('pending');
+      expect(result.stripeDashboardActions).toHaveLength(1);
+      expect(bookingSave).not.toHaveBeenCalled();
+      expect(disputeSave).toHaveBeenCalledWith(expect.objectContaining({ status: 'awaiting_refund' }));
+      expect(resolutionSave).toHaveBeenCalledWith(
         expect.objectContaining({
-          refundStatus: 'succeeded',
-          refundsCreated: 1,
+          workflowStatus: 'awaiting_refund',
+          refundStatus: 'pending',
+          refundTargetCents: 10_000,
+          pendingBookingOutcome: 'cancelled',
         }),
       );
     });
 
-    it('persists a partial Stripe refund outcome for admin follow-up', async () => {
-      setupResolutionTxMocks({ dispute: baseDispute });
-      mockPaymentService.refundCapturedAmount.mockResolvedValueOnce({
-        ok: false,
-        refundsCreated: 1,
-        message: 'second charge failed',
-        partialFailure: true,
+    it('records the requested partial refund target for Stripe follow-up', async () => {
+      const { resolutionSave } = setupResolutionTxMocks({ dispute: baseDispute });
+      mockPaymentService.getRefundDecisionSnapshot.mockResolvedValueOnce({
+        capturedTotalCents: 10_000,
+        refundedBaselineCents: 1_000,
+        additionalRefundTargetCents: 2_500,
+        currency: 'cad',
+        allocation: [],
       });
 
       const result = await service.createResolution('dispute-1', adminId, {
-        resolutionType: 'refund',
-        bookingOutcome: 'cancelled',
+        resolutionType: 'partial_refund',
+        refundAmount: 25,
       });
 
-      expect(result.stripeRefund.status).toBe('partial');
-      expect(mockResolutionRepo.save).toHaveBeenCalledWith(
+      expect(result.stripeRefund.status).toBe('pending');
+      expect(mockPaymentService.getRefundDecisionSnapshot).toHaveBeenCalledWith('booking-1', 2500);
+      expect(resolutionSave).toHaveBeenCalledWith(
         expect.objectContaining({
-          refundStatus: 'partial',
-          refundMessage: 'second charge failed',
-          refundsCreated: 1,
+          refundBaselineCents: 1_000,
+          refundTargetCents: 2_500,
         }),
       );
     });
 
-    it('does not roll back after post-commit outcome persistence fails', async () => {
+    it('commits the refund workflow without creating money movement', async () => {
       setupResolutionTxMocks({ dispute: baseDispute });
-      mockResolutionRepo.save.mockRejectedValueOnce(new Error('database unavailable'));
-
-      await expect(
-        service.createResolution('dispute-1', adminId, {
-          resolutionType: 'refund',
-          bookingOutcome: 'cancelled',
-        }),
-      ).rejects.toThrow('database unavailable');
-
+      await service.createResolution('dispute-1', adminId, {
+        resolutionType: 'refund',
+        bookingOutcome: 'cancelled',
+      });
       expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
       expect(mockQueryRunner.rollbackTransaction).not.toHaveBeenCalled();
     });
@@ -728,7 +759,9 @@ describe('DisputeService', () => {
 
     it('throws BadRequestException when refund requested but nothing was captured', async () => {
       setupResolutionTxMocks({ dispute: baseDispute });
-      mockPaymentService.getTotalCapturedForBooking.mockResolvedValueOnce(null);
+      mockPaymentService.getRefundDecisionSnapshot.mockRejectedValueOnce(
+        new BadRequestException('No captured payments exist for this booking'),
+      );
 
       await expect(
         service.createResolution('dispute-1', adminId, {
@@ -740,10 +773,9 @@ describe('DisputeService', () => {
 
     it('throws BadRequestException when partial refund exceeds captured total', async () => {
       setupResolutionTxMocks({ dispute: baseDispute });
-      mockPaymentService.getTotalCapturedForBooking.mockResolvedValueOnce({
-        totalCents: 1000,
-        currency: 'cad',
-      });
+      mockPaymentService.getRefundDecisionSnapshot.mockRejectedValueOnce(
+        new BadRequestException('Refund target exceeds the remaining refundable amount'),
+      );
 
       await expect(
         service.createResolution('dispute-1', adminId, {
@@ -755,48 +787,40 @@ describe('DisputeService', () => {
     });
   });
 
-  describe('retryResolutionRefund', () => {
-    it('retries with the existing resolution idempotency key and persists success', async () => {
+  describe('reconcileResolutionRefund', () => {
+    it('refreshes refund state from Stripe and returns the updated resolution', async () => {
       mockDisputeRepo.findOne.mockResolvedValue({
         id: 'dispute-1',
         bookingId: 'booking-1',
       });
-      mockResolutionRepo.findOne.mockResolvedValue({
+      mockResolutionRepo.findOne
+        .mockResolvedValueOnce({
+          id: 'res-1',
+          disputeId: 'dispute-1',
+          resolutionType: 'partial_refund',
+          refundAmount: 25,
+          refundStatus: 'pending',
+        })
+        .mockResolvedValueOnce({
         id: 'res-1',
         disputeId: 'dispute-1',
         resolutionType: 'partial_refund',
         refundAmount: 25,
-        refundStatus: 'failed',
-      });
-      mockPaymentService.refundCapturedAmount.mockResolvedValueOnce({
-        ok: true,
-        refundsCreated: 1,
-      });
-
-      const result = await service.retryResolutionRefund('dispute-1', 'admin-1');
-
-      expect(result.status).toBe('succeeded');
-      expect(mockPaymentService.refundCapturedAmount).toHaveBeenCalledWith('booking-1', 'res-1', 2500);
-      expect(mockResolutionRepo.save).toHaveBeenCalledWith(expect.objectContaining({ refundStatus: 'succeeded' }));
-    });
-
-    it('does not retry a successful refund', async () => {
-      mockDisputeRepo.findOne.mockResolvedValue({
-        id: 'dispute-1',
-        bookingId: 'booking-1',
-      });
-      mockResolutionRepo.findOne.mockResolvedValue({
-        id: 'res-1',
-        disputeId: 'dispute-1',
-        resolutionType: 'refund',
         refundStatus: 'succeeded',
-      });
+        workflowStatus: 'completed',
+        refundConfirmedCents: 2500,
+        refundTargetCents: 2500,
+        resolvedAt: new Date('2026-06-14T10:00:00.000Z'),
+      } as Resolution);
 
-      await expect(service.retryResolutionRefund('dispute-1', 'admin-1')).rejects.toThrow(BadRequestException);
-      expect(mockPaymentService.refundCapturedAmount).not.toHaveBeenCalled();
+      const result = await service.reconcileResolutionRefund('dispute-1', 'admin-1');
+
+      expect(mockPaymentService.reconcileExternalRefunds).toHaveBeenCalledWith('booking-1');
+      expect(result.refundStatus).toBe('succeeded');
+      expect(result.refundConfirmedCents).toBe(2500);
     });
 
-    it('rejects a legacy partial refund with no valid amount', async () => {
+    it('rejects reconciliation for a non-refund resolution', async () => {
       mockDisputeRepo.findOne.mockResolvedValue({
         id: 'dispute-1',
         bookingId: 'booking-1',
@@ -804,15 +828,14 @@ describe('DisputeService', () => {
       mockResolutionRepo.findOne.mockResolvedValue({
         id: 'res-1',
         disputeId: 'dispute-1',
-        resolutionType: 'partial_refund',
-        refundAmount: null,
-        refundStatus: 'failed',
+        resolutionType: 'no_action',
+        refundStatus: 'not_applicable',
       });
 
-      await expect(service.retryResolutionRefund('dispute-1', 'admin-1')).rejects.toThrow(
-        'Partial refund amount is missing or invalid',
+      await expect(service.reconcileResolutionRefund('dispute-1', 'admin-1')).rejects.toThrow(
+        BadRequestException,
       );
-      expect(mockPaymentService.refundCapturedAmount).not.toHaveBeenCalled();
+      expect(mockPaymentService.reconcileExternalRefunds).not.toHaveBeenCalled();
     });
   });
 

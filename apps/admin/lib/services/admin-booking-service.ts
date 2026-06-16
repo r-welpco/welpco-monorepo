@@ -14,6 +14,9 @@ export interface ServiceReceiptSummary {
   notes?: string | null;
   confirmedAt: string;
   sentToCustomerAt?: string | null;
+  stripeTaxTransactionId?: string | null;
+  stripeTaxTransactionStatus?: string | null;
+  stripeTaxTransactionError?: string | null;
   evidenceFiles?: Array<{ id?: string; key: string; signedUrl?: string | null }>;
 }
 
@@ -44,6 +47,13 @@ export interface AdminBookingDetail {
   updatedAt: string;
   paymentPhase?: string | null;
   captureEligibleAt?: string | null;
+  paymentAuthorizationStatus?: string | null;
+  paymentAuthorizationDueAt?: string | null;
+  paymentAuthorizationDeadlineAt?: string | null;
+  paymentAuthorizationLastAttemptAt?: string | null;
+  paymentAuthorizationAttemptCount?: number;
+  paymentAuthorizationFailureCode?: string | null;
+  paymentAuthorizationFailureMessage?: string | null;
   disputeReportDeadlineAt?: string | null;
   serviceReceipt?: ServiceReceiptSummary | null;
   customerFirstName?: string | null;

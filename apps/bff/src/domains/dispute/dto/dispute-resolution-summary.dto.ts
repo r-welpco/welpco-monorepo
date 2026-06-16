@@ -34,4 +34,13 @@ export class DisputeResolutionSummaryDto {
 
   @ApiPropertyOptional()
   refundAttemptedAt?: string | null;
+
+  @ApiPropertyOptional() workflowStatus?: string;
+  @ApiPropertyOptional() refundBaselineCents?: number | null;
+  @ApiPropertyOptional() refundTargetCents?: number | null;
+  @ApiPropertyOptional() refundConfirmedCents?: number;
+  @ApiPropertyOptional() pendingBookingOutcome?: string | null;
+  @ApiPropertyOptional() refundException?: string | null;
+  @ApiPropertyOptional() recommendedRefundAllocation?: Array<Record<string, unknown>> | null;
+  @ApiPropertyOptional() stripeLastSyncedAt?: string | null;
 }

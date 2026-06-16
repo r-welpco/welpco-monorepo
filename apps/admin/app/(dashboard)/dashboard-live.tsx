@@ -20,8 +20,10 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, Fragment } from "react";
 import { AdminErrorCallout } from "@/components/admin-callout";
+import { formatAdminMoneyCents } from "@/lib/admin-format";
 import { getAdminDashboardSnapshot, type AdminDashboardSnapshot } from "@/lib/services/admin-dashboard-service";
 import { listAdminAuditLogs, type AdminAuditEntry } from "@/lib/services/admin-audit-service";
+import { getPayoutUpcoming } from "@/lib/services/admin-payouts-service";
 
 const LIVE_STORAGE_KEY = "welpco-admin-dashboard-live";
 
@@ -35,6 +37,36 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
         {value}
       </Heading>
     </Card>
+  );
+}
+
+function QueueCard({
+  href,
+  label,
+  value,
+  hint,
+}: {
+  href: string;
+  label: string;
+  value: string | number;
+  hint: string;
+}) {
+  return (
+    <Link href={href} style={{ textDecoration: "none", color: "inherit" }}>
+      <Card size="2" style={{ height: "100%" }}>
+        <Flex direction="column" gap="1">
+          <Text size="1" color="gray">
+            {label}
+          </Text>
+          <Heading size="6" weight="bold">
+            {value}
+          </Heading>
+          <Text size="1" color="gray">
+            {hint}
+          </Text>
+        </Flex>
+      </Card>
+    </Link>
   );
 }
 
@@ -244,14 +276,22 @@ export function DashboardLive() {
     staleTime: live ? 0 : 60_000,
   });
 
+  const payoutQuery = useQuery({
+    queryKey: ["adminPayoutUpcoming", live],
+    queryFn: getPayoutUpcoming,
+    refetchInterval,
+    refetchIntervalInBackground: false,
+    staleTime: live ? 0 : 60_000,
+  });
+
   const snap = dashboardQuery.data;
   const err = dashboardQuery.error instanceof Error ? dashboardQuery.error.message : null;
 
   return (
     <Flex direction="column" gap="4">
       <Text size="2" color="gray" style={{ maxWidth: 640 }}>
-        Welper launch overview. Manage accounts in <Link href="/users">Users</Link> and review actions in{" "}
-        <Link href="/audit-logs">Audit</Link>.
+        Launch and operations overview. Counts are linked to the relevant queue so staff can move
+        directly from a signal to the affected records.
       </Text>
 
       <Flex align="center" gap="4" wrap="wrap">
@@ -272,6 +312,7 @@ export function DashboardLive() {
           onClick={() => {
             void dashboardQuery.refetch();
             void auditQuery.refetch();
+            void payoutQuery.refetch();
           }}
           disabled={dashboardQuery.isFetching}
         >
@@ -335,6 +376,142 @@ export function DashboardLive() {
               <StatCard label="BG failed" value={snap.users.welpersBgFailed} />
             </Link>
           </Grid>
+
+          <SectionTitle>Account health</SectionTitle>
+          <Grid columns={{ initial: "1", sm: "2", md: "4" }} gap="3">
+            <QueueCard
+              href="/users?status=Active"
+              label="Active accounts"
+              value={snap.users.activeUsers}
+              hint="Currently able to use the platform"
+            />
+            <QueueCard
+              href="/users?status=Pending"
+              label="Pending accounts"
+              value={snap.users.pendingUsers}
+              hint="Awaiting setup or activation"
+            />
+            <QueueCard
+              href="/users?status=Suspended"
+              label="Suspended accounts"
+              value={snap.users.suspendedUsers}
+              hint="Review moderation reason and history"
+            />
+            <QueueCard
+              href="/users?status=Deactivated"
+              label="Deactivated accounts"
+              value={snap.users.deactivatedUsers}
+              hint="Closed or disabled accounts"
+            />
+          </Grid>
+
+          <SectionTitle>Operations queues</SectionTitle>
+          <Grid columns={{ initial: "1", sm: "2", md: "4" }} gap="3">
+            <QueueCard
+              href="/disputes?status=open"
+              label="Open disputes"
+              value={snap.disputes.open}
+              hint="New cases awaiting review"
+            />
+            <QueueCard
+              href="/disputes?status=in-review"
+              label="Disputes in review"
+              value={snap.disputes.inReview}
+              hint="Cases currently being investigated"
+            />
+            <QueueCard
+              href="/disputes?status=escalated"
+              label="Escalated disputes"
+              value={snap.disputes.escalated}
+              hint="Highest-priority resolution queue"
+            />
+            <QueueCard
+              href="/bookings?status=disputed"
+              label="Disputed bookings"
+              value={snap.bookings.currentlyDisputed}
+              hint={`${snap.bookings.createdLast24h} bookings created in the last 24h`}
+            />
+          </Grid>
+
+          <SectionTitle>Payment operations</SectionTitle>
+          <Grid columns={{ initial: "1", sm: "2", md: "4" }} gap="3">
+            <QueueCard
+              href="/bookings?status=accepted"
+              label="Authorization failures"
+              value={snap.paymentOperations.authorizationFailures}
+              hint="Customer action or operator follow-up required"
+            />
+            <QueueCard
+              href="/disputes?status=awaiting-refund"
+              label="Awaiting Stripe refunds"
+              value={snap.paymentOperations.awaitingRefunds}
+              hint="Issue refunds in Stripe, then refresh the dispute"
+            />
+            <QueueCard
+              href="/payouts"
+              label="Transfer recoveries"
+              value={snap.paymentOperations.transferRecoveries}
+              hint="Reverse the listed transfer amounts in Stripe"
+            />
+            <QueueCard
+              href="/bookings"
+              label="Tax failures"
+              value={snap.paymentOperations.taxFailures}
+              hint="Payout remains blocked while Stripe Tax retries"
+            />
+            <QueueCard
+              href="/payouts"
+              label="Payout exceptions"
+              value={snap.paymentOperations.payoutExceptions}
+              hint="Stripe fee, tax, or transfer state needs review"
+            />
+          </Grid>
+
+          <SectionTitle>Payout readiness</SectionTitle>
+          {payoutQuery.error instanceof Error ? (
+            <AdminErrorCallout message={payoutQuery.error.message} />
+          ) : payoutQuery.data ? (
+            <Grid columns={{ initial: "1", sm: "2", md: "4" }} gap="3">
+              <QueueCard
+                href="/payouts"
+                label="Eligible bookings"
+                value={payoutQuery.data.eligiblePendingCount}
+                hint={`For Friday ${payoutQuery.data.payoutFriday}`}
+              />
+              <QueueCard
+                href="/payouts"
+                label="Eligible welpers"
+                value={payoutQuery.data.eligibleWelperCount}
+                hint="Review Connect readiness before approval"
+              />
+              <QueueCard
+                href="/payouts"
+                label="Upcoming transfer"
+                value={formatAdminMoneyCents(
+                  payoutQuery.data.eligibleWelperNetCents,
+                  "CAD",
+                )}
+                hint={
+                  payoutQuery.data.existingBatchStatus
+                    ? `Current batch: ${payoutQuery.data.existingBatchStatus}`
+                    : "No batch built yet"
+                }
+              />
+              <QueueCard
+                href="/payouts"
+                label="Captured in last 7 days"
+                value={formatAdminMoneyCents(
+                  snap.payments.capturedCentsLast7d,
+                  snap.payments.currency,
+                )}
+                hint="Gross customer payments captured"
+              />
+            </Grid>
+          ) : (
+            <Text size="2" color="gray">
+              Loading payout readiness…
+            </Text>
+          )}
 
           <SectionTitle>Welpers by service category</SectionTitle>
           <Card size="2">

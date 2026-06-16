@@ -14,6 +14,7 @@ import { BookingTaxService } from './booking-tax.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
 import { WelperPayoutLedgerService } from './welper-payout-ledger.service';
+import { StripeOperationsService } from './stripe-operations.service';
 import type Stripe from 'stripe';
 
 describe('PaymentService', () => {
@@ -83,6 +84,15 @@ describe('PaymentService', () => {
     upsertLedgerForReleasedBooking: jest.fn().mockResolvedValue(null),
     applyRefundDelta: jest.fn().mockResolvedValue(undefined),
     syncStripeFeesForBooking: jest.fn().mockResolvedValue({ totalFeeCents: 0, allSynced: true }),
+  };
+  const mockStripeOperations = {
+    ensureTaxTransaction: jest.fn().mockResolvedValue(true),
+    retryPendingTaxTransactions: jest.fn().mockResolvedValue({ scanned: 0, recovered: 0 }),
+    reconcileBookingRefunds: jest.fn().mockResolvedValue(undefined),
+    syncRefund: jest.fn().mockResolvedValue(null),
+    syncChargeRefunds: jest.fn().mockResolvedValue(undefined),
+    getRefundDecisionSnapshot: jest.fn(),
+    getRecoveryTaskForResolution: jest.fn().mockResolvedValue(null),
   };
 
   beforeEach(async () => {
@@ -158,12 +168,116 @@ describe('PaymentService', () => {
           provide: WelperPayoutLedgerService,
           useValue: mockWelperPayoutLedger,
         },
+        { provide: StripeOperationsService, useValue: mockStripeOperations },
       ],
     }).compile();
 
     service = module.get(PaymentService);
     bookingRepo = mockBookingRepo;
     bookingPaymentRepo = mockBookingPaymentRepo;
+  });
+
+  describe('deferred authorization', () => {
+    it('schedules authorization five days before a later booking', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-06-14T12:00:00.000Z'));
+      const booking = {
+        id: 'later-booking',
+        status: BookingRequestStatus.PENDING,
+        scheduledDate: '2026-06-21',
+        scheduledStartTime: '12:00',
+        timezoneOffsetMinutes: 0,
+      } as BookingRequest;
+      mockBookingRepo.findOne.mockResolvedValue(booking);
+      mockBookingRepo.save.mockImplementation(async (row) => row);
+
+      await expect(service.prepareAuthorizationForAcceptance(booking.id)).resolves.toBe('scheduled');
+
+      expect(booking.paymentAuthorizationStatus).toBe('scheduled');
+      expect(booking.paymentAuthorizationDueAt?.toISOString()).toBe('2026-06-16T12:00:00.000Z');
+      expect(booking.paymentAuthorizationDeadlineAt?.toISOString()).toBe('2026-06-20T12:00:00.000Z');
+      jest.useRealTimers();
+    });
+
+    it('authorizes immediately when service starts within five days', async () => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2026-06-14T12:00:00.000Z'));
+      const booking = {
+        id: 'near-booking',
+        status: BookingRequestStatus.PENDING,
+        scheduledDate: '2026-06-18',
+        scheduledStartTime: '12:00',
+        timezoneOffsetMinutes: 0,
+      } as BookingRequest;
+      mockBookingRepo.findOne.mockResolvedValue(booking);
+      mockBookingRepo.save.mockImplementation(async (row) => row);
+      const authorize = jest.spyOn(service, 'authorizeHoldBeforeWelperAccept').mockResolvedValue(undefined);
+
+      await expect(service.prepareAuthorizationForAcceptance(booking.id)).resolves.toBe('authorized');
+
+      expect(authorize).toHaveBeenCalledWith(booking.id);
+      jest.useRealTimers();
+    });
+
+    it('claims scheduled work with skip-locked database locking', async () => {
+      const setOnLocked = jest.fn().mockReturnThis();
+      const save = jest.fn().mockImplementation(async (row) => row);
+      let claimed = false;
+      mockDataSource.transaction.mockImplementation(async (fn: (manager: unknown) => Promise<unknown>) =>
+        fn({
+          getRepository: () => ({
+            createQueryBuilder: () => ({
+              setLock: jest.fn().mockReturnThis(),
+              setOnLocked,
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+              getOne: jest.fn().mockImplementation(async () => {
+                if (claimed) return null;
+                claimed = true;
+                return {
+                  id: 'scheduled-booking',
+                  paymentAuthorizationLeaseUntil: null,
+                };
+              }),
+            }),
+            save,
+          }),
+        }),
+      );
+      jest.spyOn(service, 'authorizeHoldBeforeWelperAccept').mockResolvedValue(undefined);
+
+      await expect(service.processDeferredAuthorizations(2)).resolves.toEqual({ processed: 1, failed: 0 });
+
+      expect(setOnLocked).toHaveBeenCalledWith('skip_locked');
+      expect(save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'scheduled-booking',
+          paymentAuthorizationLeaseUntil: expect.any(Date),
+        }),
+      );
+    });
+
+    it('cancels outstanding authorization work when the booking is cancelled', async () => {
+      const booking = {
+        id: 'cancelled-booking',
+        status: BookingRequestStatus.CANCELLED,
+        paymentAuthorizationStatus: 'scheduled',
+        paymentAuthorizationLeaseUntil: new Date(),
+      } as BookingRequest;
+      mockBookingRepo.findOne.mockResolvedValue(booking);
+      mockBookingRepo.save.mockImplementation(async (row) => row);
+      mockBookingPaymentRepo.find.mockResolvedValue([]);
+
+      await service.onBookingCanceled(booking.id);
+
+      expect(mockBookingRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          paymentAuthorizationStatus: 'canceled',
+          paymentAuthorizationLeaseUntil: null,
+        }),
+      );
+    });
   });
 
   describe('syncPaymentIntentFromWebhook', () => {
@@ -310,7 +424,9 @@ describe('PaymentService', () => {
       } as Stripe.PaymentIntent;
       await service.syncPaymentIntentFromWebhook(pi);
 
-      expect(mockBookingRepo.save).not.toHaveBeenCalled();
+      expect(mockBookingRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ status: BookingRequestStatus.PAYMENT_RELEASED }),
+      );
     });
 
     it('does not release when a failed receipt delta leaves the receipt underpaid', async () => {
@@ -352,7 +468,9 @@ describe('PaymentService', () => {
         amount_received: 1000,
       } as Stripe.PaymentIntent);
 
-      expect(mockBookingRepo.save).not.toHaveBeenCalled();
+      expect(mockBookingRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ status: BookingRequestStatus.COMPLETED }),
+      );
       expect(mockWelperPayoutLedger.upsertLedgerForReleasedBooking).not.toHaveBeenCalled();
     });
   });

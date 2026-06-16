@@ -134,14 +134,17 @@ export default async function AdminJobsPage({
                 ))}
               </select>
             </NativeFormField>
-            <NativeFormField label="From">
+            <NativeFormField label="Created from">
               <input type="date" name="dateFrom" defaultValue={dateFrom ?? ""} {...nativeInputProps()} />
             </NativeFormField>
-            <NativeFormField label="To">
+            <NativeFormField label="Created to">
               <input type="date" name="dateTo" defaultValue={dateTo ?? ""} {...nativeInputProps()} />
             </NativeFormField>
             <Button type="submit" variant="soft">
               Apply filters
+            </Button>
+            <Button asChild type="button" variant="ghost">
+              <Link href="/jobs">Clear</Link>
             </Button>
           </Flex>
         </form>
@@ -157,6 +160,8 @@ export default async function AdminJobsPage({
               <TableColumnHeaderCell>Customer</TableColumnHeaderCell>
               <TableColumnHeaderCell>Category</TableColumnHeaderCell>
               <TableColumnHeaderCell>Status</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Schedule</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Location</TableColumnHeaderCell>
               <TableColumnHeaderCell>Apps</TableColumnHeaderCell>
               <TableColumnHeaderCell>Booking</TableColumnHeaderCell>
               <TableColumnHeaderCell>Published</TableColumnHeaderCell>
@@ -165,7 +170,7 @@ export default async function AdminJobsPage({
           <TableBody>
             {(list?.data ?? []).length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7}>
+                <TableCell colSpan={9}>
                   <Text color="gray">No jobs match.</Text>
                 </TableCell>
               </TableRow>
@@ -196,6 +201,19 @@ export default async function AdminJobsPage({
                     <Badge color={statusColor(job.status)} variant="soft" size="1">
                       {formatAdminStatusLabel(job.status)}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Text size="1">
+                      {job.scheduledDate} · {job.scheduledStartTime}–{job.scheduledEndTime}
+                    </Text>
+                    <Text size="1" color="gray">
+                      {job.durationMinutes} min
+                    </Text>
+                  </TableCell>
+                  <TableCell>
+                    <Text size="1">
+                      {[job.locationCity, job.locationRegion].filter(Boolean).join(", ") || "—"}
+                    </Text>
                   </TableCell>
                   <TableCell>{job.applicationCount}</TableCell>
                   <TableCell>

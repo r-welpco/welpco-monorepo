@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThanOrEqual, Repository } from 'typeorm';
+import { In, MoreThanOrEqual, Repository } from 'typeorm';
 import { UserAccount, AccountType, AccountStatus } from '../entities/user-account.entity';
 import {
   VerificationStatus,
@@ -14,6 +14,11 @@ import { ServiceCategory } from '../../content-management/entities/service-categ
 import { ServiceOffering } from '../../profile-management/entities/service-offering.entity';
 import { WelperProfile } from '../../profile-management/entities/welper-profile.entity';
 import { ProfileVisibility } from '../../profile-management/entities/profile-visibility.enum';
+import { PaymentRecoveryTask } from '../../payment/entities/payment-recovery-task.entity';
+import { BookingServiceReceipt } from '../../booking/entities/booking-service-receipt.entity';
+import { WelperPayoutLedger } from '../../payment/entities/welper-payout-ledger.entity';
+import { WelperPayoutLedgerStatus } from '../../payment/entities/payout-ledger-status.enum';
+import { BookingRefund } from '../../payment/entities/booking-refund.entity';
 
 export interface WelpersPerSubcategoryRow {
   subcategoryId: string;
@@ -66,6 +71,13 @@ export interface AdminDashboardSnapshot {
     capturedCentsLast7d: number;
     currency: string;
   };
+  paymentOperations: {
+    authorizationFailures: number;
+    awaitingRefunds: number;
+    transferRecoveries: number;
+    taxFailures: number;
+    payoutExceptions: number;
+  };
 }
 
 @Injectable()
@@ -89,6 +101,14 @@ export class AdminDashboardService {
     private readonly serviceOfferingRepository: Repository<ServiceOffering>,
     @InjectRepository(WelperProfile)
     private readonly welperProfileRepository: Repository<WelperProfile>,
+    @InjectRepository(PaymentRecoveryTask)
+    private readonly recoveryTaskRepository: Repository<PaymentRecoveryTask>,
+    @InjectRepository(BookingServiceReceipt)
+    private readonly receiptRepository: Repository<BookingServiceReceipt>,
+    @InjectRepository(WelperPayoutLedger)
+    private readonly payoutLedgerRepository: Repository<WelperPayoutLedger>,
+    @InjectRepository(BookingRefund)
+    private readonly bookingRefundRepository: Repository<BookingRefund>,
   ) {}
 
   async getSnapshot(): Promise<AdminDashboardSnapshot> {
@@ -120,6 +140,11 @@ export class AdminDashboardService {
       bookingsDisputed,
       paymentAgg,
       welpersPerCategory,
+      authorizationFailures,
+      awaitingRefunds,
+      transferRecoveries,
+      taxFailures,
+      payoutExceptions,
     ] = await Promise.all([
       this.userRepository.count(),
       this.userRepository.count({ where: { status: AccountStatus.ACTIVE } }),
@@ -175,6 +200,27 @@ export class AdminDashboardService {
         .andWhere('bp.captured_at >= :since', { since: since7d })
         .getRawOne<{ total: string; currency: string | null }>(),
       this.getWelpersPerCategory(),
+      this.bookingRepository
+        .createQueryBuilder('booking')
+        .where('booking.status = :accepted', { accepted: BookingRequestStatus.ACCEPTED })
+        .andWhere('booking.payment_authorization_status IN (:...statuses)', {
+          statuses: ['failed', 'requires_action'],
+        })
+        .getCount(),
+      this.disputeRepository.count({ where: { status: 'awaiting_refund' } }),
+      this.recoveryTaskRepository.count({ where: { status: In(['open', 'partial']) } }),
+      Promise.all([
+        this.receiptRepository.count({ where: { stripeTaxTransactionStatus: 'failed' } }),
+        this.bookingRefundRepository.count({ where: { taxReversalStatus: 'failed' } }),
+      ]).then(([transactionFailures, reversalFailures]) => transactionFailures + reversalFailures),
+      this.payoutLedgerRepository
+        .createQueryBuilder('ledger')
+        .where('ledger.status = :failed', { failed: WelperPayoutLedgerStatus.FAILED })
+        .orWhere('(ledger.status = :excluded AND ledger.exclusion_reason IN (:...reasons))', {
+          excluded: WelperPayoutLedgerStatus.EXCLUDED,
+          reasons: ['stripe_fee_pending', 'stripe_tax_pending'],
+        })
+        .getCount(),
     ]);
 
     const totalCents = paymentAgg?.total != null ? parseInt(String(paymentAgg.total), 10) : 0;
@@ -214,6 +260,13 @@ export class AdminDashboardService {
       payments: {
         capturedCentsLast7d: Number.isFinite(totalCents) ? totalCents : 0,
         currency,
+      },
+      paymentOperations: {
+        authorizationFailures,
+        awaitingRefunds,
+        transferRecoveries,
+        taxFailures,
+        payoutExceptions,
       },
       welpersPerCategory,
     };

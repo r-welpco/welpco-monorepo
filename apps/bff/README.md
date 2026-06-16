@@ -69,3 +69,39 @@ All are implemented as domain modules within this app; no HTTP clients to separa
 ## Booking (MVP)
 
 Late cancellations (within 24 hours of the scheduled start) are **logged only**; cancellation fees are not charged until product/Stripe rules are defined.
+
+## Stripe payment operations
+
+Stripe Dashboard is the financial source of truth. Welpco records operational decisions and reconciles Stripe webhooks; it does not create refunds or transfer reversals.
+
+Required Stripe webhook events:
+
+- `payment_intent.amount_capturable_updated`
+- `payment_intent.succeeded`
+- `payment_intent.payment_failed`
+- `payment_intent.canceled`
+- `charge.refunded`
+- `refund.created`
+- `refund.updated`
+- `refund.failed`
+- `transfer.created`
+- `transfer.reversed`
+
+Run the reconciliation command after deploying the migration and backend:
+
+```bash
+# Read-only inventory
+pnpm --filter @welpco/bff stripe:reconcile-operations
+
+# Reconcile existing Stripe refunds, transfers, and Tax records
+pnpm --filter @welpco/bff stripe:reconcile-operations -- --apply
+```
+
+Deploy in this order:
+
+1. Run database migrations.
+2. Deploy the backend and update the Stripe webhook endpoint events.
+3. Run reconciliation in dry-run mode, then with `--apply`.
+4. Deploy the admin app.
+
+Give operators a restricted Stripe Dashboard role that can view payments and create refunds and transfer reversals. Welpco does not require a second refund approver. Monitor webhook failures, authorization failures, disputes awaiting refunds, recovery-task age, and Stripe Tax exceptions.

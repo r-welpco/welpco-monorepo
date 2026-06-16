@@ -51,6 +51,13 @@ export interface AdminDashboardSnapshot {
     capturedCentsLast7d: number;
     currency: string;
   };
+  paymentOperations: {
+    authorizationFailures: number;
+    awaitingRefunds: number;
+    transferRecoveries: number;
+    taxFailures: number;
+    payoutExceptions: number;
+  };
 }
 
 export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapshot> {

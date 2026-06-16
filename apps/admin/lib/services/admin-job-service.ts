@@ -10,6 +10,12 @@ export interface AdminJobListItem {
   subcategoryLabel?: string | null;
   status: string;
   applicationCount: number;
+  scheduledDate: string;
+  scheduledStartTime: string;
+  scheduledEndTime: string;
+  durationMinutes: number;
+  locationCity?: string | null;
+  locationRegion?: string | null;
   publishedAt: string | null;
   createdAt: string;
   bookingId?: string | null;

@@ -23,7 +23,8 @@ import { DisputeResponseDto, DisputeStatusApi } from './dto/dispute-response.dto
 import { CreateResolutionDto } from './dto/create-resolution.dto';
 import { DisputeParticipantSummaryDto } from './dto/dispute-participant-summary.dto';
 import { DisputeResolutionSummaryDto } from './dto/dispute-resolution-summary.dto';
-import { PaymentService, type RefundCapturedResult } from '../payment/payment.service';
+import { PaymentService } from '../payment/payment.service';
+import type { RefundDecisionSnapshot } from '../payment/stripe-operations.service';
 import { WelperPayoutLedgerService } from '../payment/welper-payout-ledger.service';
 import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { majorCurrencyUnitsToCents } from '../payment/money';
@@ -61,7 +62,7 @@ const EVIDENCE_ALLOWED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp', 'heic
 const WITHDRAWABLE_STATUSES: string[] = ['open', 'in_review'];
 
 export type StripeRefundOutcome = {
-  status: 'succeeded' | 'failed' | 'partial' | 'skipped' | 'not_applicable';
+  status: 'pending' | 'succeeded' | 'failed' | 'partial' | 'skipped' | 'not_applicable';
   refundsCreated?: number;
   message?: string;
 };
@@ -185,6 +186,8 @@ export class DisputeService {
   /** Map DB status to API status (in_review -> in-review) */
   private toStatusApi(status: string): DisputeStatusApi {
     if (status === 'in_review') return 'in-review';
+    if (status === 'awaiting_refund') return 'awaiting-refund';
+    if (status === 'awaiting_recovery') return 'awaiting-recovery';
     return status as DisputeStatusApi;
   }
 
@@ -365,6 +368,14 @@ export class DisputeService {
       refundMessage: r.refundMessage,
       refundsCreated: r.refundsCreated,
       refundAttemptedAt: r.refundAttemptedAt?.toISOString() ?? null,
+      workflowStatus: r.workflowStatus,
+      refundBaselineCents: r.refundBaselineCents,
+      refundTargetCents: r.refundTargetCents,
+      refundConfirmedCents: r.refundConfirmedCents,
+      pendingBookingOutcome: r.pendingBookingOutcome,
+      refundException: r.refundException,
+      recommendedRefundAllocation: r.recommendedRefundAllocation,
+      stripeLastSyncedAt: r.stripeLastSyncedAt?.toISOString() ?? null,
     };
   }
 
@@ -565,7 +576,10 @@ export class DisputeService {
         ]);
         dto.customer = customer;
         dto.welper = welper;
-        if (resolutionRow) dto.resolution = this.resolutionToSummary(resolutionRow);
+        if (resolutionRow) {
+          dto.resolution = this.resolutionToSummary(resolutionRow);
+          dto.recoveryTask = await this.paymentService.getRecoveryTaskForResolution(resolutionRow.id);
+        }
         if (captured) dto.capturedPayment = captured;
       }
       return dto;
@@ -652,8 +666,10 @@ export class DisputeService {
     refundAmount: number | null;
     resolvedAt: string;
     bookingId: string;
-    bookingStatus: 'completed' | 'cancelled';
+    bookingStatus: 'completed' | 'cancelled' | 'disputed';
     stripeRefund: StripeRefundOutcome;
+    workflowStatus?: string;
+    stripeDashboardActions?: Array<Record<string, unknown>>;
   }> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -697,26 +713,17 @@ export class DisputeService {
         );
       }
 
+      let refundSnapshot: RefundDecisionSnapshot | null = null;
       if (dto.resolutionType === 'refund' || dto.resolutionType === 'partial_refund') {
-        const cap = await this.paymentService.getTotalCapturedForBooking(booking.id);
-        if (!cap || cap.totalCents <= 0) {
-          throw new BadRequestException(
-            'No captured card payments exist for this booking; choose a non-refund resolution or process the refund manually in Stripe.',
-          );
-        }
+        let requestedTargetCents: number | undefined;
         if (dto.resolutionType === 'partial_refund') {
-          let partialCents: number;
           try {
-            partialCents = majorCurrencyUnitsToCents(dto.refundAmount!);
+            requestedTargetCents = majorCurrencyUnitsToCents(dto.refundAmount!);
           } catch {
             throw new BadRequestException('Invalid partial refund amount');
           }
-          if (partialCents > cap.totalCents) {
-            throw new BadRequestException(
-              `Refund amount exceeds total captured (${(cap.totalCents / 100).toFixed(2)} ${cap.currency.toUpperCase()})`,
-            );
-          }
         }
+        refundSnapshot = await this.paymentService.getRefundDecisionSnapshot(booking.id, requestedTargetCents);
       }
 
       const now = new Date();
@@ -727,8 +734,64 @@ export class DisputeService {
         refundAmount: dto.refundAmount ?? null,
         resolvedById: adminUserId,
         resolvedAt: now,
+        workflowStatus: refundSnapshot ? 'awaiting_refund' : 'completed',
+        refundBaselineCents: refundSnapshot?.refundedBaselineCents ?? null,
+        refundTargetCents: refundSnapshot?.additionalRefundTargetCents ?? null,
+        refundConfirmedCents: 0,
+        pendingBookingOutcome: refundSnapshot ? (dto.bookingOutcome ?? 'completed') : null,
+        refundException: null,
+        recommendedRefundAllocation: refundSnapshot?.allocation ?? null,
+        stripeLastSyncedAt: refundSnapshot ? now : null,
+        refundStatus: refundSnapshot ? 'pending' : 'not_applicable',
+        refundMessage: refundSnapshot
+          ? 'Issue the recommended refund in Stripe Dashboard. Welpco will close this dispute after confirmation.'
+          : null,
+        refundsCreated: 0,
+        refundAttemptedAt: refundSnapshot ? now : null,
       });
       const saved = await resolutionRepo.save(resolution);
+
+      if (refundSnapshot) {
+        dispute.status = 'awaiting_refund';
+        await disputeRepo.save(dispute);
+        await queryRunner.commitTransaction();
+        transactionCommitted = true;
+        await this.adminAuditService.record(adminUserId, 'dispute.refund_decision', {
+          disputeId,
+          bookingId: booking.id,
+          resolutionType: dto.resolutionType,
+          bookingOutcome: dto.bookingOutcome ?? 'completed',
+          refundBaselineCents: refundSnapshot.refundedBaselineCents,
+          refundTargetCents: refundSnapshot.additionalRefundTargetCents,
+        });
+        await this.emitDisputeNotifications(
+          [booking.customerId, booking.welperId],
+          'refund_decision_recorded',
+          { subject: 'Refund decision recorded' },
+          {
+            disputeId,
+            bookingId: booking.id,
+            status: 'awaiting_refund',
+            kind: 'refund_decision_recorded',
+          },
+        );
+        return {
+          id: saved.id,
+          disputeId: saved.disputeId,
+          resolutionType: saved.resolutionType,
+          notes: saved.notes ?? null,
+          refundAmount: saved.refundAmount != null ? Number(saved.refundAmount) : null,
+          resolvedAt: saved.resolvedAt!.toISOString(),
+          bookingId: booking.id,
+          bookingStatus: 'disputed',
+          stripeRefund: {
+            status: 'pending',
+            message: saved.refundMessage ?? undefined,
+          },
+          workflowStatus: saved.workflowStatus,
+          stripeDashboardActions: refundSnapshot.allocation,
+        };
+      }
 
       dispute.status = 'resolved';
       await disputeRepo.save(dispute);
@@ -736,9 +799,7 @@ export class DisputeService {
       if (booking.status === BookingRequestStatus.CANCELLED) {
         await queryRunner.commitTransaction();
         transactionCommitted = true;
-        const refundResult = await this.runStripeRefundForResolution(booking.id, dto, saved.id);
-        const stripeRefund = this.toStripeRefundOutcome(dto, refundResult);
-        await this.persistRefundOutcome(saved, stripeRefund);
+        const stripeRefund: StripeRefundOutcome = { status: 'not_applicable' };
         await this.adminAuditService.record(adminUserId, 'dispute.resolution', {
           disputeId,
           bookingId: booking.id,
@@ -788,9 +849,7 @@ export class DisputeService {
 
       await queryRunner.commitTransaction();
       transactionCommitted = true;
-      const refundResult = await this.runStripeRefundForResolution(booking.id, dto, saved.id);
-      const stripeRefund = this.toStripeRefundOutcome(dto, refundResult);
-      await this.persistRefundOutcome(saved, stripeRefund);
+      const stripeRefund: StripeRefundOutcome = { status: 'not_applicable' };
       await this.adminAuditService.record(adminUserId, 'dispute.resolution', {
         disputeId,
         bookingId: booking.id,
@@ -952,103 +1011,25 @@ export class DisputeService {
     }
   }
 
-  private async runStripeRefundForResolution(
-    bookingId: string,
-    dto: CreateResolutionDto,
-    resolutionId: string,
-  ): Promise<RefundCapturedResult | null> {
-    if (dto.resolutionType !== 'refund' && dto.resolutionType !== 'partial_refund') {
-      return null;
-    }
-    try {
-      const partialCents =
-        dto.resolutionType === 'partial_refund' ? majorCurrencyUnitsToCents(dto.refundAmount!) : undefined;
-      return await this.paymentService.refundCapturedAmount(bookingId, resolutionId, partialCents);
-    } catch (e) {
-      const message = (e as Error).message;
-      this.logger.warn(`Stripe refund failed for booking ${bookingId}: ${message}`);
-      return { ok: false, refundsCreated: 0, message };
-    }
-  }
-
-  private toStripeRefundOutcome(dto: CreateResolutionDto, result: RefundCapturedResult | null): StripeRefundOutcome {
-    if (dto.resolutionType !== 'refund' && dto.resolutionType !== 'partial_refund') {
-      return { status: 'not_applicable' };
-    }
-    if (!result) {
-      return { status: 'failed', message: 'Refund was not executed' };
-    }
-    if (result.ok && result.skipped) {
-      return { status: 'skipped', message: result.detail };
-    }
-    if (result.ok) {
-      return { status: 'succeeded', refundsCreated: result.refundsCreated };
-    }
-    if (result.partialFailure) {
-      return {
-        status: 'partial',
-        message: result.message,
-        refundsCreated: result.refundsCreated,
-      };
-    }
-    return {
-      status: 'failed',
-      message: result.message,
-      refundsCreated: result.refundsCreated,
-    };
-  }
-
-  private async persistRefundOutcome(resolution: Resolution, outcome: StripeRefundOutcome): Promise<void> {
-    resolution.refundStatus = outcome.status;
-    resolution.refundMessage = outcome.message ?? null;
-    resolution.refundsCreated = outcome.refundsCreated ?? 0;
-    resolution.refundAttemptedAt = outcome.status === 'not_applicable' ? null : new Date();
-    await this.resolutionRepo.save(resolution);
-  }
-
-  async retryResolutionRefund(disputeId: string, adminUserId: string): Promise<StripeRefundOutcome> {
-    const dispute = await this.disputeRepo.findOne({
-      where: { id: disputeId },
-    });
-    if (!dispute) {
-      throw new NotFoundException('Dispute not found');
-    }
-    const resolution = await this.resolutionRepo.findOne({
-      where: { disputeId },
-    });
-    if (!resolution) {
-      throw new NotFoundException('Resolution not found');
-    }
+  async reconcileResolutionRefund(disputeId: string, adminUserId: string): Promise<DisputeResolutionSummaryDto> {
+    const dispute = await this.disputeRepo.findOne({ where: { id: disputeId } });
+    if (!dispute) throw new NotFoundException('Dispute not found');
+    const resolution = await this.resolutionRepo.findOne({ where: { disputeId } });
+    if (!resolution) throw new NotFoundException('Resolution not found');
     if (resolution.resolutionType !== 'refund' && resolution.resolutionType !== 'partial_refund') {
       throw new BadRequestException('This resolution does not include a refund');
     }
-    if (resolution.refundStatus === 'succeeded') {
-      throw new BadRequestException('Refund already succeeded');
-    }
-    if (resolution.refundStatus === 'skipped') {
-      throw new BadRequestException('Refund was skipped because no refundable payment was found');
-    }
-    if (
-      resolution.resolutionType === 'partial_refund' &&
-      (resolution.refundAmount == null || Number(resolution.refundAmount) <= 0)
-    ) {
-      throw new BadRequestException('Partial refund amount is missing or invalid');
-    }
-
-    const dto: CreateResolutionDto = {
-      resolutionType: resolution.resolutionType,
-      refundAmount: resolution.resolutionType === 'partial_refund' ? Number(resolution.refundAmount) : undefined,
-    };
-    const result = await this.runStripeRefundForResolution(dispute.bookingId, dto, resolution.id);
-    const outcome = this.toStripeRefundOutcome(dto, result);
-    await this.persistRefundOutcome(resolution, outcome);
-    await this.adminAuditService.record(adminUserId, 'dispute.refund_retry', {
+    await this.paymentService.reconcileExternalRefunds(dispute.bookingId);
+    const refreshed = await this.resolutionRepo.findOne({ where: { id: resolution.id } });
+    if (!refreshed) throw new NotFoundException('Resolution not found after reconciliation');
+    await this.adminAuditService.record(adminUserId, 'dispute.refund_reconcile', {
       disputeId,
       bookingId: dispute.bookingId,
       resolutionId: resolution.id,
-      refundStatus: outcome.status,
-      refundsCreated: outcome.refundsCreated ?? 0,
+      workflowStatus: refreshed.workflowStatus,
+      refundStatus: refreshed.refundStatus,
+      refundConfirmedCents: refreshed.refundConfirmedCents,
     });
-    return outcome;
+    return this.resolutionToSummary(refreshed);
   }
 }

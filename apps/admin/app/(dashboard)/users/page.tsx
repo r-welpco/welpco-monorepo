@@ -52,6 +52,10 @@ const QUICK_PRESETS: { label: string; query: Record<string, string> }[] = [
     query: { accountType: "Welper", signupCompleted: "false" },
   },
   {
+    label: "Welpers · not discoverable",
+    query: { accountType: "Welper", discoverable: "false" },
+  },
+  {
     label: "Welpers · BG in progress",
     query: { accountType: "Welper", backgroundCheckStatus: "In Progress" },
   },
@@ -59,7 +63,18 @@ const QUICK_PRESETS: { label: string; query: Record<string, string> }[] = [
     label: "Welpers · BG failed",
     query: { accountType: "Welper", backgroundCheckStatus: "Failed" },
   },
+  {
+    label: "Welpers · BG expired",
+    query: { accountType: "Welper", backgroundCheckStatus: "Expired" },
+  },
 ];
+
+function accountStatusColor(status: string): "green" | "amber" | "red" | "gray" {
+  if (status === "Active") return "green";
+  if (status === "Pending") return "amber";
+  if (status === "Suspended") return "red";
+  return "gray";
+}
 
 export default async function AdminUsersPage({
   searchParams,
@@ -278,6 +293,9 @@ export default async function AdminUsersPage({
             <Button type="submit" variant="soft">
               Apply filters
             </Button>
+            <Button asChild type="button" variant="ghost">
+              <Link href="/users">Clear</Link>
+            </Button>
           </Flex>
         </form>
       </Card>
@@ -331,12 +349,22 @@ export default async function AdminUsersPage({
                   </TableCell>
                   <TableCell>{u.email}</TableCell>
                   <TableCell>
-                    <Badge variant="soft">{u.accountType}</Badge>
+                    <Badge variant="soft" color="gray">{u.accountType}</Badge>
                   </TableCell>
-                  <TableCell>{u.status}</TableCell>
+                  <TableCell>
+                    <Badge variant="soft" color={accountStatusColor(u.status)}>
+                      {u.status}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{u.signupCompleted ? "Yes" : "No"}</TableCell>
                   <TableCell>
-                    {u.discoverable == null ? "—" : u.discoverable ? "Yes" : "No"}
+                    {u.discoverable == null ? (
+                      "—"
+                    ) : (
+                      <Badge variant="soft" color={u.discoverable ? "green" : "amber"}>
+                        {u.discoverable ? "Ready" : "Blocked"}
+                      </Badge>
+                    )}
                   </TableCell>
                   <TableCell>{formatSignupStepsProgress(u)}</TableCell>
                   <TableCell>{u.emailVerified ? "Yes" : "No"}</TableCell>

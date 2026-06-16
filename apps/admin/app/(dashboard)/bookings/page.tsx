@@ -16,6 +16,7 @@ import Link from "next/link";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { NativeFormField, nativeInputProps, nativeSelectProps } from "@/components/native-form-field";
+import { formatAdminDateTime, formatAdminMoneyMajor, formatAdminStatusLabel } from "@/lib/admin-format";
 import { searchAdminBookings } from "@/lib/services/admin-booking-service";
 import { BookingIdJump } from "./booking-id-jump";
 
@@ -40,8 +41,18 @@ const QUICK_PRESETS: { label: string; query: Record<string, string | undefined> 
   { label: "Pending", query: { status: "pending" } },
   { label: "In progress", query: { status: "in_progress" } },
   { label: "Disputed", query: { status: "disputed" } },
+  { label: "Payment released", query: { status: "payment_released" } },
+  { label: "No show", query: { status: "no_show" } },
   { label: "Cancelled", query: { status: "cancelled" } },
 ];
+
+function bookingStatusColor(status: string): "green" | "amber" | "red" | "blue" | "gray" {
+  if (["completed", "payment_released"].includes(status)) return "green";
+  if (["pending", "accepted", "in_progress"].includes(status)) return "blue";
+  if (status === "disputed") return "amber";
+  if (["cancelled", "declined", "no_show"].includes(status)) return "red";
+  return "gray";
+}
 
 export default async function BookingsSearchPage({
   searchParams,
@@ -145,6 +156,9 @@ export default async function BookingsSearchPage({
               <Button type="submit" variant="soft">
                 Apply filters
               </Button>
+              <Button asChild type="button" variant="ghost">
+                <Link href="/bookings">Clear</Link>
+              </Button>
             </Flex>
           </form>
           <Separator size="4" />
@@ -163,15 +177,18 @@ export default async function BookingsSearchPage({
             <TableRow>
               <TableColumnHeaderCell>Status</TableColumnHeaderCell>
               <TableColumnHeaderCell>Scheduled</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Total</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Payment</TableColumnHeaderCell>
               <TableColumnHeaderCell>Customer</TableColumnHeaderCell>
               <TableColumnHeaderCell>Welper</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Updated</TableColumnHeaderCell>
               <TableColumnHeaderCell />
             </TableRow>
           </TableHeader>
           <TableBody>
             {list.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={8}>
                   <Text color="gray">No bookings match.</Text>
                 </TableCell>
               </TableRow>
@@ -181,14 +198,42 @@ export default async function BookingsSearchPage({
                 return (
                   <TableRow key={id || `booking-${idx}`}>
                     <TableCell>
-                      <Badge variant="soft" size="1">
-                        {String(b.status ?? "—")}
+                      <Badge
+                        variant="soft"
+                        size="1"
+                        color={bookingStatusColor(String(b.status ?? ""))}
+                      >
+                        {formatAdminStatusLabel(String(b.status ?? "—"))}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <Text size="1" color="gray">
                         {b.scheduledDate != null ? String(b.scheduledDate) : "—"}
                       </Text>
+                      {b.scheduledStartTime || b.scheduledEndTime ? (
+                        <Text size="1" color="gray">
+                          {[b.scheduledStartTime, b.scheduledEndTime]
+                            .filter(Boolean)
+                            .join("–")}
+                        </Text>
+                      ) : null}
+                    </TableCell>
+                    <TableCell>
+                      {formatAdminMoneyMajor(b.totalPrice, "CAD")}
+                    </TableCell>
+                    <TableCell>
+                      <Text size="1">
+                        {b.paymentPhase
+                          ? formatAdminStatusLabel(b.paymentPhase)
+                          : b.paymentAuthorizationStatus
+                            ? formatAdminStatusLabel(b.paymentAuthorizationStatus)
+                            : "—"}
+                      </Text>
+                      {b.paymentAuthorizationDeadlineAt ? (
+                        <Text size="1" color="gray">
+                          Cutoff {formatAdminDateTime(b.paymentAuthorizationDeadlineAt)}
+                        </Text>
+                      ) : null}
                     </TableCell>
                     <TableCell>
                       {typeof b.customerId === "string" ? (
@@ -215,6 +260,11 @@ export default async function BookingsSearchPage({
                           —
                         </Text>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      <Text size="1" color="gray">
+                        {b.updatedAt ? new Date(b.updatedAt).toLocaleString() : "—"}
+                      </Text>
                     </TableCell>
                     <TableCell>{id ? <Link href={`/bookings/${id}`}>View</Link> : null}</TableCell>
                   </TableRow>

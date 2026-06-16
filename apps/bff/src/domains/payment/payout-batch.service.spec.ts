@@ -15,6 +15,7 @@ import { PayoutBatchStatus, WelperPayoutLedgerStatus } from './entities/payout-l
 import { PayoutMethodChoice } from '../profile-management/entities/payout-method-choice.enum';
 import * as payoutEligibility from './payout-eligibility';
 import { buildTransferIdempotencyKey } from './payout-idempotency.util';
+import { StripeOperationsService } from './stripe-operations.service';
 
 describe('PayoutBatchService', () => {
   let service: PayoutBatchService;
@@ -53,6 +54,9 @@ describe('PayoutBatchService', () => {
   };
   const mockStripeConnect = {
     getStatus: jest.fn().mockResolvedValue({ onboardingComplete: true, payoutsEnabled: true }),
+  };
+  const mockStripeOperations = {
+    syncTransfer: jest.fn().mockResolvedValue(undefined),
   };
 
   const scheduledLine = {
@@ -174,6 +178,7 @@ describe('PayoutBatchService', () => {
         },
         { provide: WelperPayoutLedgerService, useValue: mockLedgerService },
         { provide: StripeConnectService, useValue: mockStripeConnect },
+        { provide: StripeOperationsService, useValue: mockStripeOperations },
       ],
     }).compile();
 

@@ -4,7 +4,15 @@ import { DisputeResolutionSummaryDto } from './dispute-resolution-summary.dto';
 import { CapturedPaymentHintDto } from './captured-payment-hint.dto';
 
 /** Frontend expects "in-review" with hyphen */
-export type DisputeStatusApi = 'open' | 'in-review' | 'resolved' | 'closed' | 'escalated' | 'withdrawn';
+export type DisputeStatusApi =
+  | 'open'
+  | 'in-review'
+  | 'resolved'
+  | 'closed'
+  | 'escalated'
+  | 'awaiting-refund'
+  | 'awaiting-recovery'
+  | 'withdrawn';
 
 export class DisputeResponseDto {
   @ApiProperty()
@@ -28,7 +36,9 @@ export class DisputeResponseDto {
   @ApiPropertyOptional()
   description?: string | null;
 
-  @ApiProperty({ enum: ['open', 'in-review', 'resolved', 'closed', 'escalated'] })
+  @ApiProperty({
+    enum: ['open', 'in-review', 'resolved', 'closed', 'escalated', 'awaiting-refund', 'awaiting-recovery'],
+  })
   status!: DisputeStatusApi;
 
   @ApiPropertyOptional({
@@ -78,4 +88,19 @@ export class DisputeResponseDto {
     type: CapturedPaymentHintDto,
   })
   capturedPayment?: CapturedPaymentHintDto;
+
+  @ApiPropertyOptional({
+    description: 'Admin detail: transfer reversal required before the dispute can close',
+  })
+  recoveryTask?: {
+    id: string;
+    stripeTransferId: string;
+    requiredReversalCents: number;
+    recoveredCents: number;
+    outstandingCents: number;
+    status: string;
+    stripeDashboardUrl: string;
+    exceptionMessage: string | null;
+    createdAt: string;
+  } | null;
 }

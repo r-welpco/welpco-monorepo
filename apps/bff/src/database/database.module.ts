@@ -38,7 +38,14 @@ import { Review } from '../domains/review/entities/review.entity';
 import { Dispute } from '../domains/dispute/entities/dispute.entity';
 import { SupportTicket } from '../domains/dispute/entities/support-ticket.entity';
 import { Resolution } from '../domains/dispute/entities/resolution.entity';
-import { ApplicationSetting, BookingPayment, ProcessedWebhookEvent } from '../domains/payment/entities';
+import {
+  ApplicationSetting,
+  BookingPayment,
+  BookingRefund,
+  PaymentRecoveryTask,
+  ProcessedWebhookEvent,
+  StripeTransferState,
+} from '../domains/payment/entities';
 import { PayoutBatch } from '../domains/payment/entities/payout-batch.entity';
 import { WelperPayoutLedger } from '../domains/payment/entities/welper-payout-ledger.entity';
 import { BackgroundCheckOrder } from '../domains/safety-verification/entities';
@@ -77,7 +84,10 @@ export const allEntities = [
   Resolution,
   ApplicationSetting,
   BookingPayment,
+  BookingRefund,
+  PaymentRecoveryTask,
   ProcessedWebhookEvent,
+  StripeTransferState,
   PayoutBatch,
   WelperPayoutLedger,
   BackgroundCheckOrder,

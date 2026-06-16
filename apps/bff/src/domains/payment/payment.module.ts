@@ -25,6 +25,12 @@ import { PayoutBatch } from './entities/payout-batch.entity';
 import { WelperPayoutLedger } from './entities/welper-payout-ledger.entity';
 import { WelperPayoutLedgerService } from './welper-payout-ledger.service';
 import { PayoutBatchService } from './payout-batch.service';
+import { BookingRefund } from './entities/booking-refund.entity';
+import { PaymentRecoveryTask } from './entities/payment-recovery-task.entity';
+import { StripeTransferState } from './entities/stripe-transfer-state.entity';
+import { Resolution } from '../dispute/entities/resolution.entity';
+import { Dispute } from '../dispute/entities/dispute.entity';
+import { StripeOperationsService } from './stripe-operations.service';
 
 @Module({
   imports: [
@@ -40,6 +46,11 @@ import { PayoutBatchService } from './payout-batch.service';
       BookingServiceReceipt,
       PayoutBatch,
       WelperPayoutLedger,
+      BookingRefund,
+      PaymentRecoveryTask,
+      StripeTransferState,
+      Resolution,
+      Dispute,
     ]),
     CustomerProfileModule,
     EmailVerifiedGuardModule,
@@ -55,6 +66,7 @@ import { PayoutBatchService } from './payout-batch.service';
     BookingTaxService,
     WelperPayoutLedgerService,
     PayoutBatchService,
+    StripeOperationsService,
   ],
   exports: [
     ApplicationSettingsService,
@@ -63,6 +75,7 @@ import { PayoutBatchService } from './payout-batch.service';
     BookingTaxService,
     WelperPayoutLedgerService,
     PayoutBatchService,
+    StripeOperationsService,
   ],
 })
 export class PaymentModule {}

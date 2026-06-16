@@ -124,7 +124,9 @@ export default async function PayoutBatchPage({ params }: { params: Promise<{ ba
         <Card key={welper.welperId} style={{ padding: "1.25rem" }}>
           <Flex justify="between" align="start" wrap="wrap" gap="2" style={{ marginBottom: "0.75rem" }}>
             <div>
-              <Text weight="medium">{welper.welperEmail ?? welper.welperId}</Text>
+              <Link href={`/users/${welper.welperId}`}>
+                <Text weight="medium">{welper.welperEmail ?? welper.welperId}</Text>
+              </Link>
               <Text size="2" color="gray">
                 {welper.bookingCount} booking
                 {welper.bookingCount === 1 ? "" : "s"} · Transfer {formatAdminMoneyCents(welper.welperNetCents, "CAD")}

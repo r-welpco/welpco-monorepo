@@ -43,10 +43,39 @@ export class BookingResponseDto {
   availableActions?: string[];
 
   @ApiPropertyOptional()
-  paymentPhase?: 'none' | 'pending' | 'requires_action' | 'authorized' | 'captured' | 'canceled' | 'failed';
+  paymentPhase?:
+    | 'none'
+    | 'scheduled'
+    | 'pending'
+    | 'requires_action'
+    | 'authorized'
+    | 'captured'
+    | 'canceled'
+    | 'failed';
 
   @ApiPropertyOptional()
   captureEligibleAt?: string | null;
+
+  @ApiPropertyOptional()
+  paymentAuthorizationStatus?: string | null;
+
+  @ApiPropertyOptional()
+  paymentAuthorizationDueAt?: string | null;
+
+  @ApiPropertyOptional()
+  paymentAuthorizationDeadlineAt?: string | null;
+
+  @ApiPropertyOptional()
+  paymentAuthorizationLastAttemptAt?: string | null;
+
+  @ApiPropertyOptional()
+  paymentAuthorizationAttemptCount?: number;
+
+  @ApiPropertyOptional()
+  paymentAuthorizationFailureCode?: string | null;
+
+  @ApiPropertyOptional()
+  paymentAuthorizationFailureMessage?: string | null;
 
   @ApiPropertyOptional({ description: 'Present when SCA / confirm is required' })
   paymentClientSecret?: string | null;

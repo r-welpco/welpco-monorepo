@@ -15,13 +15,23 @@ import Link from "next/link";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { NativeFormField, nativeSelectProps } from "@/components/native-form-field";
+import { formatAdminMoneyCents, formatAdminStatusLabel } from "@/lib/admin-format";
 import { listDisputes } from "@/lib/services/dispute-service";
 
 export const dynamic = "force-dynamic";
 
 const LIMIT = 25;
 
-const STATUS_OPTIONS = ["", "open", "in-review", "escalated", "resolved", "closed"] as const;
+const STATUS_OPTIONS = [
+  "",
+  "open",
+  "in-review",
+  "escalated",
+  "awaiting-refund",
+  "awaiting-recovery",
+  "resolved",
+  "closed",
+] as const;
 
 export default async function DisputesPage({
   searchParams,
@@ -76,6 +86,9 @@ export default async function DisputesPage({
             <Button type="submit" variant="soft">
               Apply filters
             </Button>
+            <Button asChild type="button" variant="ghost">
+              <Link href="/disputes">Clear</Link>
+            </Button>
           </Flex>
         </form>
       </Card>
@@ -91,7 +104,9 @@ export default async function DisputesPage({
             <TableRow>
               <TableColumnHeaderCell>Status</TableColumnHeaderCell>
               <TableColumnHeaderCell>Subject</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Filer</TableColumnHeaderCell>
               <TableColumnHeaderCell>Booking</TableColumnHeaderCell>
+              <TableColumnHeaderCell>Captured</TableColumnHeaderCell>
               <TableColumnHeaderCell>Alerts</TableColumnHeaderCell>
               <TableColumnHeaderCell>Category</TableColumnHeaderCell>
               <TableColumnHeaderCell>Updated</TableColumnHeaderCell>
@@ -101,7 +116,7 @@ export default async function DisputesPage({
           <TableBody>
             {list.data.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7}>
+                <TableCell colSpan={9}>
                   <Text color="gray">No disputes found.</Text>
                 </TableCell>
               </TableRow>
@@ -109,9 +124,14 @@ export default async function DisputesPage({
               list.data.map((d) => (
                 <TableRow key={d.id}>
                   <TableCell>
-                    <Badge variant="soft">{d.status}</Badge>
+                    <Badge variant="soft">{formatAdminStatusLabel(d.status)}</Badge>
                   </TableCell>
                   <TableCell>{d.subject}</TableCell>
+                  <TableCell>
+                    <Link href={`/users/${d.filerId}`}>
+                      <Text size="1">{d.filerType}</Text>
+                    </Link>
+                  </TableCell>
                   <TableCell>
                     <Link href={`/bookings/${d.bookingId}`}>
                       <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
@@ -120,9 +140,17 @@ export default async function DisputesPage({
                     </Link>
                     {d.bookingStatus ? (
                       <Text size="1" color="gray" as="div" mt="1">
-                        {d.bookingStatus}
+                        {formatAdminStatusLabel(d.bookingStatus)}
                       </Text>
                     ) : null}
+                  </TableCell>
+                  <TableCell>
+                    {d.capturedPayment
+                      ? formatAdminMoneyCents(
+                          d.capturedPayment.totalCents,
+                          d.capturedPayment.currency,
+                        )
+                      : "—"}
                   </TableCell>
                   <TableCell>
                     {d.bookingCancelledWithOpenDispute ? (

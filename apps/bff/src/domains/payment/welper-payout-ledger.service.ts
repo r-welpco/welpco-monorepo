@@ -19,6 +19,7 @@ import { isStripeFeeSynced, syncStripeFeeForPaymentIntent } from './stripe-fee.u
 import { applyTotalsToBatch, computeTotalsFromLines } from './payout-batch-totals.util';
 
 export const STRIPE_FEE_PENDING_REASON = 'stripe_fee_pending';
+export const STRIPE_TAX_PENDING_REASON = 'stripe_tax_pending';
 
 @Injectable()
 export class WelperPayoutLedgerService {
@@ -144,6 +145,13 @@ export class WelperPayoutLedgerService {
     const welperNetCents = Math.max(0, welperGrossCents - welperRefundCents);
 
     const feePending = !allSynced;
+    const taxPending = receipt.stripeTaxTransactionStatus !== 'succeeded';
+    const operationalPending = feePending || taxPending;
+    const pendingReason = feePending
+      ? STRIPE_FEE_PENDING_REASON
+      : taxPending
+        ? STRIPE_TAX_PENDING_REASON
+        : null;
     const payload: Partial<WelperPayoutLedger> = {
       bookingId: booking.id,
       welperId: booking.welperId,
@@ -157,7 +165,7 @@ export class WelperPayoutLedgerService {
       welperNetCents,
       platformGrossCents,
       stripeFeeCents: feePending ? null : totalFeeCents,
-      status: feePending
+      status: operationalPending
         ? WelperPayoutLedgerStatus.EXCLUDED
         : welperNetCents <= 0
           ? WelperPayoutLedgerStatus.EXCLUDED
@@ -167,7 +175,7 @@ export class WelperPayoutLedgerService {
             : existing?.status === WelperPayoutLedgerStatus.EXCLUDED
               ? WelperPayoutLedgerStatus.PENDING
               : (existing?.status ?? WelperPayoutLedgerStatus.PENDING),
-      exclusionReason: feePending ? STRIPE_FEE_PENDING_REASON : welperNetCents <= 0 ? 'fully_refunded' : null,
+      exclusionReason: pendingReason ?? (welperNetCents <= 0 ? 'fully_refunded' : null),
     };
 
     if (existing) {
@@ -182,13 +190,13 @@ export class WelperPayoutLedgerService {
         Object.assign(existing, payload);
         return ledgerRepo.save(existing);
       }
-      if (existing.status === WelperPayoutLedgerStatus.EXCLUDED && welperNetCents > 0 && !feePending) {
+      if (existing.status === WelperPayoutLedgerStatus.EXCLUDED && welperNetCents > 0 && !operationalPending) {
         existing.status = WelperPayoutLedgerStatus.PENDING;
         existing.exclusionReason = null;
         Object.assign(existing, payload);
         return ledgerRepo.save(existing);
       }
-      if (feePending) {
+      if (operationalPending) {
         Object.assign(existing, payload);
         return ledgerRepo.save(existing);
       }

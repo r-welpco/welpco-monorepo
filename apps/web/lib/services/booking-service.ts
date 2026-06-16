@@ -103,7 +103,15 @@ export interface BookingItem {
 
   availableActions?: string[];
 
-  paymentPhase?: "none" | "pending" | "requires_action" | "authorized" | "captured" | "canceled" | "failed";
+  paymentPhase?:
+    | "none"
+    | "scheduled"
+    | "pending"
+    | "requires_action"
+    | "authorized"
+    | "captured"
+    | "canceled"
+    | "failed";
   captureEligibleAt?: string | null;
   paymentClientSecret?: string | null;
   serviceReceipt?: ServiceReceipt | null;

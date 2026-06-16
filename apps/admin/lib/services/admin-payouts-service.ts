@@ -69,6 +69,20 @@ export interface PayoutUpcomingPreview {
   welpers: PayoutWelperRollup[];
 }
 
+export interface PaymentRecoveryTask {
+  id: string;
+  bookingId: string;
+  resolutionId: string;
+  stripeTransferId: string;
+  requiredReversalCents: number;
+  recoveredCents: number;
+  outstandingCents: number;
+  status: string;
+  stripeDashboardUrl: string;
+  exceptionMessage: string | null;
+  createdAt: string;
+}
+
 export async function getPayoutUpcoming(): Promise<PayoutUpcomingPreview> {
   return apiClient.get<PayoutUpcomingPreview>("/api/admin/payouts/upcoming");
 }
@@ -83,6 +97,10 @@ export async function listPayoutBatches(params?: {
       limit: params?.limit,
     },
   });
+}
+
+export async function listPaymentRecoveries(): Promise<{ data: PaymentRecoveryTask[] }> {
+  return apiClient.get<{ data: PaymentRecoveryTask[] }>("/api/admin/payouts/recoveries");
 }
 
 export async function getPayoutBatch(id: string): Promise<PayoutBatchReview> {

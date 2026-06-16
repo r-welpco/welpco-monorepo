@@ -92,6 +92,21 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
   const payoutStep = signupState?.stepSummaries?.welperPayout;
   const profilePhotoUrl =
     profile?.profilePhotoUrl ?? user.profilePhotoUrl ?? null;
+  const availabilityStepComplete =
+    signupState?.completedSteps.includes("welperAvailability") ?? false;
+  const discoverabilityChecks = isWelper
+    ? [
+        { label: "Signup complete", passed: user.signupCompleted === true },
+        { label: "Email verified", passed: user.emailVerified === true },
+        { label: "Account active", passed: user.status === "Active" },
+        {
+          label: "Profile public",
+          passed: profile?.profileVisibility === "Public",
+        },
+      ]
+    : [];
+  const discoverable =
+    isWelper && discoverabilityChecks.every((check) => check.passed);
 
   return (
     <Flex direction="column" gap="4">
@@ -119,6 +134,20 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
       {isWelper ? (
         <Card size="2" title="Launch readiness">
           {signupStateError ? <AdminErrorCallout message={signupStateError} /> : null}
+          <Flex gap="2" wrap="wrap" mb="3">
+            <Badge variant="soft" color={discoverable ? "green" : "amber"}>
+              {discoverable ? "Discoverable" : "Not discoverable"}
+            </Badge>
+            {discoverabilityChecks.map((check) => (
+              <Badge
+                key={check.label}
+                variant="soft"
+                color={check.passed ? "green" : "red"}
+              >
+                {check.passed ? "Ready" : "Blocked"}: {check.label}
+              </Badge>
+            ))}
+          </Flex>
           <DetailTable>
             <DetailRow label="Signup completed">{user.signupCompleted ? "Yes" : "No"}</DetailRow>
             <DetailRow label="Preferred locale">{user.preferredLocale ?? "—"}</DetailRow>
@@ -245,6 +274,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
             <DetailRow label="Onboarding">
               {profile.onboardingCompleted ? "Completed" : "Not completed"}
             </DetailRow>
+            <DetailRow label="Date of birth">{profile.dateOfBirth ?? "—"}</DetailRow>
             <DetailRow label="Phone">
               <Text
                 size="1"
@@ -267,6 +297,52 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
                   {profile.bio || "—"}
                 </Text>
               </DetailRow>
+            ) : null}
+            {profile.type === "welper" ? (
+              <>
+                <DetailRow label="Profile visibility">
+                  <Badge variant="soft">{profile.profileVisibility ?? "—"}</Badge>
+                </DetailRow>
+                <DetailRow label="Trust verification">
+                  {profile.verified ? "Verified" : "Not verified"}
+                </DetailRow>
+                <DetailRow label="Service area">
+                  <Text
+                    size="1"
+                    style={{ whiteSpace: "pre-wrap", fontFamily: "ui-monospace, monospace" }}
+                  >
+                    {formatProfileValue(profile.serviceArea)}
+                  </Text>
+                </DetailRow>
+                <DetailRow label="Service area summary">
+                  {[
+                    profile.serviceAreaCity,
+                    profile.provinceCode,
+                    profile.countryCode,
+                  ]
+                    .filter(Boolean)
+                    .join(", ") || "—"}
+                </DetailRow>
+                <DetailRow label="Postal areas">
+                  {profile.serviceAreaPostalCodes && profile.serviceAreaPostalCodes.length > 0
+                    ? profile.serviceAreaPostalCodes.join(", ")
+                    : profile.serviceAreaCity || profile.serviceArea
+                      ? "All configured area"
+                      : "—"}
+                </DetailRow>
+                <DetailRow label="Coordinates">
+                  {profile.latitude != null && profile.longitude != null
+                    ? `${profile.latitude}, ${profile.longitude}`
+                    : "—"}
+                </DetailRow>
+                <DetailRow label="Availability preference">
+                  {profile.availabilityAdHocOnly
+                    ? "Ad-hoc requests only"
+                    : availabilityStepComplete
+                      ? "Recurring schedule"
+                      : "Not configured"}
+                </DetailRow>
+              </>
             ) : null}
           </DetailTable>
         </Card>

@@ -24,8 +24,8 @@ import { JwtAuthGuard, RolesGuard, Roles } from '../../../common/auth';
 import { AccountType, AccountStatus, UserAccount } from '../entities/user-account.entity';
 import { BackgroundCheckStatus } from '../entities/verification-status.entity';
 import { AccountLockoutService } from '../auth/account-lockout.service';
-import { PaymentService } from '../../payment/payment.service';
 import { PayoutBatchService } from '../../payment/payout-batch.service';
+import { StripeOperationsService } from '../../payment/stripe-operations.service';
 import { ApplicationSettingsService, PAYMENT_CAPTURE_DELAY_KEY } from '../../payment/application-settings.service';
 import { CurrentUser, CurrentUserData } from '../../../common/auth/decorators/current-user.decorator';
 import { BookingService } from '../../booking/booking.service';
@@ -33,15 +33,8 @@ import { SupportTicketService } from '../../dispute/support-ticket.service';
 import { AdminAuditService } from './admin-audit.service';
 import { BookingRequestStatus } from '../../booking/entities/booking-request.entity';
 import { UpdateSupportTicketAdminDto } from '../../dispute/dto/update-support-ticket-admin.dto';
-import { BookingPaymentRecordStatus } from '../../payment/entities/booking-payment.entity';
 import { JobPostingService } from '../../job-posting/job-posting.service';
 import { AdminJobPostingListQueryDto } from '../../job-posting/dto/job-posting-query.dto';
-
-function parseBookingPaymentStatus(s?: string): BookingPaymentRecordStatus | undefined {
-  if (!s?.trim()) return undefined;
-  const values = Object.values(BookingPaymentRecordStatus) as string[];
-  return values.includes(s.trim()) ? (s.trim() as BookingPaymentRecordStatus) : undefined;
-}
 
 function sanitizeAdminUser(user: UserAccount): Omit<UserAccount, 'passwordHash'> {
   const { passwordHash: _passwordHash, ...safe } = user;
@@ -58,13 +51,13 @@ export class AdminController {
     private readonly adminService: AdminService,
     private readonly adminDashboardService: AdminDashboardService,
     private readonly accountLockoutService: AccountLockoutService,
-    private readonly paymentService: PaymentService,
     private readonly applicationSettingsService: ApplicationSettingsService,
     private readonly bookingService: BookingService,
     private readonly supportTicketService: SupportTicketService,
     private readonly adminAuditService: AdminAuditService,
     private readonly jobPostingService: JobPostingService,
     private readonly payoutBatchService: PayoutBatchService,
+    private readonly stripeOperationsService: StripeOperationsService,
   ) {}
 
   @Get('users')
@@ -531,100 +524,16 @@ export class AdminController {
     return this.adminAuditService.findPage(page, limit);
   }
 
-  @Get('payments')
-  @ApiOperation({ summary: 'List booking payments (admin, all statuses)' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'welperId', required: false })
-  @ApiQuery({ name: 'customerId', required: false })
-  @ApiQuery({
-    name: 'status',
-    required: false,
-    enum: BookingPaymentRecordStatus,
-  })
-  @ApiQuery({
-    name: 'capturedDateFrom',
-    required: false,
-    description: 'ISO date',
-  })
-  @ApiQuery({
-    name: 'capturedDateTo',
-    required: false,
-    description: 'ISO date',
-  })
-  async listPayments(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(25), ParseIntPipe) limit: number,
-    @Query('welperId') welperId?: string,
-    @Query('customerId') customerId?: string,
-    @Query('status') status?: string,
-    @Query('capturedDateFrom') capturedDateFrom?: string,
-    @Query('capturedDateTo') capturedDateTo?: string,
-  ) {
-    return this.paymentService.findRowsForAdminList({
-      page,
-      limit,
-      welperId,
-      customerId,
-      status: parseBookingPaymentStatus(status),
-      capturedDateFrom: capturedDateFrom ? new Date(capturedDateFrom) : undefined,
-      capturedDateTo: capturedDateTo ? new Date(capturedDateTo) : undefined,
-    });
-  }
-
-  @Get('payments/export')
-  @ApiOperation({ summary: 'Export captured Stripe payments (CSV or JSON)' })
-  @ApiQuery({ name: 'welperId', required: false })
-  @ApiQuery({ name: 'dateFrom', required: false, description: 'ISO date' })
-  @ApiQuery({ name: 'dateTo', required: false, description: 'ISO date' })
-  @ApiQuery({ name: 'format', required: false, enum: ['csv', 'json'] })
-  async exportPayments(
-    @Res() res: Response,
-    @Query('welperId') welperId?: string,
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-    @Query('format') format?: string,
-  ) {
-    const rows = await this.paymentService.findCapturedRowsForExport({
-      welperId,
-      dateFrom: dateFrom ? new Date(dateFrom) : undefined,
-      dateTo: dateTo ? new Date(dateTo) : undefined,
-    });
-    const payload = rows.map((r) => ({
-      bookingId: r.bookingId,
-      welperId: r.welperId,
-      customerId: r.customerId,
-      amountCents: r.amountCents,
-      currency: r.currency,
-      stripePaymentIntentId: r.stripePaymentIntentId,
-      capturedAt: r.capturedAt?.toISOString() ?? null,
-    }));
-    if (format === 'json') {
-      res.status(200).json(payload);
-      return;
-    }
-    const header = 'booking_id,welper_id,customer_id,amount_cents,currency,stripe_payment_intent_id,captured_at\n';
-    const lines = rows.map((r) =>
-      [
-        r.bookingId,
-        r.welperId,
-        r.customerId,
-        r.amountCents,
-        r.currency,
-        r.stripePaymentIntentId,
-        r.capturedAt?.toISOString() ?? '',
-      ].join(','),
-    );
-    const csv = header + lines.join('\n');
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="welpco-payments.csv"');
-    res.send(csv);
-  }
-
   @Get('payouts/upcoming')
   @ApiOperation({ summary: 'Preview upcoming Friday welper payout batch' })
   async getPayoutUpcoming() {
     return this.payoutBatchService.getUpcomingPreview();
+  }
+
+  @Get('payouts/recoveries')
+  @ApiOperation({ summary: 'List open Stripe transfer recovery tasks' })
+  async listPayoutRecoveries() {
+    return { data: await this.stripeOperationsService.listOpenRecoveryTasks() };
   }
 
   @Get('payouts/batches')

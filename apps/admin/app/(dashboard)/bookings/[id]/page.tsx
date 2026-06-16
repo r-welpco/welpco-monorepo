@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminTimeline } from "@/components/admin-timeline";
+import { AdminWarningCallout } from "@/components/admin-callout";
 import { DetailRow, DetailTable } from "@/components/detail-rows";
 import {
   formatAdminAddress,
@@ -86,6 +87,12 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
         <AdminTimeline events={timelineEvents} />
       </Card>
 
+      {booking.paymentAuthorizationFailureMessage ? (
+        <AdminWarningCallout
+          message={`Payment authorization needs attention: ${booking.paymentAuthorizationFailureMessage}`}
+        />
+      ) : null}
+
       <Grid columns={{ initial: "1", md: "2" }} gap="4">
         <Card size="2" title="Schedule & pricing">
           <DetailTable>
@@ -160,6 +167,30 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
             <DetailRow label="Capture eligible at">
               {formatAdminDateTime(booking.captureEligibleAt)}
             </DetailRow>
+            <DetailRow label="Authorization">
+              {booking.paymentAuthorizationStatus
+                ? formatAdminStatusLabel(booking.paymentAuthorizationStatus)
+                : "—"}
+            </DetailRow>
+            <DetailRow label="Authorization due">
+              {formatAdminDateTime(booking.paymentAuthorizationDueAt)}
+            </DetailRow>
+            <DetailRow label="Auto-cancel cutoff">
+              {formatAdminDateTime(booking.paymentAuthorizationDeadlineAt)}
+            </DetailRow>
+            <DetailRow label="Last authorization attempt">
+              {formatAdminDateTime(booking.paymentAuthorizationLastAttemptAt)}
+            </DetailRow>
+            <DetailRow label="Authorization attempts">
+              {booking.paymentAuthorizationAttemptCount ?? 0}
+            </DetailRow>
+            {booking.paymentAuthorizationFailureCode ? (
+              <DetailRow label="Payment issue code">
+                <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                  {booking.paymentAuthorizationFailureCode}
+                </Text>
+              </DetailRow>
+            ) : null}
             <DetailRow label="Dispute report deadline">
               {formatAdminDateTime(booking.disputeReportDeadlineAt)}
             </DetailRow>
@@ -216,6 +247,25 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
             <DetailRow label="Sent to customer">
               {formatAdminDateTime(receipt.sentToCustomerAt)}
             </DetailRow>
+            <DetailRow label="Stripe Tax transaction">
+              {receipt.stripeTaxTransactionStatus
+                ? formatAdminStatusLabel(receipt.stripeTaxTransactionStatus)
+                : "Not recorded"}
+            </DetailRow>
+            {receipt.stripeTaxTransactionId ? (
+              <DetailRow label="Tax transaction ID">
+                <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                  {receipt.stripeTaxTransactionId}
+                </Text>
+              </DetailRow>
+            ) : null}
+            {receipt.stripeTaxTransactionError ? (
+              <DetailRow label="Tax exception">
+                <Text size="2" color="red">
+                  {receipt.stripeTaxTransactionError}
+                </Text>
+              </DetailRow>
+            ) : null}
             {receipt.notes ? (
               <DetailRow label="Receipt notes">
                 <Text size="2" style={{ whiteSpace: "pre-wrap" }}>

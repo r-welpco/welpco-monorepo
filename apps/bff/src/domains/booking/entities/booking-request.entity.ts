@@ -102,4 +102,31 @@ export class BookingRequest extends BaseEntity {
   /** Stripe Tax Calculation id used for the one-hour authorization hold. */
   @Column({ name: 'hold_stripe_tax_calculation_id', type: 'varchar', length: 255, nullable: true })
   holdStripeTaxCalculationId!: string | null;
+
+  @Column({ name: 'payment_authorization_status', type: 'varchar', length: 32, nullable: true })
+  paymentAuthorizationStatus!: string | null;
+
+  @Column({ name: 'payment_authorization_scheduled_at', type: 'timestamptz', nullable: true })
+  paymentAuthorizationScheduledAt!: Date | null;
+
+  @Column({ name: 'payment_authorization_due_at', type: 'timestamptz', nullable: true })
+  paymentAuthorizationDueAt!: Date | null;
+
+  @Column({ name: 'payment_authorization_deadline_at', type: 'timestamptz', nullable: true })
+  paymentAuthorizationDeadlineAt!: Date | null;
+
+  @Column({ name: 'payment_authorization_last_attempt_at', type: 'timestamptz', nullable: true })
+  paymentAuthorizationLastAttemptAt!: Date | null;
+
+  @Column({ name: 'payment_authorization_attempt_count', type: 'int', default: 0 })
+  paymentAuthorizationAttemptCount!: number;
+
+  @Column({ name: 'payment_authorization_failure_code', type: 'varchar', length: 128, nullable: true })
+  paymentAuthorizationFailureCode!: string | null;
+
+  @Column({ name: 'payment_authorization_failure_message', type: 'text', nullable: true })
+  paymentAuthorizationFailureMessage!: string | null;
+
+  @Column({ name: 'payment_authorization_lease_until', type: 'timestamptz', nullable: true })
+  paymentAuthorizationLeaseUntil!: Date | null;
 }

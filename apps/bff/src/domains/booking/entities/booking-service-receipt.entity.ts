@@ -49,6 +49,15 @@ export class BookingServiceReceipt extends BaseEntity {
   @Column({ name: 'stripe_tax_calculation_id', type: 'varchar', length: 255, nullable: true })
   stripeTaxCalculationId!: string | null;
 
+  @Column({ name: 'stripe_tax_transaction_id', type: 'varchar', length: 255, nullable: true })
+  stripeTaxTransactionId!: string | null;
+
+  @Column({ name: 'stripe_tax_transaction_status', type: 'varchar', length: 32, nullable: true })
+  stripeTaxTransactionStatus!: string | null;
+
+  @Column({ name: 'stripe_tax_transaction_error', type: 'text', nullable: true })
+  stripeTaxTransactionError!: string | null;
+
   @Column({ name: 'total_cents', type: 'int' })
   totalCents!: number;
 

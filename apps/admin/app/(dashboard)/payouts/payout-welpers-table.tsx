@@ -56,7 +56,11 @@ export function PayoutWelpersTable({
           <TableBody>
             {welpers.map((welper) => (
               <TableRow key={welper.welperId}>
-                <TableCell>{welper.welperEmail ?? welper.welperId}</TableCell>
+                <TableCell>
+                  <Link href={`/users/${welper.welperId}`}>
+                    {welper.welperEmail ?? welper.welperId}
+                  </Link>
+                </TableCell>
                 <TableCell>{welper.bookingCount}</TableCell>
                 <TableCell>{formatAdminMoneyCents(welper.welperNetCents, "CAD")}</TableCell>
                 <TableCell>{formatAdminMoneyCents(welper.platformNetCents, "CAD")}</TableCell>

@@ -38,6 +38,9 @@ export class ServiceReceiptDto {
   @ApiPropertyOptional() notes!: string | null;
   @ApiProperty() confirmedAt!: string;
   @ApiPropertyOptional() sentToCustomerAt!: string | null;
+  @ApiPropertyOptional() stripeTaxTransactionId?: string | null;
+  @ApiPropertyOptional() stripeTaxTransactionStatus?: string | null;
+  @ApiPropertyOptional() stripeTaxTransactionError?: string | null;
 
   /**
    * Wave 2: presigned GET URLs for each evidence file attached to this receipt.

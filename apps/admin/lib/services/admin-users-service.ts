@@ -188,6 +188,17 @@ export interface AdminUserProfile {
   payoutMethodChoice?: string | null;
   stripeConnectConnected?: boolean;
   stripeConnectAccountLast4?: string | null;
+  dateOfBirth?: string | null;
+  profileVisibility?: string | null;
+  verified?: boolean;
+  serviceArea?: unknown;
+  serviceAreaCity?: string | null;
+  serviceAreaPostalCodes?: string[] | null;
+  countryCode?: string | null;
+  provinceCode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  availabilityAdHocOnly?: boolean;
 }
 
 export async function getAdminUserProfile(id: string): Promise<AdminUserProfile> {

@@ -50,14 +50,14 @@ export function ResolutionForm({
   const capturedHint = dispute.capturedPayment;
   const refundHelp = useMemo(() => {
     if (resolutionType === "refund") {
-      return "Full refund: Stripe refunds each captured charge in full. Leave amount empty.";
+      return "Record a full-refund decision here, then issue the recommended refunds in Stripe Dashboard.";
     }
     if (resolutionType === "partial_refund") {
       const cap =
         capturedHint != null
           ? ` Max captured: ${formatAdminMoneyCents(capturedHint.totalCents, capturedHint.currency)}.`
           : "";
-      return `Enter refund in dollars (e.g. 25.00). Applied to the most recent capture first.${cap}`;
+      return `Enter the decision amount in dollars. Welpco will recommend a latest-capture-first allocation for Stripe.${cap}`;
     }
     return null;
   }, [resolutionType, capturedHint]);
@@ -86,17 +86,11 @@ export function ResolutionForm({
         body.refundAmount = Number.parseFloat(refundAmount);
       }
       const res = await createDisputeResolution(disputeId, body);
-      const sr = res.stripeRefund;
-      let stripeLine = "";
-      if (sr.status === "succeeded") {
-        stripeLine = ` Stripe: refund succeeded (${sr.refundsCreated ?? 1} charge(s)).`;
-      } else if (sr.status === "failed") {
-        stripeLine = ` Stripe: refund failed — ${sr.message ?? "unknown error"}. Resolution is still saved.`;
-      } else if (sr.status === "skipped") {
-        stripeLine = ` Stripe: ${sr.message ?? "No captured payment to refund."}`;
-      }
+      const requiresStripe = res.stripeRefund.status === "pending";
       setSuccess(
-        `Resolution recorded. Booking ${res.bookingId.slice(0, 8)}… is now ${res.bookingStatus}.${stripeLine}`,
+        requiresStripe
+          ? `Refund decision recorded. The booking remains disputed until Stripe confirms the refund${res.workflowStatus ? ` (${res.workflowStatus})` : ""}.`
+          : `Resolution recorded. Booking ${res.bookingId.slice(0, 8)}... is now ${res.bookingStatus}.`,
       );
       router.refresh();
     } catch (err) {
@@ -186,7 +180,7 @@ export function ResolutionForm({
           {success ? <AdminSuccessCallout message={success} /> : null}
 
           <Button type="submit" disabled={loading}>
-            {loading ? "Submitting…" : "Submit resolution"}
+            {loading ? "Submitting..." : resolutionType.includes("refund") ? "Record refund decision" : "Submit resolution"}
           </Button>
         </Flex>
       </form>

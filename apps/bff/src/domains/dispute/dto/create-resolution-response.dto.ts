@@ -2,9 +2,9 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class StripeRefundOutcomeDto {
   @ApiProperty({
-    enum: ['succeeded', 'failed', 'partial', 'skipped', 'not_applicable'],
+    enum: ['pending', 'succeeded', 'failed', 'partial', 'skipped', 'not_applicable'],
   })
-  status!: 'succeeded' | 'failed' | 'partial' | 'skipped' | 'not_applicable';
+  status!: 'pending' | 'succeeded' | 'failed' | 'partial' | 'skipped' | 'not_applicable';
 
   @ApiPropertyOptional({
     description: 'Number of Stripe refund API calls that completed successfully',
@@ -39,13 +39,19 @@ export class CreateResolutionResponseDto {
 
   @ApiProperty({
     description: 'New booking status after resolution',
-    enum: ['completed', 'cancelled'],
+    enum: ['completed', 'cancelled', 'disputed'],
   })
-  bookingStatus!: 'completed' | 'cancelled';
+  bookingStatus!: 'completed' | 'cancelled' | 'disputed';
 
   @ApiProperty({
     type: StripeRefundOutcomeDto,
     description: 'Stripe card refund outcome (dispute resolutions)',
   })
   stripeRefund!: StripeRefundOutcomeDto;
+
+  @ApiPropertyOptional()
+  workflowStatus?: string;
+
+  @ApiPropertyOptional()
+  stripeDashboardActions?: Array<Record<string, unknown>>;
 }

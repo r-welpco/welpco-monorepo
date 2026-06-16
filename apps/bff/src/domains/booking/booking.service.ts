@@ -15,6 +15,7 @@ import { CreateBookingRequestDto } from './dto/create-booking-request.dto';
 import { BookingListQueryDto } from './dto/booking-list-query.dto';
 import { BookingResponseDto } from './dto/booking-response.dto';
 import { computeWelperGrossCentsFromCustomerSubtotal } from './booking-pricing';
+import { scheduledTimeToUtcMs } from './booking-schedule-time';
 import { SubmitServiceReceiptDto } from './dto/submit-service-receipt.dto';
 import {
   ConfirmServiceReceiptResponseDto,
@@ -308,6 +309,13 @@ export class BookingService {
       checkedInAt: booking.checkedInAt,
       checkedOutAt: booking.checkedOutAt,
       completedAt: booking.completedAt,
+      paymentAuthorizationStatus: booking.paymentAuthorizationStatus,
+      paymentAuthorizationDueAt: booking.paymentAuthorizationDueAt?.toISOString() ?? null,
+      paymentAuthorizationDeadlineAt: booking.paymentAuthorizationDeadlineAt?.toISOString() ?? null,
+      paymentAuthorizationLastAttemptAt: booking.paymentAuthorizationLastAttemptAt?.toISOString() ?? null,
+      paymentAuthorizationAttemptCount: booking.paymentAuthorizationAttemptCount,
+      paymentAuthorizationFailureCode: booking.paymentAuthorizationFailureCode,
+      paymentAuthorizationFailureMessage: booking.paymentAuthorizationFailureMessage,
       createdAt: booking.createdAt,
       updatedAt: booking.updatedAt,
       availableActions: actions,
@@ -394,12 +402,12 @@ export class BookingService {
 
     if (booking.scheduledDate && booking.scheduledStartTime && booking.scheduledEndTime) {
       const offset = booking.timezoneOffsetMinutes ?? null;
-      const scheduledStartMs = this.scheduledTimeToUtcMs(
+      const scheduledStartMs = scheduledTimeToUtcMs(
         booking.scheduledDate,
         booking.scheduledStartTime,
         offset,
       );
-      const scheduledEndMs = this.scheduledTimeToUtcMs(
+      const scheduledEndMs = scheduledTimeToUtcMs(
         booking.scheduledDate,
         booking.scheduledEndTime,
         offset,
@@ -451,6 +459,9 @@ export class BookingService {
       notes: r.notes,
       confirmedAt: r.confirmedAt.toISOString(),
       sentToCustomerAt: r.sentToCustomerAt?.toISOString() ?? null,
+      stripeTaxTransactionId: r.stripeTaxTransactionId,
+      stripeTaxTransactionStatus: r.stripeTaxTransactionStatus,
+      stripeTaxTransactionError: r.stripeTaxTransactionError,
       evidenceFiles,
     };
   }
@@ -906,7 +917,7 @@ export class BookingService {
       return this.toResponse(idempotentAlreadyAccepted, welperId, 'welper');
     }
 
-    await this.paymentService.authorizeHoldBeforeWelperAccept(bookingId);
+    await this.paymentService.prepareAuthorizationForAcceptance(bookingId);
 
     let saved: BookingRequest;
     try {
@@ -1295,7 +1306,7 @@ export class BookingService {
       const offset = timezoneOffsetMinutes ?? booking.timezoneOffsetMinutes ?? null;
       let chargeLateCancellationFee = false;
       if (role === 'customer' && booking.scheduledDate && booking.scheduledStartTime) {
-        const scheduledUtcMs = this.scheduledTimeToUtcMs(
+        const scheduledUtcMs = scheduledTimeToUtcMs(
           booking.scheduledDate,
           booking.scheduledStartTime,
           offset,
@@ -1458,19 +1469,6 @@ export class BookingService {
   }
 
   // ─── Private Helpers ──────────────────────────────────────────────────
-
-  /**
-   * Convert scheduled date+time to UTC ms. If offset is set (minutes from UTC),
-   * the date/time is interpreted in that timezone; otherwise server local.
-   */
-  private scheduledTimeToUtcMs(dateStr: string, timeStr: string, offsetMinutes: number | null): number {
-    const [y, m, d] = dateStr.split('-').map(Number);
-    const [hh, mm] = (timeStr.length >= 5 ? timeStr.slice(0, 5) : timeStr).split(':').map(Number);
-    if (offsetMinutes != null) {
-      return Date.UTC(y, (m ?? 1) - 1, d ?? 1, hh ?? 0, mm ?? 0) - (offsetMinutes * 60 * 1000);
-    }
-    return new Date(y!, (m ?? 1) - 1, d ?? 1, hh ?? 0, mm ?? 0).getTime();
-  }
 
   /** Fetch a booking with a pessimistic write lock inside a transaction — used by welper state transitions. */
   private async getBookingForWelperLocked(

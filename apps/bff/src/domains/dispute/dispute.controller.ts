@@ -31,6 +31,8 @@ import { CreateResolutionResponseDto } from './dto/create-resolution-response.dt
 function disputeStatusQueryToDb(q: string): string | undefined {
   const v = q.trim().toLowerCase();
   if (v === 'in-review' || v === 'in_review') return 'in_review';
+  if (v === 'awaiting-refund' || v === 'awaiting_refund') return 'awaiting_refund';
+  if (v === 'awaiting-recovery' || v === 'awaiting_recovery') return 'awaiting_recovery';
   const allowed = ['open', 'resolved', 'closed', 'escalated'];
   if (allowed.includes(v)) return v;
   return undefined;
@@ -119,7 +121,7 @@ export class DisputeController {
   @ApiOperation({
     summary: 'List disputes',
     description:
-      'Customers and welpers see disputes where they are the booking participant. Admins see all disputes. Admins may filter by status (open, in-review, escalated, resolved, closed).',
+      'Customers and welpers see disputes where they are the booking participant. Admins see all disputes and may filter by operational status.',
   })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -209,15 +211,15 @@ export class DisputeController {
     return this.disputeService.createResolution(id, user.userId, dto);
   }
 
-  @Post('disputes/:id/resolution/refund/retry')
+  @Post('disputes/:id/resolution/refund/reconcile')
   @UseGuards(RolesGuard)
   @Roles(AccountType.ADMIN)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Retry a failed or partial Stripe refund for an existing resolution',
+    summary: 'Refresh an external Stripe refund and recovery workflow',
   })
   @ApiParam({ name: 'id', description: 'Dispute ID' })
-  async retryResolutionRefund(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
-    return this.disputeService.retryResolutionRefund(id, user.userId);
+  async reconcileResolutionRefund(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    return this.disputeService.reconcileResolutionRefund(id, user.userId);
   }
 }

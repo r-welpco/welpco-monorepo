@@ -12,4 +12,6 @@ export type DisputeStatus =
   | 'resolved'
   | 'closed'
   | 'escalated'
+  | 'awaiting_refund'
+  | 'awaiting_recovery'
   | 'withdrawn';

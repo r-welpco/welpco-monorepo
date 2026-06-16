@@ -26,6 +26,10 @@ import { AdminDashboardService } from './admin-dashboard.service';
 import { BackgroundCheckOrder } from '../../safety-verification/entities/background-check-order.entity';
 import { SafetyVerificationModule } from '../../safety-verification/safety-verification.module';
 import { JobPostingModule } from '../../job-posting/job-posting.module';
+import { PaymentRecoveryTask } from '../../payment/entities/payment-recovery-task.entity';
+import { BookingServiceReceipt } from '../../booking/entities/booking-service-receipt.entity';
+import { WelperPayoutLedger } from '../../payment/entities/welper-payout-ledger.entity';
+import { BookingRefund } from '../../payment/entities/booking-refund.entity';
 
 @Module({
   imports: [
@@ -45,6 +49,10 @@ import { JobPostingModule } from '../../job-posting/job-posting.module';
       BookingRequest,
       BookingPayment,
       ServiceCategory,
+      PaymentRecoveryTask,
+      BookingServiceReceipt,
+      WelperPayoutLedger,
+      BookingRefund,
     ]),
     UsersModule,
     EventsModule,
@@ -61,4 +69,3 @@ import { JobPostingModule } from '../../job-posting/job-posting.module';
   exports: [AdminService, AdminDashboardService],
 })
 export class AdminModule {}
-

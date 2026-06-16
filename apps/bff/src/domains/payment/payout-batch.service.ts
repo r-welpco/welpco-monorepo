@@ -22,6 +22,7 @@ import { PayoutMethodChoice } from '../profile-management/entities/payout-method
 import { E2E_STRIPE_CONNECT_ACCOUNT_PREFIX } from '../../common/signup-e2e-bypass';
 import { buildTransferIdempotencyKey } from './payout-idempotency.util';
 import { computeTotalsFromLines } from './payout-batch-totals.util';
+import { StripeOperationsService } from './stripe-operations.service';
 
 export type PayoutBatchLineDto = {
   ledgerId: string;
@@ -115,6 +116,7 @@ export class PayoutBatchService {
     private readonly bookingRepo: Repository<BookingRequest>,
     private readonly ledgerService: WelperPayoutLedgerService,
     private readonly stripeConnect: StripeConnectService,
+    private readonly stripeOperationsService: StripeOperationsService,
   ) {
     const key = this.config.get<string>('STRIPE_SECRET_KEY');
     this.stripe = key ? createStripeClient(key) : null;
@@ -733,6 +735,7 @@ export class PayoutBatchService {
   }
 
   async handleTransferWebhook(transfer: Stripe.Transfer): Promise<void> {
+    await this.stripeOperationsService.syncTransfer(transfer);
     const batchId = transfer.transfer_group ?? transfer.metadata?.batchId;
     const welperId = transfer.metadata?.welperId;
     if (!batchId || !welperId) return;
@@ -740,17 +743,11 @@ export class PayoutBatchService {
   }
 
   async handleTransferReversed(transfer: Stripe.Transfer): Promise<void> {
+    await this.stripeOperationsService.syncTransfer(transfer);
     const batchId = transfer.transfer_group ?? transfer.metadata?.batchId;
     const welperId = transfer.metadata?.welperId;
-    if (!batchId || !welperId) return;
-    this.logger.warn(`Transfer reversed: transfer=${transfer.id} batch=${batchId} welper=${welperId}`);
-    await this.ledgerRepo.update(
-      {
-        payoutBatchId: batchId,
-        welperId,
-        stripeTransferId: transfer.id,
-      },
-      { status: WelperPayoutLedgerStatus.FAILED },
+    this.logger.warn(
+      `Transfer reversed: transfer=${transfer.id} batch=${batchId ?? 'unknown'} welper=${welperId ?? 'unknown'}`,
     );
   }
 }

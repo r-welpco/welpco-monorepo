@@ -1,6 +1,24 @@
 import { apiClient } from "@/lib/api/client";
 
-export type DisputeStatusApi = "open" | "in-review" | "escalated" | "resolved" | "closed" | "withdrawn";
+export type DisputeStatusApi =
+  | "open"
+  | "in-review"
+  | "escalated"
+  | "awaiting-refund"
+  | "awaiting-recovery"
+  | "resolved"
+  | "closed"
+  | "withdrawn";
+
+export interface RefundAllocation {
+  paymentIntentId: string;
+  chargeId: string;
+  capturedCents: number;
+  refundedCents: number;
+  refundableCents: number;
+  recommendedRefundCents: number;
+  stripeDashboardUrl: string;
+}
 
 export interface DisputeParticipantSummary {
   userId: string;
@@ -18,10 +36,18 @@ export interface DisputeResolutionSummary {
   refundAmount?: number | null;
   resolvedAt: string;
   resolvedById?: string | null;
-  refundStatus?: "succeeded" | "failed" | "partial" | "skipped" | "not_applicable" | null;
+  refundStatus?: "pending" | "succeeded" | "failed" | "partial" | "skipped" | "not_applicable" | null;
   refundMessage?: string | null;
   refundsCreated?: number | null;
   refundAttemptedAt?: string | null;
+  workflowStatus?: string;
+  refundBaselineCents?: number | null;
+  refundTargetCents?: number | null;
+  refundConfirmedCents?: number;
+  pendingBookingOutcome?: string | null;
+  refundException?: string | null;
+  recommendedRefundAllocation?: RefundAllocation[] | null;
+  stripeLastSyncedAt?: string | null;
 }
 
 export interface CapturedPaymentHint {
@@ -57,6 +83,17 @@ export interface DisputeItem {
   welper?: DisputeParticipantSummary;
   resolution?: DisputeResolutionSummary;
   capturedPayment?: CapturedPaymentHint;
+  recoveryTask?: {
+    id: string;
+    stripeTransferId: string;
+    requiredReversalCents: number;
+    recoveredCents: number;
+    outstandingCents: number;
+    status: string;
+    stripeDashboardUrl: string;
+    exceptionMessage: string | null;
+    createdAt: string;
+  } | null;
 }
 
 export interface DisputesListResponse {
@@ -77,7 +114,7 @@ export interface CreateDisputeResolutionParams {
 }
 
 export type StripeRefundOutcome = {
-  status: "succeeded" | "failed" | "partial" | "skipped" | "not_applicable";
+  status: "pending" | "succeeded" | "failed" | "partial" | "skipped" | "not_applicable";
   refundsCreated?: number;
   message?: string;
 };
@@ -90,8 +127,10 @@ export interface CreateDisputeResolutionResponse {
   refundAmount: number | null;
   resolvedAt: string;
   bookingId: string;
-  bookingStatus: "completed" | "cancelled";
+  bookingStatus: "completed" | "cancelled" | "disputed";
   stripeRefund: StripeRefundOutcome;
+  workflowStatus?: string;
+  stripeDashboardActions?: RefundAllocation[];
 }
 
 export async function listDisputes(page = 1, limit = 50, status?: string): Promise<DisputesListResponse> {
@@ -114,6 +153,8 @@ export async function createDisputeResolution(
   );
 }
 
-export async function retryDisputeRefund(disputeId: string): Promise<StripeRefundOutcome> {
-  return apiClient.post<StripeRefundOutcome>(`/api/disputes/${encodeURIComponent(disputeId)}/resolution/refund/retry`);
+export async function reconcileDisputeRefund(disputeId: string): Promise<DisputeResolutionSummary> {
+  return apiClient.post<DisputeResolutionSummary>(
+    `/api/disputes/${encodeURIComponent(disputeId)}/resolution/refund/reconcile`,
+  );
 }

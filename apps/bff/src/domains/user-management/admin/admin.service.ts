@@ -582,6 +582,17 @@ export class AdminService {
     payoutMethodChoice?: string | null;
     stripeConnectConnected?: boolean;
     stripeConnectAccountLast4?: string | null;
+    dateOfBirth?: string | null;
+    profileVisibility?: string | null;
+    verified?: boolean;
+    serviceArea?: unknown;
+    serviceAreaCity?: string | null;
+    serviceAreaPostalCodes?: string[] | null;
+    countryCode?: string | null;
+    provinceCode?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+    availabilityAdHocOnly?: boolean;
   }> {
     const user = await this.findOne(userId);
     if (user.accountType === AccountType.CUSTOMER) {
@@ -598,6 +609,9 @@ export class AdminService {
         onboardingCompleted: profile.onboardingCompleted,
         phoneNumber: profile.phoneNumber,
         address: profile.address,
+        dateOfBirth: profile.dateOfBirth
+          ? String(profile.dateOfBirth).slice(0, 10)
+          : null,
       };
     }
     if (user.accountType === AccountType.WELPER) {
@@ -620,6 +634,19 @@ export class AdminService {
           profile.payoutMethodChoice === PayoutMethodChoice.STRIPE && connectId.length > 0,
         stripeConnectAccountLast4:
           connectId.length >= 4 ? connectId.slice(-4) : null,
+        dateOfBirth: profile.dateOfBirth
+          ? String(profile.dateOfBirth).slice(0, 10)
+          : null,
+        profileVisibility: profile.profileVisibility,
+        verified: profile.verified,
+        serviceArea: profile.serviceArea,
+        serviceAreaCity: profile.serviceAreaCity,
+        serviceAreaPostalCodes: profile.serviceAreaPostalCodes,
+        countryCode: profile.countryCode,
+        provinceCode: profile.provinceCode,
+        latitude: profile.latitude == null ? null : Number(profile.latitude),
+        longitude: profile.longitude == null ? null : Number(profile.longitude),
+        availabilityAdHocOnly: profile.availabilityAdHocOnly,
       };
     }
     return { type: null };

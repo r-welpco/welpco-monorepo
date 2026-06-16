@@ -8,7 +8,7 @@ import { formatAdminDateTime, formatAdminMoneyCents, formatAdminStatusLabel } fr
 import { buildDisputeTimeline } from "@/lib/dispute-detail-utils";
 import { getDisputeById, type DisputeItem, type DisputeParticipantSummary } from "@/lib/services/dispute-service";
 import { ResolutionForm } from "./resolution-form";
-import { RefundRetryAction } from "./refund-retry-action";
+import { RefundReconcileAction } from "./refund-retry-action";
 
 export const dynamic = "force-dynamic";
 
@@ -185,12 +185,11 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
 
       {dispute.resolution ? (
         <Card size="2" title="Resolution on file">
-          {dispute.resolution.refundStatus === "failed" || dispute.resolution.refundStatus === "partial" ? (
+          {dispute.resolution.refundException ? (
             <AdminWarningCallout
               message={
                 <>
-                  <Text weight="bold">Stripe refund {dispute.resolution.refundStatus}.</Text>{" "}
-                  {dispute.resolution.refundMessage ?? "Verify the payment in Stripe Dashboard before retrying."}
+                  <Text weight="bold">Finance exception.</Text> {dispute.resolution.refundException}
                 </>
               }
             />
@@ -213,12 +212,32 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
             {dispute.resolution.refundStatus ? (
               <DetailRow label="Stripe refund">{formatAdminStatusLabel(dispute.resolution.refundStatus)}</DetailRow>
             ) : null}
-            {dispute.resolution.refundsCreated != null ? (
-              <DetailRow label="Refund operations">{dispute.resolution.refundsCreated}</DetailRow>
+            {dispute.resolution.workflowStatus ? (
+              <DetailRow label="Workflow">{formatAdminStatusLabel(dispute.resolution.workflowStatus)}</DetailRow>
             ) : null}
-            {dispute.resolution.refundAttemptedAt ? (
-              <DetailRow label="Last refund attempt">
-                {formatAdminDateTime(dispute.resolution.refundAttemptedAt)}
+            {dispute.resolution.refundTargetCents != null ? (
+              <DetailRow label="Additional refund target">
+                {formatAdminMoneyCents(dispute.resolution.refundTargetCents, "CAD")}
+              </DetailRow>
+            ) : null}
+            {dispute.resolution.refundConfirmedCents != null ? (
+              <DetailRow label="Confirmed after decision">
+                {formatAdminMoneyCents(dispute.resolution.refundConfirmedCents, "CAD")}
+              </DetailRow>
+            ) : null}
+            {dispute.resolution.refundBaselineCents != null ? (
+              <DetailRow label="Already refunded at decision">
+                {formatAdminMoneyCents(dispute.resolution.refundBaselineCents, "CAD")}
+              </DetailRow>
+            ) : null}
+            {dispute.resolution.pendingBookingOutcome ? (
+              <DetailRow label="Booking outcome after confirmation">
+                {formatAdminStatusLabel(dispute.resolution.pendingBookingOutcome)}
+              </DetailRow>
+            ) : null}
+            {dispute.resolution.stripeLastSyncedAt ? (
+              <DetailRow label="Last Stripe refresh">
+                {formatAdminDateTime(dispute.resolution.stripeLastSyncedAt)}
               </DetailRow>
             ) : null}
             {dispute.resolution.notes ? (
@@ -229,16 +248,67 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
               </DetailRow>
             ) : null}
           </DetailTable>
-          {dispute.resolution.refundStatus === "failed" || dispute.resolution.refundStatus === "partial" ? (
+          {(dispute.resolution.recommendedRefundAllocation?.length ?? 0) > 0 ? (
+            <Flex direction="column" gap="2" mt="3">
+              <Text size="2" weight="bold">
+                Refund in Stripe Dashboard
+              </Text>
+              {dispute.resolution.recommendedRefundAllocation?.map((allocation) => (
+                <Card key={allocation.chargeId} size="1">
+                  <Flex direction="column" gap="1">
+                    <Text size="2">
+                      Refund {formatAdminMoneyCents(allocation.recommendedRefundCents, "CAD")} on charge{" "}
+                      <Text style={{ fontFamily: "ui-monospace, monospace" }}>{allocation.chargeId}</Text>
+                    </Text>
+                    <Text size="1" color="gray">
+                      Captured {formatAdminMoneyCents(allocation.capturedCents, "CAD")}; already refunded{" "}
+                      {formatAdminMoneyCents(allocation.refundedCents, "CAD")}
+                    </Text>
+                    <Link href={allocation.stripeDashboardUrl} target="_blank" rel="noopener noreferrer">
+                      Open payment in Stripe
+                    </Link>
+                  </Flex>
+                </Card>
+              ))}
+            </Flex>
+          ) : null}
+          {dispute.resolution.refundStatus !== "not_applicable" ? (
             <Flex mt="3">
-              <RefundRetryAction disputeId={dispute.id} />
+              <RefundReconcileAction disputeId={dispute.id} />
             </Flex>
           ) : null}
         </Card>
       ) : null}
 
+      {dispute.recoveryTask ? (
+        <Card size="2" title="Transfer recovery">
+          <AdminWarningCallout
+            message={`Reverse exactly ${formatAdminMoneyCents(
+              dispute.recoveryTask.outstandingCents,
+              "CAD",
+            )} on transfer ${dispute.recoveryTask.stripeTransferId} in Stripe. Do not close this dispute manually; Welpco will reconcile the reversal webhook.`}
+          />
+          <DetailTable>
+            <DetailRow label="Required reversal">
+              {formatAdminMoneyCents(dispute.recoveryTask.requiredReversalCents, "CAD")}
+            </DetailRow>
+            <DetailRow label="Recovered">
+              {formatAdminMoneyCents(dispute.recoveryTask.recoveredCents, "CAD")}
+            </DetailRow>
+            <DetailRow label="Status">{formatAdminStatusLabel(dispute.recoveryTask.status)}</DetailRow>
+            <DetailRow label="Stripe transfer">
+              <Link href={dispute.recoveryTask.stripeDashboardUrl} target="_blank" rel="noopener noreferrer">
+                Open transfer in Stripe
+              </Link>
+            </DetailRow>
+          </DetailTable>
+        </Card>
+      ) : null}
+
       {canResolve ? (
         <ResolutionForm disputeId={dispute.id} dispute={dispute} />
+      ) : dispute.status === "awaiting-refund" || dispute.status === "awaiting-recovery" ? (
+        <AdminInfoCallout message="Decision recorded. This dispute stays open until Stripe confirms the required financial actions." />
       ) : (
         <AdminSuccessCallout message="This dispute is already resolved." />
       )}

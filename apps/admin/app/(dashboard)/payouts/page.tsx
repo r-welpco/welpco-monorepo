@@ -11,10 +11,14 @@ import {
   Text,
 } from "@welpco/ui";
 import Link from "next/link";
-import { AdminErrorCallout } from "@/components/admin-callout";
+import { AdminErrorCallout, AdminWarningCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
-import { formatAdminMoneyCents, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
-import { getPayoutUpcoming, listPayoutBatches } from "@/lib/services/admin-payouts-service";
+import { formatAdminDateTime, formatAdminMoneyCents, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
+import {
+  getPayoutUpcoming,
+  listPaymentRecoveries,
+  listPayoutBatches,
+} from "@/lib/services/admin-payouts-service";
 import { PayoutBuildAction, PayoutFeeRefreshAction } from "./payout-batch-actions";
 import { PayoutWelpersTable } from "./payout-welpers-table";
 
@@ -36,12 +40,14 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
 export default async function PayoutsPage() {
   let upcoming;
   let batches: Awaited<ReturnType<typeof listPayoutBatches>>["data"] = [];
+  let recoveries: Awaited<ReturnType<typeof listPaymentRecoveries>>["data"] = [];
   let err: string | null = null;
 
   try {
     upcoming = await getPayoutUpcoming();
     const list = await listPayoutBatches({ limit: 12 });
     batches = list.data;
+    recoveries = (await listPaymentRecoveries()).data;
   } catch (e) {
     err = e instanceof Error ? e.message : "Failed to load payouts";
     upcoming = {
@@ -55,6 +61,10 @@ export default async function PayoutsPage() {
     };
   }
 
+  const blockedWelpers = upcoming.welpers.filter(
+    (welper) => welper.welperNetCents > 0 && !welper.connectReady,
+  ).length;
+
   return (
     <Flex direction="column" gap="4">
       <AdminPageHeader
@@ -63,8 +73,60 @@ export default async function PayoutsPage() {
       />
 
       {err ? <AdminErrorCallout message={err} /> : null}
+      {blockedWelpers > 0 ? (
+        <AdminWarningCallout
+          message={`${blockedWelpers} eligible welper${blockedWelpers === 1 ? "" : "s"} cannot be paid until Stripe Connect setup is complete.`}
+        />
+      ) : null}
 
       <PayoutFeeRefreshAction />
+
+      {recoveries.length > 0 ? (
+        <Card style={{ padding: "1.25rem" }}>
+          <Flex direction="column" gap="3">
+            <div>
+              <Text size="3" weight="medium">
+                Transfer recoveries
+              </Text>
+              <Text size="2" color="gray" style={{ display: "block" }}>
+                Reverse the exact outstanding amount in Stripe. Welpco closes the dispute after the webhook confirms it.
+              </Text>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableColumnHeaderCell>Booking</TableColumnHeaderCell>
+                  <TableColumnHeaderCell>Transfer</TableColumnHeaderCell>
+                  <TableColumnHeaderCell>Required</TableColumnHeaderCell>
+                  <TableColumnHeaderCell>Recovered</TableColumnHeaderCell>
+                  <TableColumnHeaderCell>Outstanding</TableColumnHeaderCell>
+                  <TableColumnHeaderCell>Opened</TableColumnHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recoveries.map((task) => (
+                  <TableRow key={task.id}>
+                    <TableCell>
+                      <Link href={`/bookings/${task.bookingId}`}>{shortId(task.bookingId)}</Link>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={task.stripeDashboardUrl} target="_blank" rel="noopener noreferrer">
+                        Reverse {shortId(task.stripeTransferId)}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{formatAdminMoneyCents(task.requiredReversalCents, "CAD")}</TableCell>
+                    <TableCell>{formatAdminMoneyCents(task.recoveredCents, "CAD")}</TableCell>
+                    <TableCell>
+                      <Text weight="bold">{formatAdminMoneyCents(task.outstandingCents, "CAD")}</Text>
+                    </TableCell>
+                    <TableCell>{formatAdminDateTime(task.createdAt)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Flex>
+        </Card>
+      ) : null}
 
       <Card style={{ padding: "1.25rem" }}>
         <Flex direction="column" gap="3">
@@ -91,6 +153,7 @@ export default async function PayoutsPage() {
               label="Welper net to transfer"
               value={formatAdminMoneyCents(upcoming.eligibleWelperNetCents, "CAD")}
             />
+            <SummaryCard label="Connect blocked" value={String(blockedWelpers)} />
           </Flex>
         </Flex>
       </Card>

@@ -17,6 +17,51 @@ import { listAdminAuditLogs } from "@/lib/services/admin-audit-service";
 
 export const dynamic = "force-dynamic";
 
+function actionLabel(action: string): string {
+  return action
+    .replace(/^admin\./, "")
+    .split(".")
+    .map((part) => part.replace(/_/g, " "))
+    .join(" · ");
+}
+
+function MetadataValue({ name, value }: { name: string; value: unknown }) {
+  const text =
+    value == null
+      ? "—"
+      : typeof value === "object"
+        ? JSON.stringify(value)
+        : String(value);
+  const href =
+    typeof value === "string" && /userId$/i.test(name)
+      ? `/users/${value}`
+      : typeof value === "string" && /bookingId$/i.test(name)
+        ? `/bookings/${value}`
+        : typeof value === "string" && /disputeId$/i.test(name)
+          ? `/disputes/${value}`
+          : typeof value === "string" && /batchId$/i.test(name)
+            ? `/payouts/${value}`
+            : null;
+
+  return href ? <Link href={href}>{text}</Link> : <>{text}</>;
+}
+
+function AuditMetadata({ metadata }: { metadata?: Record<string, unknown> | null }) {
+  if (!metadata || Object.keys(metadata).length === 0) {
+    return <Text size="1" color="gray">—</Text>;
+  }
+  return (
+    <Flex direction="column" gap="1">
+      {Object.entries(metadata).map(([name, value]) => (
+        <Text key={name} size="1" style={{ wordBreak: "break-word" }}>
+          <Text color="gray">{name.replace(/([a-z])([A-Z])/g, "$1 $2")}: </Text>
+          <MetadataValue name={name} value={value} />
+        </Text>
+      ))}
+    </Flex>
+  );
+}
+
 export default async function AuditLogsPage({
   searchParams,
 }: {
@@ -41,7 +86,7 @@ export default async function AuditLogsPage({
     <Flex direction="column" gap="4">
       <AdminPageHeader
         title="Audit log"
-        description="Recent staff actions (user status, background check, unlock, payment delay, dispute resolutions). Requires admin_audit_logs migration applied."
+        description="Trace staff actions and jump directly to affected users, bookings, disputes, or payout batches."
       />
       <Text size="2" color="gray">
         {list.total} entries · page {list.page} of {list.totalPages}
@@ -74,7 +119,12 @@ export default async function AuditLogsPage({
                     </Text>
                   </TableCell>
                   <TableCell>
-                    <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                    <Text size="1" weight="medium">{actionLabel(row.action)}</Text>
+                    <Text
+                      size="1"
+                      color="gray"
+                      style={{ fontFamily: "ui-monospace, monospace" }}
+                    >
                       {row.action}
                     </Text>
                   </TableCell>
@@ -86,7 +136,7 @@ export default async function AuditLogsPage({
                     </Link>
                   </TableCell>
                   <TableCell style={{ maxWidth: 360, wordBreak: "break-word" }}>
-                    <Text size="1">{row.metadata ? JSON.stringify(row.metadata) : "—"}</Text>
+                    <AuditMetadata metadata={row.metadata} />
                   </TableCell>
                 </TableRow>
               ))

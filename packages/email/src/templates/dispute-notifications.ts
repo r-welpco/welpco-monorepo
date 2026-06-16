@@ -2,7 +2,11 @@ import { escapeHtml, wrapEmail } from "../layout";
 import { btnStyle, h1Style, pStyle } from "../styles";
 import type { EmailLocale } from "../types";
 
-export type DisputeEmailType = "dispute_filed" | "dispute_resolved" | "dispute_withdrawn";
+export type DisputeEmailType =
+  | "dispute_filed"
+  | "dispute_resolved"
+  | "dispute_withdrawn"
+  | "refund_decision_recorded";
 
 export interface DisputeEmailVariables {
   subject?: string;
@@ -28,6 +32,8 @@ export function getDisputeEmailSubject(type: DisputeEmailType, locale: EmailLoca
       return fr ? "Signalement résolu – Welpco" : "Problem report resolved – Welpco";
     case "dispute_withdrawn":
       return fr ? "Signalement retiré – Welpco" : "Problem report withdrawn – Welpco";
+    case "refund_decision_recorded":
+      return fr ? "Décision de remboursement enregistrée – Welpco" : "Refund decision recorded – Welpco";
     default:
       return fr ? "Mise à jour de signalement – Welpco" : "Problem report update – Welpco";
   }
@@ -64,6 +70,13 @@ export function getDisputeNotificationCopy(
         body: fr
           ? `Le signalement de problème concernant ${subject} a été retiré.`
           : `The problem report about ${subject} was withdrawn.`,
+      };
+    case "refund_decision_recorded":
+      return {
+        title: fr ? "Décision de remboursement enregistrée" : "Refund decision recorded",
+        body: fr
+          ? "Welpco a enregistré une décision de remboursement. Le signalement restera ouvert jusqu’à la confirmation du remboursement."
+          : "Welpco recorded a refund decision. The report will remain open until the refund is confirmed.",
       };
     default:
       return {
