@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Container, Flex, Separator, Text } from "@welpco/ui";
+import { Button, Flex, Separator, Text } from "@welpco/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ADMIN_LAUNCH_NAV } from "@/lib/admin-nav";
@@ -40,7 +40,7 @@ export function AdminShell({
   signOutAction: () => Promise<void>;
 }) {
   return (
-    <Container size="4" px="4" py="5">
+    <main className="admin-shell">
       <Flex direction="column" gap="4">
         <AdminNav />
         <Flex align="center" gap="3" wrap="wrap">
@@ -58,6 +58,6 @@ export function AdminShell({
         <Separator size="4" />
         {children}
       </Flex>
-    </Container>
+    </main>
   );
 }
