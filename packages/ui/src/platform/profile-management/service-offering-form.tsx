@@ -37,7 +37,7 @@ export type ServiceOfferingFormLabels = {
   title: string;
   titlePlaceholder: string;
   category: string;
-  subcategoriesOptional: string;
+  subcategories: string;
   subcategoriesHint: string;
   hourlyRate: string;
   /** Shown under the rate field — welper sets y, customers are charged x = y × 1.25. */
@@ -164,6 +164,7 @@ function SubcategoriesField({
   loading,
   labels,
   getCategoryDisplayName,
+  errorMessage,
 }: {
   subcategories: Array<{ id: string; name: string }>;
   selectedSubcategories: string[];
@@ -171,13 +172,17 @@ function SubcategoriesField({
   loading?: boolean;
   labels?: ServiceOfferingFormLabels;
   getCategoryDisplayName?: (englishName: string) => string;
+  errorMessage?: string;
 }) {
   const displayName = getCategoryDisplayName ?? ((n: string) => n);
   if (subcategories.length === 0) return null;
   return (
     <Box mb={FORM_SPACING.fieldGap}>
       <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
-        {labels?.subcategoriesOptional ?? "Subcategories (optional)"}
+        {labels?.subcategories ?? "Subcategories"}
+        <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+          *
+        </Text>
       </Text>
       <Text
         as="p"
@@ -205,6 +210,11 @@ function SubcategoriesField({
           </Flex>
         ))}
       </Flex>
+      {errorMessage ? (
+        <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+          {errorMessage}
+        </Text>
+      ) : null}
     </Box>
   );
 }
@@ -437,9 +447,16 @@ export function ServiceOfferingForm({
   inDialog = false,
   labels,
 }: ServiceOfferingFormProps) {
+  const validationKey = JSON.stringify({
+    validation: labels?.validation,
+    requireSubcategories: subcategories.length > 0,
+  });
   const offeringSchema = useMemo(
-    () => createServiceOfferingSchema(labels?.validation),
-    [labels?.validation],
+    () =>
+      createServiceOfferingSchema(labels?.validation, {
+        requireSubcategories: subcategories.length > 0,
+      }),
+    [validationKey],
   );
 
   const form = useForm<ServiceOfferingValues>({
@@ -495,7 +512,7 @@ export function ServiceOfferingForm({
     const updated = isChecked
       ? [...selectedSubcategories, subcategoryId]
       : selectedSubcategories.filter((id) => id !== subcategoryId);
-    form.setValue("subcategories", updated);
+    form.setValue("subcategories", updated, { shouldValidate: true, shouldDirty: true });
   };
 
   const formContent = (
@@ -533,6 +550,7 @@ export function ServiceOfferingForm({
           loading={loading}
           labels={labels}
           getCategoryDisplayName={getCategoryDisplayName}
+          errorMessage={form.formState.errors.subcategories?.message}
         />
         <RateAndExperienceFields form={form} loading={loading} labels={labels} />
         <DescriptionField form={form} loading={loading} labels={labels} />

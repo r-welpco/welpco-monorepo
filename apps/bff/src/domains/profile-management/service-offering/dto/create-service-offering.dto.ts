@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, Min, Max, IsBoolean, ValidateNested, IsArray, IsUUID } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Min, Max, IsBoolean, ValidateNested, IsArray, IsUUID, ArrayMinSize } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ServiceArea } from '../../../../common/types';
 import { IsValidGeoJSON } from '../../common/validators/geojson.validator';
@@ -64,13 +64,12 @@ export class CreateServiceOfferingDto {
   @ApiProperty({
     description: 'Array of subcategory IDs (from Content Management)',
     example: ['123e4567-e89b-12d3-a456-426614174001', '123e4567-e89b-12d3-a456-426614174002'],
-    required: false,
     type: [String],
   })
-  @IsOptional()
   @IsArray()
+  @ArrayMinSize(1, { message: 'subcategoryIds must include at least one subcategory' })
   @IsUUID(4, { each: true })
-  subcategoryIds?: string[];
+  subcategoryIds: string[];
 
   @ApiProperty({
     description: 'Active status',

@@ -86,7 +86,7 @@ export class ServiceOfferingService {
       hourlyRate: createDto.hourlyRate,
       experienceYears: createDto.experienceYears ?? 1,
       serviceArea: createDto.serviceArea,
-      subcategoryIds: createDto.subcategoryIds ?? [],
+      subcategoryIds: createDto.subcategoryIds,
       welperId,
       active: createDto.active !== undefined ? createDto.active : true,
     });

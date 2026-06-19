@@ -10,6 +10,7 @@ import { CreateServiceOfferingDto } from './create-service-offering.dto';
  */
 describe('CreateServiceOfferingDto', () => {
   const validUuid = '123e4567-e89b-12d3-a456-426614174000';
+  const validSubcategoryUuid = '550e8400-e29b-41d4-a716-446655440000';
 
   function makeDto(overrides: Partial<Record<string, unknown>> = {}) {
     return plainToInstance(CreateServiceOfferingDto, {
@@ -17,6 +18,7 @@ describe('CreateServiceOfferingDto', () => {
       serviceDescription: 'Professional cleaning and maintenance.',
       hourlyRate: 50,
       experienceYears: 5,
+      subcategoryIds: [validSubcategoryUuid],
       ...overrides,
     });
   }
@@ -58,5 +60,17 @@ describe('CreateServiceOfferingDto', () => {
   it('rejects rates with more than 2 decimal places', async () => {
     const errors = await validate(makeDto({ hourlyRate: 49.999 }));
     expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('rejects missing subcategoryIds', async () => {
+    const errors = await validate(makeDto({ subcategoryIds: undefined }));
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('rejects empty subcategoryIds', async () => {
+    const errors = await validate(makeDto({ subcategoryIds: [] }));
+    expect(errors.length).toBeGreaterThan(0);
+    const flat = errors.flatMap((e) => Object.values(e.constraints ?? {}));
+    expect(flat.join(' ')).toMatch(/at least one subcategory/i);
   });
 });

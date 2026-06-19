@@ -1972,8 +1972,9 @@
           "title": "Titre",
           "titlePlaceholder": "Nettoyage résidentiel premium",
           "category": "Catégorie",
-          "subcategoriesOptional": "Sous-catégories (facultatif)",
-          "subcategoriesHint": "Choisissez une ou plusieurs sous-catégories qui s'appliquent à cette offre.",
+          "subcategoriesOptional": "Sous-catégories",
+          "subcategories": "Sous-catégories",
+          "subcategoriesHint": "Choisissez au moins une sous-catégorie qui s'applique à cette offre.",
           "hourlyRate": "Votre taux horaire ($)",
           "customerChargeHint": "Les clients paieront {charge}/h pour ce service. Cela inclut des frais de service de plateforme payés par le client.",
           "experienceYears": "Expérience (années)",
@@ -2000,7 +2001,8 @@
             "stateRequired": "La province ou l'état est obligatoire",
             "postalRequired": "Le code postal est obligatoire",
             "radiusMin": "Le rayon doit être d'au moins 1 km",
-            "radiusMax": "Le rayon doit être d'au plus 100 000 km"
+            "radiusMax": "Le rayon doit être d'au plus 100 000 km",
+            "subcategoriesRequired": "Choisissez au moins une sous-catégorie"
           },
           "serviceAreaSelector": {
             "overrideDescription": "Utilisez la zone par défaut ou définissez une zone personnalisée pour cette offre.",

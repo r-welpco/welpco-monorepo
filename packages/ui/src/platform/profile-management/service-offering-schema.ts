@@ -20,6 +20,7 @@ export type ServiceOfferingValidationLabels = {
   postalRequired: string;
   radiusMin: string;
   radiusMax: string;
+  subcategoriesRequired: string;
 };
 
 const DEFAULT_VALIDATION_LABELS: ServiceOfferingValidationLabels = {
@@ -37,6 +38,7 @@ const DEFAULT_VALIDATION_LABELS: ServiceOfferingValidationLabels = {
   postalRequired: "Postal code is required",
   radiusMin: "Radius must be at least 1 km",
   radiusMax: "Radius must be at most 100,000 km",
+  subcategoriesRequired: "Select at least one subcategory",
 };
 
 export function createServiceAreaSchema(v: ServiceOfferingValidationLabels) {
@@ -65,12 +67,16 @@ export function createServiceAreaSchema(v: ServiceOfferingValidationLabels) {
 
 export function createServiceOfferingSchema(
   v: ServiceOfferingValidationLabels = DEFAULT_VALIDATION_LABELS,
+  options?: { requireSubcategories?: boolean },
 ) {
   const serviceAreaSchema = createServiceAreaSchema(v);
+  const subcategoriesSchema = options?.requireSubcategories
+    ? z.array(z.string()).min(1, v.subcategoriesRequired)
+    : z.array(z.string()).optional();
   return z.object({
     title: z.string().min(3, v.titleRequired).max(80, v.titleMax),
     category: z.string().min(2, v.categoryRequired),
-    subcategories: z.array(z.string()).optional(),
+    subcategories: subcategoriesSchema,
     hourlyRate: z.coerce.number().min(1, v.rateMin).max(1000, v.rateMax),
     experienceYears: z.coerce.number().min(0, v.experienceMin).max(50, v.experienceMax),
     description: z.string().min(10, v.descriptionMin).max(2000, v.descriptionMax),

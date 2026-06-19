@@ -222,6 +222,7 @@ describe('ServiceOfferingService', () => {
         serviceDescription: 'Professional service',
         hourlyRate: 30.0,
         experienceYears: 5,
+        subcategoryIds: ['subcategory-1'],
         serviceArea: {
           type: 'Point',
           coordinates: [-122.4, 37.8],
@@ -252,7 +253,7 @@ describe('ServiceOfferingService', () => {
         experienceYears: 5,
         active: true,
         serviceArea: createDto.serviceArea,
-        subcategoryIds: createDto.subcategoryIds ?? [],
+        subcategoryIds: createDto.subcategoryIds,
       });
       expect(mockServiceOfferingRepository.save).toHaveBeenCalled();
       expect(mockEventPublisher.publishServiceOfferingAdded).toHaveBeenCalledWith({
@@ -270,6 +271,7 @@ describe('ServiceOfferingService', () => {
         serviceCategoryId: 'category-1',
         serviceDescription: 'Professional service',
         hourlyRate: 30.0,
+        subcategoryIds: ['subcategory-1'],
       };
 
       const welperProfile = { id: 'profile-1', welperId };
@@ -297,7 +299,7 @@ describe('ServiceOfferingService', () => {
         experienceYears: 1,
         active: true,
         serviceArea: undefined,
-        subcategoryIds: [],
+        subcategoryIds: createDto.subcategoryIds,
       });
     });
 
@@ -309,6 +311,7 @@ describe('ServiceOfferingService', () => {
         serviceDescription: 'Professional service',
         hourlyRate: 30.0,
         experienceYears: 5,
+        subcategoryIds: ['subcategory-1'],
       };
 
       const welperProfile = { id: 'profile-1', welperId };
@@ -334,7 +337,7 @@ describe('ServiceOfferingService', () => {
         experienceYears: 5,
         active: true,
         serviceArea: undefined,
-        subcategoryIds: [],
+        subcategoryIds: createDto.subcategoryIds,
       });
     });
 
@@ -346,6 +349,7 @@ describe('ServiceOfferingService', () => {
         serviceDescription: 'Professional service',
         hourlyRate: 30.0,
         active: false,
+        subcategoryIds: ['subcategory-1'],
       };
 
       const welperProfile = { id: 'profile-1', welperId };
@@ -371,7 +375,7 @@ describe('ServiceOfferingService', () => {
         experienceYears: 1,
         active: false,
         serviceArea: undefined,
-        subcategoryIds: [],
+        subcategoryIds: createDto.subcategoryIds,
       });
     });
 

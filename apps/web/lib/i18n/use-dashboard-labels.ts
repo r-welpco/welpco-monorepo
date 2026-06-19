@@ -1231,7 +1231,7 @@ export function useWelperServiceOfferingFormLabels() {
     title: t("title"),
     titlePlaceholder: t("titlePlaceholder"),
     category: t("category"),
-    subcategoriesOptional: t("subcategoriesOptional"),
+    subcategories: t("subcategories"),
     subcategoriesHint: t("subcategoriesHint"),
     hourlyRate: t("hourlyRate"),
     customerChargeHint: (charge: string) => t("customerChargeHint", { charge }),
@@ -1261,6 +1261,7 @@ export function useWelperServiceOfferingFormLabels() {
       postalRequired: t("validation.postalRequired"),
       radiusMin: t("validation.radiusMin"),
       radiusMax: t("validation.radiusMax"),
+      subcategoriesRequired: t("validation.subcategoriesRequired"),
     },
     serviceAreaSelector: {
       ...serviceArea.selector,

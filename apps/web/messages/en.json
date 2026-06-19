@@ -1973,8 +1973,9 @@
           "title": "Title",
           "titlePlaceholder": "Premium home cleaning",
           "category": "Category",
-          "subcategoriesOptional": "Subcategories (optional)",
-          "subcategoriesHint": "Select one or more subcategories that apply to this offering.",
+          "subcategoriesOptional": "Subcategories",
+          "subcategories": "Subcategories",
+          "subcategoriesHint": "Select at least one subcategory that applies to this offering.",
           "hourlyRate": "Your hourly rate ($)",
           "customerChargeHint": "Customers will be charged {charge}/hr for this service. This includes a platform service fee paid by the customer.",
           "experienceYears": "Experience (years)",
@@ -2001,7 +2002,8 @@
             "stateRequired": "Province or state is required",
             "postalRequired": "Postal code is required",
             "radiusMin": "Radius must be at least 1 km",
-            "radiusMax": "Radius must be at most 100,000 km"
+            "radiusMax": "Radius must be at most 100,000 km",
+            "subcategoriesRequired": "Select at least one subcategory"
           },
           "serviceAreaSelector": {
             "overrideDescription": "Use default service area or define a custom area for this service.",
