@@ -11,7 +11,7 @@ import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm, Controller, type UseFormReturn } from "react-hook-form";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { AddressInput, type AddressInputLabels, type AddressValues } from "./address-input";
 import { CANADIAN_PROVINCE_CODES } from "./canadian-provinces";
@@ -38,6 +38,7 @@ export interface CustomerProfileFormLabels {
   phonePlaceholder: string;
   save: string;
   saving: string;
+  saved: string;
   addressIncomplete: string;
   addressFields: AddressInputLabels;
   provinceLabels?: Record<string, string>;
@@ -56,6 +57,7 @@ const DEFAULT_LABELS: CustomerProfileFormLabels = {
   phonePlaceholder: "+1 (555) 000-0000",
   save: "Save profile",
   saving: "Saving…",
+  saved: "Profile saved.",
   addressIncomplete: "Please complete all address fields",
   addressFields: {
     streetAddress: "Street address",
@@ -188,10 +190,18 @@ export function CustomerProfileForm({
   });
 
   const { markSynced } = useSyncedCustomerProfileDefaults(form, defaultValues);
+  const [saveSucceeded, setSaveSucceeded] = useState(false);
+
+  useEffect(() => {
+    if (form.formState.isDirty) {
+      setSaveSucceeded(false);
+    }
+  }, [form.formState.isDirty]);
 
   const handleSubmit = form.handleSubmit(async (values: CustomerProfileValues) => {
     await onSubmit?.(values);
     markSynced(values);
+    setSaveSucceeded(true);
   });
 
   return (
@@ -361,6 +371,12 @@ export function CustomerProfileForm({
               }}
             />
           </Box>
+
+          {saveSucceeded ? (
+            <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
+              <Callout.Text>{labels.saved}</Callout.Text>
+            </Callout.Root>
+          ) : null}
 
           <Button
             type="submit"

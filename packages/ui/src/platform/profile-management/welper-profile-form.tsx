@@ -13,7 +13,7 @@ import { Callout } from "@welpco/ui/callout";
 import { Switch } from "@welpco/ui/switch";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm, Controller, type UseFormReturn } from "react-hook-form";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { WELPER_BIO_MAX_LENGTH, WELPER_BIO_MIN_LENGTH } from "./bio-limits";
 
@@ -34,6 +34,7 @@ export interface WelperProfileFormLabels {
   visibilityCurrent: (value: string) => string;
   save: string;
   saving: string;
+  saved: string;
 }
 
 export interface WelperProfileFormProps {
@@ -143,6 +144,7 @@ export function WelperProfileForm({
     visibilityCurrent: (value: string) => `Current: ${value}`,
     save: "Save profile",
     saving: "Saving...",
+    saved: "Profile saved.",
   };
   const form = useForm<WelperProfileValues>({
     resolver: zodResolver(schema),
@@ -150,10 +152,18 @@ export function WelperProfileForm({
   });
 
   const { markSynced } = useSyncedWelperProfileDefaults(form, defaultValues);
+  const [saveSucceeded, setSaveSucceeded] = useState(false);
+
+  useEffect(() => {
+    if (form.formState.isDirty) {
+      setSaveSucceeded(false);
+    }
+  }, [form.formState.isDirty]);
 
   const handleSubmit = form.handleSubmit(async (values: WelperProfileValues) => {
     await onSubmit?.(values);
     markSynced(values);
+    setSaveSucceeded(true);
   });
 
   return (
@@ -301,6 +311,12 @@ export function WelperProfileForm({
                 {labels.visibilityCurrent(form.watch("profileVisibility"))}
               </Text>
             </Box>
+          ) : null}
+
+          {saveSucceeded ? (
+            <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
+              <Callout.Text>{labels.saved}</Callout.Text>
+            </Callout.Root>
           ) : null}
 
           <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>

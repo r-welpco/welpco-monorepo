@@ -1503,9 +1503,9 @@
       },
       "recentNotifications": {
         "title": "Recent notifications",
-        "viewAll": "View all",
-        "emptyTitle": "No notifications yet",
-        "emptyDescription": "Booking updates, messages, and payments show up here."
+        "clearAll": "Clear all",
+        "emptyTitle": "No new notifications",
+        "emptyDescription": "You're all caught up."
       },
       "customer": {
         "greeting": "Welcome back, {name}.",
@@ -1934,7 +1934,8 @@
         "visibilityHint": "Public profiles are visible in search results. Private profiles are only visible to customers you've worked with.",
         "visibilityCurrent": "Current: {value}",
         "save": "Save profile",
-        "saving": "Saving..."
+        "saving": "Saving...",
+        "saved": "Profile saved."
       },
       "serviceArea": {
         "title": "Service area",
@@ -2095,6 +2096,7 @@
           "phonePlaceholder": "+1 (555) 000-0000",
           "save": "Save profile",
           "saving": "Saving…",
+          "saved": "Profile saved.",
           "addressIncomplete": "Please complete all address fields",
           "addressFields": {
             "streetAddress": "Street address",

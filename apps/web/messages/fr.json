@@ -1502,9 +1502,9 @@
       },
       "recentNotifications": {
         "title": "Notifications récentes",
-        "viewAll": "Tout voir",
-        "emptyTitle": "Aucune notification pour l'instant",
-        "emptyDescription": "Les réservations, messages et paiements s'affichent ici."
+        "clearAll": "Tout effacer",
+        "emptyTitle": "Aucune nouvelle notification",
+        "emptyDescription": "Vous êtes à jour."
       },
       "customer": {
         "greeting": "Bon retour, {name}.",
@@ -1933,7 +1933,8 @@
         "visibilityHint": "Les profils publics apparaissent dans la recherche. Les profils privés ne sont visibles que pour les clients avec qui vous avez travaillé.",
         "visibilityCurrent": "Actuel : {value}",
         "save": "Enregistrer le profil",
-        "saving": "Enregistrement…"
+        "saving": "Enregistrement…",
+        "saved": "Profil enregistré."
       },
       "serviceArea": {
         "title": "Zone de service",
@@ -2094,6 +2095,7 @@
           "phonePlaceholder": "+1 (555) 000-0000",
           "save": "Enregistrer le profil",
           "saving": "Enregistrement…",
+          "saved": "Profil enregistré.",
           "addressIncomplete": "Veuillez remplir tous les champs d'adresse",
           "addressFields": {
             "streetAddress": "Rue",

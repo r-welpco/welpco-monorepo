@@ -603,6 +603,7 @@ export function useCustomerProfileLabels() {
       phonePlaceholder: form("phonePlaceholder"),
       save: form("save"),
       saving: form("saving"),
+      saved: form("saved"),
       addressIncomplete: form("addressIncomplete"),
       addressFields: {
         streetAddress: af("streetAddress"),
@@ -769,6 +770,7 @@ export function useWelperProfileFormLabels() {
     visibilityCurrent: (value: string) => t("visibilityCurrent", { value }),
     save: t("save"),
     saving: t("saving"),
+    saved: t("saved"),
   };
 }
 
@@ -1364,7 +1366,7 @@ export function useRecentNotificationsLabels() {
   const t = useTranslations("dashboard.home.recentNotifications");
   return {
     title: t("title"),
-    viewAll: t("viewAll"),
+    clearAll: t("clearAll"),
     emptyTitle: t("emptyTitle"),
     emptyDescription: t("emptyDescription"),
   };
