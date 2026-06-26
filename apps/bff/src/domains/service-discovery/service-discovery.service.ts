@@ -279,6 +279,7 @@ export class ServiceDiscoveryService {
     } else {
       qb.orderBy('p.created_at', 'DESC');
     }
+    qb.addOrderBy('p.welper_id', 'ASC');
 
     const total = await qb.getCount();
 

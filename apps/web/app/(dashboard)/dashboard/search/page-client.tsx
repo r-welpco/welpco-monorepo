@@ -223,7 +223,7 @@ export default function DashboardSearchPageClient() {
     [q, categoryId, postalCode, searchLat, searchLng, searchMinPrice, searchMaxPrice, searchMinRating, page, sort]
   );
 
-  const { data, isLoading, isError, error, refetch } = useSearchServices(
+  const { data, isLoading, isFetching, isError, error, refetch } = useSearchServices(
     params,
     hasSearchCenter && searchAllowed
   );
@@ -519,9 +519,12 @@ export default function DashboardSearchPageClient() {
   ]);
 
   const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / DEFAULT_LIMIT) || 1;
+  const pageSize = data?.limit ?? DEFAULT_LIMIT;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const hasNext = page < totalPages;
   const hasPrev = page > 1;
+  const isPageTransition = isFetching && data != null && data.page !== page;
+  const resultsMatchPage = data?.page === page;
 
   useEffect(() => {
     if (hasSearchCenter && data && total > 0 && page > totalPages) {
@@ -533,10 +536,22 @@ export default function DashboardSearchPageClient() {
     searchAllowed &&
     hasSearchCenter &&
     !isLoading &&
+    !isFetching &&
     !isError &&
-    (total === 0 || cardItems.length === 0);
-  const showResults =
-    searchAllowed && hasSearchCenter && !isLoading && !isError && cardItems.length > 0;
+    (total === 0 || (resultsMatchPage && cardItems.length === 0));
+  const showResultCards =
+    searchAllowed &&
+    hasSearchCenter &&
+    !isError &&
+    resultsMatchPage &&
+    cardItems.length > 0;
+  const showResultLoading =
+    searchAllowed &&
+    hasSearchCenter &&
+    !isError &&
+    (isLoading || isPageTransition);
+  const showResultsRegion =
+    searchAllowed && hasSearchCenter && !isError && (showResultCards || showResultLoading || total > 0);
   const showLocationPrompt = !hasSearchCenter;
 
   const hasActiveFilters =
@@ -698,7 +713,7 @@ export default function DashboardSearchPageClient() {
             </Card>
           )}
 
-          {isError && !postalError && !showResults && (
+          {isError && !postalError && !showResultsRegion && (
             <Callout.Root color={SEMANTIC_COLOR.danger} role="alert">
               <Callout.Text>
                 {searchLabels.loadError}{" "}
@@ -717,28 +732,29 @@ export default function DashboardSearchPageClient() {
           )}
 
           <Box className={styles["results-region"]}>
-            {showResults && (
+            {showResultsRegion && (
               <Flex direction="column" gap="4">
                 <Flex justify="between" align="center" gap="3" wrap="wrap">
                   <SearchResultsToolbar
                     total={total}
                     page={page}
-                    pageSize={DEFAULT_LIMIT}
+                    pageSize={pageSize}
                     sort={sort}
                     onSortChange={handleSortChange}
                     showSortDistance={hasSearchCenter}
                     viewMode={viewMode}
                     onViewModeChange={(mode) => startTransition(() => setViewMode(mode))}
                     showViewToggle
-                    loading={isLoading || isPending}
+                    loading={isLoading || isPending || isPageTransition}
                     labels={searchLabels.toolbar}
                   />
                 </Flex>
 
-                {viewMode === "list" ? (
+                {showResultCards ? (
+                  viewMode === "list" ? (
                   <SearchResultsList
                     items={cardItems}
-                    loading={isLoading || isPending}
+                    loading={false}
                     error={
                       isError
                         ? error != null && typeof error === "object" && "message" in error
@@ -783,7 +799,10 @@ export default function DashboardSearchPageClient() {
                       />
                     ))}
                   </Grid>
-                )}
+                )
+                ) : showResultLoading ? (
+                  <SearchResultsList items={[]} loading />
+                ) : null}
 
                 {(hasPrev || hasNext) && (
                   <Flex gap="2" justify="center" align="center" py="4">
@@ -791,7 +810,7 @@ export default function DashboardSearchPageClient() {
                       variant="soft"
                       color="gray"
                       size="2"
-                      disabled={!hasPrev}
+                      disabled={!hasPrev || isPageTransition}
                       onClick={() => updateParams({ page: page - 1 })}
                       aria-label={searchLabels.prevPage}
                     >
@@ -804,7 +823,7 @@ export default function DashboardSearchPageClient() {
                       variant="soft"
                       color="gray"
                       size="2"
-                      disabled={!hasNext}
+                      disabled={!hasNext || isPageTransition}
                       onClick={() => updateParams({ page: page + 1 })}
                       aria-label={searchLabels.nextPage}
                     >
@@ -841,12 +860,6 @@ export default function DashboardSearchPageClient() {
                       }
                 }
               />
-            )}
-
-            {isLoading && !isError && (
-              /* Reuse the canonical SearchResultsList loading shape so the
-                 skeleton matches the rendered cards. Bible §17.4. */
-              <SearchResultsList items={[]} loading />
             )}
           </Box>
         </Flex>

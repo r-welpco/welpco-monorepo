@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   searchServices,
   getDiscoveryCategories,
@@ -12,6 +12,7 @@ export function useSearchServices(params: SearchServicesParams = {}, enabled = t
     queryFn: () => searchServices(params),
     enabled,
     staleTime: 2 * 60 * 1000, // 2 minutes
+    placeholderData: keepPreviousData,
   });
 }
 
