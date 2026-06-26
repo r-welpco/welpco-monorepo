@@ -6,23 +6,10 @@ import { EmailVerificationRequiredError } from "@/lib/api/client";
 import { useResendVerification, type ResendVerificationHuman } from "@/lib/hooks/use-resend-verification";
 
 /**
- * Day 15 — Phase 3 of the signup ↔ onboarding merge.
- *
- * Generic wrapper around a "bookable action" — any mutation that the BFF
- * gates with `EmailVerifiedGuard`. When the wrapped run() throws an
- * `EmailVerificationRequiredError`, the wrapper returns a `pendingVerification`
- * flag the caller binds into `<EmailVerificationRequiredDialog>`. All other
- * errors propagate verbatim so existing error-handling stays untouched.
- *
- * Wiring example:
- *
- *   const bookable = useBookableAction();
- *   await bookable.run(() => createBooking.mutateAsync(params));
- *   <EmailVerificationRequiredDialog
- *     open={bookable.dialogOpen}
- *     onOpenChange={bookable.setDialogOpen}
- *     email={bookable.email}
- *   />
+ * Wrapper around a "bookable action" — any mutation the BFF gates with
+ * `EmailVerifiedGuard`. When the wrapped run() throws an
+ * `EmailVerificationRequiredError`, the wrapper surfaces
+ * `<EmailVerificationRequiredDialog>` instead of propagating the error.
  */
 export function useBookableAction() {
   const { data: session } = useSession();
@@ -45,8 +32,7 @@ export function useBookableAction() {
   );
 
   const handleResend = useCallback(async (human?: ResendVerificationHuman) => {
-    await resend.mutateAsync(human);
-    setDialogOpen(false);
+    return resend.mutateAsync(human);
   }, [resend]);
 
   return {

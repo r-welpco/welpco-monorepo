@@ -1349,8 +1349,26 @@
       "resendVerification": "Resend email",
       "resendSending": "Sending…",
       "resendSent": "Sent. Check your inbox in a minute or two.",
+      "alreadyVerified": "Your email is already verified.",
       "resendFailed": "We couldn't resend the email. Try again in a moment.",
+      "turnstileRequiredHint": "Complete the check below, then tap Resend email.",
+      "addCard": "Add card",
       "allCompleteDiscoverable": "Setup complete — you're visible in customer search.",
+      "customerSections": {
+        "account": {
+          "title": "Your account — verify email and add your address",
+          "complete": "Your account is set up — add a payment method when you're ready to book.",
+          "compactProgress": "Account — {done} of {total} steps done"
+        },
+        "bookingPayment": {
+          "title": "Payment method — required to book",
+          "subtitle": "Add a card to authorize payment after a Welper accepts your booking.",
+          "complete": "Payment method saved — you're ready to book."
+        },
+        "beyondA": {
+          "compactProgress": "Add a payment method to start booking"
+        }
+      },
       "welperSections": {
         "progress": "{done} of {total} steps done",
         "goLive": {
@@ -1511,6 +1529,7 @@
         "greeting": "Welcome back, {name}.",
         "loading": "Loading your dashboard…",
         "setupIncomplete": "Finish setting up your account to start booking.",
+        "recommendedSetupRemaining": "Add a payment method below to start booking Welpers.",
         "upcomingBookings": "{count, plural, one {You have # upcoming booking.} other {You have # upcoming bookings.}}",
         "noUpcomingBookings": "No upcoming bookings — find a Welper to get started.",
         "statsSectionTitle": "Your numbers",
@@ -2097,6 +2116,7 @@
           "save": "Save profile",
           "saving": "Saving…",
           "saved": "Profile saved.",
+          "cancel": "Cancel",
           "addressIncomplete": "Please complete all address fields",
           "addressFields": {
             "streetAddress": "Street address",
@@ -2161,9 +2181,11 @@
       "notesLabel": "Notes",
       "notesOptional": "(optional)",
       "notesPlaceholder": "Any special instructions or requests…",
-      "profileGate": "Add your profile details and a saved payment method before you can confirm a booking.",
-      "paymentSettings": "Payment settings",
-      "paymentRequired": "Add a saved payment method in Settings before booking.",
+      "profileGate": "Add your profile details before you can confirm a booking.",
+      "profileGatePaymentOnly": "Add a payment method to confirm your booking.",
+      "profileSettings": "Profile settings",
+      "paymentSettings": "Add payment method",
+      "paymentRequired": "Add a saved payment method before booking.",
       "createFailed": "Failed to create booking. Please try again.",
       "mobileHoldLabel": "Card hold (1 hr)",
       "durationMinutes": "{minutes}m",
@@ -2355,6 +2377,9 @@
       "pageSubtitle": "Find the perfect Welper for your needs",
       "heroTitle": "Find your Welper",
       "locationPrompt": "Enter your postal code or use your location to find Welpers nearby.",
+      "emailVerificationRequired": "Verify your email to search Welpers",
+      "emailVerificationDescription": "We need to confirm your email before you can browse and book services.",
+      "verifyEmail": "Verify email",
       "geolocationUnsupported": "Geolocation is not supported by your browser.",
       "geocodingUnavailable": "Location lookup isn't available right now. Please enter a postal code to search.",
       "geocodingUnavailableRetry": "Location lookup isn't available right now. Please try again later.",
@@ -2539,8 +2564,24 @@
       "title": "Verify your email",
       "description": "Click the link we sent to {email} to keep going. Need a new one? We'll send another.",
       "resend": "Resend email",
+      "sent": "Sent. Check your inbox in a minute or two.",
+      "alreadyVerified": "Your email is already verified.",
+      "sendFailed": "We couldn't resend the email. Try again in a moment.",
       "close": "Close",
       "emailFallback": "your email address"
+    },
+    "addPaymentMethod": {
+      "title": "Add payment method",
+      "description": "Add a card to authorize payment after a Welper accepts your booking.",
+      "saveCard": "Save card",
+      "savingCard": "Saving…",
+      "cancel": "Cancel",
+      "couldNotSaveCard": "Could not save card",
+      "couldNotStartSetup": "Could not start card setup"
+    },
+    "bookingReadiness": {
+      "addressTitle": "Add your home address",
+      "addressDescription": "We need your address before you can book a Welper."
     },
     "settingsForms": {
       "emailTitle": "Update email",

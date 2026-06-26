@@ -61,6 +61,8 @@ export interface AddressInputProps {
   provinceLabels?: Record<string, string>;
   /** @deprecated Country is always Canada; kept for API compatibility. */
   showCountry?: boolean;
+  /** Force city/province/postal into a single column (e.g. narrow modals). */
+  layout?: "responsive" | "stacked" | "split";
 }
 
 function withCanada(values: AddressValues): AddressValues {
@@ -85,6 +87,7 @@ export function AddressInput({
   loading,
   required = true,
   provinceLabels,
+  layout = "responsive",
 }: AddressInputProps) {
   const labels = labelsProp ?? DEFAULT_ADDRESS_INPUT_LABELS;
   const provinceValue = normalizeCanadianProvinceCode(values.stateProvince);
@@ -128,8 +131,122 @@ export function AddressInput({
         )}
       </Box>
 
-      <Flex gap="3" direction={{ initial: "column", sm: "row" }}>
-        <Box style={{ flex: 2 }}>
+      {layout === "split" ? (
+        <Flex direction="column" gap="3">
+          <Box
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)",
+              gap: "var(--space-3)",
+              alignItems: "start",
+            }}
+          >
+            <Box style={{ minWidth: 0 }}>
+              <Text as="label" size="2" weight="bold" htmlFor="address-city" mb="1">
+                {labels.city}
+                {required && (
+                  <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+                    *
+                  </Text>
+                )}
+              </Text>
+              <TextField.Root
+                id="address-city"
+                placeholder={labels.cityPlaceholder ?? DEFAULT_ADDRESS_INPUT_LABELS.cityPlaceholder}
+                autoComplete="address-level2"
+                size="2"
+                disabled={loading}
+                aria-required={required || undefined}
+                aria-invalid={errors?.city ? "true" : undefined}
+                aria-describedby={errors?.city ? "address-city-error" : undefined}
+                value={values.city}
+                onChange={(e) => handleChange("city", e.target.value)}
+              />
+              {errors?.city && (
+                <Text id="address-city-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
+                  {errors.city}
+                </Text>
+              )}
+            </Box>
+
+            <Box style={{ minWidth: 0 }}>
+              <Text as="label" size="2" weight="bold" htmlFor="address-state" mb="1">
+                {labels.stateProvince}
+                {required && (
+                  <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+                    *
+                  </Text>
+                )}
+              </Text>
+              <Select
+                size="2"
+                value={provinceValue || undefined}
+                onValueChange={(value) => handleChange("stateProvince", value)}
+                disabled={loading}
+              >
+                <SelectTrigger
+                  id="address-state"
+                  style={{ width: "100%" }}
+                  aria-required={required || undefined}
+                  aria-invalid={errors?.stateProvince ? "true" : undefined}
+                  aria-describedby={errors?.stateProvince ? "address-state-error" : undefined}
+                  placeholder={labels.provincePlaceholder ?? "Select province"}
+                />
+                <SelectContent>
+                  {CANADIAN_PROVINCES.map((province) => (
+                    <SelectItem key={province.code} value={province.code}>
+                      {provinceLabels?.[province.code] ?? province.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors?.stateProvince && (
+                <Text id="address-state-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
+                  {errors.stateProvince}
+                </Text>
+              )}
+            </Box>
+          </Box>
+
+          <Box>
+            <Text as="label" size="2" weight="bold" htmlFor="address-zip" mb="1">
+              {labels.zipPostalCode}
+              {required && (
+                <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
+                  *
+                </Text>
+              )}
+            </Text>
+            <TextField.Root
+              id="address-zip"
+              placeholder={labels.zipPlaceholder ?? DEFAULT_ADDRESS_INPUT_LABELS.zipPlaceholder}
+              autoComplete="postal-code"
+              size="2"
+              disabled={loading}
+              aria-required={required || undefined}
+              aria-invalid={errors?.zipPostalCode ? "true" : undefined}
+              aria-describedby={errors?.zipPostalCode ? "address-zip-error" : undefined}
+              value={values.zipPostalCode}
+              onChange={(e) => handleChange("zipPostalCode", e.target.value.toUpperCase())}
+            />
+            {errors?.zipPostalCode && (
+              <Text id="address-zip-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
+                {errors.zipPostalCode}
+              </Text>
+            )}
+          </Box>
+        </Flex>
+      ) : (
+      <Box
+        style={{
+          display: "grid",
+          gridTemplateColumns:
+            layout === "stacked" ? "1fr" : "repeat(auto-fit, minmax(8.5rem, 1fr))",
+          gap: "var(--space-3)",
+          alignItems: "start",
+        }}
+      >
+        <Box style={{ minWidth: 0 }}>
           <Text as="label" size="2" weight="bold" htmlFor="address-city" mb="1">
             {labels.city}
             {required && (
@@ -157,7 +274,7 @@ export function AddressInput({
           )}
         </Box>
 
-        <Box style={{ flex: 1 }}>
+        <Box style={{ minWidth: 0 }}>
           <Text as="label" size="2" weight="bold" htmlFor="address-state" mb="1">
             {labels.stateProvince}
             {required && (
@@ -167,12 +284,14 @@ export function AddressInput({
             )}
           </Text>
           <Select
+            size="2"
             value={provinceValue || undefined}
             onValueChange={(value) => handleChange("stateProvince", value)}
             disabled={loading}
           >
             <SelectTrigger
               id="address-state"
+              style={{ width: "100%" }}
               aria-required={required || undefined}
               aria-invalid={errors?.stateProvince ? "true" : undefined}
               aria-describedby={errors?.stateProvince ? "address-state-error" : undefined}
@@ -193,7 +312,7 @@ export function AddressInput({
           )}
         </Box>
 
-        <Box style={{ flex: 1 }}>
+        <Box style={{ minWidth: 0 }}>
           <Text as="label" size="2" weight="bold" htmlFor="address-zip" mb="1">
             {labels.zipPostalCode}
             {required && (
@@ -220,7 +339,8 @@ export function AddressInput({
             </Text>
           )}
         </Box>
-      </Flex>
+      </Box>
+      )}
 
       <Text size="1" color="gray">
         {labels.country ?? "Country"}: {labels.countryValue ?? "Canada"}

@@ -37,11 +37,11 @@ import {
 import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import { formatOfferingCategoryLabel } from "@/lib/utils/category-utils";
 import { useBookingHandoff } from "@/lib/hooks/use-job-posting";
-import { useCustomerProfile } from "@/lib/hooks/use-profile";
 import { useAuthStore } from "@/stores/authStore";
 import { ApiClientError } from "@/lib/api/client";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
+import { useBookingReadinessGate } from "@/lib/hooks/use-booking-readiness-gate";
 import { QuestionField } from "@/components/features/booking/question-field";
 import { useQuestionFieldLabels } from "@/lib/i18n/question-field-labels";
 import {
@@ -111,11 +111,6 @@ export default function NewBookingPageClient({
   const offeringId = offeringIdProp ?? handoff?.offeringId;
   const isMarketplaceHandoff = !!(jobId && applicationId);
 
-  const { data: myCustomerProfile, isSuccess: myProfileLoaded } = useCustomerProfile(
-    user?.id ?? "",
-    user?.role === "customer",
-  );
-
   // ── Form state ───────────────────────────────────────────────────────
   const [selectedOfferingId, setSelectedOfferingId] = useState(offeringId ?? "");
   const [scheduledDate, setScheduledDate] = useState("");
@@ -137,6 +132,7 @@ export default function NewBookingPageClient({
 
   const createBooking = useCreateBooking();
   const bookable = useBookableAction();
+  const bookingGate = useBookingReadinessGate({ enabled: user?.role === "customer" });
 
   // ── Derived values ───────────────────────────────────────────────────
   const displayName = useMemo(
@@ -295,11 +291,6 @@ export default function NewBookingPageClient({
     return computeSubtotalFromMinutes(selectedOffering.hourlyRate, durationMinutes);
   }, [durationMinutes, selectedOffering]);
 
-  const profileOkForBooking =
-    user?.role === "customer" &&
-    myProfileLoaded &&
-    myCustomerProfile?.profileCompletionStatusLabel === "Complete";
-
   const canSubmit = useMemo(
     () =>
       !!welperId &&
@@ -312,8 +303,7 @@ export default function NewBookingPageClient({
       durationMinutes >= MIN_BOOKING_DURATION_MINUTES &&
       durationMinutes <= MAX_DURATION_MINUTES &&
       requiredQuestionsAnswered &&
-      questionsReady &&
-      profileOkForBooking,
+      questionsReady,
     [
       welperId,
       selectedOfferingId,
@@ -325,7 +315,6 @@ export default function NewBookingPageClient({
       durationMinutes,
       requiredQuestionsAnswered,
       questionsReady,
-      profileOkForBooking,
     ],
   );
 
@@ -334,47 +323,55 @@ export default function NewBookingPageClient({
     if (!canSubmit || !welperId || !selectedOffering) return;
     setSubmitError(null);
 
-    try {
-      const filteredAnswers =
-        serviceQuestions && scheduledDate && startTime
-          ? buildBookingAnswersPayload(serviceQuestions, answers, {
-              scheduledDate,
-              startTime,
-            })
-          : {};
+    const submitBooking = async () => {
+      try {
+        const filteredAnswers =
+          serviceQuestions && scheduledDate && startTime
+            ? buildBookingAnswersPayload(serviceQuestions, answers, {
+                scheduledDate,
+                startTime,
+              })
+            : {};
 
-      const result = await bookable.run(() =>
-        createBooking.mutateAsync({
-          welperId,
-          offeringId: selectedOffering.id,
-          serviceQuestionCategoryId: serviceCategoryId,
-          answers: filteredAnswers,
-          scheduledDate,
-          scheduledStartTime: startTime,
-          scheduledEndTime: endTime,
-          durationMinutes: durationMinutes ?? undefined,
-          notes: notes.trim() || undefined,
-          timezoneOffsetMinutes: -(new Date().getTimezoneOffset()),
-          ...(jobId && applicationId
-            ? { jobPostingId: jobId, jobApplicationId: applicationId }
-            : {}),
-        }),
-      );
-      // bookable.run swallows EmailVerificationRequiredError and surfaces the
-      // dialog instead — `result` is undefined in that case so we keep the
-      // user on the page until they verify or close the dialog.
-      if (result) {
-        router.push("/dashboard/bookings");
+        const result = await bookable.run(() =>
+          createBooking.mutateAsync({
+            welperId,
+            offeringId: selectedOffering.id,
+            serviceQuestionCategoryId: serviceCategoryId,
+            answers: filteredAnswers,
+            scheduledDate,
+            scheduledStartTime: startTime,
+            scheduledEndTime: endTime,
+            durationMinutes: durationMinutes ?? undefined,
+            notes: notes.trim() || undefined,
+            timezoneOffsetMinutes: -(new Date().getTimezoneOffset()),
+            ...(jobId && applicationId
+              ? { jobPostingId: jobId, jobApplicationId: applicationId }
+              : {}),
+          }),
+        );
+        if (result) {
+          router.push("/dashboard/bookings");
+        }
+      } catch (e) {
+        if (e instanceof ApiClientError && e.code === "PAYMENT_METHOD_REQUIRED") {
+          bookingGate.openNextGap();
+          return;
+        }
+        setSubmitError(
+          e instanceof Error ? e.message : bookingLabels.createFailed,
+        );
       }
-    } catch (e) {
-      if (e instanceof ApiClientError && e.code === "PAYMENT_METHOD_REQUIRED") {
-        setSubmitError(bookingLabels.paymentRequired);
-        return;
-      }
-      setSubmitError(
-        e instanceof Error ? e.message : bookingLabels.createFailed,
-      );
+    };
+
+    if (user?.role === "customer") {
+      bookingGate.ensureBookingReady(() => {
+        void submitBooking();
+      });
+      return;
     }
+
+    await submitBooking();
   }, [
     canSubmit,
     welperId,
@@ -392,6 +389,8 @@ export default function NewBookingPageClient({
     createBooking,
     bookable,
     router,
+    user?.role,
+    bookingGate,
   ]);
 
   // ── Page chrome ──────────────────────────────────────────────────────
@@ -584,6 +583,7 @@ export default function NewBookingPageClient({
         pending={bookable.resendPending}
         onResend={bookable.resend}
       />
+      {bookingGate.dialogs}
       <Flex direction="column" gap="6">
         {/* Page header */}
         <Box>
@@ -982,27 +982,6 @@ export default function NewBookingPageClient({
                   maxLength={2000}
                 />
               </Box>
-
-              {/* Profile-completion gate */}
-              {user?.role === "customer" &&
-                myProfileLoaded &&
-                myCustomerProfile?.profileCompletionStatusLabel !== "Complete" && (
-                  <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface">
-                    <Flex direction="column" gap="3" align="start">
-                      <Callout.Text>
-                        {bookingLabels.profileGate}
-                      </Callout.Text>
-                      <Button
-                        size="2"
-                        variant="soft"
-                        color={SEMANTIC_COLOR.warning}
-                        onClick={() => router.push("/dashboard/settings?tab=payment")}
-                      >
-                        {bookingLabels.paymentSettings}
-                      </Button>
-                    </Flex>
-                  </Callout.Root>
-                )}
 
               {/* Submit error */}
               {submitError && (

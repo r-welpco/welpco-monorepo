@@ -292,7 +292,7 @@ const CUSTOMER_SETUP_TASK_META: Record<
   customerPayment: {
     label: 'Payment method',
     href: '/dashboard/settings?tab=payment',
-    required: true,
+    required: false,
   },
 };
 
@@ -382,6 +382,7 @@ export class SignupOrchestratorService {
   async getCustomerSetupChecklist(userId: string): Promise<{
     setupTasks: CustomerSetupTask[];
     setupComplete: boolean;
+    allSetupComplete: boolean;
   }> {
     await this.assertCustomer(userId);
     const state = await this.getState(userId);
@@ -389,7 +390,8 @@ export class SignupOrchestratorService {
     const setupComplete = setupTasks
       .filter((t) => t.required)
       .every((t) => t.completed);
-    return { setupTasks, setupComplete };
+    const allSetupComplete = setupTasks.every((t) => t.completed);
+    return { setupTasks, setupComplete, allSetupComplete };
   }
 
   /**

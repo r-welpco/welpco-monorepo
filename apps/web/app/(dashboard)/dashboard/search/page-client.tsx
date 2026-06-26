@@ -32,6 +32,10 @@ const ServiceSelectionDialog = dynamic(
 import { useSearchServices, useDiscoveryCategories, usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import { reverseGeocode } from "@/lib/services/geocode.service";
 import { ApiClientError } from "@/lib/api/client";
+import { useBookingReadinessGate } from "@/lib/hooks/use-booking-readiness-gate";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { verificationHref } from "@/lib/auth/verification-href";
 import {
   localizeCategoryOptionLabel,
   localizeCategoryOptions,
@@ -124,6 +128,11 @@ function mapToWelperProfileDialogProfile(
 
 export default function DashboardSearchPageClient() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const bookingGate = useBookingReadinessGate();
+  const emailVerified = session?.user?.emailVerified === true;
+  const searchAllowed = emailVerified;
+  const sessionEmail = session?.user?.email ?? undefined;
   const marketplaceLabels = useMarketplaceLabels();
   const searchLabels = useSearchLabels();
   const categoryDisplayName = useCategoryDisplayName();
@@ -216,7 +225,7 @@ export default function DashboardSearchPageClient() {
 
   const { data, isLoading, isError, error, refetch } = useSearchServices(
     params,
-    hasSearchCenter
+    hasSearchCenter && searchAllowed
   );
 
   const isGeocodingUnavailable =
@@ -451,12 +460,12 @@ export default function DashboardSearchPageClient() {
   const handleServiceSelect = useCallback(
     (offering: WelperProfileDialogOffering) => {
       if (!serviceSelectionWelperId) return;
-      router.push(
-        `/dashboard/booking/new?welperId=${encodeURIComponent(serviceSelectionWelperId)}&offeringId=${encodeURIComponent(offering.id)}`
+      bookingGate.requestBookingNavigation(
+        `/dashboard/booking/new?welperId=${encodeURIComponent(serviceSelectionWelperId)}&offeringId=${encodeURIComponent(offering.id)}`,
       );
       setServiceSelectionWelperId(null);
     },
-    [router, serviceSelectionWelperId]
+    [bookingGate, serviceSelectionWelperId],
   );
 
   const heroCategories = useMemo(() => {
@@ -521,12 +530,13 @@ export default function DashboardSearchPageClient() {
   }, [hasSearchCenter, data, total, page, totalPages, updateParams]);
 
   const showEmpty =
+    searchAllowed &&
     hasSearchCenter &&
     !isLoading &&
     !isError &&
     (total === 0 || cardItems.length === 0);
   const showResults =
-    hasSearchCenter && !isLoading && !isError && cardItems.length > 0;
+    searchAllowed && hasSearchCenter && !isLoading && !isError && cardItems.length > 0;
   const showLocationPrompt = !hasSearchCenter;
 
   const hasActiveFilters =
@@ -567,7 +577,8 @@ export default function DashboardSearchPageClient() {
             availabilityLocale={locale}
             labels={searchLabels.profileDialog}
             onBook={() => {
-              if (profileDialogWelperId) openServiceSelection(profileDialogWelperId);
+              if (!searchAllowed || !profileDialogWelperId) return;
+              openServiceSelection(profileDialogWelperId);
             }}
           />
           <ServiceSelectionDialog
@@ -578,6 +589,7 @@ export default function DashboardSearchPageClient() {
             labels={searchLabels.serviceDialog}
             onSelect={handleServiceSelect}
           />
+          {bookingGate.dialogs}
           <Box>
             <Heading as="h1" size="7" mb="2">
               {searchLabels.pageTitle}
@@ -588,6 +600,34 @@ export default function DashboardSearchPageClient() {
           </Box>
 
           <Flex direction="column" gap="4" style={{ width: "100%", minWidth: 0 }}>
+            {!searchAllowed ? (
+              <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="status">
+                <Flex direction="column" gap="3" align="start">
+                  <Box>
+                    <Text size="2" weight="medium" as="p" mb="1">
+                      {searchLabels.emailVerificationRequired}
+                    </Text>
+                    <Text size="2" color="gray" highContrast as="p">
+                      {searchLabels.emailVerificationDescription}
+                    </Text>
+                  </Box>
+                  <Button size="2" variant="soft" color={SEMANTIC_COLOR.warning} asChild>
+                    <Link href={verificationHref(sessionEmail ?? "", "/dashboard/search")}>
+                      {searchLabels.verifyEmail}
+                    </Link>
+                  </Button>
+                </Flex>
+              </Callout.Root>
+            ) : null}
+
+            <Box
+              style={
+                searchAllowed
+                  ? undefined
+                  : { opacity: 0.55, pointerEvents: "none", userSelect: "none" }
+              }
+              aria-hidden={!searchAllowed}
+            >
             <SearchHero
               fillWidth
               mode="location"
@@ -645,9 +685,10 @@ export default function DashboardSearchPageClient() {
                 {filtersSidebar}
               </Box>
             )}
+            </Box>
           </Flex>
 
-          {showLocationPrompt && (
+          {searchAllowed && showLocationPrompt && (
             <Card size="4" variant="surface" style={{ width: "100%", maxWidth: "560px", minWidth: 0 }}>
               <Flex direction="column" gap="3" align="center">
                 <Text as="p" size="2" color="gray" highContrast align="center">

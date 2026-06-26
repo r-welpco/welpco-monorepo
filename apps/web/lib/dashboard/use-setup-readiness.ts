@@ -5,7 +5,11 @@ import { useSession } from "next-auth/react";
 import type { CustomerSetupTaskDto, WelperSetupTaskDto } from "@welpco/types";
 import { normalizeCustomerSetupChecklist } from "@/lib/dashboard/normalize-customer-setup-checklist";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
-import { buildWelperSetupGroupedView, firstPendingSectionATask } from "@/lib/dashboard/welper-setup-groups";
+import {
+  buildCustomerSetupGroupedView,
+  firstPendingSectionATask,
+} from "@/lib/dashboard/customer-setup-groups";
+import { buildWelperSetupGroupedView, firstPendingSectionATask as firstPendingWelperSectionATask } from "@/lib/dashboard/welper-setup-groups";
 import {
   useCustomerSetupChecklist,
   useWelperSetupChecklist,
@@ -42,14 +46,14 @@ export function useSetupReadiness(role: "customer" | "welper"): SetupReadinessSt
         };
       }
       const data = normalizeCustomerSetupChecklist(rawCustomer, emailVerified);
-      const requiredTasks = data.setupTasks.filter((task) => task.required);
-      const pendingRequired = requiredTasks.filter((task) => !task.completed);
+      const grouped = buildCustomerSetupGroupedView(data.setupTasks);
+      const pendingAccount = grouped.account.tasks.filter((task) => !task.completed);
       return {
         isLoading,
-        requiredIncomplete: !data.setupComplete,
-        completedRequired: requiredTasks.length - pendingRequired.length,
-        totalRequired: requiredTasks.length,
-        nextTask: pendingRequired[0],
+        requiredIncomplete: !grouped.sectionAComplete,
+        completedRequired: grouped.account.completedCount,
+        totalRequired: grouped.account.totalCount,
+        nextTask: firstPendingSectionATask(data.setupTasks) ?? pendingAccount[0],
       };
     }
 
@@ -71,7 +75,7 @@ export function useSetupReadiness(role: "customer" | "welper"): SetupReadinessSt
       requiredIncomplete: !grouped.sectionAComplete,
       completedRequired: grouped.goLive.completedCount,
       totalRequired: grouped.goLive.totalCount,
-      nextTask: firstPendingSectionATask(data.setupTasks),
+      nextTask: firstPendingWelperSectionATask(data.setupTasks),
     };
   }, [
     isCustomer,

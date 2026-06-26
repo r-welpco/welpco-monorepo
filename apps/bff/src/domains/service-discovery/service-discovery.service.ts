@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
 import { ServiceOffering } from '../profile-management/entities/service-offering.entity';
+import { UserAccount } from '../user-management/entities/user-account.entity';
 import { ServiceCategory } from '../content-management/entities/service-category.entity';
 import { ProfileCompletionStatus } from '../profile-management/entities/profile-completion-status.enum';
 import { ProfileVisibility } from '../profile-management/entities/profile-visibility.enum';
@@ -23,6 +24,10 @@ import type { WeeklyAvailabilitySummaryDto } from '../profile-management/availab
 import { formatWelperDisplayNameForCustomer } from '../../common/display-name.util';
 import { customerHourlyChargeFromWelperRate } from '../booking/booking-pricing';
 import { isMinorWelper } from '../safety-verification/background-check-age.util';
+import {
+  applyMarketplaceAccountFilters,
+  isWelperAccountMarketplaceEligible,
+} from './welper-marketplace-eligibility.util';
 
 const BIO_SNIPPET_LENGTH = 120;
 
@@ -53,6 +58,8 @@ export class ServiceDiscoveryService {
     private readonly welperProfileRepo: Repository<WelperProfile>,
     @InjectRepository(ServiceOffering)
     private readonly serviceOfferingRepo: Repository<ServiceOffering>,
+    @InjectRepository(UserAccount)
+    private readonly userAccountRepo: Repository<UserAccount>,
     private readonly welperProfileService: WelperProfileService,
     private readonly aggregatesService: WelperProfileAggregatesService,
     private readonly serviceOfferingService: ServiceOfferingService,
@@ -207,6 +214,8 @@ export class ServiceDiscoveryService {
           AND so_active.active = true
         )`,
       );
+
+    applyMarketplaceAccountFilters(qb);
 
     if (categoryIds.length > 0) {
       qb.andWhere(
@@ -368,6 +377,14 @@ export class ServiceDiscoveryService {
     ]);
 
     if (profile.profileVisibility !== ProfileVisibility.PUBLIC || profile.profileCompletionStatus !== ProfileCompletionStatus.COMPLETE) {
+      throw new NotFoundException('Welper profile not found');
+    }
+
+    const account = await this.userAccountRepo.findOne({
+      where: { id: welperId },
+      select: ['id', 'accountType', 'status', 'signupCompleted', 'emailVerified'],
+    });
+    if (!isWelperAccountMarketplaceEligible(account)) {
       throw new NotFoundException('Welper profile not found');
     }
 

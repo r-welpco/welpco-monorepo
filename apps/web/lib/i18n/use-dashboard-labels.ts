@@ -285,6 +285,7 @@ export type CustomerHomeLabels = {
   greeting: (name: string) => string;
   loading: string;
   setupIncomplete: string;
+  recommendedSetupRemaining: string;
   upcomingBookings: (count: number) => string;
   noUpcomingBookings: string;
   statsSectionTitle: string;
@@ -318,6 +319,7 @@ export function useCustomerHomeLabels(): CustomerHomeLabels {
     greeting: (name) => t("greeting", { name }),
     loading: t("loading"),
     setupIncomplete: t("setupIncomplete"),
+    recommendedSetupRemaining: t("recommendedSetupRemaining"),
     upcomingBookings: (count) => t("upcomingBookings", { count }),
     noUpcomingBookings: t("noUpcomingBookings"),
     statsSectionTitle: t("statsSectionTitle"),
@@ -604,6 +606,7 @@ export function useCustomerProfileLabels() {
       save: form("save"),
       saving: form("saving"),
       saved: form("saved"),
+      cancel: form("cancel"),
       addressIncomplete: form("addressIncomplete"),
       addressFields: {
         streetAddress: af("streetAddress"),
@@ -698,6 +701,8 @@ export function useBookingNewLabels() {
     notesOptional: t("notesOptional"),
     notesPlaceholder: t("notesPlaceholder"),
     profileGate: t("profileGate"),
+    profileGatePaymentOnly: t("profileGatePaymentOnly"),
+    profileSettings: t("profileSettings"),
     paymentSettings: t("paymentSettings"),
     paymentRequired: t("paymentRequired"),
     createFailed: t("createFailed"),
@@ -1077,6 +1082,9 @@ export function useSearchLabels() {
     pageSubtitle: t("pageSubtitle"),
     heroTitle: t("heroTitle"),
     locationPrompt: t("locationPrompt"),
+    emailVerificationRequired: t("emailVerificationRequired"),
+    emailVerificationDescription: t("emailVerificationDescription"),
+    verifyEmail: t("verifyEmail"),
     geolocationUnsupported: t("geolocationUnsupported"),
     geocodingUnavailable: t("geocodingUnavailable"),
     geocodingUnavailableRetry: t("geocodingUnavailableRetry"),
@@ -1378,8 +1386,34 @@ export function useEmailVerificationDialogLabels() {
     title: t("title"),
     description: (email: string) => t("description", { email }),
     resend: t("resend"),
+    sent: t("sent"),
+    alreadyVerified: t("alreadyVerified"),
+    sendFailed: t("sendFailed"),
     close: t("close"),
     emailFallback: t("emailFallback"),
+  };
+}
+
+export function useAddPaymentMethodDialogLabels() {
+  const t = useTranslations("dashboard.addPaymentMethod");
+  return {
+    title: t("title"),
+    description: t("description"),
+    actions: {
+      saveCard: t("saveCard"),
+      savingCard: t("savingCard"),
+      cancel: t("cancel"),
+      couldNotSaveCard: t("couldNotSaveCard"),
+      couldNotStartSetup: t("couldNotStartSetup"),
+    },
+  };
+}
+
+export function useBookingReadinessLabels() {
+  const t = useTranslations("dashboard.bookingReadiness");
+  return {
+    addressTitle: t("addressTitle"),
+    addressDescription: t("addressDescription"),
   };
 }
 

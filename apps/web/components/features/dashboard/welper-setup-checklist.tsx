@@ -25,11 +25,16 @@ import {
   WELPER_SETUP_TASK_LABEL_KEYS,
   welperTaskActionHref,
 } from "@/lib/dashboard/setup-checklist-navigation";
-import { useResendVerification } from "@/lib/hooks/use-resend-verification";
+import { useSyncEmailVerificationSession } from "@/lib/hooks/use-sync-email-verification-session";
 import { useBackgroundCheckStatus, useWelperSetupChecklist } from "@/lib/hooks/use-signup";
 import type { BackgroundCheckStatusResponse } from "@/lib/services/background-check-service";
 import { useGuardianConsentStatus } from "@/lib/hooks/use-guardian-consent";
 import type { GuardianConsentStatusResponse } from "@/lib/services/guardian-consent-service";
+import {
+  EmailVerificationResendButton,
+  EmailVerificationResendExtras,
+  EmailVerificationResendProvider,
+} from "@/components/features/dashboard/email-verification-resend";
 
 function setupTaskLabel(
   task: WelperSetupTaskDto,
@@ -88,6 +93,8 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
   const sessionRole = session?.user?.role;
   const isWelperSession = sessionRole === "welper";
   const { data: raw, isPending, isError, refetch } = useWelperSetupChecklist(isWelperSession);
+
+  useSyncEmailVerificationSession(isWelperSession);
 
   useEffect(() => {
     if (isWelperSession && isError) {
@@ -365,9 +372,6 @@ function SetupTaskRow({
   showTaskLabel?: boolean;
 }) {
   const t = useTranslations("dashboard.setup");
-  const resend = useResendVerification();
-  const [resendNote, setResendNote] = useState<string | null>(null);
-  const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
   const Icon = task.completed
     ? CheckCircle2
     : task.required
@@ -378,6 +382,46 @@ function SetupTaskRow({
     : task.required
       ? "var(--amber-9)"
       : "var(--gray-8)";
+
+  if (task.id === "emailVerification" && !task.completed) {
+    return (
+      <li>
+        <EmailVerificationResendProvider>
+          <Flex
+            direction="column"
+            gap="2"
+            py={showDivider ? "2" : "0"}
+            style={showDivider ? { borderBottom: "1px solid var(--gray-a5)" } : undefined}
+          >
+            <Flex align="center" justify="between" gap="3">
+              <Flex align="center" gap="3" style={{ minWidth: 0 }}>
+                <Icon size={20} color={iconColor} aria-hidden />
+                <Box style={{ minWidth: 0 }}>
+                  {showTaskLabel ? (
+                    <Text size="2" weight="medium" as="p">
+                      {showStepNumber ? `${stepNumber}. ${label}` : label}
+                    </Text>
+                  ) : null}
+                  <Text size="1" color="gray" as="p">
+                    {statusLabel}
+                  </Text>
+                  {optionalHint ? (
+                    <Text size="2" weight="medium" as="p" mt="1">
+                      {optionalHint}
+                    </Text>
+                  ) : null}
+                </Box>
+              </Flex>
+            </Flex>
+            <EmailVerificationResendExtras />
+            <Flex justify="end">
+              <EmailVerificationResendButton />
+            </Flex>
+          </Flex>
+        </EmailVerificationResendProvider>
+      </li>
+    );
+  }
 
   return (
     <li>
@@ -404,59 +448,13 @@ function SetupTaskRow({
                 {optionalHint}
               </Text>
             ) : null}
-            {task.id === "emailVerification" && resendNote ? (
-              <Text
-                size="1"
-                color={resend.isError ? SEMANTIC_COLOR.danger : "gray"}
-                as="p"
-                mt="1"
-              >
-                {resendNote}
-              </Text>
-            ) : null}
           </Box>
         </Flex>
         {!task.completed ? (
           <Flex gap="2" wrap="wrap" justify="end">
-            {task.id === "emailVerification" ? (
-              <>
-                {turnstileEnabled && sessionEmail ? (
-                  <Button size="1" variant="soft" color={SEMANTIC_COLOR.primary} asChild>
-                    <Link href={welperTaskActionHref(task, locale, sessionEmail)}>
-                      {t("resendVerification")}
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button
-                    size="1"
-                    variant="soft"
-                    color={SEMANTIC_COLOR.primary}
-                    disabled={resend.isPending}
-                    onClick={() => {
-                      setResendNote(null);
-                      void resend.mutateAsync().then(
-                        () => setResendNote(t("resendSent")),
-                        (err: unknown) =>
-                          setResendNote(
-                            err instanceof Error ? err.message : t("resendFailed"),
-                          ),
-                      );
-                    }}
-                  >
-                    {resend.isPending ? t("resendSending") : t("resendVerification")}
-                  </Button>
-                )}
-                <Button size="1" variant="soft" asChild>
-                  <Link href={welperTaskActionHref(task, locale, sessionEmail)}>
-                    {t("verifyEmail")}
-                  </Link>
-                </Button>
-              </>
-            ) : (
-              <Button size="1" variant="soft" asChild>
-                <Link href={welperTaskActionHref(task, locale, sessionEmail)}>{t("open")}</Link>
-              </Button>
-            )}
+            <Button size="1" variant="soft" asChild>
+              <Link href={welperTaskActionHref(task, locale, sessionEmail)}>{t("open")}</Link>
+            </Button>
           </Flex>
         ) : null}
       </Flex>

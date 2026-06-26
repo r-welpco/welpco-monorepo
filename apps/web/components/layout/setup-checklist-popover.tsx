@@ -17,6 +17,7 @@ import { ListChecks, ChevronRight } from "lucide-react";
 import type { CustomerSetupTaskDto, WelperSetupTaskDto } from "@welpco/types";
 import { normalizeCustomerSetupChecklist } from "@/lib/dashboard/normalize-customer-setup-checklist";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
+import { buildCustomerSetupGroupedView } from "@/lib/dashboard/customer-setup-groups";
 import { buildWelperSetupGroupedView } from "@/lib/dashboard/welper-setup-groups";
 import {
   CUSTOMER_SETUP_TASK_LABEL_KEYS,
@@ -28,10 +29,13 @@ import {
   useCustomerSetupChecklist,
   useWelperSetupChecklist,
 } from "@/lib/hooks/use-signup";
+import { useSyncEmailVerificationSession } from "@/lib/hooks/use-sync-email-verification-session";
 import {
   DashboardHeaderIconTrigger,
   DASHBOARD_HEADER_GLYPH_SIZE,
 } from "@/components/layout/dashboard-header-icon-trigger";
+import { AddPaymentMethodDialog } from "@/components/features/payments/add-payment-method-shared";
+import { useAddPaymentMethodDialogLabels } from "@/lib/i18n/use-dashboard-labels";
 
 export interface SetupChecklistPopoverProps {
   role: "customer" | "welper";
@@ -73,9 +77,12 @@ export function SetupChecklistPopover({
   const locale = useLocale() as Locale;
   const { data: session } = useSession();
   const t = useTranslations("dashboard.setup");
+  const paymentDialogLabels = useAddPaymentMethodDialogLabels();
   const [open, setOpen] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
 
   const isCustomer = role === "customer";
+  useSyncEmailVerificationSession(true);
   const {
     data: rawCustomer,
     isPending: customerPending,
@@ -100,6 +107,11 @@ export function SetupChecklistPopover({
 
   const data = isCustomer ? customerData : welperData;
 
+  const customerGrouped = useMemo(() => {
+    if (!isCustomer || !customerData) return undefined;
+    return buildCustomerSetupGroupedView(customerData.setupTasks);
+  }, [isCustomer, customerData]);
+
   const welperGrouped = useMemo(() => {
     if (isCustomer || !welperData) return undefined;
     return buildWelperSetupGroupedView(welperData.setupTasks);
@@ -107,14 +119,24 @@ export function SetupChecklistPopover({
 
   const requiredTasks = useMemo(() => {
     if (isCustomer) {
-      return data?.setupTasks.filter((task) => task.required) ?? [];
+      return customerGrouped?.account.tasks ?? [];
     }
     return welperGrouped?.goLive.tasks ?? [];
-  }, [isCustomer, data, welperGrouped]);
+  }, [isCustomer, customerGrouped, welperGrouped]);
 
   const pendingTasks = useMemo(() => {
     if (isCustomer) {
-      return requiredTasks.filter((task) => !task.completed);
+      if (!customerGrouped) return [];
+      const pending: CustomerSetupTaskDto[] = [];
+      for (const task of customerGrouped.account.tasks) {
+        if (!task.completed) pending.push(task);
+      }
+      if (customerGrouped.bookingPayment) {
+        for (const task of customerGrouped.bookingPayment.tasks) {
+          if (!task.completed) pending.push(task);
+        }
+      }
+      return pending;
     }
     if (!welperGrouped) return [];
     const pending: WelperSetupTaskDto[] = [];
@@ -135,19 +157,22 @@ export function SetupChecklistPopover({
   }, [isCustomer, requiredTasks, welperGrouped]);
 
   const completedRequired = isCustomer
-    ? requiredTasks.length - pendingTasks.length
+    ? (customerGrouped?.account.completedCount ?? 0)
     : (welperGrouped?.goLive.completedCount ?? 0);
   const remainingCount = isCustomer
-    ? pendingTasks.length
+    ? customerGrouped?.allComplete
+      ? 0
+      : pendingTasks.length
     : welperGrouped?.allComplete
       ? 0
       : pendingTasks.length;
   const progressPct = Math.round(
     (completedRequired / Math.max(requiredTasks.length, 1)) * 100,
   );
+  const customerAllComplete = isCustomer && (customerGrouped?.allComplete ?? false);
   const welperAllComplete = !isCustomer && (welperGrouped?.allComplete ?? false);
 
-  if (isInitialLoad || !data || (isCustomer && data.setupComplete) || welperAllComplete) {
+  if (isInitialLoad || !data || customerAllComplete || welperAllComplete) {
     return null;
   }
 
@@ -182,10 +207,14 @@ export function SetupChecklistPopover({
               </Text>
               <Text size="2" color="gray" as="p">
                 {isCustomer
-                  ? t("header.subtitle", {
-                      done: completedRequired,
-                      total: requiredTasks.length,
-                    })
+                  ? customerGrouped?.sectionAComplete
+                    ? t("header.subtitleOptional", {
+                        count: pendingTasks.length,
+                      })
+                    : t("header.subtitle", {
+                        done: completedRequired,
+                        total: requiredTasks.length,
+                      })
                   : welperGrouped?.sectionAComplete
                     ? t("header.subtitleOptional", {
                         count: pendingTasks.length,
@@ -218,6 +247,10 @@ export function SetupChecklistPopover({
                       }}
                       onClick={() => {
                         setOpen(false);
+                        if (isCustomer && task.id === "customerPayment") {
+                          setPaymentDialogOpen(true);
+                          return;
+                        }
                         router.push(taskHref(task, role, locale, sessionEmail));
                       }}
                     >
@@ -254,6 +287,15 @@ export function SetupChecklistPopover({
       >
         {remainingCount > 9 ? "9+" : remainingCount}
       </Badge>
+      {isCustomer ? (
+        <AddPaymentMethodDialog
+          open={paymentDialogOpen}
+          onOpenChange={setPaymentDialogOpen}
+          title={paymentDialogLabels.title}
+          description={paymentDialogLabels.description}
+          labels={paymentDialogLabels.actions}
+        />
+      ) : null}
     </Box>
   );
 }

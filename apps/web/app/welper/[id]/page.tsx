@@ -24,6 +24,7 @@ import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import { publicWelperDisplayName } from "@/lib/display-name";
 import { useWelperReviews } from "@/lib/hooks/use-booking-review";
 import { useIsAuthenticated } from "@/stores/authStore";
+import { useBookingReadinessGate } from "@/lib/hooks/use-booking-readiness-gate";
 import type { PublicWelperProfile } from "@/types";
 import { format } from "date-fns";
 
@@ -235,6 +236,7 @@ function ServicesEmptyState({ welperName }: { welperName: string }) {
 function PublicWelperProfileContent({ welperId }: { welperId: string }) {
   const router = useRouter();
   const isAuthenticated = useIsAuthenticated();
+  const bookingGate = useBookingReadinessGate({ enabled: isAuthenticated });
   const { data, isLoading, isError, error } = usePublicWelperProfile(welperId);
   const profile = data as PublicWelperProfileWithTrust | undefined;
 
@@ -277,10 +279,10 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
 
   const handleBookOffering = (offeringId: string) => {
     if (isAuthenticated) {
-      router.push(
+      bookingGate.requestBookingNavigation(
         `/dashboard/booking/new?welperId=${encodeURIComponent(
-          profile.welperId
-        )}&offeringId=${encodeURIComponent(offeringId)}`
+          profile.welperId,
+        )}&offeringId=${encodeURIComponent(offeringId)}`,
       );
     } else {
       const next = `/dashboard/booking/new?welperId=${profile.welperId}&offeringId=${offeringId}`;
@@ -290,6 +292,7 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
 
   return (
     <Flex direction="column" gap="6">
+      {bookingGate.dialogs}
       {/* Hero — trust-critical above-the-fold block. Bible §20.1–20.3:
           identity → rating → verified → CTAs. */}
       <Card size="4" variant="surface">

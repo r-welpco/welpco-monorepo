@@ -130,7 +130,7 @@ export function NotificationBellPopover({ badgeColor = "blue" }: NotificationBel
           collisionPadding={12}
           style={{
             padding: 0,
-            width: 560,
+            width: "min(560px, calc(100vw - 24px))",
             height: "min(80vh, 480px)",
             maxHeight:
               "min(480px, var(--radix-popover-content-available-height, var(--radix-popper-available-height, 80vh)))",

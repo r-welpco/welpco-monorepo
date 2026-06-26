@@ -1,5 +1,7 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import { EmailAlreadyVerifiedError } from "@/lib/api/client";
+import { syncEmailVerificationFromServer } from "@/lib/auth/sync-email-verification-session";
 import { resendVerificationCode } from "@/lib/services/user-service";
 
 export type ResendVerificationHuman = {
@@ -7,21 +9,32 @@ export type ResendVerificationHuman = {
   website?: string;
 };
 
+export type ResendVerificationResult =
+  | { outcome: "sent" }
+  | { outcome: "already_verified" };
+
 /**
- * Day 15 — Phase 3 of the signup ↔ onboarding merge.
- *
- * Tiny wrapper around the existing `resendVerificationCode` service so the
- * verification banner + the bookable-action 403 dialog share one mutation
- * surface. The BFF endpoint reads the user from the JWT, so the email
- * argument is informational (it logs the request target).
+ * Resend verification email for the signed-in user. When BFF reports the
+ * email is already verified, refreshes the session so setup UI catches up.
  */
 export function useResendVerification() {
-  const { data: session } = useSession();
-  return useMutation<void, Error, ResendVerificationHuman | void>({
-    mutationFn: (human) =>
-      resendVerificationCode(
-        (session?.user as { email?: string | null } | undefined)?.email ?? "",
-        human ?? undefined,
-      ),
+  const { data: session, update: updateSession } = useSession();
+  const queryClient = useQueryClient();
+
+  return useMutation<ResendVerificationResult, Error, ResendVerificationHuman | void>({
+    mutationFn: async (human) => {
+      const email =
+        (session?.user as { email?: string | null } | undefined)?.email ?? "";
+      try {
+        await resendVerificationCode(email, human ?? undefined);
+        return { outcome: "sent" };
+      } catch (err) {
+        if (err instanceof EmailAlreadyVerifiedError) {
+          await syncEmailVerificationFromServer(updateSession, queryClient);
+          return { outcome: "already_verified" };
+        }
+        throw err;
+      }
+    },
   });
 }

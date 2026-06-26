@@ -9,24 +9,17 @@ import {
   useEmailVerificationDialogLabels,
 } from "@/lib/i18n/use-dashboard-labels";
 import { TurnstileWidget } from "@/components/security/turnstile-widget";
-import type { ResendVerificationHuman } from "@/lib/hooks/use-resend-verification";
+import type {
+  ResendVerificationHuman,
+  ResendVerificationResult,
+} from "@/lib/hooks/use-resend-verification";
 
-/**
- * Day 15 — Phase 3 of the signup ↔ onboarding merge.
- *
- * Focused dialog that surfaces when a bookable-action endpoint returns 403
- * with `code: 'EMAIL_VERIFICATION_REQUIRED'`. Wraps the canonical
- * `<ActionConfirmDialog>` (bible §17.6 + §25.4) — no bespoke modal here.
- *
- * Confirm verb is "Resend email"; cancel verb is "Close" (kept short to fit
- * mobile width per §22 voice).
- */
 export interface EmailVerificationRequiredDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   email?: string;
   pending?: boolean;
-  onResend: (human?: ResendVerificationHuman) => void | Promise<void>;
+  onResend: (human?: ResendVerificationHuman) => Promise<ResendVerificationResult>;
 }
 
 export function EmailVerificationRequiredDialog({
@@ -42,6 +35,9 @@ export function EmailVerificationRequiredDialog({
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
   const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
   return (
@@ -51,6 +47,9 @@ export function EmailVerificationRequiredDialog({
         if (!nextOpen) {
           setTurnstileToken(null);
           setTurnstileError(null);
+          setSendError(null);
+          setSent(false);
+          setSuccessMessage(null);
           setTurnstileResetKey((key) => key + 1);
         }
         onOpenChange(nextOpen);
@@ -58,10 +57,21 @@ export function EmailVerificationRequiredDialog({
       title={labels.title}
       description={
         <Flex direction="column" gap="3">
-          <Text size="2" color="gray" highContrast as="p">
-            {labels.description(target)}
-          </Text>
-          {turnstileEnabled ? (
+          {sent && successMessage ? (
+            <Text size="2" color="green" highContrast as="p">
+              {successMessage}
+            </Text>
+          ) : (
+            <Text size="2" color="gray" highContrast as="p">
+              {labels.description(target)}
+            </Text>
+          )}
+          {sendError ? (
+            <Text size="1" color="red" as="p">
+              {sendError}
+            </Text>
+          ) : null}
+          {!sent && turnstileEnabled ? (
             <>
               <TurnstileWidget
                 action="resend_verification"
@@ -77,21 +87,31 @@ export function EmailVerificationRequiredDialog({
           ) : null}
         </Flex>
       }
-      confirmLabel={labels.resend}
+      confirmLabel={sent ? labels.close : labels.resend}
       cancelLabel={labels.close}
       variant="primary"
       pending={pending}
       onConfirm={async () => {
+        if (sent) {
+          onOpenChange(false);
+          return;
+        }
         if (turnstileEnabled && !turnstileToken) {
           setTurnstileError(common.turnstileComplete);
           return;
         }
         setTurnstileError(null);
+        setSendError(null);
         try {
-          await onResend({ turnstileToken: turnstileToken ?? undefined });
-        } catch {
+          const result = await onResend({ turnstileToken: turnstileToken ?? undefined });
+          setSent(true);
+          setSuccessMessage(
+            result.outcome === "sent" ? labels.sent : labels.alreadyVerified,
+          );
+        } catch (err) {
           setTurnstileResetKey((key) => key + 1);
           setTurnstileToken(null);
+          setSendError(err instanceof Error ? err.message : labels.sendFailed);
         }
       }}
     />

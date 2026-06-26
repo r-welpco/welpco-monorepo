@@ -33,6 +33,14 @@ export class EmailVerificationRequiredError extends ApiClientError {
   }
 }
 
+/** BFF rejects resend when the account email is already verified in the database. */
+export class EmailAlreadyVerifiedError extends ApiClientError {
+  constructor(message = "Email is already verified", body?: unknown) {
+    super(message, 400, "EMAIL_ALREADY_VERIFIED", body);
+    this.name = "EmailAlreadyVerifiedError";
+  }
+}
+
 interface RequestConfig extends RequestInit {
   skipAuth?: boolean;
   params?: Record<string, string | number | boolean | undefined>;

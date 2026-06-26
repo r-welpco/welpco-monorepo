@@ -350,7 +350,8 @@ export function useCustomerSetupChecklist(enabled = true) {
     placeholderData: keepPreviousData,
     refetchInterval: (query) => {
       const data = query.state.data;
-      if (!data || data.setupComplete) return false;
+      const allDone = data?.allSetupComplete ?? data?.setupComplete;
+      if (!data || allDone) return false;
       return 30_000;
     },
   });

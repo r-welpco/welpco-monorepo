@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/api/client";
+import { apiClient, ApiClientError, EmailAlreadyVerifiedError } from "@/lib/api/client";
 import type {
   RegistrationData,
   VerificationData,
@@ -153,14 +153,22 @@ export async function resendVerificationCode(
       turnstileToken: human?.turnstileToken,
       website: human?.website,
     });
-  } catch (error: any) {
-    if (error.statusCode === 400) {
-      throw new Error("Email is already verified");
+  } catch (error: unknown) {
+    if (error instanceof ApiClientError) {
+      if (
+        error.statusCode === 400 &&
+        error.message.toLowerCase().includes("already verified")
+      ) {
+        throw new EmailAlreadyVerifiedError(error.message, error.body);
+      }
+      if (error.statusCode === 404) {
+        throw new Error("User not found");
+      }
+      throw new Error(error.message || "Failed to resend verification email");
     }
-    if (error.statusCode === 404) {
-      throw new Error("User not found");
-    }
-    throw new Error(error.message || "Failed to resend verification email");
+    throw new Error(
+      error instanceof Error ? error.message : "Failed to resend verification email",
+    );
   }
 }
 

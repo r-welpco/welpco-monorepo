@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
 import { ServiceOffering } from '../profile-management/entities/service-offering.entity';
+import { UserAccount } from '../user-management/entities/user-account.entity';
 import { ProfileManagementDomainModule } from '../profile-management/profile-management.module';
 import { ContentManagementDomainModule } from '../content-management/content-management.module';
 import { GeocodeModule } from '../geocode/geocode.module';
@@ -11,7 +12,7 @@ import { ServiceDiscoveryService } from './service-discovery.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([WelperProfile, ServiceOffering]),
+    TypeOrmModule.forFeature([WelperProfile, ServiceOffering, UserAccount]),
     ProfileManagementDomainModule,
     ContentManagementDomainModule,
     GeocodeModule,

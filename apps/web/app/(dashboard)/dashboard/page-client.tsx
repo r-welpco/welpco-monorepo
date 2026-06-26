@@ -16,6 +16,7 @@ import { CustomerSetupChecklist } from "@/components/features/dashboard/customer
 import { WelperSetupChecklist } from "@/components/features/dashboard/welper-setup-checklist";
 import { normalizeCustomerSetupChecklist } from "@/lib/dashboard/normalize-customer-setup-checklist";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
+import { buildCustomerSetupGroupedView } from "@/lib/dashboard/customer-setup-groups";
 import { buildWelperSetupGroupedView } from "@/lib/dashboard/welper-setup-groups";
 import { useCustomerSetupChecklist, useWelperSetupChecklist } from "@/lib/hooks/use-signup";
 import { useDashboardUser } from "@/lib/hooks/use-dashboard-user";
@@ -95,11 +96,27 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     [customerSetup, session?.user?.emailVerified],
   );
 
-  const customerSetupIncomplete =
+  const customerGroupedSetup = useMemo(
+    () =>
+      normalizedCustomerSetup
+        ? buildCustomerSetupGroupedView(normalizedCustomerSetup.setupTasks)
+        : undefined,
+    [normalizedCustomerSetup],
+  );
+
+  const customerSectionAIncomplete =
+    userRole === "customer" &&
+    ((customerSetupPending && !customerSetup) ||
+      !customerGroupedSetup ||
+      !customerGroupedSetup.sectionAComplete);
+
+  const customerChecklistVisible =
     userRole === "customer" &&
     ((customerSetupPending && !customerSetup) ||
       !normalizedCustomerSetup ||
-      !normalizedCustomerSetup.setupComplete);
+      !customerGroupedSetup?.allComplete);
+
+  const customerSetupIncomplete = customerSectionAIncomplete;
 
   const welperGroupedSetup = useMemo(
     () =>
@@ -167,8 +184,8 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
   }, [bookingsResponse, bookings.length, userRole, welperHome, customerHome]);
 
   const welperShowSetupChecklist = welperChecklistVisible;
-  const customerShowSetupChecklist = userRole === "customer" && customerSetupIncomplete;
-  const hideDashboardExtras = welperSectionAIncomplete || customerSetupIncomplete;
+  const customerShowSetupChecklist = customerChecklistVisible;
+  const hideDashboardExtras = welperSectionAIncomplete || customerSectionAIncomplete;
 
   // The single concrete state line below the greeting. Avoids generic
   // "here's what's happening" copy — names a number when there is one.
@@ -208,8 +225,11 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
       }
       return welperHome.noJobsNotDiscoverable;
     }
-    if (customerSetupIncomplete && !customerShowSetupChecklist) {
+    if (customerSectionAIncomplete && !customerShowSetupChecklist) {
       return customerHome.setupIncomplete;
+    }
+    if (customerShowSetupChecklist && !customerSectionAIncomplete) {
+      return customerHome.recommendedSetupRemaining;
     }
     if (upcomingCount > 0) {
       return customerHome.upcomingBookings(upcomingCount);
@@ -222,6 +242,7 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     pendingForWelper,
     bookings,
     welperSectionAIncomplete,
+    customerSectionAIncomplete,
     customerSetupIncomplete,
     customerShowSetupChecklist,
     welperShowSetupChecklist,

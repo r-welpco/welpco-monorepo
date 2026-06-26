@@ -16,6 +16,7 @@ import { DiscoveryCategoriesCacheService } from '../../common/discovery-categori
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
 import { AvailabilityService } from '../profile-management/availability/availability.service';
 import { emptyWeeklyAvailabilitySummary } from '../profile-management/availability/dto/weekly-availability-summary.dto';
+import { UserAccount, AccountType, AccountStatus } from '../user-management/entities/user-account.entity';
 
 describe('ServiceDiscoveryService', () => {
   let service: ServiceDiscoveryService;
@@ -35,6 +36,18 @@ describe('ServiceDiscoveryService', () => {
   const mockServiceOfferingRepo = {
     find: jest.fn(),
     createQueryBuilder: jest.fn(),
+  };
+
+  const mockUserAccountRepo = {
+    findOne: jest.fn(),
+  };
+
+  const activeMarketplaceUser = {
+    id: 'w1',
+    accountType: AccountType.WELPER,
+    status: AccountStatus.ACTIVE,
+    signupCompleted: true,
+    emailVerified: true,
   };
 
   const mockWelperProfileService = {
@@ -89,6 +102,7 @@ describe('ServiceDiscoveryService', () => {
   const mockQueryBuilder = {
     select: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
+    innerJoin: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
@@ -114,6 +128,10 @@ describe('ServiceDiscoveryService', () => {
         {
           provide: getRepositoryToken(ServiceOffering),
           useValue: mockServiceOfferingRepo,
+        },
+        {
+          provide: getRepositoryToken(UserAccount),
+          useValue: mockUserAccountRepo,
         },
         {
           provide: WelperProfileService,
@@ -240,6 +258,17 @@ describe('ServiceDiscoveryService', () => {
         verified: false,
         isMinor: false,
       });
+      expect(mockQueryBuilder.innerJoin).toHaveBeenCalled();
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'u.account_type = :marketplaceWelperType',
+        { marketplaceWelperType: AccountType.WELPER },
+      );
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'u.status = :marketplaceActiveStatus',
+        { marketplaceActiveStatus: AccountStatus.ACTIVE },
+      );
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('u.signup_completed = true');
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('u.email_verified = true');
     });
 
     it('should return empty when categoryId has no offerings', async () => {
@@ -333,6 +362,13 @@ describe('ServiceDiscoveryService', () => {
   });
 
   describe('getPublicWelperProfile', () => {
+    beforeEach(() => {
+      mockUserAccountRepo.findOne.mockImplementation(async ({ where }: { where: { id: string } }) => ({
+        ...activeMarketplaceUser,
+        id: where.id,
+      }));
+    });
+
     it('should return profile with offerings when public and complete', async () => {
       const profile = {
         id: 'prof-1',
@@ -512,6 +548,23 @@ describe('ServiceDiscoveryService', () => {
       expect(mockServiceOfferingService.findByWelperId).toHaveBeenCalledWith('w1', 1, 100, true);
     });
 
+    it('should throw NotFound when account is deactivated', async () => {
+      const profile = {
+        id: 'prof-1',
+        welperId: 'w1',
+        profileVisibility: ProfileVisibility.PUBLIC,
+        profileCompletionStatus: ProfileCompletionStatus.COMPLETE,
+      };
+      mockWelperProfileService.findByWelperId.mockResolvedValue(profile);
+      mockUserAccountRepo.findOne.mockResolvedValue({
+        ...activeMarketplaceUser,
+        status: AccountStatus.DEACTIVATED,
+      });
+
+      await expect(service.getPublicWelperProfile('w1')).rejects.toThrow(NotFoundException);
+      expect(mockServiceOfferingService.findByWelperId).toHaveBeenCalledWith('w1', 1, 100, true);
+    });
+
     it('should throw when welper not found', async () => {
       mockWelperProfileService.findByWelperId.mockRejectedValue(
         new NotFoundException('Welper profile not found'),
@@ -527,6 +580,7 @@ describe('ServiceDiscoveryService', () => {
     it('should exclude welpers with NULL ratings when minRating is set', async () => {
       const qb = {
         leftJoin: jest.fn().mockReturnThis(),
+        innerJoin: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
@@ -571,6 +625,7 @@ describe('ServiceDiscoveryService', () => {
     it('should not apply rating filter when minRating is not provided', async () => {
       const qb = {
         leftJoin: jest.fn().mockReturnThis(),
+        innerJoin: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
@@ -630,6 +685,7 @@ describe('ServiceDiscoveryService', () => {
     it('should apply earth_distance filter when radius parameters are provided', async () => {
       const qb = {
         leftJoin: jest.fn().mockReturnThis(),
+        innerJoin: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
