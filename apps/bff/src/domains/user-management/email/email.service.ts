@@ -73,9 +73,21 @@ export class EmailService {
       throw new Error('SMTP_FROM must be set when using Resend in production');
     }
 
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL')?.trim();
+    if (isProduction) {
+      if (!frontendUrl) {
+        throw new Error(
+          'FRONTEND_URL must be set in production (public web origin for reset/verify email links)',
+        );
+      }
+      if (/localhost|127\.0\.0\.1/i.test(frontendUrl)) {
+        throw new Error('FRONTEND_URL must not point at localhost in production');
+      }
+    }
+
     this.publicAppUrl =
       this.configService.get<string>('PUBLIC_APP_URL') ||
-      this.configService.get<string>('FRONTEND_URL') ||
+      frontendUrl ||
       'http://localhost:8081';
 
     if (this.deliveryMode === 'resend') {
@@ -91,7 +103,8 @@ export class EmailService {
   }
 
   private localizedAuthUrl(path: string, locale: UserPreferredLocale): string {
-    const baseUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:8081';
+    const baseUrl =
+      this.configService.get<string>('FRONTEND_URL')?.trim() || 'http://localhost:8081';
     return `${baseUrl}${localePathPrefix(locale)}${path}`;
   }
 

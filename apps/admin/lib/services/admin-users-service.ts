@@ -104,6 +104,8 @@ export async function listAdminUsers(params?: {
   signupCompleted?: boolean;
   discoverable?: boolean;
   backgroundCheckStatus?: string;
+  provinceCode?: string;
+  city?: string;
   search?: string;
   sortBy?: AdminUsersSortBy;
   sortDir?: AdminUsersSortDir;
@@ -118,6 +120,8 @@ export async function listAdminUsers(params?: {
       signupCompleted: params?.signupCompleted,
       discoverable: params?.discoverable,
       backgroundCheckStatus: params?.backgroundCheckStatus,
+      provinceCode: params?.provinceCode?.trim() || undefined,
+      city: params?.city?.trim() || undefined,
       search: params?.search?.trim() || undefined,
       sortBy: params?.sortBy,
       sortDir: params?.sortDir,

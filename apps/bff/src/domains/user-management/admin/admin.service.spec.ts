@@ -20,6 +20,24 @@ import { BackgroundCheckOrder } from '../../safety-verification/entities/backgro
 import { BackgroundCheckService } from '../../safety-verification/background-check.service';
 import { SignupOrchestratorService } from '../auth/signup-orchestrator.service';
 
+function createQueryBuilderMock() {
+  return {
+    innerJoin: jest.fn().mockReturnThis(),
+    leftJoin: jest.fn().mockReturnThis(),
+    leftJoinAndSelect: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    andWhere: jest.fn().mockReturnThis(),
+    setParameters: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    addSelect: jest.fn().mockReturnThis(),
+    groupBy: jest.fn().mockReturnThis(),
+    addGroupBy: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    getRawOne: jest.fn(),
+    getRawMany: jest.fn(),
+  };
+}
+
 describe('AdminService', () => {
   let service: AdminService;
   let userRepository: jest.Mocked<Repository<UserAccount>>;
@@ -156,6 +174,106 @@ describe('AdminService', () => {
           BackgroundCheckStatus.PASSED,
         ),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('getWelperDistributionReport', () => {
+    it('returns aggregate buckets without user identifiers or individual coordinates', async () => {
+      const summaryQb = createQueryBuilderMock();
+      const bucketsQb = createQueryBuilderMock();
+      userRepository.createQueryBuilder
+        .mockReturnValueOnce(summaryQb as any)
+        .mockReturnValueOnce(bucketsQb as any);
+
+      summaryQb.getRawOne.mockResolvedValue({
+        total: '3',
+        active: '2',
+        discoverable: '1',
+        signupIncomplete: '1',
+        pendingBackgroundCheck: '1',
+        missingCoordinates: '1',
+      });
+      bucketsQb.getRawMany.mockResolvedValue([
+        {
+          city: 'Toronto',
+          provinceCode: 'ON',
+          countryCode: 'CA',
+          welperCount: '3',
+          activeCount: '2',
+          discoverableCount: '1',
+          signupIncompleteCount: '1',
+          pendingBackgroundCheckCount: '1',
+          missingCoordinateCount: '1',
+          latitude: '43.65',
+          longitude: '-79.38',
+          pendingStatusCount: '1',
+          activeStatusCount: '2',
+          suspendedStatusCount: '0',
+          deactivatedStatusCount: '0',
+        },
+      ]);
+
+      const report = await service.getWelperDistributionReport({
+        scope: 'all',
+        city: 'Toronto',
+        provinceCode: 'on',
+      });
+
+      expect(report.summary).toEqual({
+        total: 3,
+        active: 2,
+        discoverable: 1,
+        signupIncomplete: 1,
+        pendingBackgroundCheck: 1,
+        missingCoordinates: 1,
+      });
+      expect(report.buckets).toEqual([
+        {
+          city: 'Toronto',
+          provinceCode: 'ON',
+          countryCode: 'CA',
+          welperCount: 3,
+          activeCount: 2,
+          discoverableCount: 1,
+          signupIncompleteCount: 1,
+          pendingBackgroundCheckCount: 1,
+          missingCoordinateCount: 1,
+          latitude: 43.65,
+          longitude: -79.38,
+          statusBreakdown: {
+            [AccountStatus.PENDING]: 1,
+            [AccountStatus.ACTIVE]: 2,
+            [AccountStatus.SUSPENDED]: 0,
+            [AccountStatus.DEACTIVATED]: 0,
+          },
+        },
+      ]);
+      expect(Object.keys(report.buckets[0])).not.toContain('id');
+      expect(Object.keys(report.buckets[0])).not.toContain('welperId');
+    });
+
+    it('defaults to discoverable welpers', async () => {
+      const summaryQb = createQueryBuilderMock();
+      const bucketsQb = createQueryBuilderMock();
+      userRepository.createQueryBuilder
+        .mockReturnValueOnce(summaryQb as any)
+        .mockReturnValueOnce(bucketsQb as any);
+      summaryQb.getRawOne.mockResolvedValue({});
+      bucketsQb.getRawMany.mockResolvedValue([]);
+
+      const report = await service.getWelperDistributionReport();
+
+      expect(report.scope).toBe('discoverable');
+      expect(
+        summaryQb.andWhere.mock.calls.some(([sql]) =>
+          String(sql).includes('user.signup_completed = true'),
+        ),
+      ).toBe(true);
+      expect(
+        summaryQb.andWhere.mock.calls.some(([sql]) =>
+          String(sql).includes('welper_profile.profile_visibility = :publicVisibility'),
+        ),
+      ).toBe(true);
     });
   });
 });

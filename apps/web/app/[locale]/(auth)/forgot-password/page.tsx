@@ -4,7 +4,8 @@ import { AuthBackground, AccountRecoveryForm } from "@welpco/ui/platform/user-ma
 import { AuthSearchParamsFallback } from "@/components/layout/auth-search-params-fallback";
 import { TurnstileWidget } from "@/components/security/turnstile-widget";
 import { Suspense, useState } from "react";
-import { Flex } from "@welpco/ui/flex";
+import { Box } from "@welpco/ui/box";
+import { Text } from "@welpco/ui/text";
 import { useSearchParams } from "next/navigation";
 import { useAppRouter } from "@/lib/i18n/use-app-router";
 import { useLocale, useTranslations } from "next-intl";
@@ -30,12 +31,13 @@ function ForgotPasswordPageClient() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const turnstileEnabled = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
+  const needsTurnstile = turnstileEnabled && !turnstileToken;
 
   const handleSubmit = async (values: AccountRecoveryValues) => {
     setError(null);
     setSentEmail(null);
-    if (turnstileEnabled && !turnstileToken) {
-      setError("Complete the human verification challenge.");
+    if (needsTurnstile) {
+      setError(t("turnstileComplete"));
       return;
     }
 
@@ -53,6 +55,7 @@ function ForgotPasswordPageClient() {
       setSentEmail(values.email);
     } catch (err) {
       setTurnstileResetKey((key) => key + 1);
+      setTurnstileToken(null);
       setError(err instanceof Error ? err.message : t("errors.sendFailed"));
     } finally {
       setLoading(false);
@@ -65,26 +68,36 @@ function ForgotPasswordPageClient() {
 
   return (
     <AuthBackground>
-      <Flex direction="column" gap="3" align="center">
-        <AccountRecoveryForm
-          title={t("title")}
-          description={t("description")}
-          labels={formLabels}
-          hideRecoveryMethod
-          loading={loading}
-          error={error || undefined}
-          successMessage={
-            sentEmail ? t("successMessage", { email: sentEmail }) : undefined
-          }
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-        />
-        <TurnstileWidget
-          action="password_reset"
-          resetKey={turnstileResetKey}
-          onToken={setTurnstileToken}
-        />
-      </Flex>
+      <AccountRecoveryForm
+        title={t("title")}
+        description={t("description")}
+        labels={formLabels}
+        hideRecoveryMethod
+        loading={loading}
+        error={error || undefined}
+        successMessage={
+          sentEmail ? t("successMessage", { email: sentEmail }) : undefined
+        }
+        submitDisabled={needsTurnstile}
+        submitTitle={needsTurnstile ? t("turnstileRequiredHint") : undefined}
+        footer={
+          turnstileEnabled ? (
+            <Box style={{ width: "100%", minHeight: 65 }}>
+              <Text size="1" color="gray" as="p" mb="2">
+                {t("turnstileRequiredHint")}
+              </Text>
+              <TurnstileWidget
+                action="password_reset"
+                resetKey={turnstileResetKey}
+                onToken={setTurnstileToken}
+                loadErrorMessage={t("turnstileLoadFailed")}
+              />
+            </Box>
+          ) : undefined
+        }
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+      />
     </AuthBackground>
   );
 }

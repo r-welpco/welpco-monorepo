@@ -1166,7 +1166,10 @@
       },
       "errors": {
         "sendFailed": "We couldn't send the reset link. Check the email and try again."
-      }
+      },
+      "turnstileComplete": "Complete the human verification challenge.",
+      "turnstileRequiredHint": "Complete the check below, then tap Send reset link.",
+      "turnstileLoadFailed": "Human verification could not load. Check your connection and try again."
     },
     "resetPassword": {
       "title": "Reset password",

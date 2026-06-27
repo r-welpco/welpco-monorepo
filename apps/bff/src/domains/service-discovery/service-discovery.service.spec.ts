@@ -106,6 +106,7 @@ describe('ServiceDiscoveryService', () => {
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
+    addOrderBy: jest.fn().mockReturnThis(),
     skip: jest.fn().mockReturnThis(),
     take: jest.fn().mockReturnThis(),
     setParameter: jest.fn().mockReturnThis(),
@@ -323,6 +324,53 @@ describe('ServiceDiscoveryService', () => {
       expect(mockWelperProfileRepo.find).toHaveBeenCalled();
       expect(result).toMatchObject({ total: 1, page: 1, limit: 20, items: expect.any(Array) });
       expect(result.items).toHaveLength(1);
+    });
+
+    it('should apply offset pagination and preserve welper order on page 2', async () => {
+      mockQueryBuilder.getCount.mockResolvedValue(15);
+      mockQueryBuilder.getRawMany.mockResolvedValue([
+        { welper_id: 'w13' },
+        { welper_id: 'w14' },
+      ]);
+      mockWelperProfileRepo.find.mockResolvedValue([
+        {
+          welperId: 'w13',
+          firstName: 'Page',
+          lastName: 'Two',
+          bio: null,
+          profilePhotoUrl: null,
+          serviceArea: null,
+          countryCode: null,
+          provinceCode: null,
+          rating: null,
+          reviewCount: 0,
+        },
+        {
+          welperId: 'w14',
+          firstName: 'Also',
+          lastName: 'Two',
+          bio: null,
+          profilePhotoUrl: null,
+          serviceArea: null,
+          countryCode: null,
+          provinceCode: null,
+          rating: null,
+          reviewCount: 0,
+        },
+      ]);
+      mockCategoriesService.findAll.mockResolvedValue([{ id: 'cat1', name: 'Care' }]);
+      mockServiceOfferingRepo.find.mockResolvedValue([
+        { welperId: 'w13', hourlyRate: 20, serviceCategoryId: 'cat1' },
+        { welperId: 'w14', hourlyRate: 22, serviceCategoryId: 'cat1' },
+      ]);
+
+      const result = await service.searchServices({ page: 2, limit: 12 });
+
+      expect(mockQueryBuilder.skip).toHaveBeenCalledWith(12);
+      expect(mockQueryBuilder.take).toHaveBeenCalledWith(12);
+      expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith('p.welper_id', 'ASC');
+      expect(result).toMatchObject({ total: 15, page: 2, limit: 12 });
+      expect(result.items.map((item) => item.welperId)).toEqual(['w13', 'w14']);
     });
 
     it('should throw BadRequest when postalCode is provided but forward geocode fails', async () => {
@@ -584,6 +632,7 @@ describe('ServiceDiscoveryService', () => {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
         getCount: jest.fn().mockResolvedValue(1),
         select: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
@@ -629,6 +678,7 @@ describe('ServiceDiscoveryService', () => {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
         getCount: jest.fn().mockResolvedValue(2),
         select: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
@@ -689,6 +739,7 @@ describe('ServiceDiscoveryService', () => {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
         getCount: jest.fn().mockResolvedValue(1),
         select: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),

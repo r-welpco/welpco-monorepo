@@ -1165,7 +1165,10 @@
       },
       "errors": {
         "sendFailed": "Impossible d'envoyer le lien. Vérifiez le courriel et réessayez."
-      }
+      },
+      "turnstileComplete": "Complétez la vérification anti-robot.",
+      "turnstileRequiredHint": "Complétez la vérification ci-dessous, puis appuyez sur Envoyer le lien.",
+      "turnstileLoadFailed": "La vérification anti-robot n'a pas pu se charger. Vérifiez votre connexion et réessayez."
     },
     "resetPassword": {
       "title": "Réinitialiser le mot de passe",

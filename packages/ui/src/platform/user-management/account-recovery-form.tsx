@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { TextField } from "@welpco/ui/text-field";
@@ -38,6 +38,12 @@ export interface AccountRecoveryFormProps {
   hideRecoveryMethod?: boolean;
   /** Optional success state — replaces the form when truthy. */
   successMessage?: string;
+  /** Rendered inside the form above the submit row (e.g. Turnstile). */
+  footer?: ReactNode;
+  /** Extra disable condition for submit (e.g. pending human verification). */
+  submitDisabled?: boolean;
+  /** Optional native title on submit when disabled (accessibility hint). */
+  submitTitle?: string;
   labels?: AccountRecoveryFormLabels;
 }
 
@@ -61,6 +67,9 @@ export function AccountRecoveryForm({
   description,
   hideRecoveryMethod,
   successMessage,
+  footer,
+  submitDisabled,
+  submitTitle,
   labels: labelsProp,
 }: AccountRecoveryFormProps) {
   const labels = labelsProp ?? DEFAULT_ACCOUNT_RECOVERY_LABELS;
@@ -217,6 +226,8 @@ export function AccountRecoveryForm({
             </Box>
           )}
 
+          {footer ? <Box mb={FORM_SPACING.fieldGap}>{footer}</Box> : null}
+
           <Flex
             gap="3"
             align="center"
@@ -240,7 +251,8 @@ export function AccountRecoveryForm({
               type="submit"
               color={SEMANTIC_COLOR.primary}
               size="2"
-              disabled={loading || Boolean(successMessage)}
+              disabled={loading || Boolean(successMessage) || Boolean(submitDisabled)}
+              title={submitDisabled ? submitTitle : undefined}
               style={{ width: "100%", flex: 1, minWidth: 0 }}
             >
               {loading

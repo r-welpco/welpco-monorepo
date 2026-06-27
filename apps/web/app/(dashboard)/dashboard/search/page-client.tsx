@@ -551,7 +551,16 @@ export default function DashboardSearchPageClient() {
     !isError &&
     (isLoading || isPageTransition);
   const showResultsRegion =
-    searchAllowed && hasSearchCenter && !isError && (showResultCards || showResultLoading || total > 0);
+    searchAllowed &&
+    hasSearchCenter &&
+    !isError &&
+    !showEmpty &&
+    (showResultCards || showResultLoading || total > 0);
+
+  useEffect(() => {
+    if (!hasSearchCenter || !searchAllowed) return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page, hasSearchCenter, searchAllowed]);
   const showLocationPrompt = !hasSearchCenter;
 
   const hasActiveFilters =

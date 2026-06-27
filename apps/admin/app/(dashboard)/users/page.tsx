@@ -86,6 +86,8 @@ export default async function AdminUsersPage({
     signupCompleted?: string;
     discoverable?: string;
     backgroundCheckStatus?: string;
+    provinceCode?: string;
+    city?: string;
     search?: string;
     offset?: string;
     sortBy?: string;
@@ -124,6 +126,8 @@ export default async function AdminUsersPage({
     )
       ? sp.backgroundCheckStatus
       : undefined;
+  const provinceCode = sp.provinceCode?.trim().toUpperCase() || undefined;
+  const city = sp.city?.trim() || undefined;
 
   const sortBy =
     sp.sortBy && SORTABLE_COLUMNS.includes(sp.sortBy as (typeof SORTABLE_COLUMNS)[number])
@@ -144,6 +148,8 @@ export default async function AdminUsersPage({
       signupCompleted,
       discoverable,
       backgroundCheckStatus,
+      provinceCode,
+      city,
       search,
       sortBy,
       sortDir,
@@ -167,6 +173,8 @@ export default async function AdminUsersPage({
       signupCompleted: sp.signupCompleted,
       discoverable: sp.discoverable,
       backgroundCheckStatus,
+      provinceCode,
+      city,
       search,
       sortBy,
       sortDir,
@@ -184,6 +192,8 @@ export default async function AdminUsersPage({
       q.set("discoverable", merged.discoverable);
     }
     if (merged.backgroundCheckStatus) q.set("backgroundCheckStatus", merged.backgroundCheckStatus);
+    if (merged.provinceCode) q.set("provinceCode", merged.provinceCode);
+    if (merged.city) q.set("city", merged.city);
     if (merged.search) q.set("search", merged.search);
     if (merged.sortBy && merged.sortBy !== "createdAt") q.set("sortBy", merged.sortBy);
     if (merged.sortDir && merged.sortDir !== "desc") q.set("sortDir", merged.sortDir);
@@ -279,6 +289,23 @@ export default async function AdminUsersPage({
                   </option>
                 ))}
               </select>
+            </NativeFormField>
+            <NativeFormField label="Province">
+              <input
+                name="provinceCode"
+                defaultValue={provinceCode ?? ""}
+                placeholder="ON"
+                maxLength={8}
+                {...nativeInputProps()}
+              />
+            </NativeFormField>
+            <NativeFormField label="City">
+              <input
+                name="city"
+                defaultValue={city ?? ""}
+                placeholder="Toronto"
+                {...nativeInputProps()}
+              />
             </NativeFormField>
             <NativeFormField label="Search (email or user ID)">
               <input

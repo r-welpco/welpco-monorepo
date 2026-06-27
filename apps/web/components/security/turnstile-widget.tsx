@@ -55,6 +55,8 @@ export interface TurnstileWidgetProps {
   resetKey?: number;
   onToken: (token: string | null) => void;
   onError?: () => void;
+  /** Localized message when the Turnstile script fails to load. */
+  loadErrorMessage?: string;
 }
 
 export function TurnstileWidget({
@@ -62,6 +64,7 @@ export function TurnstileWidget({
   resetKey,
   onToken,
   onError,
+  loadErrorMessage,
 }: TurnstileWidgetProps) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -110,7 +113,8 @@ export function TurnstileWidget({
       <div ref={containerRef} />
       {loadError ? (
         <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--red-11, #b42318)" }}>
-          Human verification could not load. Check your connection and try again.
+          {loadErrorMessage ??
+            "Human verification could not load. Check your connection and try again."}
         </p>
       ) : null}
     </div>

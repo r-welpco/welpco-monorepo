@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Repository, SelectQueryBuilder } from 'typeorm';
 import { UserAccount, AccountType, AccountStatus } from '../entities/user-account.entity';
 import { VerificationStatus, BackgroundCheckStatus } from '../entities/verification-status.entity';
 import { CustomerProfile } from '../../profile-management/entities/customer-profile.entity';
@@ -69,6 +69,58 @@ export type AdminSignupStateReadout = {
       stripeOnboardingCompleted?: boolean;
     };
   };
+};
+
+export const ADMIN_WELPER_DISTRIBUTION_SCOPES = [
+  'discoverable',
+  'active',
+  'all',
+] as const;
+
+export type AdminWelperDistributionScope =
+  (typeof ADMIN_WELPER_DISTRIBUTION_SCOPES)[number];
+
+export type AdminWelperDistributionFilters = {
+  scope?: AdminWelperDistributionScope;
+  status?: AccountStatus;
+  signupCompleted?: boolean;
+  emailVerified?: boolean;
+  backgroundCheckStatus?: BackgroundCheckStatus;
+  serviceCategoryId?: string;
+  provinceCode?: string;
+  city?: string;
+};
+
+export type AdminWelperDistributionSummary = {
+  total: number;
+  active: number;
+  discoverable: number;
+  signupIncomplete: number;
+  pendingBackgroundCheck: number;
+  missingCoordinates: number;
+};
+
+export type AdminWelperDistributionBucket = {
+  city: string;
+  provinceCode: string;
+  countryCode: string;
+  welperCount: number;
+  activeCount: number;
+  discoverableCount: number;
+  signupIncompleteCount: number;
+  pendingBackgroundCheckCount: number;
+  missingCoordinateCount: number;
+  latitude: number | null;
+  longitude: number | null;
+  statusBreakdown: Record<AccountStatus, number>;
+};
+
+export type AdminWelperDistributionReport = {
+  scope: AdminWelperDistributionScope;
+  filters: AdminWelperDistributionFilters;
+  summary: AdminWelperDistributionSummary;
+  buckets: AdminWelperDistributionBucket[];
+  generatedAt: string;
 };
 
 @Injectable()
@@ -146,6 +198,276 @@ export class AdminService {
       user.status === AccountStatus.ACTIVE &&
       profileVisibility === ProfileVisibility.PUBLIC
     );
+  }
+
+  private get welperDiscoverableSql(): string {
+    return [
+      'user.signup_completed = true',
+      'user.email_verified = true',
+      'user.status = :activeStatus',
+      'welper_profile.profile_visibility = :publicVisibility',
+    ].join(' AND ');
+  }
+
+  private rawCount(value: unknown): number {
+    const count = Number(value ?? 0);
+    return Number.isFinite(count) ? count : 0;
+  }
+
+  private rawNullableNumber(value: unknown): number | null {
+    if (value === null || value === undefined) return null;
+    const numberValue = Number(value);
+    return Number.isFinite(numberValue) ? numberValue : null;
+  }
+
+  private isUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value,
+    );
+  }
+
+  private createWelperDistributionQuery(
+    filters: AdminWelperDistributionFilters,
+  ): SelectQueryBuilder<UserAccount> {
+    const scope = filters.scope ?? 'discoverable';
+    const qb = this.userRepository
+      .createQueryBuilder('user')
+      .innerJoin(WelperProfile, 'welper_profile', 'welper_profile.welper_id = user.id')
+      .leftJoin(
+        VerificationStatus,
+        'verification_status',
+        'verification_status.user_id = user.id',
+      )
+      .where('user.account_type = :welperAccountType', {
+        welperAccountType: AccountType.WELPER,
+      })
+      .setParameters({
+        activeStatus: AccountStatus.ACTIVE,
+        publicVisibility: ProfileVisibility.PUBLIC,
+        pendingBackgroundCheckStatuses: [
+          BackgroundCheckStatus.PENDING,
+          BackgroundCheckStatus.IN_PROGRESS,
+        ],
+      });
+
+    if (scope === 'discoverable') {
+      qb.andWhere(this.welperDiscoverableSql);
+    } else if (scope === 'active') {
+      qb.andWhere('user.status = :activeStatus');
+    }
+
+    if (filters.status) {
+      qb.andWhere('user.status = :status', { status: filters.status });
+    }
+    if (typeof filters.signupCompleted === 'boolean') {
+      qb.andWhere('user.signup_completed = :signupCompleted', {
+        signupCompleted: filters.signupCompleted,
+      });
+    }
+    if (typeof filters.emailVerified === 'boolean') {
+      qb.andWhere('user.email_verified = :emailVerified', {
+        emailVerified: filters.emailVerified,
+      });
+    }
+    if (filters.backgroundCheckStatus) {
+      qb.andWhere('verification_status.background_check_status = :backgroundCheckStatus', {
+        backgroundCheckStatus: filters.backgroundCheckStatus,
+      });
+    }
+    if (filters.provinceCode) {
+      qb.andWhere('UPPER(TRIM(welper_profile.province_code)) = :provinceCode', {
+        provinceCode: filters.provinceCode.trim().toUpperCase(),
+      });
+    }
+    if (filters.city) {
+      qb.andWhere('LOWER(TRIM(welper_profile.service_area_city)) = LOWER(:city)', {
+        city: filters.city.trim(),
+      });
+    }
+    if (filters.serviceCategoryId && this.isUuid(filters.serviceCategoryId)) {
+      qb.andWhere(
+        [
+          'EXISTS (',
+          'SELECT 1',
+          'FROM service_offerings service_offering',
+          'LEFT JOIN service_categories service_category',
+          'ON service_category.id = service_offering.service_category_id',
+          'WHERE service_offering.welper_id = user.id',
+          'AND service_offering.active = true',
+          'AND (',
+          'service_offering.service_category_id = CAST(:serviceCategoryId AS uuid)',
+          'OR EXISTS (',
+          'SELECT 1',
+          "FROM jsonb_array_elements_text(COALESCE(service_offering.subcategory_ids, '[]'::jsonb)) subcategory_id",
+          'WHERE subcategory_id = :serviceCategoryId',
+          ')',
+          'OR service_category.parent_id = CAST(:serviceCategoryId AS uuid)',
+          ')',
+          ')',
+        ].join(' '),
+        { serviceCategoryId: filters.serviceCategoryId },
+      );
+    }
+
+    return qb;
+  }
+
+  async getWelperDistributionReport(
+    filters: AdminWelperDistributionFilters = {},
+  ): Promise<AdminWelperDistributionReport> {
+    const scope = filters.scope ?? 'discoverable';
+    const discoverableSql = this.welperDiscoverableSql;
+    const pendingBackgroundSql =
+      'verification_status.background_check_status IN (:...pendingBackgroundCheckStatuses)';
+    const missingCoordinatesSql =
+      'welper_profile.latitude IS NULL OR welper_profile.longitude IS NULL';
+
+    const summaryRaw = await this.createWelperDistributionQuery({ ...filters, scope })
+      .select('COUNT(DISTINCT user.id)', 'total')
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN user.status = :activeStatus THEN user.id END)`,
+        'active',
+      )
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN ${discoverableSql} THEN user.id END)`,
+        'discoverable',
+      )
+      .addSelect(
+        'COUNT(DISTINCT CASE WHEN user.signup_completed = false THEN user.id END)',
+        'signupIncomplete',
+      )
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN ${pendingBackgroundSql} THEN user.id END)`,
+        'pendingBackgroundCheck',
+      )
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN ${missingCoordinatesSql} THEN user.id END)`,
+        'missingCoordinates',
+      )
+      .getRawOne<{
+        total: string;
+        active: string;
+        discoverable: string;
+        signupIncomplete: string;
+        pendingBackgroundCheck: string;
+        missingCoordinates: string;
+      }>();
+
+    const cityExpression =
+      "COALESCE(NULLIF(TRIM(welper_profile.service_area_city), ''), 'Unknown')";
+    const provinceExpression =
+      "COALESCE(NULLIF(UPPER(TRIM(welper_profile.province_code)), ''), 'Unknown')";
+    const countryExpression =
+      "COALESCE(NULLIF(UPPER(TRIM(welper_profile.country_code)), ''), 'CA')";
+
+    const bucketRows = await this.createWelperDistributionQuery({ ...filters, scope })
+      .select(cityExpression, 'city')
+      .addSelect(provinceExpression, 'provinceCode')
+      .addSelect(countryExpression, 'countryCode')
+      .addSelect('COUNT(DISTINCT user.id)', 'welperCount')
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN user.status = :activeStatus THEN user.id END)`,
+        'activeCount',
+      )
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN ${discoverableSql} THEN user.id END)`,
+        'discoverableCount',
+      )
+      .addSelect(
+        'COUNT(DISTINCT CASE WHEN user.signup_completed = false THEN user.id END)',
+        'signupIncompleteCount',
+      )
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN ${pendingBackgroundSql} THEN user.id END)`,
+        'pendingBackgroundCheckCount',
+      )
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN ${missingCoordinatesSql} THEN user.id END)`,
+        'missingCoordinateCount',
+      )
+      .addSelect(
+        `ROUND(AVG(CASE WHEN NOT (${missingCoordinatesSql}) THEN welper_profile.latitude::numeric END), 2)`,
+        'latitude',
+      )
+      .addSelect(
+        `ROUND(AVG(CASE WHEN NOT (${missingCoordinatesSql}) THEN welper_profile.longitude::numeric END), 2)`,
+        'longitude',
+      )
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN user.status = '${AccountStatus.PENDING}' THEN user.id END)`,
+        'pendingStatusCount',
+      )
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN user.status = '${AccountStatus.ACTIVE}' THEN user.id END)`,
+        'activeStatusCount',
+      )
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN user.status = '${AccountStatus.SUSPENDED}' THEN user.id END)`,
+        'suspendedStatusCount',
+      )
+      .addSelect(
+        `COUNT(DISTINCT CASE WHEN user.status = '${AccountStatus.DEACTIVATED}' THEN user.id END)`,
+        'deactivatedStatusCount',
+      )
+      .groupBy(cityExpression)
+      .addGroupBy(provinceExpression)
+      .addGroupBy(countryExpression)
+      .orderBy('"welperCount"', 'DESC')
+      .getRawMany<{
+        city: string;
+        provinceCode: string;
+        countryCode: string;
+        welperCount: string;
+        activeCount: string;
+        discoverableCount: string;
+        signupIncompleteCount: string;
+        pendingBackgroundCheckCount: string;
+        missingCoordinateCount: string;
+        latitude: string | null;
+        longitude: string | null;
+        pendingStatusCount: string;
+        activeStatusCount: string;
+        suspendedStatusCount: string;
+        deactivatedStatusCount: string;
+      }>();
+
+    return {
+      scope,
+      filters: {
+        ...filters,
+        scope,
+        provinceCode: filters.provinceCode?.trim().toUpperCase(),
+        city: filters.city?.trim(),
+      },
+      summary: {
+        total: this.rawCount(summaryRaw?.total),
+        active: this.rawCount(summaryRaw?.active),
+        discoverable: this.rawCount(summaryRaw?.discoverable),
+        signupIncomplete: this.rawCount(summaryRaw?.signupIncomplete),
+        pendingBackgroundCheck: this.rawCount(summaryRaw?.pendingBackgroundCheck),
+        missingCoordinates: this.rawCount(summaryRaw?.missingCoordinates),
+      },
+      buckets: bucketRows.map((row) => ({
+        city: row.city,
+        provinceCode: row.provinceCode,
+        countryCode: row.countryCode,
+        welperCount: this.rawCount(row.welperCount),
+        activeCount: this.rawCount(row.activeCount),
+        discoverableCount: this.rawCount(row.discoverableCount),
+        signupIncompleteCount: this.rawCount(row.signupIncompleteCount),
+        pendingBackgroundCheckCount: this.rawCount(row.pendingBackgroundCheckCount),
+        missingCoordinateCount: this.rawCount(row.missingCoordinateCount),
+        latitude: this.rawNullableNumber(row.latitude),
+        longitude: this.rawNullableNumber(row.longitude),
+        statusBreakdown: {
+          [AccountStatus.PENDING]: this.rawCount(row.pendingStatusCount),
+          [AccountStatus.ACTIVE]: this.rawCount(row.activeStatusCount),
+          [AccountStatus.SUSPENDED]: this.rawCount(row.suspendedStatusCount),
+          [AccountStatus.DEACTIVATED]: this.rawCount(row.deactivatedStatusCount),
+        },
+      })),
+      generatedAt: new Date().toISOString(),
+    };
   }
 
   private async loadWelperProfileVisibilityByUserIds(
@@ -256,6 +578,8 @@ export class AdminService {
     signupCompleted?: boolean;
     discoverable?: boolean;
     backgroundCheckStatus?: BackgroundCheckStatus;
+    provinceCode?: string;
+    city?: string;
     search?: string;
     limit?: number;
     offset?: number;
@@ -264,7 +588,17 @@ export class AdminService {
   }): Promise<{ users: AdminUserListRow[]; total: number }> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.verificationStatus', 'verificationStatus');
+      .leftJoinAndSelect('user.verificationStatus', 'verification_status');
+    let joinedWelperProfile = false;
+    const joinWelperProfile = () => {
+      if (joinedWelperProfile) return;
+      queryBuilder.leftJoin(
+        WelperProfile,
+        'welper_profile',
+        'welper_profile.welper_id = user.id',
+      );
+      joinedWelperProfile = true;
+    };
 
     const rawSearch = filters?.search?.trim();
     if (rawSearch) {
@@ -310,11 +644,7 @@ export class AdminService {
       queryBuilder.andWhere('user.accountType = :welperType', {
         welperType: AccountType.WELPER,
       });
-      queryBuilder.leftJoin(
-        WelperProfile,
-        'welperProfile',
-        'welperProfile.welper_id = user.id',
-      );
+      joinWelperProfile();
       if (filters.discoverable) {
         queryBuilder
           .andWhere('user.signupCompleted = true')
@@ -322,12 +652,12 @@ export class AdminService {
           .andWhere('user.status = :discoverableActive', {
             discoverableActive: AccountStatus.ACTIVE,
           })
-          .andWhere('welperProfile.profileVisibility = :discoverablePublic', {
+          .andWhere('welper_profile.profile_visibility = :discoverablePublic', {
             discoverablePublic: ProfileVisibility.PUBLIC,
           });
       } else {
         queryBuilder.andWhere(
-          `(user.signupCompleted = false OR user.emailVerified = false OR user.status != :discoverableActive OR welperProfile.profileVisibility IS NULL OR welperProfile.profileVisibility != :discoverablePublic)`,
+          `(user.signupCompleted = false OR user.emailVerified = false OR user.status != :discoverableActive OR welper_profile.profile_visibility IS NULL OR welper_profile.profile_visibility != :discoverablePublic)`,
           {
             discoverableActive: AccountStatus.ACTIVE,
             discoverablePublic: ProfileVisibility.PUBLIC,
@@ -338,9 +668,29 @@ export class AdminService {
 
     if (filters?.backgroundCheckStatus) {
       queryBuilder.andWhere(
-        'verificationStatus.background_check_status = :backgroundCheckStatus',
+        'verification_status.background_check_status = :backgroundCheckStatus',
         { backgroundCheckStatus: filters.backgroundCheckStatus },
       );
+    }
+
+    if (filters?.provinceCode) {
+      queryBuilder.andWhere('user.accountType = :areaWelperType', {
+        areaWelperType: AccountType.WELPER,
+      });
+      joinWelperProfile();
+      queryBuilder.andWhere('UPPER(TRIM(welper_profile.province_code)) = :provinceCode', {
+        provinceCode: filters.provinceCode.trim().toUpperCase(),
+      });
+    }
+
+    if (filters?.city) {
+      queryBuilder.andWhere('user.accountType = :areaCityWelperType', {
+        areaCityWelperType: AccountType.WELPER,
+      });
+      joinWelperProfile();
+      queryBuilder.andWhere('LOWER(TRIM(welper_profile.service_area_city)) = LOWER(:city)', {
+        city: filters.city.trim(),
+      });
     }
 
     const total = await queryBuilder.getCount();

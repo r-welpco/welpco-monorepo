@@ -17,7 +17,11 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
-import { AdminService } from './admin.service';
+import {
+  AdminService,
+  ADMIN_WELPER_DISTRIBUTION_SCOPES,
+  type AdminWelperDistributionScope,
+} from './admin.service';
 import { AdminDashboardService } from './admin-dashboard.service';
 import { UpdateBackgroundCheckDto, UpdateUserAccountStatusDto } from './dto';
 import { JwtAuthGuard, RolesGuard, Roles } from '../../../common/auth';
@@ -41,6 +45,12 @@ function sanitizeAdminUser(user: UserAccount): Omit<UserAccount, 'passwordHash'>
   return safe;
 }
 
+function parseOptionalBoolean(value?: string): boolean | undefined {
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  return undefined;
+}
+
 @ApiTags('Admin')
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -59,6 +69,64 @@ export class AdminController {
     private readonly payoutBatchService: PayoutBatchService,
     private readonly stripeOperationsService: StripeOperationsService,
   ) {}
+
+  @Get('reports/welper-distribution')
+  @ApiOperation({ summary: 'Aggregate welper distribution by service area' })
+  @ApiQuery({
+    name: 'scope',
+    required: false,
+    enum: ADMIN_WELPER_DISTRIBUTION_SCOPES,
+  })
+  @ApiQuery({ name: 'status', enum: AccountStatus, required: false })
+  @ApiQuery({ name: 'signupCompleted', type: Boolean, required: false })
+  @ApiQuery({ name: 'emailVerified', type: Boolean, required: false })
+  @ApiQuery({
+    name: 'backgroundCheckStatus',
+    enum: BackgroundCheckStatus,
+    required: false,
+  })
+  @ApiQuery({ name: 'serviceCategoryId', required: false })
+  @ApiQuery({ name: 'provinceCode', required: false })
+  @ApiQuery({ name: 'city', required: false })
+  @ApiResponse({
+    status: 200,
+    description: 'Welper distribution summary and aggregate area buckets',
+  })
+  async getWelperDistributionReport(
+    @Query('scope') scope?: string,
+    @Query('status') status?: AccountStatus,
+    @Query('signupCompleted') signupCompleted?: string,
+    @Query('emailVerified') emailVerified?: string,
+    @Query('backgroundCheckStatus')
+    backgroundCheckStatus?: BackgroundCheckStatus,
+    @Query('serviceCategoryId') serviceCategoryId?: string,
+    @Query('provinceCode') provinceCode?: string,
+    @Query('city') city?: string,
+  ) {
+    const resolvedScope = ADMIN_WELPER_DISTRIBUTION_SCOPES.includes(
+      scope as AdminWelperDistributionScope,
+    )
+      ? (scope as AdminWelperDistributionScope)
+      : undefined;
+    const resolvedStatus =
+      status && Object.values(AccountStatus).includes(status) ? status : undefined;
+    const resolvedBackgroundCheckStatus =
+      backgroundCheckStatus &&
+      Object.values(BackgroundCheckStatus).includes(backgroundCheckStatus)
+        ? backgroundCheckStatus
+        : undefined;
+
+    return this.adminService.getWelperDistributionReport({
+      scope: resolvedScope,
+      status: resolvedStatus,
+      signupCompleted: parseOptionalBoolean(signupCompleted),
+      emailVerified: parseOptionalBoolean(emailVerified),
+      backgroundCheckStatus: resolvedBackgroundCheckStatus,
+      serviceCategoryId: serviceCategoryId?.trim() || undefined,
+      provinceCode: provinceCode?.trim() || undefined,
+      city: city?.trim() || undefined,
+    });
+  }
 
   @Get('users')
   @ApiOperation({ summary: 'List all users with filters' })
@@ -86,6 +154,16 @@ export class AdminController {
     description: 'Filter by user id (UUID) or partial email (case-insensitive)',
   })
   @ApiQuery({
+    name: 'provinceCode',
+    required: false,
+    description: 'Welper only: filter by service area province code',
+  })
+  @ApiQuery({
+    name: 'city',
+    required: false,
+    description: 'Welper only: filter by service area city',
+  })
+  @ApiQuery({
     name: 'sortBy',
     required: false,
     enum: ['createdAt', 'email', 'status', 'lastLoginAt', 'signupSteps'],
@@ -104,6 +182,8 @@ export class AdminController {
     @Query('backgroundCheckStatus')
     backgroundCheckStatus?: BackgroundCheckStatus,
     @Query('search') search?: string,
+    @Query('provinceCode') provinceCode?: string,
+    @Query('city') city?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
     @Query('sortBy') sortBy?: string,
@@ -129,6 +209,8 @@ export class AdminController {
         discoverable === 'true' ? true : discoverable === 'false' ? false : undefined,
       backgroundCheckStatus: bgStatus,
       search: search?.trim() || undefined,
+      provinceCode: provinceCode?.trim() || undefined,
+      city: city?.trim() || undefined,
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
       sortBy: resolvedSortBy,
