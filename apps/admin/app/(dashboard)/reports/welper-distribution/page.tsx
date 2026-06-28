@@ -27,7 +27,9 @@ import {
   type WelperDistributionScope,
 } from "@/lib/services/admin-reports-service";
 import { BACKGROUND_CHECK_STATUSES } from "@/lib/services/admin-users-service";
+import { ServiceCategoryFilter } from "./service-category-filter";
 import { WelperDistributionMap } from "./welper-distribution-map";
+import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -54,25 +56,36 @@ function parseBoolean(value?: string): boolean | undefined {
   return undefined;
 }
 
-function flattenCategories(
-  categories: AdminCategory[],
-  depth = 0,
-  seen = new Set<string>(),
-): Array<AdminCategory & { depth: number }> {
-  return categories.flatMap((category) => {
-    if (seen.has(category.id)) {
-      return flattenCategories(category.children ?? [], depth + 1, seen);
-    }
-    seen.add(category.id);
-    return [
-      { ...category, depth },
-      ...flattenCategories(category.children ?? [], depth + 1, seen),
-    ];
-  });
-}
-
 function formatNumber(value: number): string {
   return new Intl.NumberFormat("en-CA").format(value);
+}
+
+function compactSelectProps(): React.SelectHTMLAttributes<HTMLSelectElement> {
+  const props = nativeSelectProps();
+  return {
+    ...props,
+    style: {
+      ...props.style,
+      fontSize: "0.875rem",
+      height: 36,
+      minWidth: 0,
+      width: "100%",
+    },
+  };
+}
+
+function compactInputProps(): React.InputHTMLAttributes<HTMLInputElement> {
+  const props = nativeInputProps();
+  return {
+    ...props,
+    style: {
+      ...props.style,
+      fontSize: "0.875rem",
+      height: 36,
+      minWidth: 0,
+      width: "100%",
+    },
+  };
 }
 
 function summaryCard(label: string, value: number, hint: string) {
@@ -136,6 +149,9 @@ function buildHiddenInputs(
   if (query.serviceCategoryId) {
     entries.push(["serviceCategoryId", query.serviceCategoryId]);
   }
+  if (query.serviceSubcategoryId) {
+    entries.push(["serviceSubcategoryId", query.serviceSubcategoryId]);
+  }
   if (query.provinceCode) entries.push(["provinceCode", query.provinceCode]);
   if (query.city) entries.push(["city", query.city]);
   return entries;
@@ -151,6 +167,7 @@ export default async function WelperDistributionReportPage({
     emailVerified?: string;
     backgroundCheckStatus?: string;
     serviceCategoryId?: string;
+    serviceSubcategoryId?: string;
     provinceCode?: string;
     city?: string;
     mapStyle?: string;
@@ -186,6 +203,7 @@ export default async function WelperDistributionReportPage({
     emailVerified: parseBoolean(sp.emailVerified),
     backgroundCheckStatus,
     serviceCategoryId: sp.serviceCategoryId?.trim() || undefined,
+    serviceSubcategoryId: sp.serviceSubcategoryId?.trim() || undefined,
     provinceCode: sp.provinceCode?.trim() || undefined,
     city: sp.city?.trim() || undefined,
   };
@@ -202,7 +220,6 @@ export default async function WelperDistributionReportPage({
     err = e instanceof Error ? e.message : "Failed to load welper distribution";
   }
 
-  const categoryOptions = flattenCategories(categories);
   const mappableCount = report.buckets.filter(
     (bucket) => bucket.latitude != null && bucket.longitude != null,
   ).length;
@@ -220,211 +237,221 @@ export default async function WelperDistributionReportPage({
         }
       />
 
-      <Card size="2">
-        <form method="get">
-          <input type="hidden" name="mapStyle" value={mapStyle} />
-          <Flex gap="4" wrap="wrap" align="end">
-            <NativeFormField label="Scope">
-              <select name="scope" defaultValue={scope} {...nativeSelectProps()}>
-                <option value="discoverable">Discoverable / ready</option>
-                <option value="active">Active accounts</option>
-                <option value="all">All welpers</option>
-              </select>
-            </NativeFormField>
-            <NativeFormField label="Account status">
-              <select name="status" defaultValue={status ?? ""} {...nativeSelectProps()}>
-                <option value="">All</option>
-                {STATUSES.filter(Boolean).map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </NativeFormField>
-            <NativeFormField label="Signup complete">
-              <select name="signupCompleted" defaultValue={sp.signupCompleted ?? ""} {...nativeSelectProps()}>
-                <option value="">All</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </NativeFormField>
-            <NativeFormField label="Email verified">
-              <select name="emailVerified" defaultValue={sp.emailVerified ?? ""} {...nativeSelectProps()}>
-                <option value="">All</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </NativeFormField>
-            <NativeFormField label="Background check">
-              <select
-                name="backgroundCheckStatus"
-                defaultValue={backgroundCheckStatus ?? ""}
-                {...nativeSelectProps()}
-              >
-                <option value="">All</option>
-                {BACKGROUND_CHECK_STATUSES.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </NativeFormField>
-            <NativeFormField label="Service category">
-              <select
-                name="serviceCategoryId"
-                defaultValue={query.serviceCategoryId ?? ""}
-                {...nativeSelectProps()}
-              >
-                <option value="">All categories</option>
-                {categoryOptions.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {"\u00a0".repeat(category.depth * 2)}
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </NativeFormField>
-            <NativeFormField label="Province">
-              <input
-                name="provinceCode"
-                defaultValue={query.provinceCode ?? ""}
-                placeholder="ON"
-                maxLength={8}
-                {...nativeInputProps()}
-              />
-            </NativeFormField>
-            <NativeFormField label="City">
-              <input
-                name="city"
-                defaultValue={query.city ?? ""}
-                placeholder="Toronto"
-                {...nativeInputProps()}
-              />
-            </NativeFormField>
-            <Button type="submit" variant="soft">
-              Apply filters
-            </Button>
-            <Button asChild type="button" variant="ghost">
-              <Link href="/reports/welper-distribution">Clear</Link>
-            </Button>
-          </Flex>
-        </form>
-      </Card>
-
-      {err ? <AdminErrorCallout message={err} /> : null}
-
-      <Flex gap="3" wrap="wrap">
-        {summaryCard("Total in scope", report.summary.total, "Welpers matching filters")}
-        {summaryCard("Discoverable", report.summary.discoverable, "Ready for public supply")}
-        {summaryCard("Active", report.summary.active, "Active account status")}
-        {summaryCard("Signup incomplete", report.summary.signupIncomplete, "Need onboarding follow-up")}
-        {summaryCard(
-          "Pending BG",
-          report.summary.pendingBackgroundCheck,
-          "Pending or in progress",
-        )}
-        {summaryCard(
-          "Missing coordinates",
-          report.summary.missingCoordinates,
-          "Counted, not mapped",
-        )}
-      </Flex>
-
-      <Card size="2">
-        <Flex direction="column" gap="3">
-          <Flex justify="between" gap="3" wrap="wrap">
-            <Text weight="bold">Map</Text>
-            <Text size="2" color="gray">
-              {mappableCount} mapped area buckets · generated{" "}
-              {report.generatedAt === EMPTY_REPORT.generatedAt
-                ? "after load failure"
-                : new Date(report.generatedAt).toLocaleString()}
-            </Text>
-          </Flex>
-          <form method="get">
-            {hiddenInputs.map(([name, value]) => (
-              <input key={name} type="hidden" name={name} value={value} />
-            ))}
-            <Flex gap="3" wrap="wrap" align="end">
-              <NativeFormField label="Map style">
-                <select name="mapStyle" defaultValue={mapStyle} {...nativeSelectProps()}>
-                  <option value="light">Light muted (recommended)</option>
-                  <option value="standard">Standard</option>
-                  <option value="grayscale">Grayscale</option>
-                  <option value="minimal">Minimal</option>
-                </select>
-              </NativeFormField>
-              <Button type="submit" variant="soft">
-                Apply map style
-              </Button>
+      <div className={styles.reportShell}>
+        <aside className={styles.filterSidebar}>
+          <Card size="2">
+            <Flex direction="column" gap="3">
+              <Flex direction="column" gap="1">
+                <Text weight="bold">Filters</Text>
+                <Text size="1" color="gray">
+                  Narrow the operational supply view.
+                </Text>
+              </Flex>
+              <form method="get" className={styles.filterForm}>
+                <input type="hidden" name="mapStyle" value={mapStyle} />
+                <NativeFormField label="Scope">
+                  <select name="scope" defaultValue={scope} {...compactSelectProps()}>
+                    <option value="discoverable">Discoverable / ready</option>
+                    <option value="active">Active accounts</option>
+                    <option value="all">All welpers</option>
+                  </select>
+                </NativeFormField>
+                <ServiceCategoryFilter
+                  categories={categories}
+                  selectedCategoryId={query.serviceCategoryId}
+                  selectedSubcategoryId={query.serviceSubcategoryId}
+                />
+                <NativeFormField label="Province">
+                  <input
+                    name="provinceCode"
+                    defaultValue={query.provinceCode ?? ""}
+                    placeholder="ON"
+                    maxLength={8}
+                    {...compactInputProps()}
+                  />
+                </NativeFormField>
+                <NativeFormField label="City">
+                  <input
+                    name="city"
+                    defaultValue={query.city ?? ""}
+                    placeholder="Toronto"
+                    {...compactInputProps()}
+                  />
+                </NativeFormField>
+                <NativeFormField label="Account status">
+                  <select name="status" defaultValue={status ?? ""} {...compactSelectProps()}>
+                    <option value="">All</option>
+                    {STATUSES.filter(Boolean).map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </NativeFormField>
+                <NativeFormField label="Signup complete">
+                  <select name="signupCompleted" defaultValue={sp.signupCompleted ?? ""} {...compactSelectProps()}>
+                    <option value="">All</option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                </NativeFormField>
+                <NativeFormField label="Email verified">
+                  <select name="emailVerified" defaultValue={sp.emailVerified ?? ""} {...compactSelectProps()}>
+                    <option value="">All</option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                </NativeFormField>
+                <NativeFormField label="Background check">
+                  <select
+                    name="backgroundCheckStatus"
+                    defaultValue={backgroundCheckStatus ?? ""}
+                    {...compactSelectProps()}
+                  >
+                    <option value="">All</option>
+                    {BACKGROUND_CHECK_STATUSES.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </NativeFormField>
+                <div className={styles.filterActions}>
+                  <Button type="submit" variant="soft">
+                    Apply
+                  </Button>
+                  <Button asChild type="button" variant="ghost">
+                    <Link href="/reports/welper-distribution">Clear</Link>
+                  </Button>
+                </div>
+              </form>
             </Flex>
-          </form>
-          <WelperDistributionMap buckets={report.buckets} mapStyle={mapStyle} />
-          <Text size="1" color="gray">
-            Coordinates are area centroids averaged from stored welper profile
-            coordinates. The API does not return welper IDs or individual
-            coordinates for this report.
-          </Text>
-        </Flex>
-      </Card>
+          </Card>
+        </aside>
 
-      <Card size="2" style={{ overflow: "auto" }}>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableColumnHeaderCell>Area</TableColumnHeaderCell>
-              <TableColumnHeaderCell>Welpers</TableColumnHeaderCell>
-              <TableColumnHeaderCell>Discoverable</TableColumnHeaderCell>
-              <TableColumnHeaderCell>Active</TableColumnHeaderCell>
-              <TableColumnHeaderCell>Signup incomplete</TableColumnHeaderCell>
-              <TableColumnHeaderCell>BG pending</TableColumnHeaderCell>
-              <TableColumnHeaderCell>Missing coords</TableColumnHeaderCell>
-              <TableColumnHeaderCell>Status mix</TableColumnHeaderCell>
-              <TableColumnHeaderCell />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {report.buckets.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9}>
-                  <Text color="gray">No welper area buckets match these filters.</Text>
-                </TableCell>
-              </TableRow>
-            ) : (
-              report.buckets.map((bucket) => (
-                <TableRow key={`${bucket.countryCode}:${bucket.provinceCode}:${bucket.city}`}>
-                  <TableCell>
-                    <Text weight="medium">{bucket.city}</Text>
-                    <Text size="1" color="gray" as="div">
-                      {bucket.provinceCode}, {bucket.countryCode}
-                    </Text>
-                  </TableCell>
-                  <TableCell>{formatNumber(bucket.welperCount)}</TableCell>
-                  <TableCell>{formatNumber(bucket.discoverableCount)}</TableCell>
-                  <TableCell>{formatNumber(bucket.activeCount)}</TableCell>
-                  <TableCell>{formatNumber(bucket.signupIncompleteCount)}</TableCell>
-                  <TableCell>{formatNumber(bucket.pendingBackgroundCheckCount)}</TableCell>
-                  <TableCell>{formatNumber(bucket.missingCoordinateCount)}</TableCell>
-                  <TableCell>
-                    <Flex gap="1" wrap="wrap">
-                      {Object.entries(bucket.statusBreakdown)
-                        .filter(([, count]) => count > 0)
-                        .map(([statusName, count]) => (
-                          <Badge key={statusName} variant="soft" color="gray">
-                            {statusName}: {formatNumber(count)}
-                          </Badge>
-                        ))}
-                    </Flex>
-                  </TableCell>
-                  <TableCell>
-                    <Link href={buildUsersHref(bucket, query)}>View users</Link>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+        <div className={styles.reportContent}>
+          <Flex direction="column" gap="4">
+            {err ? <AdminErrorCallout message={err} /> : null}
+
+            <div className={styles.summaryGrid}>
+              {summaryCard("Total in scope", report.summary.total, "Welpers matching filters")}
+              {summaryCard("Discoverable", report.summary.discoverable, "Ready for public supply")}
+              {summaryCard("Active", report.summary.active, "Active account status")}
+              {summaryCard(
+                "Signup incomplete",
+                report.summary.signupIncomplete,
+                "Need onboarding follow-up",
+              )}
+              {summaryCard(
+                "Pending BG",
+                report.summary.pendingBackgroundCheck,
+                "Pending or in progress",
+              )}
+              {summaryCard(
+                "Missing coordinates",
+                report.summary.missingCoordinates,
+                "Counted, not mapped",
+              )}
+            </div>
+
+            <Card size="2">
+              <Flex direction="column" gap="3">
+                <Flex justify="between" gap="3" wrap="wrap">
+                  <Text weight="bold">Map</Text>
+                  <Text size="2" color="gray">
+                    {mappableCount} mapped area buckets · generated{" "}
+                    {report.generatedAt === EMPTY_REPORT.generatedAt
+                      ? "after load failure"
+                      : new Date(report.generatedAt).toLocaleString()}
+                  </Text>
+                </Flex>
+                <form method="get">
+                  {hiddenInputs.map(([name, value]) => (
+                    <input key={name} type="hidden" name={name} value={value} />
+                  ))}
+                  <Flex gap="3" wrap="wrap" align="end">
+                    <NativeFormField label="Map style">
+                      <select name="mapStyle" defaultValue={mapStyle} {...nativeSelectProps()}>
+                        <option value="light">Light muted (recommended)</option>
+                        <option value="standard">Standard</option>
+                        <option value="grayscale">Grayscale</option>
+                        <option value="minimal">Minimal</option>
+                      </select>
+                    </NativeFormField>
+                    <Button type="submit" variant="soft">
+                      Apply map style
+                    </Button>
+                  </Flex>
+                </form>
+                <WelperDistributionMap buckets={report.buckets} mapStyle={mapStyle} />
+                <Text size="1" color="gray">
+                  Coordinates are area centroids averaged from stored welper profile
+                  coordinates. The API does not return welper IDs or individual
+                  coordinates for this report.
+                </Text>
+              </Flex>
+            </Card>
+
+            <Card size="2" style={{ overflow: "auto" }}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableColumnHeaderCell>Area</TableColumnHeaderCell>
+                    <TableColumnHeaderCell>Welpers</TableColumnHeaderCell>
+                    <TableColumnHeaderCell>Discoverable</TableColumnHeaderCell>
+                    <TableColumnHeaderCell>Active</TableColumnHeaderCell>
+                    <TableColumnHeaderCell>Signup incomplete</TableColumnHeaderCell>
+                    <TableColumnHeaderCell>BG pending</TableColumnHeaderCell>
+                    <TableColumnHeaderCell>Missing coords</TableColumnHeaderCell>
+                    <TableColumnHeaderCell>Status mix</TableColumnHeaderCell>
+                    <TableColumnHeaderCell />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {report.buckets.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9}>
+                        <Text color="gray">No welper area buckets match these filters.</Text>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    report.buckets.map((bucket) => (
+                      <TableRow key={`${bucket.countryCode}:${bucket.provinceCode}:${bucket.city}`}>
+                        <TableCell>
+                          <Text weight="medium">{bucket.city}</Text>
+                          <Text size="1" color="gray" as="div">
+                            {bucket.provinceCode}, {bucket.countryCode}
+                          </Text>
+                        </TableCell>
+                        <TableCell>{formatNumber(bucket.welperCount)}</TableCell>
+                        <TableCell>{formatNumber(bucket.discoverableCount)}</TableCell>
+                        <TableCell>{formatNumber(bucket.activeCount)}</TableCell>
+                        <TableCell>{formatNumber(bucket.signupIncompleteCount)}</TableCell>
+                        <TableCell>{formatNumber(bucket.pendingBackgroundCheckCount)}</TableCell>
+                        <TableCell>{formatNumber(bucket.missingCoordinateCount)}</TableCell>
+                        <TableCell>
+                          <Flex gap="1" wrap="wrap">
+                            {Object.entries(bucket.statusBreakdown)
+                              .filter(([, count]) => count > 0)
+                              .map(([statusName, count]) => (
+                                <Badge key={statusName} variant="soft" color="gray">
+                                  {statusName}: {formatNumber(count)}
+                                </Badge>
+                              ))}
+                          </Flex>
+                        </TableCell>
+                        <TableCell>
+                          <Link href={buildUsersHref(bucket, query)}>View users</Link>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </Flex>
+        </div>
+      </div>
     </Flex>
   );
 }

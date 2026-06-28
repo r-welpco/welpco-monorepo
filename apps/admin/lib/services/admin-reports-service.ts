@@ -25,6 +25,7 @@ export interface WelperDistributionQuery {
   emailVerified?: boolean;
   backgroundCheckStatus?: string;
   serviceCategoryId?: string;
+  serviceSubcategoryId?: string;
   provinceCode?: string;
   city?: string;
 }
@@ -74,6 +75,7 @@ export async function getWelperDistributionReport(
         emailVerified: params?.emailVerified,
         backgroundCheckStatus: params?.backgroundCheckStatus,
         serviceCategoryId: params?.serviceCategoryId,
+        serviceSubcategoryId: params?.serviceSubcategoryId,
         provinceCode: params?.provinceCode?.trim() || undefined,
         city: params?.city?.trim() || undefined,
       },

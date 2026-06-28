@@ -87,6 +87,7 @@ export type AdminWelperDistributionFilters = {
   emailVerified?: boolean;
   backgroundCheckStatus?: BackgroundCheckStatus;
   serviceCategoryId?: string;
+  serviceSubcategoryId?: string;
   provinceCode?: string;
   city?: string;
 };
@@ -284,7 +285,32 @@ export class AdminService {
         city: filters.city.trim(),
       });
     }
-    if (filters.serviceCategoryId && this.isUuid(filters.serviceCategoryId)) {
+    const serviceCategoryId =
+      filters.serviceCategoryId && this.isUuid(filters.serviceCategoryId)
+        ? filters.serviceCategoryId
+        : undefined;
+    const serviceSubcategoryId =
+      filters.serviceSubcategoryId && this.isUuid(filters.serviceSubcategoryId)
+        ? filters.serviceSubcategoryId
+        : undefined;
+    if (serviceCategoryId || serviceSubcategoryId) {
+      const serviceFilterSql: string[] = [];
+      if (serviceCategoryId) {
+        serviceFilterSql.push(
+          'service_offering.service_category_id = CAST(:serviceCategoryId AS uuid)',
+        );
+      }
+      if (serviceSubcategoryId) {
+        serviceFilterSql.push(
+          [
+            'EXISTS (',
+            'SELECT 1',
+            "FROM jsonb_array_elements_text(COALESCE(service_offering.subcategory_ids, '[]'::jsonb)) subcategory_id",
+            'WHERE subcategory_id = :serviceSubcategoryId',
+            ')',
+          ].join(' '),
+        );
+      }
       qb.andWhere(
         [
           'EXISTS (',
@@ -294,18 +320,10 @@ export class AdminService {
           'ON service_category.id = service_offering.service_category_id',
           'WHERE service_offering.welper_id = user.id',
           'AND service_offering.active = true',
-          'AND (',
-          'service_offering.service_category_id = CAST(:serviceCategoryId AS uuid)',
-          'OR EXISTS (',
-          'SELECT 1',
-          "FROM jsonb_array_elements_text(COALESCE(service_offering.subcategory_ids, '[]'::jsonb)) subcategory_id",
-          'WHERE subcategory_id = :serviceCategoryId',
-          ')',
-          'OR service_category.parent_id = CAST(:serviceCategoryId AS uuid)',
-          ')',
+          `AND ${serviceFilterSql.join(' AND ')}`,
           ')',
         ].join(' '),
-        { serviceCategoryId: filters.serviceCategoryId },
+        { serviceCategoryId, serviceSubcategoryId },
       );
     }
 

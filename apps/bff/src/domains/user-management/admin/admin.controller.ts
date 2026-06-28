@@ -86,6 +86,7 @@ export class AdminController {
     required: false,
   })
   @ApiQuery({ name: 'serviceCategoryId', required: false })
+  @ApiQuery({ name: 'serviceSubcategoryId', required: false })
   @ApiQuery({ name: 'provinceCode', required: false })
   @ApiQuery({ name: 'city', required: false })
   @ApiResponse({
@@ -100,6 +101,7 @@ export class AdminController {
     @Query('backgroundCheckStatus')
     backgroundCheckStatus?: BackgroundCheckStatus,
     @Query('serviceCategoryId') serviceCategoryId?: string,
+    @Query('serviceSubcategoryId') serviceSubcategoryId?: string,
     @Query('provinceCode') provinceCode?: string,
     @Query('city') city?: string,
   ) {
@@ -123,6 +125,7 @@ export class AdminController {
       emailVerified: parseOptionalBoolean(emailVerified),
       backgroundCheckStatus: resolvedBackgroundCheckStatus,
       serviceCategoryId: serviceCategoryId?.trim() || undefined,
+      serviceSubcategoryId: serviceSubcategoryId?.trim() || undefined,
       provinceCode: provinceCode?.trim() || undefined,
       city: city?.trim() || undefined,
     });
