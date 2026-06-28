@@ -11,10 +11,16 @@ import {
   TableRow,
   Text,
 } from "@welpco/ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@welpco/ui/select";
+import { NativeFormField, nativeInputProps } from "@/components/native-form-field";
 import Link from "next/link";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
-import { NativeFormField, nativeInputProps, nativeSelectProps } from "@/components/native-form-field";
 import { listCategories, type AdminCategory } from "@/lib/services/admin-categories-service";
 import {
   getWelperDistributionReport,
@@ -34,6 +40,18 @@ import styles from "./page.module.css";
 export const dynamic = "force-dynamic";
 
 const STATUSES = ["", "Pending", "Active", "Suspended", "Deactivated"] as const;
+const ALL_FILTER_VALUE = "__all__";
+const CONTROL_STYLE: React.CSSProperties = {
+  width: "100%",
+};
+
+function filterInputProps(): React.InputHTMLAttributes<HTMLInputElement> {
+  const base = nativeInputProps();
+  return {
+    ...base,
+    style: { ...base.style, ...CONTROL_STYLE, minWidth: 0 },
+  };
+}
 
 const EMPTY_REPORT: WelperDistributionReport = {
   scope: "discoverable",
@@ -50,42 +68,21 @@ const EMPTY_REPORT: WelperDistributionReport = {
   generatedAt: new Date(0).toISOString(),
 };
 
+function normalizeFilterValue(value?: string): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed === ALL_FILTER_VALUE) return undefined;
+  return trimmed;
+}
+
 function parseBoolean(value?: string): boolean | undefined {
-  if (value === "true") return true;
-  if (value === "false") return false;
+  const normalized = normalizeFilterValue(value);
+  if (normalized === "true") return true;
+  if (normalized === "false") return false;
   return undefined;
 }
 
 function formatNumber(value: number): string {
   return new Intl.NumberFormat("en-CA").format(value);
-}
-
-function compactSelectProps(): React.SelectHTMLAttributes<HTMLSelectElement> {
-  const props = nativeSelectProps();
-  return {
-    ...props,
-    style: {
-      ...props.style,
-      fontSize: "0.875rem",
-      height: 36,
-      minWidth: 0,
-      width: "100%",
-    },
-  };
-}
-
-function compactInputProps(): React.InputHTMLAttributes<HTMLInputElement> {
-  const props = nativeInputProps();
-  return {
-    ...props,
-    style: {
-      ...props.style,
-      fontSize: "0.875rem",
-      height: 36,
-      minWidth: 0,
-      width: "100%",
-    },
-  };
 }
 
 function summaryCard(label: string, value: number, hint: string) {
@@ -174,21 +171,24 @@ export default async function WelperDistributionReportPage({
   }>;
 }) {
   const sp = await searchParams;
+  const normalizedStatus = normalizeFilterValue(sp.status);
+  const normalizedBackgroundCheckStatus = normalizeFilterValue(sp.backgroundCheckStatus);
   const scope: WelperDistributionScope =
     sp.scope &&
     WELPER_DISTRIBUTION_SCOPES.includes(sp.scope as WelperDistributionScope)
       ? (sp.scope as WelperDistributionScope)
       : "discoverable";
   const status =
-    sp.status && STATUSES.includes(sp.status as (typeof STATUSES)[number]) && sp.status !== ""
-      ? sp.status
+    normalizedStatus &&
+    STATUSES.includes(normalizedStatus as (typeof STATUSES)[number])
+      ? normalizedStatus
       : undefined;
   const backgroundCheckStatus =
-    sp.backgroundCheckStatus &&
+    normalizedBackgroundCheckStatus &&
     BACKGROUND_CHECK_STATUSES.includes(
-      sp.backgroundCheckStatus as (typeof BACKGROUND_CHECK_STATUSES)[number],
+      normalizedBackgroundCheckStatus as (typeof BACKGROUND_CHECK_STATUSES)[number],
     )
-      ? sp.backgroundCheckStatus
+      ? normalizedBackgroundCheckStatus
       : undefined;
   const mapStyle: WelperDistributionMapStyle =
     sp.mapStyle &&
@@ -202,10 +202,10 @@ export default async function WelperDistributionReportPage({
     signupCompleted: parseBoolean(sp.signupCompleted),
     emailVerified: parseBoolean(sp.emailVerified),
     backgroundCheckStatus,
-    serviceCategoryId: sp.serviceCategoryId?.trim() || undefined,
-    serviceSubcategoryId: sp.serviceSubcategoryId?.trim() || undefined,
-    provinceCode: sp.provinceCode?.trim() || undefined,
-    city: sp.city?.trim() || undefined,
+    serviceCategoryId: normalizeFilterValue(sp.serviceCategoryId),
+    serviceSubcategoryId: normalizeFilterValue(sp.serviceSubcategoryId),
+    provinceCode: normalizeFilterValue(sp.provinceCode),
+    city: normalizeFilterValue(sp.city),
   };
 
   let report = EMPTY_REPORT;
@@ -250,11 +250,14 @@ export default async function WelperDistributionReportPage({
               <form method="get" className={styles.filterForm}>
                 <input type="hidden" name="mapStyle" value={mapStyle} />
                 <NativeFormField label="Scope">
-                  <select name="scope" defaultValue={scope} {...compactSelectProps()}>
-                    <option value="discoverable">Discoverable / ready</option>
-                    <option value="active">Active accounts</option>
-                    <option value="all">All welpers</option>
-                  </select>
+                  <Select name="scope" defaultValue={scope}>
+                    <SelectTrigger style={CONTROL_STYLE} />
+                    <SelectContent>
+                      <SelectItem value="discoverable">Discoverable / ready</SelectItem>
+                      <SelectItem value="active">Active accounts</SelectItem>
+                      <SelectItem value="all">All welpers</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </NativeFormField>
                 <ServiceCategoryFilter
                   categories={categories}
@@ -267,7 +270,7 @@ export default async function WelperDistributionReportPage({
                     defaultValue={query.provinceCode ?? ""}
                     placeholder="ON"
                     maxLength={8}
-                    {...compactInputProps()}
+                    {...filterInputProps()}
                   />
                 </NativeFormField>
                 <NativeFormField label="City">
@@ -275,46 +278,71 @@ export default async function WelperDistributionReportPage({
                     name="city"
                     defaultValue={query.city ?? ""}
                     placeholder="Toronto"
-                    {...compactInputProps()}
+                    {...filterInputProps()}
                   />
                 </NativeFormField>
                 <NativeFormField label="Account status">
-                  <select name="status" defaultValue={status ?? ""} {...compactSelectProps()}>
-                    <option value="">All</option>
-                    {STATUSES.filter(Boolean).map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                  <Select name="status" defaultValue={status ?? ALL_FILTER_VALUE}>
+                    <SelectTrigger style={CONTROL_STYLE} />
+                    <SelectContent>
+                      <SelectItem value={ALL_FILTER_VALUE}>All</SelectItem>
+                      {STATUSES.filter(Boolean).map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </NativeFormField>
                 <NativeFormField label="Signup complete">
-                  <select name="signupCompleted" defaultValue={sp.signupCompleted ?? ""} {...compactSelectProps()}>
-                    <option value="">All</option>
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                  </select>
+                  <Select
+                    name="signupCompleted"
+                    defaultValue={
+                      typeof query.signupCompleted === "boolean"
+                        ? String(query.signupCompleted)
+                        : ALL_FILTER_VALUE
+                    }
+                  >
+                    <SelectTrigger style={CONTROL_STYLE} />
+                    <SelectContent>
+                      <SelectItem value={ALL_FILTER_VALUE}>All</SelectItem>
+                      <SelectItem value="true">Yes</SelectItem>
+                      <SelectItem value="false">No</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </NativeFormField>
                 <NativeFormField label="Email verified">
-                  <select name="emailVerified" defaultValue={sp.emailVerified ?? ""} {...compactSelectProps()}>
-                    <option value="">All</option>
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                  </select>
+                  <Select
+                    name="emailVerified"
+                    defaultValue={
+                      typeof query.emailVerified === "boolean"
+                        ? String(query.emailVerified)
+                        : ALL_FILTER_VALUE
+                    }
+                  >
+                    <SelectTrigger style={CONTROL_STYLE} />
+                    <SelectContent>
+                      <SelectItem value={ALL_FILTER_VALUE}>All</SelectItem>
+                      <SelectItem value="true">Yes</SelectItem>
+                      <SelectItem value="false">No</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </NativeFormField>
                 <NativeFormField label="Background check">
-                  <select
+                  <Select
                     name="backgroundCheckStatus"
-                    defaultValue={backgroundCheckStatus ?? ""}
-                    {...compactSelectProps()}
+                    defaultValue={backgroundCheckStatus ?? ALL_FILTER_VALUE}
                   >
-                    <option value="">All</option>
-                    {BACKGROUND_CHECK_STATUSES.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger style={CONTROL_STYLE} />
+                    <SelectContent>
+                      <SelectItem value={ALL_FILTER_VALUE}>All</SelectItem>
+                      {BACKGROUND_CHECK_STATUSES.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </NativeFormField>
                 <div className={styles.filterActions}>
                   <Button type="submit" variant="soft">
@@ -371,12 +399,15 @@ export default async function WelperDistributionReportPage({
                   ))}
                   <Flex gap="3" wrap="wrap" align="end">
                     <NativeFormField label="Map style">
-                      <select name="mapStyle" defaultValue={mapStyle} {...nativeSelectProps()}>
-                        <option value="light">Light muted (recommended)</option>
-                        <option value="standard">Standard</option>
-                        <option value="grayscale">Grayscale</option>
-                        <option value="minimal">Minimal</option>
-                      </select>
+                      <Select name="mapStyle" defaultValue={mapStyle}>
+                        <SelectTrigger style={{ minWidth: 220 }} />
+                        <SelectContent>
+                          <SelectItem value="light">Light muted (recommended)</SelectItem>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="grayscale">Grayscale</SelectItem>
+                          <SelectItem value="minimal">Minimal</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </NativeFormField>
                     <Button type="submit" variant="soft">
                       Apply map style

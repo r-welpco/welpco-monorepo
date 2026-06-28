@@ -1,22 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { NativeFormField, nativeSelectProps } from "@/components/native-form-field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@welpco/ui/select";
+import { NativeFormField } from "@/components/native-form-field";
 import type { AdminCategory } from "@/lib/services/admin-categories-service";
 
-function compactSelectProps(): React.SelectHTMLAttributes<HTMLSelectElement> {
-  const props = nativeSelectProps();
-  return {
-    ...props,
-    style: {
-      ...props.style,
-      fontSize: "0.875rem",
-      height: 36,
-      minWidth: 0,
-      width: "100%",
-    },
-  };
-}
+const ALL_FILTER_VALUE = "__all__";
+const CONTROL_STYLE: React.CSSProperties = {
+  width: "100%",
+};
 
 function uniqueById(categories: AdminCategory[]): AdminCategory[] {
   const seen = new Set<string>();
@@ -59,6 +56,7 @@ export function ServiceCategoryFilter({
   );
   const [categoryId, setCategoryId] = useState(selectedCategoryId ?? "");
   const [subcategoryId, setSubcategoryId] = useState(selectedSubcategoryId ?? "");
+  const categoryValue = categoryId || ALL_FILTER_VALUE;
 
   const subcategories = useMemo(() => {
     if (!categoryId) return [];
@@ -75,40 +73,46 @@ export function ServiceCategoryFilter({
   return (
     <>
       <NativeFormField label="Service category">
-        <select
+        <Select
           name="serviceCategoryId"
-          value={categoryId}
-          onChange={(event) => {
-            setCategoryId(event.target.value);
+          value={categoryValue}
+          onValueChange={(value) => {
+            setCategoryId(value === ALL_FILTER_VALUE ? "" : value);
             setSubcategoryId("");
           }}
-          {...compactSelectProps()}
         >
-          <option value="">All categories</option>
-          {rootCategories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger style={CONTROL_STYLE} />
+          <SelectContent>
+            <SelectItem value={ALL_FILTER_VALUE}>All categories</SelectItem>
+            {rootCategories.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </NativeFormField>
       <NativeFormField label="Subcategory">
-        <select
+        <Select
           name="serviceSubcategoryId"
-          value={hasSelectedSubcategory ? subcategoryId : ""}
-          onChange={(event) => setSubcategoryId(event.target.value)}
+          value={hasSelectedSubcategory ? subcategoryId : ALL_FILTER_VALUE}
+          onValueChange={(value) =>
+            setSubcategoryId(value === ALL_FILTER_VALUE ? "" : value)
+          }
           disabled={!categoryId || subcategories.length === 0}
-          {...compactSelectProps()}
         >
-          <option value="">
-            {categoryId ? "All subcategories" : "Select category first"}
-          </option>
-          {subcategories.map((subcategory) => (
-            <option key={subcategory.id} value={subcategory.id}>
-              {subcategory.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger style={CONTROL_STYLE} />
+          <SelectContent>
+            <SelectItem value={ALL_FILTER_VALUE}>
+              {categoryId ? "All subcategories" : "Select category first"}
+            </SelectItem>
+            {subcategories.map((subcategory) => (
+              <SelectItem key={subcategory.id} value={subcategory.id}>
+                {subcategory.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </NativeFormField>
     </>
   );
