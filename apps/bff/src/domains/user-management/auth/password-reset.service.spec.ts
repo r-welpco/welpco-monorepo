@@ -3,8 +3,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   BadRequestException,
+  HttpException,
   NotFoundException,
-  TooManyRequestsException,
 } from '@nestjs/common';
 import { PasswordResetService } from './password-reset.service';
 import { UserAccount } from '../entities/user-account.entity';
@@ -105,13 +105,13 @@ describe('PasswordResetService', () => {
       expect(eventPublisher.publishPasswordResetRequested).not.toHaveBeenCalled();
     });
 
-    it('should throw TooManyRequestsException after 5 reset requests per hour', async () => {
+    it('should throw HttpException (429) after 5 reset requests per hour', async () => {
       userRepository.findOne.mockResolvedValue(mockUser);
       cacheService.get.mockResolvedValue(5);
 
       await expect(
         service.requestPasswordReset('test@example.com'),
-      ).rejects.toThrow(TooManyRequestsException);
+      ).rejects.toThrow(HttpException);
 
       expect(cacheService.set).not.toHaveBeenCalled();
       expect(emailService.sendPasswordResetEmail).not.toHaveBeenCalled();

@@ -2,8 +2,9 @@ import {
   Injectable,
   Logger,
   BadRequestException,
+  HttpException,
+  HttpStatus,
   NotFoundException,
-  TooManyRequestsException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -60,8 +61,9 @@ export class PasswordResetService {
     const rateLimitKey = `password-reset:rate-limit:${normalizedEmail}`;
     const requestCount = await this.cacheService.get<number>(rateLimitKey) || 0;
     if (requestCount >= this.MAX_REQUESTS_PER_HOUR) {
-      throw new TooManyRequestsException(
+      throw new HttpException(
         'Too many password reset requests. Please try again later.',
+        HttpStatus.TOO_MANY_REQUESTS,
       );
     }
 
