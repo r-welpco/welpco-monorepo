@@ -109,19 +109,28 @@ export class AuthController {
   @Public()
   @Post('reset-password')
   @UseGuards(RateLimitGuard)
-  @RateLimit({ ttl: 3600, limit: 3, keyGenerator: (req) => `password-reset:${req.body?.email || req.ip}` })
+  @RateLimit({
+    ttl: 3600,
+    limit: 5,
+    keyGenerator: (req) => `password-reset:${req.body?.email || req.ip}`,
+  })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Request password reset',
     description:
-      'Wave 2 (BFF): always returns `{ ok: true }` regardless of whether the email is known. Bible §22.6 enumeration-safe contract — known and unknown emails are indistinguishable from the response shape and from response timing (email send is dispatched fire-and-forget out-of-band).',
+      'Request a password reset email. Unknown email addresses and rate-limit failures are returned explicitly so the reset form can show actionable feedback.',
   })
   @ApiBody({ type: RequestResetPasswordDto })
   @ApiResponse({
     status: 200,
-    description: 'Always 200 with `{ ok: true }` (whether or not the email exists)',
-    schema: { type: 'object', properties: { ok: { type: 'boolean', example: true } } },
+    description: 'Password reset email sent',
+    schema: {
+      type: 'object',
+      properties: { ok: { type: 'boolean', example: true } },
+    },
   })
+  @ApiResponse({ status: 404, description: 'No account found for this email address' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async requestResetPassword(
     @Body() requestResetDto: RequestResetPasswordDto,
   ): Promise<{ ok: true }> {
@@ -231,4 +240,3 @@ export class AuthController {
     // Client handles logout via NextAuth signOut()
   }
 }
-

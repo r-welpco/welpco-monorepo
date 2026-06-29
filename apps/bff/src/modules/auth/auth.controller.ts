@@ -147,7 +147,7 @@ export class AuthController {
   @UseGuards(RateLimitGuard)
   @RateLimit({
     ttl: 3600,
-    limit: 3,
+    limit: 5,
     keyGenerator: (req) =>
       `password-reset:${(req.body?.email || '').toLowerCase().trim() || req.ip}`,
   })
@@ -155,6 +155,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Request password reset' })
   @ApiBody({ type: RequestResetPasswordDto })
   @ApiResponse({ status: 200, description: 'Password reset email sent' })
+  @ApiResponse({ status: 404, description: 'No account found for this email address' })
   @ApiResponse({ status: 429, description: 'Too many requests' })
   async requestResetPassword(@Body() requestResetPasswordDto: RequestResetPasswordDto) {
     await this.humanVerification.assertVerified({

@@ -192,12 +192,16 @@ export async function requestPasswordReset(data: PasswordResetData): Promise<voi
       },
       { skipAuth: true }
     );
-    // Backend returns 200 even if user doesn't exist (security best practice)
-  } catch (error: any) {
-    if (error.statusCode === 429) {
+  } catch (error: unknown) {
+    if (error instanceof ApiClientError && error.statusCode === 404) {
+      throw new Error(error.message || "No account found for this email address.");
+    }
+    if (error instanceof ApiClientError && error.statusCode === 429) {
       throw new Error("Too many requests. Please try again later.");
     }
-    throw new Error(error.message || "Failed to request password reset");
+    throw new Error(
+      error instanceof Error ? error.message : "Failed to request password reset",
+    );
   }
 }
 

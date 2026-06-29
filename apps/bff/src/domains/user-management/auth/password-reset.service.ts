@@ -2,6 +2,8 @@ import {
   Injectable,
   Logger,
   BadRequestException,
+  NotFoundException,
+  TooManyRequestsException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -20,7 +22,7 @@ import { EmailService } from '../email/email.service';
 export class PasswordResetService {
   private readonly logger = new Logger(PasswordResetService.name);
   private readonly TOKEN_EXPIRATION_SECONDS = 15 * 60; // 15 minutes
-  private readonly MAX_REQUESTS_PER_HOUR = 3;
+  private readonly MAX_REQUESTS_PER_HOUR = 5;
 
   constructor(
     @InjectRepository(UserAccount)
@@ -31,22 +33,10 @@ export class PasswordResetService {
   ) {}
 
   /**
-   * Wave 2 (BFF): enumeration-safe password reset request.
+   * Operational password reset request.
    *
-   * Bible §22.6 contract:
-   *  - Always returns successfully (no thrown exceptions ever bubble to the
-   *    controller). Both known and unknown emails get the same `200 { ok }`.
-   *  - Rate-limit excess for KNOWN accounts is enforced silently (we still
-   *    skip the email send + token mint internally, but the caller sees the
-   *    same response shape — a 400 here would have leaked "this email exists
-   *    AND has been requested 3+ times").
-   *  - Email send is fire-and-forget (`void`-returning promise, errors logged
-   *    but not awaited) so the response timing for unknown vs known is the
-   *    same regardless of how slow the email transport is.
-   *
-   * The previous behaviour returned 200 for unknown emails but threw 400 for
-   * rate-limited known emails — that's a textbook enumeration leak. Wave 2
-   * removes the differentiating exception.
+   * We intentionally surface unknown email and rate-limit errors so the user
+   * can fix the problem immediately from the reset form.
    */
   async requestPasswordReset(
     email: string,
@@ -57,11 +47,8 @@ export class PasswordResetService {
       where: { email: normalizedEmail },
     });
 
-    // Unknown email → return early, but only AFTER the DB roundtrip so the
-    // timing is at least similar to the known-email path. Email send happens
-    // out-of-band (see below) so its latency doesn't widen the window.
     if (!user) {
-      return;
+      throw new NotFoundException('No account found for this email address');
     }
 
     const localeFromRequest = normalizePreferredLocale(options?.preferredLocale);
@@ -70,17 +57,12 @@ export class PasswordResetService {
       await this.userRepository.save(user);
     }
 
-    // Rate limiting (still enforced — we don't want a flood of resets going to
-    // a real account from a single attacker), but enforced silently. The
-    // caller never sees a "you've hit the rate limit" error because that error
-    // alone would tell them the account exists.
     const rateLimitKey = `password-reset:rate-limit:${normalizedEmail}`;
     const requestCount = await this.cacheService.get<number>(rateLimitKey) || 0;
     if (requestCount >= this.MAX_REQUESTS_PER_HOUR) {
-      this.logger.warn(
-        `Password reset rate-limit reached for ${normalizedEmail}; suppressing email send (response stays uniform).`,
+      throw new TooManyRequestsException(
+        'Too many password reset requests. Please try again later.',
       );
-      return;
     }
 
     // Generate reset token + persist
@@ -89,28 +71,16 @@ export class PasswordResetService {
     await this.cacheService.set(tokenKey, user.id, this.TOKEN_EXPIRATION_SECONDS);
     await this.cacheService.increment(rateLimitKey, 3600); // 1 hour TTL
 
-    // Fire-and-forget the email send + event publish so the HTTP response
-    // doesn't wait on the SMTP / event-bus roundtrip. Bible §22.6: timing
-    // uniformity is part of the enumeration contract.
-    void this.dispatchResetEmail(user, token);
+    await this.dispatchResetEmail(user, token);
   }
 
-  /**
-   * Wave 2 (BFF): out-of-band side-effects for a confirmed reset request.
-   * Errors are logged (not rethrown) — the caller already returned 200.
-   */
   private async dispatchResetEmail(user: UserAccount, token: string): Promise<void> {
-    try {
-      await this.emailService.sendPasswordResetEmail(
-        user.email,
-        token,
-        user.preferredLocale,
-      );
-    } catch (error) {
-      this.logger.warn(
-        `Password reset email send failed for ${user.email}: ${(error as Error).message}`,
-      );
-    }
+    await this.emailService.sendPasswordResetEmail(
+      user.email,
+      token,
+      user.preferredLocale,
+    );
+
     try {
       await this.eventPublisher.publishPasswordResetRequested({
         userId: user.id,

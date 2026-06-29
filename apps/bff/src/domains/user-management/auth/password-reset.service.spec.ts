@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  TooManyRequestsException,
+} from '@nestjs/common';
 import { PasswordResetService } from './password-reset.service';
 import { UserAccount } from '../entities/user-account.entity';
 import { CacheService } from '../cache/cache.service';
@@ -13,6 +17,7 @@ describe('PasswordResetService', () => {
   let userRepository: jest.Mocked<Repository<UserAccount>>;
   let cacheService: jest.Mocked<CacheService>;
   let eventPublisher: jest.Mocked<EventPublisherService>;
+  let emailService: jest.Mocked<EmailService>;
 
   const mockUser: UserAccount = {
     id: 'user-1',
@@ -61,14 +66,16 @@ describe('PasswordResetService', () => {
     userRepository = module.get(getRepositoryToken(UserAccount));
     cacheService = module.get(CacheService);
     eventPublisher = module.get(EventPublisherService);
+    emailService = module.get(EmailService);
   });
 
   describe('requestPasswordReset', () => {
-    it('should generate reset token (and dispatch email/event out-of-band) for known email', async () => {
+    it('should generate reset token and await email/event dispatch for known email', async () => {
       userRepository.findOne.mockResolvedValue(mockUser);
       cacheService.get.mockResolvedValue(0);
       cacheService.set.mockResolvedValue();
       cacheService.increment.mockResolvedValue(1);
+      emailService.sendPasswordResetEmail.mockResolvedValue();
       eventPublisher.publishPasswordResetRequested.mockResolvedValue();
 
       await service.requestPasswordReset('  Test@Example.com  ');
@@ -78,35 +85,36 @@ describe('PasswordResetService', () => {
       });
       expect(cacheService.set).toHaveBeenCalled();
       expect(cacheService.increment).toHaveBeenCalled();
-      // Email + event are fire-and-forget; await a microtask flush so the
-      // void-returning dispatch can run before assertions.
-      await new Promise((r) => setImmediate(r));
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith(
+        mockUser.email,
+        expect.any(String),
+        mockUser.preferredLocale,
+      );
       expect(eventPublisher.publishPasswordResetRequested).toHaveBeenCalled();
     });
 
-    it('should return silently for unknown email (Wave 2: enumeration-safe)', async () => {
+    it('should throw NotFoundException for unknown email', async () => {
       userRepository.findOne.mockResolvedValue(null);
 
       await expect(
         service.requestPasswordReset('nonexistent@example.com'),
-      ).resolves.toBeUndefined();
+      ).rejects.toThrow(NotFoundException);
 
       expect(cacheService.set).not.toHaveBeenCalled();
+      expect(emailService.sendPasswordResetEmail).not.toHaveBeenCalled();
       expect(eventPublisher.publishPasswordResetRequested).not.toHaveBeenCalled();
     });
 
-    it('Wave 2: rate-limited known account also returns silently (no thrown error)', async () => {
+    it('should throw TooManyRequestsException after 5 reset requests per hour', async () => {
       userRepository.findOne.mockResolvedValue(mockUser);
-      cacheService.get.mockResolvedValue(3);
+      cacheService.get.mockResolvedValue(5);
 
       await expect(
         service.requestPasswordReset('test@example.com'),
-      ).resolves.toBeUndefined();
+      ).rejects.toThrow(TooManyRequestsException);
 
-      // Crucially: no token mint, no email send, no event publish — but no
-      // BadRequest either, so the response shape stays uniform with the
-      // unknown-email path.
       expect(cacheService.set).not.toHaveBeenCalled();
+      expect(emailService.sendPasswordResetEmail).not.toHaveBeenCalled();
       expect(eventPublisher.publishPasswordResetRequested).not.toHaveBeenCalled();
     });
   });
