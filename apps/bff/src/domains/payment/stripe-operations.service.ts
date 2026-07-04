@@ -51,6 +51,19 @@ export type PaymentRecoveryTaskSummary = {
   createdAt: string;
 };
 
+export type TaxFailureSummary = {
+  id: string;
+  kind: 'transaction' | 'refund_reversal';
+  bookingId: string;
+  refundId: string | null;
+  status: string | null;
+  error: string | null;
+  stripeTaxCalculationId: string | null;
+  stripeTaxTransactionId: string | null;
+  stripeTaxReversalId: string | null;
+  updatedAt: string;
+};
+
 @Injectable()
 export class StripeOperationsService {
   private readonly logger = new Logger(StripeOperationsService.name);
@@ -116,6 +129,51 @@ export class StripeOperationsService {
       exceptionMessage: task.exceptionMessage,
       createdAt: task.createdAt.toISOString(),
     }));
+  }
+
+  async listTaxFailures(limit = 100): Promise<TaxFailureSummary[]> {
+    const take = Math.min(Math.max(limit, 1), 200);
+    const [receiptFailures, refundFailures] = await Promise.all([
+      this.receiptRepo.find({
+        where: { stripeTaxTransactionStatus: 'failed' },
+        order: { updatedAt: 'ASC' },
+        take,
+      }),
+      this.bookingRefundRepo.find({
+        where: { taxReversalStatus: 'failed' },
+        order: { updatedAt: 'ASC' },
+        take,
+      }),
+    ]);
+
+    return [
+      ...receiptFailures.map((receipt) => ({
+        id: receipt.id,
+        kind: 'transaction' as const,
+        bookingId: receipt.bookingId,
+        refundId: null,
+        status: receipt.stripeTaxTransactionStatus,
+        error: receipt.stripeTaxTransactionError,
+        stripeTaxCalculationId: receipt.stripeTaxCalculationId,
+        stripeTaxTransactionId: receipt.stripeTaxTransactionId,
+        stripeTaxReversalId: null,
+        updatedAt: receipt.updatedAt.toISOString(),
+      })),
+      ...refundFailures.map((refund) => ({
+        id: refund.id,
+        kind: 'refund_reversal' as const,
+        bookingId: refund.bookingId,
+        refundId: refund.stripeRefundId,
+        status: refund.taxReversalStatus,
+        error: refund.taxReversalError,
+        stripeTaxCalculationId: null,
+        stripeTaxTransactionId: null,
+        stripeTaxReversalId: refund.stripeTaxReversalId,
+        updatedAt: refund.updatedAt.toISOString(),
+      })),
+    ]
+      .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt))
+      .slice(0, take);
   }
 
   async getRecoveryTaskForResolution(resolutionId: string): Promise<PaymentRecoveryTaskSummary | null> {

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, IsNull, Repository } from 'typeorm';
+import { DataSource, EntityManager, In, IsNull, Repository } from 'typeorm';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { PayoutBatch } from './entities/payout-batch.entity';
@@ -160,14 +160,29 @@ export class PayoutBatchService {
     };
   }
 
-  private async findEligiblePendingLines(payoutFriday: string): Promise<WelperPayoutLedger[]> {
-    const pending = await this.ledgerRepo.find({
-      where: {
-        status: In([WelperPayoutLedgerStatus.PENDING, WelperPayoutLedgerStatus.FAILED]),
-        stripeTransferId: IsNull(),
-      },
-      order: { paymentReleasedAt: 'ASC' },
-    });
+  private async findEligiblePendingLines(
+    payoutFriday: string,
+    manager?: EntityManager,
+  ): Promise<WelperPayoutLedger[]> {
+    const ledgerRepo = manager ? manager.getRepository(WelperPayoutLedger) : this.ledgerRepo;
+    const bookingRepo = manager ? manager.getRepository(BookingRequest) : this.bookingRepo;
+    const pending = manager
+      ? await ledgerRepo
+          .createQueryBuilder('ledger')
+          .setLock('pessimistic_write')
+          .where('ledger.status IN (:...statuses)', {
+            statuses: [WelperPayoutLedgerStatus.PENDING, WelperPayoutLedgerStatus.FAILED],
+          })
+          .andWhere('ledger.stripe_transfer_id IS NULL')
+          .orderBy('ledger.payment_released_at', 'ASC')
+          .getMany()
+      : await ledgerRepo.find({
+          where: {
+            status: In([WelperPayoutLedgerStatus.PENDING, WelperPayoutLedgerStatus.FAILED]),
+            stripeTransferId: IsNull(),
+          },
+          order: { paymentReleasedAt: 'ASC' },
+        });
     const candidateLines = pending.filter(
       (line) =>
         line.welperNetCents > 0 &&
@@ -176,11 +191,18 @@ export class PayoutBatchService {
     );
     if (candidateLines.length === 0) return [];
 
-    const bookings = await this.bookingRepo.find({
-      where: {
-        id: In([...new Set(candidateLines.map((line) => line.bookingId))]),
-      },
-    });
+    const bookingIds = [...new Set(candidateLines.map((line) => line.bookingId))];
+    const bookings = manager
+      ? await bookingRepo
+          .createQueryBuilder('booking')
+          .setLock('pessimistic_read')
+          .where('booking.id IN (:...bookingIds)', { bookingIds })
+          .getMany()
+      : await bookingRepo.find({
+          where: {
+            id: In(bookingIds),
+          },
+        });
     const bookingStatusById = new Map(bookings.map((booking) => [booking.id, booking.status]));
     const eligible: WelperPayoutLedger[] = [];
     for (const line of candidateLines) {
@@ -248,13 +270,7 @@ export class PayoutBatchService {
         await batchRepo.remove(existing);
       }
 
-      const eligible = await this.findEligiblePendingLines(friday);
-      for (const line of eligible) {
-        await ledgerRepo.findOne({
-          where: { id: line.id },
-          lock: { mode: 'pessimistic_write' },
-        });
-      }
+      const eligible = await this.findEligiblePendingLines(friday, manager);
 
       const totals = computeTotalsFromLines(eligible);
       const batch = batchRepo.create({
@@ -448,6 +464,14 @@ export class PayoutBatchService {
       );
     }
 
+    const review = await this.getBatchReview(batchId, {
+      liveConnectCheck: true,
+    });
+    const notReady = review.welpers.filter((w) => w.welperNetCents > 0 && !w.connectReady);
+    if (notReady.length > 0) {
+      throw new BadRequestException(`${notReady.length} welper(s) are not Connect-ready for payout`);
+    }
+
     const lockedLines = await this.dataSource.transaction(async (manager) => {
       const batchRepo = manager.getRepository(PayoutBatch);
       const ledgerRepo = manager.getRepository(WelperPayoutLedger);
@@ -496,15 +520,6 @@ export class PayoutBatchService {
 
       return lines;
     });
-
-    const review = await this.getBatchReview(batchId, {
-      liveConnectCheck: true,
-    });
-    const notReady = review.welpers.filter((w) => w.welperNetCents > 0 && !w.connectReady);
-    if (notReady.length > 0) {
-      await this.batchRepo.update({ id: batchId }, { status: PayoutBatchStatus.REVIEW });
-      throw new BadRequestException(`${notReady.length} welper(s) are not Connect-ready for payout`);
-    }
 
     const linesByWelper = new Map<string, WelperPayoutLedger[]>();
     for (const line of lockedLines) {
@@ -710,11 +725,12 @@ export class PayoutBatchService {
     const header =
       'welper_id,welper_email,booking_id,customer_total_cents,welper_net_cents,platform_gross_cents,stripe_fee_cents,platform_net_cents,stripe_transfer_id,payment_released_at';
     const rows: string[] = [header];
+    const csv = (value: string | number | null | undefined) => {
+      const text = value == null ? '' : String(value);
+      return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    };
     for (const welper of review.welpers) {
       for (const line of welper.lines) {
-        const ledger = await this.ledgerRepo.findOne({
-          where: { id: line.ledgerId },
-        });
         rows.push(
           [
             welper.welperId,
@@ -725,9 +741,9 @@ export class PayoutBatchService {
             line.platformGrossCents,
             line.stripeFeeCents,
             line.platformNetCents,
-            ledger?.stripeTransferId ?? '',
+            line.stripeTransferId ?? '',
             line.paymentReleasedAt,
-          ].join(','),
+          ].map(csv).join(','),
         );
       }
     }

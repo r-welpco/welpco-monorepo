@@ -16,10 +16,16 @@ import { AdminPageHeader } from "@/components/admin-page-header";
 import { formatAdminDateTime, formatAdminMoneyCents, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
 import {
   getPayoutUpcoming,
+  listPayoutTaxFailures,
   listPaymentRecoveries,
   listPayoutBatches,
 } from "@/lib/services/admin-payouts-service";
-import { PayoutBuildAction, PayoutFeeRefreshAction } from "./payout-batch-actions";
+import {
+  PayoutBuildAction,
+  PayoutFeeRefreshAction,
+  PayoutRecoveryRefreshAction,
+  PayoutTaxRetryAction,
+} from "./payout-batch-actions";
 import { PayoutWelpersTable } from "./payout-welpers-table";
 
 export const dynamic = "force-dynamic";
@@ -41,13 +47,20 @@ export default async function PayoutsPage() {
   let upcoming;
   let batches: Awaited<ReturnType<typeof listPayoutBatches>>["data"] = [];
   let recoveries: Awaited<ReturnType<typeof listPaymentRecoveries>>["data"] = [];
+  let taxFailures: Awaited<ReturnType<typeof listPayoutTaxFailures>>["data"] = [];
   let err: string | null = null;
 
   try {
-    upcoming = await getPayoutUpcoming();
-    const list = await listPayoutBatches({ limit: 12 });
+    const [upcomingResult, list, recoveryList, taxFailureList] = await Promise.all([
+      getPayoutUpcoming(),
+      listPayoutBatches({ limit: 12 }),
+      listPaymentRecoveries(),
+      listPayoutTaxFailures({ limit: 25 }),
+    ]);
+    upcoming = upcomingResult;
     batches = list.data;
-    recoveries = (await listPaymentRecoveries()).data;
+    recoveries = recoveryList.data;
+    taxFailures = taxFailureList.data;
   } catch (e) {
     err = e instanceof Error ? e.message : "Failed to load payouts";
     upcoming = {
@@ -79,7 +92,10 @@ export default async function PayoutsPage() {
         />
       ) : null}
 
-      <PayoutFeeRefreshAction />
+      <Flex gap="2" wrap="wrap" align="start">
+        <PayoutFeeRefreshAction />
+        <PayoutTaxRetryAction />
+      </Flex>
 
       {recoveries.length > 0 ? (
         <Card style={{ padding: "1.25rem" }}>
@@ -101,6 +117,7 @@ export default async function PayoutsPage() {
                   <TableColumnHeaderCell>Recovered</TableColumnHeaderCell>
                   <TableColumnHeaderCell>Outstanding</TableColumnHeaderCell>
                   <TableColumnHeaderCell>Opened</TableColumnHeaderCell>
+                  <TableColumnHeaderCell>Refresh</TableColumnHeaderCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -120,6 +137,62 @@ export default async function PayoutsPage() {
                       <Text weight="bold">{formatAdminMoneyCents(task.outstandingCents, "CAD")}</Text>
                     </TableCell>
                     <TableCell>{formatAdminDateTime(task.createdAt)}</TableCell>
+                    <TableCell>
+                      <PayoutRecoveryRefreshAction stripeTransferId={task.stripeTransferId} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Flex>
+        </Card>
+      ) : null}
+
+      {taxFailures.length > 0 ? (
+        <Card style={{ padding: "1.25rem" }}>
+          <Flex direction="column" gap="3">
+            <div>
+              <Text size="3" weight="medium">
+                Stripe Tax failures
+              </Text>
+              <Text size="2" color="gray" style={{ display: "block" }}>
+                Payout ledger rows remain blocked while Stripe Tax transactions or refund reversals are failed.
+              </Text>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableColumnHeaderCell>Type</TableColumnHeaderCell>
+                  <TableColumnHeaderCell>Booking</TableColumnHeaderCell>
+                  <TableColumnHeaderCell>Stripe ID</TableColumnHeaderCell>
+                  <TableColumnHeaderCell>Status</TableColumnHeaderCell>
+                  <TableColumnHeaderCell>Error</TableColumnHeaderCell>
+                  <TableColumnHeaderCell>Updated</TableColumnHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {taxFailures.map((failure) => (
+                  <TableRow key={`${failure.kind}:${failure.id}`}>
+                    <TableCell>{failure.kind === "transaction" ? "Tax transaction" : "Refund reversal"}</TableCell>
+                    <TableCell>
+                      <Link href={`/bookings/${failure.bookingId}`}>{shortId(failure.bookingId)}</Link>
+                    </TableCell>
+                    <TableCell>
+                      <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                        {failure.stripeTaxReversalId ??
+                          failure.stripeTaxTransactionId ??
+                          failure.stripeTaxCalculationId ??
+                          failure.refundId ??
+                          "—"}
+                      </Text>
+                    </TableCell>
+                    <TableCell>{formatAdminStatusLabel(failure.status ?? "unknown")}</TableCell>
+                    <TableCell>
+                      <Text size="1" color="red">
+                        {failure.error ?? "No error details"}
+                      </Text>
+                    </TableCell>
+                    <TableCell>{formatAdminDateTime(failure.updatedAt)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

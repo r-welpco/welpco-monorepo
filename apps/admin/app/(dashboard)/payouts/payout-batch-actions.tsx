@@ -4,7 +4,13 @@ import { Button, Flex, Text } from "@welpco/ui";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AdminErrorCallout, AdminSuccessCallout } from "@/components/admin-callout";
-import { approvePayoutBatch, buildPayoutBatch, refreshPendingPayoutFees } from "@/lib/services/admin-payouts-service";
+import {
+  approvePayoutBatch,
+  buildPayoutBatch,
+  refreshPaymentRecovery,
+  refreshPendingPayoutFees,
+  retryPayoutTax,
+} from "@/lib/services/admin-payouts-service";
 import { formatAdminMoneyCents } from "@/lib/admin-format";
 
 export function PayoutBuildAction({
@@ -91,6 +97,68 @@ export function PayoutFeeRefreshAction() {
       {message ? <AdminSuccessCallout message={message} /> : null}
       <Button type="button" variant="soft" disabled={loading} onClick={() => void refresh()}>
         {loading ? "Refreshing..." : "Refresh pending Stripe fees"}
+      </Button>
+    </Flex>
+  );
+}
+
+export function PayoutTaxRetryAction() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function retry() {
+    setLoading(true);
+    setMessage(null);
+    setError(null);
+    try {
+      const result = await retryPayoutTax();
+      setMessage(
+        `Tax retry checked ${result.scanned} transaction(s) and ${result.reversalScanned} reversal(s); ${result.recovered + result.reversalRecovered} recovered.`,
+      );
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Tax retry failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Flex direction="column" gap="2" align="start">
+      {error ? <AdminErrorCallout message={error} /> : null}
+      {message ? <AdminSuccessCallout message={message} /> : null}
+      <Button type="button" variant="soft" disabled={loading} onClick={() => void retry()}>
+        {loading ? "Retrying..." : "Retry Stripe Tax tasks"}
+      </Button>
+    </Flex>
+  );
+}
+
+export function PayoutRecoveryRefreshAction({ stripeTransferId }: { stripeTransferId: string }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function refresh() {
+    setLoading(true);
+    setError(null);
+    try {
+      await refreshPaymentRecovery(stripeTransferId);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Recovery refresh failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Flex direction="column" gap="1" align="start">
+      {error ? <AdminErrorCallout message={error} /> : null}
+      <Button type="button" variant="soft" size="1" disabled={loading} onClick={() => void refresh()}>
+        {loading ? "Refreshing..." : "Refresh from Stripe"}
       </Button>
     </Flex>
   );

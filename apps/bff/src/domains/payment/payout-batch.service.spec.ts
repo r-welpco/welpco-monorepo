@@ -354,6 +354,43 @@ describe('PayoutBatchService', () => {
         update: jest.fn().mockResolvedValue(undefined),
         findOne: jest.fn(),
         save: jest.fn(async (x) => x),
+        createQueryBuilder: jest.fn(() => ({
+          setLock: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          andWhere: jest.fn().mockReturnThis(),
+          orderBy: jest.fn().mockReturnThis(),
+          getMany: jest.fn().mockResolvedValue([
+            {
+              id: 'l1',
+              welperId: 'w1',
+              bookingId: 'b1',
+              customerId: 'c1',
+              paymentReleasedAt: new Date('2026-05-20T12:00:00.000Z'),
+              customerSubtotalCents: 6250,
+              customerTaxCents: 813,
+              customerTotalCents: 7063,
+              welperGrossCents: 5000,
+              welperRefundCents: 0,
+              welperNetCents: 5000,
+              platformGrossCents: 1250,
+              stripeFeeCents: 80,
+              status: WelperPayoutLedgerStatus.PENDING,
+              exclusionReason: null,
+            },
+          ]),
+        })),
+      };
+      const txBookingRepo = {
+        createQueryBuilder: jest.fn(() => ({
+          setLock: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          getMany: jest.fn().mockResolvedValue([
+            {
+              id: 'b1',
+              status: BookingRequestStatus.PAYMENT_RELEASED,
+            },
+          ]),
+        })),
       };
 
       mockDataSource.transaction.mockImplementation(async (fn) =>
@@ -362,6 +399,7 @@ describe('PayoutBatchService', () => {
           getRepository: jest.fn((entity) => {
             if (entity === PayoutBatch) return txBatchRepo;
             if (entity === WelperPayoutLedger) return txLedgerRepo;
+            if (entity === BookingRequest) return txBookingRepo;
             return {};
           }),
         }),

@@ -621,6 +621,31 @@ export class AdminController {
     return { data: await this.stripeOperationsService.listOpenRecoveryTasks() };
   }
 
+  @Post('payouts/recoveries/:transferId/refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh a Stripe transfer recovery task from Stripe' })
+  @ApiParam({ name: 'transferId', description: 'Stripe transfer ID' })
+  async refreshPayoutRecovery(
+    @CurrentUser() actor: CurrentUserData,
+    @Param('transferId') transferId: string,
+  ) {
+    await this.stripeOperationsService.reconcileTransferById(transferId);
+    const tasks = await this.stripeOperationsService.listOpenRecoveryTasks();
+    await this.adminAuditService.record(actor.userId, 'admin.payout_recovery.refresh', {
+      stripeTransferId: transferId,
+    });
+    return { data: tasks };
+  }
+
+  @Get('payouts/tax-failures')
+  @ApiOperation({ summary: 'List failed Stripe Tax transaction and reversal tasks' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async listPayoutTaxFailures(
+    @Query('limit', new DefaultValuePipe(100), ParseIntPipe) limit?: number,
+  ) {
+    return { data: await this.stripeOperationsService.listTaxFailures(limit) };
+  }
+
   @Get('payouts/batches')
   @ApiOperation({ summary: 'List welper payout batches' })
   @ApiQuery({
@@ -641,7 +666,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Full payout batch review payload' })
   @ApiParam({ name: 'id', description: 'Payout batch ID' })
   async getPayoutBatch(@Param('id') id: string) {
-    return this.payoutBatchService.getBatchReview(id);
+    return this.payoutBatchService.getBatchReview(id, { liveConnectCheck: true });
   }
 
   @Post('payouts/batches/build')
@@ -667,6 +692,17 @@ export class AdminController {
   async refreshPendingPayoutFees(@CurrentUser() actor: CurrentUserData) {
     const result = await this.payoutBatchService.refreshPendingStripeFees();
     await this.adminAuditService.record(actor.userId, 'admin.payout_fees.refresh', result);
+    return result;
+  }
+
+  @Post('payouts/retry-tax')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Retry Stripe Tax transactions and refund reversals blocking payout',
+  })
+  async retryPayoutTax(@CurrentUser() actor: CurrentUserData) {
+    const result = await this.stripeOperationsService.retryPendingTaxTransactions();
+    await this.adminAuditService.record(actor.userId, 'admin.payout_tax.retry', result);
     return result;
   }
 

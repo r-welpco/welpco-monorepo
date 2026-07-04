@@ -83,6 +83,19 @@ export interface PaymentRecoveryTask {
   createdAt: string;
 }
 
+export interface PayoutTaxFailure {
+  id: string;
+  kind: "transaction" | "refund_reversal";
+  bookingId: string;
+  refundId: string | null;
+  status: string | null;
+  error: string | null;
+  stripeTaxCalculationId: string | null;
+  stripeTaxTransactionId: string | null;
+  stripeTaxReversalId: string | null;
+  updatedAt: string;
+}
+
 export async function getPayoutUpcoming(): Promise<PayoutUpcomingPreview> {
   return apiClient.get<PayoutUpcomingPreview>("/api/admin/payouts/upcoming");
 }
@@ -101,6 +114,24 @@ export async function listPayoutBatches(params?: {
 
 export async function listPaymentRecoveries(): Promise<{ data: PaymentRecoveryTask[] }> {
   return apiClient.get<{ data: PaymentRecoveryTask[] }>("/api/admin/payouts/recoveries");
+}
+
+export async function refreshPaymentRecovery(
+  stripeTransferId: string,
+): Promise<{ data: PaymentRecoveryTask[] }> {
+  return apiClient.post<{ data: PaymentRecoveryTask[] }>(
+    `/api/admin/payouts/recoveries/${encodeURIComponent(stripeTransferId)}/refresh`,
+  );
+}
+
+export async function listPayoutTaxFailures(params?: {
+  limit?: number;
+}): Promise<{ data: PayoutTaxFailure[] }> {
+  return apiClient.get<{ data: PayoutTaxFailure[] }>("/api/admin/payouts/tax-failures", {
+    params: {
+      limit: params?.limit,
+    },
+  });
 }
 
 export async function getPayoutBatch(id: string): Promise<PayoutBatchReview> {
@@ -123,4 +154,13 @@ export async function refreshPendingPayoutFees(): Promise<{
   stillPending: number;
 }> {
   return apiClient.post("/api/admin/payouts/refresh-pending-fees");
+}
+
+export async function retryPayoutTax(): Promise<{
+  scanned: number;
+  recovered: number;
+  reversalScanned: number;
+  reversalRecovered: number;
+}> {
+  return apiClient.post("/api/admin/payouts/retry-tax");
 }
