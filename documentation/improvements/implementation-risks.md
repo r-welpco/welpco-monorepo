@@ -15,6 +15,9 @@ Coverage exists but is shallower than it looks: `apps/bff/test/auth.e2e-spec.ts`
 ### 2b. Certn webhook accepts unsigned payloads when the secret is unset
 The safety-verification Certn webhook verifies HMAC signatures only if `CERTN_WEBHOOK_SECRET` is configured — otherwise it **accepts the payload with just a warning log**. A misconfigured production environment would let anyone forge background-check results. Make signature verification fail-closed outside local dev (reject if the secret is missing or the signature is invalid).
 
+### 2d. Login endpoint has no request-rate cap
+The per-email login rate limit formerly at the auth controller was removed (`apps/bff/src/modules/auth/auth.controller.ts:56-59`) — brute-force protection now relies solely on `AccountLockoutService`. Lockout throttles per-account guessing but not credential-stuffing sweeps across many accounts or resource exhaustion on the bcrypt-verify path. Backlog ticket LOGIN-003 covers this and is more urgent than its P1 label suggests (verified 2026-07-04).
+
 ## P1 — Broken or hazardous tooling
 
 ### 2c. Legacy `apps/bff/src/modules/` facade shadows domain controllers
@@ -50,6 +53,12 @@ Verified at audit time: `@welpco/shared` has zero consumers and comment-only ind
 
 ### 9c. Design lint rules are warnings only, and the marketing exemption isn't configured
 All 7 `eslint-plugin-design` rules run at `warn` in root `eslint.config.js`, so design-bible violations never fail anything. Separately, `apps/web/components/features/marketing/CLAUDE.md` documents an exemption for that folder, but no such override exists in the eslint config (verified by grep) — the policy and the tooling disagree. Either escalate rules to `error` with an explicit marketing override, or update the CLAUDE.md policy to match reality.
+
+### 9c2. Dead code identified during backlog validation (2026-07-04)
+Safe deletion candidates, each verified unmounted/unused: legacy signup-step components in `packages/ui/src/platform/user-management/` (exported but mounted nowhere since the signup-merge — 5 obsolete backlog tickets target them), `apps/web` `recent-activity.tsx` + `buildDashboardActivities` (replaced by `RecentNotifications`), the `describe.skip`-ed `e2e/onboarding/onboarding-flow.spec.ts` (tests a deleted flow), and the stale comment at `booking-dashboard.ts:132-139` claiming the BFF doesn't surface ratings (it does, via `welper-profile.service.ts#hydrate()`).
+
+### 9d. Barrel-import regression in the web dashboard (bundle size)
+The 2025 Vercel/React audit's CRITICAL finding (full-package barrel imports) was fixed at its original site, but the pattern has regressed: 5 dashboard files import `from "@welpco/ui"` (the barrel) instead of per-component subpaths, and the package declares no `sideEffects: false` — so the bundler cannot tree-shake it. Fix the 5 imports and add `sideEffects: false` to `packages/ui/package.json`. (Verified 2026-07-04; see `documentation/improvements/audits/audit-vercel-react-best-practices.md` validation block.)
 
 ### 10. No LICENSE file
 Legal status of the repo is undefined. Add a LICENSE (or a proprietary notice) at root.

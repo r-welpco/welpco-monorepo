@@ -1,5 +1,24 @@
 # Documentation Audit — Welpco Monorepo
 
+> **Validation: 2026-07-04** (commit b809feb) — historical report; per-finding status below.
+>
+> This audit drove the 2026-07-04 documentation cleanup (new `documentation/` tree; legacy trees deleted/relocated). Status of the 12 recommendations: 7 resolved (3 of them by deletion) · 2 still open · 3 partial.
+>
+> | Rec | Summary | Status | Evidence (current state) |
+> |-----|---------|--------|--------------------------|
+> | R1 | Rewrite `apps/web/README.md` | ✅ resolved | Now a real README: port 8081, `pnpm dev`, pointers to `documentation/apps/web.md` and setup/e2e docs |
+> | R2 | Fix/delete `dev-tmux.sh` + Zellij hardcoded paths | 🟢 still open | `scripts/dev-tmux.sh:31–35` still runs `pnpm --filter user-management/profile-management/service-discovery dev` (packages that don't exist); `.zellij/layouts/welpco-dev.kdl` still hardcodes `cwd "/Users/rabie/Developer/welpco/welpco-monorepo"` in 5 panes (wrong path for this checkout), patched by `sed` in `dev-zellij.sh` |
+> | R3 | Root README package list + `WEB_PORT` | 🟡 partial | README restructured (no phantom `packages/auth`; packages listed generically), but root `.env.example:37` still says `WEB_PORT=8080` while web runs `next dev -p 8081` |
+> | R4 | Runbook: `approved` batch status | ✅ resolved | `documentation/operations/payment-operations-runbook.md` documents the `approved` status, the Friday-index migration `20260703000001`, and rebuild/stuck-batch behavior (header: "Last verified 2026-07-03 · commit de88bd4") |
+> | R5 | Fix false `me/favorites` entry in ENDPOINTS_AUDIT | ⚫ obsolete | `apps/bff/ENDPOINTS_AUDIT.md` was deleted in the cleanup — falsified claim gone with the file |
+> | R6 | Correct payment entities / booking diagram / domain count | ✅ resolved | `documentation/architecture/domains/payment.md` documents the real entities (`BookingPayment`, `BookingRefund`, `PayoutBatch`, `WelperPayoutLedger`); `booking.md` states there is **no** `Confirmed` status (citing migration `20260403000001`); `geocode` listed in `domains/README.md`; docs carry "Last verified · commit" headers |
+> | R7 | Archive/mark historical docs | ⚫ obsolete | Resolved by deletion instead of archiving: `apps/bff/docs/` (Redis guide, wire-align investigation), `TESTING_UPDATES.md` etc. removed; `features/` moved to `documentation/improvements/backlog/` |
+> | R8 | READMEs for 6 packages + design-system | 🟡 partial | Content now covered by `documentation/packages/*.md` (all packages incl. ui/database/shared/types/events/email), but in-package README pointers still absent — only `packages/eslint-plugin-design/README.md` exists; `apps/design-system` still has no README |
+> | R9 | `CONTRIBUTING.md` + migrations doc | 🟡 partial | Migrations workflow now documented (`documentation/operations/migrations.md`); `CONTRIBUTING.md` still missing (and `LICENSE` from H5 still missing) |
+> | R10 | DEPLOYMENT doc | ✅ resolved | `documentation/operations/deployment.md` exists and honestly documents the gap ("there is no deployment pipeline") plus what `infrastructure/` actually contains |
+> | R11 | Status tracking for plans/features | ✅ resolved | `apps/web/WEB-APP-PLAN.md` and `packages/ui/ROADMAP.md` deleted; backlog files (`documentation/improvements/backlog/*.md`) carry source + shipped/open framing |
+> | R12 | CI/PR-template guard for doc drift | 🟢 still open | No `.github/` directory at all — no CI, no PR template, no doc-drift guard |
+
 > **Date:** 2026-07-03
 > **Scope:** All documentation in the monorepo — root/setup docs, architecture docs (`updated_functional_architecture/`, `bible/`, `features/`), app-level docs (`apps/*`), package docs (`packages/*`), and operational docs (runbooks, API docs, env vars, migrations, deployment).
 > **Method:** Every doc verified against the code it describes (commands vs `package.json`, entities vs `apps/bff/src/domains/`, endpoints vs controllers, env vars vs `.env.example` files, git timestamps for staleness).

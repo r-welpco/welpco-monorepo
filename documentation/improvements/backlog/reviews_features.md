@@ -1,5 +1,7 @@
 # Reviews — open tickets
 
+> **Validation: 2026-07-04** — every ticket below re-verified against the implementation at the current commit (`b809feb`). Status tags: ✅ SHIPPED · 🟢 STILL OPEN · 🟡 PARTIAL · ⚫ OBSOLETE · ❓ UNVERIFIED.
+
 Source: Day 12 messages + reviews functional audit (`apps/web/AUDIT-LOG.md`).
 
 The audit shipped 3 P1/P2 fixes (catalogued first, for traceability). The remaining open work is below — each ticket-ready, severity- and effort-tagged, ordered by leverage.
@@ -23,6 +25,8 @@ Cross-references:
 
 ## REVIEWS-001 — Reviewer display name (real identity, not "Customer #ABC123")
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `apps/web/app/welper/[id]/page.tsx` still maps `reviewerName: \`Customer #${r.reviewerId.slice(-6).toUpperCase()}\`` and `apps/bff/src/domains/review/dto/review-response.dto.ts` has no `reviewerDisplayName` field.
+
 - **Priority**: P1 (trust + product completeness)
 - **Area**: BFF `getReviewsForWelper` + customer-profile + web welper profile
 - **Problem**: After Day12-R-01, the welper public profile shows reviews — but the reviewer is rendered as `Customer #A12B34` (a slice of their user id). That's a privacy-safe placeholder that doesn't help the next customer evaluate the trust signal. Real-name reviews are how every reputable marketplace builds social proof. Today the customer-profile entity has `firstName` / `lastName` but the BFF `getReviewsForWelper` doesn't join + project them, and the FE has no consented "show my name on reviews I write" preference.
@@ -37,6 +41,8 @@ Cross-references:
 ---
 
 ## REVIEWS-002 — Welper public response to reviews
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `apps/bff/src/domains/review/entities/review.entity.ts` has no `response_text`/`response_at` columns, and `review.service.ts` carries an explicit `TODO (REVIEWS-002 ship)` comment in the create-path.
 
 - **Priority**: P1
 - **Area**: BFF + welper profile (reviews) + welper dashboard
@@ -54,6 +60,8 @@ Cross-references:
 
 ## REVIEWS-003 — Photo attachments on reviews
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `review.entity.ts` has no `photo_urls` column and `packages/ui/src/platform/review-rating/rating-form.tsx` / `review-card.tsx` contain no photo uploader or thumbnail rendering.
+
 - **Priority**: P2
 - **Area**: BFF + `RatingForm` + `ReviewCard`
 - **Problem**: A customer who got an exceptional clean of their kitchen has nothing to share but text. Photo evidence is a major trust signal for service marketplaces ("see what they did"). Same infra as MESSAGES-004 / Wave 2 evidence files.
@@ -68,6 +76,8 @@ Cross-references:
 ---
 
 ## REVIEWS-004 — Edit / delete window for reviews
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `review.controller.ts` has POST/PATCH/GET only (no DELETE endpoint), and `review.service.update` has no time-window check. (The booking-detail edit dialog exists in `apps/web/app/(dashboard)/dashboard/bookings/[id]/page-client.tsx`, but edits are unbounded and deletion is impossible.)
 
 - **Priority**: P2
 - **Area**: BFF + booking detail
@@ -84,6 +94,8 @@ Cross-references:
 ---
 
 ## REVIEWS-005 — Review prompt (email + in-app) at +24h after completion
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no `review-prompt.scheduler.ts` exists; the only scheduler in the BFF is `apps/bff/src/domains/payment/payment-capture.scheduler.ts`. Note: the notifications pass added a review-*received* notification to the reviewee (`review.service.create`), which is not the review-*prompt* nudge this ticket asks for.
 
 - **Priority**: P1 (review-volume = trust-volume; today most bookings get no review at all)
 - **Area**: BFF (scheduler + email) + web (in-app prompt)
@@ -102,6 +114,8 @@ Cross-references:
 
 ## REVIEWS-006 — Welper's view of the customer (reciprocal review surface)
 
+**[🟡 PARTIAL — verified 2026-07-04]** — Evidence: shipped since the ticket — `apps/bff/src/domains/profile-management/customer-profile/customer-profile-aggregates.service.ts` (welper-given rating aggregator filtered on `reviewer_type = welper`), welper-only endpoint `GET /customers/:customerId/summary` (`@Roles(AccountType.WELPER)` in `customer-profile.controller.ts`), surfaced via `apps/web/components/features/dashboard/customer-preview-dialog.tsx` on the booking detail/list/marketplace pages. Still missing: the most-recent-welper-review snippet.
+
 - **Priority**: P2
 - **Area**: BFF + booking detail (already partially wired) + welper dashboard
 - **Problem**: The entity supports `reviewerType = welper` (a welper reviewing a customer). The UI has a "Review customer" button on the booking detail. But there's no surface where these reviews are read — they're effectively write-only data. Bible §22.6: welper-on-customer reviews don't feed the customer's public score (we don't expose customer ratings), but they DO need to feed the welper's pre-booking decision ("has any other welper flagged this customer as difficult?"). Without that, repeat bad customers flow uninhibited from welper to welper.
@@ -117,6 +131,8 @@ Cross-references:
 ---
 
 ## REVIEWS-007 — Report a review (moderation queue; T&S)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no `review-report` entity/service anywhere in `apps/bff/src` (grep returns nothing), no report endpoint in `review.controller.ts`, and `review-card.tsx` has no overflow/report menu.
 
 - **Priority**: P1
 - **Area**: BFF + welper profile + admin app
@@ -134,6 +150,8 @@ Cross-references:
 
 ## REVIEWS-008 — Sort + filter on the welper public profile
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `review.controller.ts#getReviewsForWelper` accepts only `page`/`limit`, `review.service.getReviewsForWelper` hardcodes `order: { createdAt: 'DESC' }`, and the web profile fetches a fixed `{ limit: 5 }` with no sort/filter UI.
+
 - **Priority**: P3
 - **Area**: Web welper profile + BFF
 - **Problem**: Today reviews load in `createdAt DESC` order with no filter. A power-curious customer wants to see "lowest rated first" (red-flag scan) or "with photos" (when REVIEWS-003 lands). Bible §17.3: useful filters.
@@ -147,6 +165,8 @@ Cross-references:
 ---
 
 ## REVIEWS-009 — Honest "X reviews" pluralization + cold-start copy
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `RatingLine` in `apps/web/app/welper/[id]/page.tsx` has only two branches ("No reviews yet" vs. full rating line) — no `reviewCount < 5` "ratings are early" caveat anywhere in the page or the welper-profile cards.
 
 - **Priority**: P3
 - **Area**: Welper profile hero + welper-card
@@ -163,6 +183,8 @@ Cross-references:
 
 ## REVIEWS-010 — Anti-fake-review hardening
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no `review-flag.entity.ts` or `review-fraud.service.ts` exists (grep for `review_flag`/`reviewFlag` across the BFF returns nothing); `review.service.create` still relies only on the participant + one-review-per-booking checks.
+
 - **Priority**: P2 (T&S; before the marketplace gets large enough to attract fraud)
 - **Area**: BFF
 - **Problem**: Today's only anti-fake-review defence is "must be a participant of a COMPLETED booking + max one review per booking". That's good baseline but vulnerable to: (a) friends-and-family bookings (welper books their cousin to write 5-star reviews), (b) an adversarial customer creating a second account to leave a second review for the same booking via the second account (current ACL would catch this, since the second account isn't a participant — but worth a spec to lock).
@@ -177,6 +199,8 @@ Cross-references:
 ---
 
 ## REVIEWS-011 — "Verified booking" badge currently hardcoded; tighten the contract
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `review-response.dto.ts` still has no `verifiedBooking` field, and `apps/web/app/welper/[id]/page.tsx` still hardcodes `verified: true` in the review mapper.
 
 - **Priority**: P3
 - **Area**: BFF + welper profile reviews block

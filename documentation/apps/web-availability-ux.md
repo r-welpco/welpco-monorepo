@@ -1,5 +1,7 @@
 # Availability – UX and Calendar Management
 
+> Last verified: 2026-07-03 (audit: matches implementation) · relocated from `apps/web/docs/` on 2026-07-04
+
 ## Current model (simplified)
 
 1. **Regular schedule** – When you’re usually available (e.g. Mon–Wed 9–17). Stored as time slots (day + start/end time) with a **recurring pattern**.

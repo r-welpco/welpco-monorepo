@@ -1,6 +1,7 @@
 # Improvements & Risks
 
-> Last verified: 2026-07-03 · commit de88bd4 · derived from the 2026-07-03 platform documentation audit
+> Last verified: 2026-07-04 · commit b809feb
+> **Folder fully validated 2026-07-04**: every backlog ticket (127) and every historical audit finding was re-verified against the implementation and tagged in place with status + evidence. Trust the per-item tags; original prose predating the validation may contain stale premises (corrections are annotated inline).
 
 This folder tracks things that must change in the **implementation** (not just the docs), plus the plan for retiring the legacy documentation once the new `documentation/` tree is validated.
 

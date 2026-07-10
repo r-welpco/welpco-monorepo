@@ -1,5 +1,7 @@
 # Service category hierarchy
 
+> Last verified: 2026-07-03 (audit: matches `apps/bff/src/database/seeds/seed-content.ts`) · relocated from `docs/` on 2026-07-04
+
 **Rule:** We always have **subcategories** (level 2). **Questions are attached only to subcategories.**  
 Welpers choose a subcategory when creating an offering (e.g. Babysitter, Dog Walks, Housekeeping). Level-1 categories (Care, Pet Care, etc.) are for grouping only and have no questions.
 

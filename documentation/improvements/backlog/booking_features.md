@@ -1,5 +1,7 @@
 # Booking + search — open tickets
 
+> **Validation: 2026-07-04** — every ticket below re-verified against the implementation at commit `b809feb`. Status tags: ✅ SHIPPED · 🟢 STILL OPEN · 🟡 PARTIAL · ⚫ OBSOLETE · ❓ UNVERIFIED.
+
 Source: Day 11 booking + search functional audit (`apps/web/AUDIT-LOG.md`).
 
 The audit shipped 6 P1/P2 fixes (catalogued first, for traceability). The remaining open work is below — each ticket-ready, severity- and effort-tagged, ordered by leverage.
@@ -25,6 +27,8 @@ Cross-references:
 
 ## WELPER-PAYOUTS-001 — Stripe Connect onboarding round-trip (welper-payout step)
 
+**[✅ SHIPPED — verified 2026-07-04]** — Evidence: `apps/bff/src/domains/payment/stripe-connect.service.ts` creates `account_onboarding` AccountLinks and computes `onboardingComplete` from `details_submitted`/`charges_enabled`/`payouts_enabled`-style status; `payout.controller.ts` exposes `POST account-link` + status + refresh endpoints; the step is fully wired (Connect CTA + skip preserved) at `apps/web/app/(dashboard)/dashboard/setup/payout/page-client.tsx` and `apps/web/app/(dashboard)/dashboard/profile/welper-setup-tab-panels.tsx` via `apps/web/lib/services/stripe-connect-service.ts`. Implemented differently than proposed: the payout step moved out of the signup wizard into the post-signup dashboard checklist (`WELPER_SETUP_TASKS` in `signup-orchestrator.service.ts`), and completion is detected by a refresh-on-return endpoint rather than an `account.updated` webhook (`stripe-webhook.controller.ts` handles checkout/transfer/payout events only).
+
 - **Priority**: P1 (welpers can't earn until this lands; signup wizard ships with a placeholder).
 - **Area**: BFF payments + signup wizard welper-payout step.
 - **Problem**: The signup wizard's `welper-payout-step` (`packages/ui/src/platform/user-management/signup-steps/welper-payout-step.tsx`, shipped Day 15 Dispatch B) renders the "Set up payouts" CTA disabled with "coming soon" copy. The skip path is fully wired (submits `{ skip: true }` and the orchestrator records the choice), so welpers can finish the wizard and reach the dashboard, but they can't actually receive payments. Real Stripe Connect onboarding was deferred from the merge to keep the merge atomic.
@@ -45,6 +49,8 @@ Cross-references:
 
 ## BOOKING-001 — Welper double-booking prevention via slot reservation
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no `slot-reservation.service.ts` and no reserve endpoints in `apps/bff/src/domains/booking/booking.controller.ts`; the only defence remains `checkConflictsInTransaction` in `booking.service.ts`.
+
 - **Priority**: P1 (highest leverage; user-visible race)
 - **Area**: BFF booking flow + booking wizard
 - **Problem**: Two customers can race to book the same welper for the same time window. Today's defence is `checkConflictsInTransaction` — it counts overlapping bookings whose status is in `(PENDING, ACCEPTED, IN_PROGRESS)` and rejects with 400. That works once a row exists, but a booking sat in the wizard for 15 min while a second customer hit "Confirm and pay" on the same slot leaks one of them a 400 error at the worst possible moment. There's also a second race: between welper-accept and the BFF's `authorizeHoldBeforeWelperAccept` call, a customer cancellation can land — code handles it but the welper sees an opaque 400.
@@ -59,6 +65,8 @@ Cross-references:
 ---
 
 ## BOOKING-002 — Reschedule flow (don't make people cancel-and-rebook)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `apps/bff/src/domains/booking/booking-state-machine.ts` has no reschedule state and `apps/bff/src/domains/booking/dto/` contains no reschedule DTO; cancel-and-rebook is still the only path.
 
 - **Priority**: P1
 - **Area**: BFF + booking detail
@@ -76,6 +84,8 @@ Cross-references:
 
 ## BOOKING-003 — Concurrent-acceptance UX: live status updates on booking detail
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no SSE/events endpoint in `apps/bff/src/domains/booking/booking.controller.ts`, and no `refetchInterval`/`EventSource` in `apps/web/lib/hooks/use-bookings.ts` or the booking-detail page-client.
+
 - **Priority**: P1
 - **Area**: Web booking detail + BFF
 - **Problem**: When a welper accepts a booking, the customer's open booking-detail page does not update without a manual refresh. The status badge sits at "Pending welper acceptance" until the user reloads. For a marketplace where money + trust flow on time, this is a trust gap.
@@ -91,6 +101,8 @@ Cross-references:
 ---
 
 ## BOOKING-004 — Pending-booking TTL (auto-decline after 24h)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no expiry scheduler exists in `apps/bff/src/domains/booking/` (the only cron is `payment-capture.scheduler.ts` in the payment domain); nothing auto-declines stale PENDING bookings.
 
 - **Priority**: P2
 - **Area**: BFF booking flow
@@ -108,6 +120,8 @@ Cross-references:
 
 ## BOOKING-005 — Honest "relevance" sort in search
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `apps/bff/src/domains/service-discovery/service-discovery.service.ts` (~line 280) still falls through to `qb.orderBy('p.created_at', 'DESC')` when sort is `relevance`; no `similarity()` / credibility ranking exists (only a comment noting pg_trgm indexes would help ILIKE).
+
 - **Priority**: P2
 - **Area**: BFF service-discovery
 - **Problem**: `apps/bff/src/domains/service-discovery/service-discovery.service.ts:241` — when `sort === 'relevance'`, the order-by clause is `created_at DESC`. Newest welpers show first regardless of how good they are. The label "relevance" implies better-matched welpers come first; the implementation lies.
@@ -123,6 +137,8 @@ Cross-references:
 ---
 
 ## BOOKING-006 — Cancellation-fee policy: design + ship
+
+**[🟡 PARTIAL — verified 2026-07-04]** — Evidence: a policy has shipped — `booking.service.ts` flags `chargeLateCancellationFee` for customer cancels <24h before start and `payment.service.ts:1090` (`onBookingCanceled`) captures the one-hour hold as the fee, with the policy stated in the cancel dialogs and wizard summary (`apps/web/messages/en.json:1631-1632, 2166`); still missing from the ticket's acceptance criteria: a live "$X.XX" fee preview in the dialog and fee-breakdown notifications (and the shipped policy is one-hour-hold capture, not the proposed 50%).
 
 - **Priority**: P2 (product call)
 - **Area**: BFF + booking detail + booking wizard
@@ -140,6 +156,8 @@ Cross-references:
 
 ## BOOKING-007 — Form persistence (draft saving for the booking wizard)
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no sessionStorage/draft logic in `apps/web/app/(dashboard)/dashboard/booking/new/page-client.tsx` and no `use-booking-draft.ts` in `apps/web/lib/hooks/`.
+
 - **Priority**: P2
 - **Area**: Booking wizard
 - **Problem**: A user fills the wizard, gets distracted, browser crashes / refresh, comes back — every field empty. For a multi-question + date + time + notes wizard, that's a real abandonment hit.
@@ -154,6 +172,8 @@ Cross-references:
 ---
 
 ## BOOKING-008 — Recurring-bookings wired to the wizard
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no recurring references anywhere under `apps/web/app/(dashboard)/dashboard/booking/`; `<RecurringBookingForm>` remains unwired and the booking entity has no series/parent linkage.
 
 - **Priority**: P2
 - **Area**: Booking wizard + BFF
@@ -171,6 +191,8 @@ Cross-references:
 
 ## BOOKING-009 — "Book again" from past booking detail
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no "Book again" CTA in `apps/web/app/(dashboard)/dashboard/bookings/[id]/page-client.tsx` and the wizard accepts no `?from=<bookingId>` prefill.
+
 - **Priority**: P2
 - **Area**: Booking detail
 - **Problem**: A completed booking is a strong signal that this customer-welper pair worked; the friction to repeat that booking should be near zero. Today the only path is search → welper profile → wizard.
@@ -184,6 +206,8 @@ Cross-references:
 ---
 
 ## BOOKING-010 — Welper response-time SLA visible in the wizard
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no `responseTime` reference anywhere in `apps/web/app/(dashboard)/dashboard/booking/new/page-client.tsx`.
 
 - **Priority**: P2
 - **Area**: Booking wizard
@@ -199,6 +223,8 @@ Cross-references:
 
 ## BOOKING-011 — Search saved searches + recent searches
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no recent-search logic in `apps/web/app/(dashboard)/dashboard/search/page-client.tsx` and no `use-recent-searches.ts` in `apps/web/lib/hooks/`.
+
 - **Priority**: P3
 - **Area**: Search
 - **Problem**: Users in this market type the same query repeatedly ("babysitter near 90210"). Re-typing every time is friction.
@@ -212,6 +238,8 @@ Cross-references:
 ---
 
 ## BOOKING-012 — Pre-tip / post-tip flow
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no tip fields or endpoints in `apps/bff/src/domains/payment/payment.controller.ts` / `payment.service.ts` (the new payout-batch system transfers service earnings only) and no tip UI in the web booking detail.
 
 - **Priority**: P3 (product call)
 - **Area**: BFF + booking detail
@@ -228,6 +256,8 @@ Cross-references:
 
 ## BOOKING-013 — Welper notification when customer is en route to wizard
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no profile-view telemetry anywhere in `apps/bff/src` and no views tile in the welper dashboard.
+
 - **Priority**: P3
 - **Area**: Search + welper notifications
 - **Problem**: A welper has no idea anyone's looking at their profile. Surfacing "X people viewed your profile in the last 24h" can drive engagement (welpers respond faster when they know there's interest).
@@ -242,6 +272,8 @@ Cross-references:
 
 ## BOOKING-014 — E2E coverage for booking + search flows
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `apps/web/e2e/` still has no `booking/` or `search/` specs (auth, settings, disputes, dashboard, profile, availability, onboarding, personalization, notifications only); note the BFF side has since gained supertest coverage (`apps/bff/test/booking.e2e-spec.ts`, `service-discovery.e2e-spec.ts`), but the browser-level Playwright specs this ticket calls for do not exist.
+
 - **Priority**: P2
 - **Area**: Tests
 - **Problem**: `apps/web/e2e/` has zero booking/search specs. Auth + settings + onboarding + availability + profile all have e2e coverage. Money + trust both flow through booking and there's no end-to-end safety net.
@@ -255,6 +287,8 @@ Cross-references:
 ---
 
 ## BOOKING-015 — Receipt-evidence file upload in the welper check-out dialog
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: the receipt dialog in `apps/web/app/(dashboard)/dashboard/bookings/[id]/page-client.tsx` still has no uploader (the `EvidenceUpload` on that page belongs to the dispute dialog, per the Day 16 DISPUTES-002 comment) and `apps/bff/src/domains/booking/dto/submit-service-receipt.dto.ts` accepts only check-in/out timestamps + notes — no evidence keys.
 
 - **Priority**: P2
 - **Area**: Welper check-out flow
@@ -271,6 +305,8 @@ Cross-references:
 
 ## BOOKING-016 — Schedule visualization in the booking wizard
 
+**[🟡 PARTIAL — verified 2026-07-04]** — Evidence: the wizard now renders the welper's `WeeklyAvailabilityTable` (`apps/web/app/(dashboard)/dashboard/booking/new/page-client.tsx:628`), so availability is visible at booking time, but it is read-only — no clickable slots filling date/time and no client-side conflict check.
+
 - **Priority**: P3
 - **Area**: Booking wizard
 - **Problem**: Today the customer types a date + start time + end time and submits. If the slot's not in the welper's availability or conflicts with another booking, they get a 400 after-the-fact. No visual guide.
@@ -285,6 +321,8 @@ Cross-references:
 
 ## BOOKING-017 — Welper service-area accuracy: distance display on search cards
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `service-discovery.service.ts` uses `earth_distance` for filtering and for the `distance` sort only; no `distanceKm` field exists in the search response DTOs, so cards cannot show distance.
+
 - **Priority**: P3
 - **Area**: Search results
 - **Problem**: Search filters by service-area distance (BFF earth_distance with welper radius), but the result card shows a static `location` like "CA, QC" with no distance from the customer. The customer can't tell which of two welpers in the same city is closer.
@@ -298,6 +336,8 @@ Cross-references:
 ---
 
 ## BOOKING-018 — `accept` idempotency response shape
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `apps/bff/src/domains/booking/booking.service.ts:916-917` — the `idempotentAlreadyAccepted` branch still returns `this.toResponse(...)` without calling `attachPaymentAndReceipt` (the ticket's `:493` line reference has drifted; the bug itself is unchanged).
 
 - **Priority**: P3
 - **Area**: BFF booking flow

@@ -1,5 +1,7 @@
 # Settings + profile-management — open tickets
 
+> **Validation: 2026-07-04** — every ticket below re-verified against the implementation at commit `b809feb`. Status tags: ✅ SHIPPED · 🟢 STILL OPEN · 🟡 PARTIAL · ⚫ OBSOLETE · ❓ UNVERIFIED.
+
 Source: Day 10 settings + profile-management functional audit (`apps/web/AUDIT-LOG.md`).
 
 The audit shipped 11 high-leverage bug-fixes (catalogued first, for traceability). The remaining open work is below — each ticket-ready, severity- and effort-tagged, ordered by leverage.
@@ -31,6 +33,8 @@ Cross-references:
 
 ## SETTINGS-001 — Email-change reverification (re-flagged from LOGIN-012)
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `apps/bff/src/domains/user-management/users/users.service.ts:44-51` — email swap still silent (`emailVerified = false`), no code to the new address, no notification/revert link to the old; web path is `apps/web/lib/services/user-service.ts:268` (`updateEmail`).
+
 - **Priority**: P1 (cross-references LOGIN-012; this surface is the trigger)
 - **Area**: Settings → Account tab + BFF user-management
 - **Problem**: Day 10 fix Day10-05 reworded the copy to stop lying about a verification email that was never sent — but the underlying flow is still wrong: `PUT /api/users/me { email }` swaps the sign-in email, sets `emailVerified=false`, and trusts the new address. No challenge to the new address, no notification to the OLD address. If the session is compromised, the attacker rotates the email and locks the legitimate user out.
@@ -48,6 +52,8 @@ Cross-references:
 ---
 
 ## SETTINGS-002 — Account-deletion grace period + restore (re-flagged from LOGIN-014)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `apps/bff/src/domains/user-management/users/users.service.ts:81-92` — `deleteAccount` still only flips `status=DEACTIVATED`; no `deletedAt`, restore flow (deactivated login rejected at `auth.service.ts:201-203`), grace-period email, or scheduled hard-delete job.
 
 - **Priority**: P1
 - **Area**: BFF user-management + settings copy
@@ -69,6 +75,8 @@ Cross-references:
 
 ## SETTINGS-003 — Phone-number international format validation
 
+**[🟡 PARTIAL — verified 2026-07-04]** Evidence: the signup wizard's identity step now uses `libphonenumber-js` (`packages/ui/src/platform/user-management/signup-steps/identity-step.tsx`, `apps/bff/src/modules/auth/dto/identity-step.dto.ts`); but the settings profile forms still validate `z.string().min(7)` (`welper-profile-form.tsx:53`, `customer-profile-form.tsx:98`), the heuristic `+`/`slice(-10)` parser survives at `apps/web/app/(dashboard)/dashboard/profile/page-client.tsx:348-356`, and the BFF `phone.validator.ts` is structural (7-15 digits) not E.164.
+
 - **Priority**: P1
 - **Area**: Customer + Welper profile forms; BFF DTOs
 - **Problem**: `welper-profile-form.tsx:28` and `customer-profile-form.tsx:35` validate phone with `min(7)` only. The page-client (`page-client.tsx:243-251`) parses the phone string into `{countryCode, number, formatted}` for the BFF — but the parsing is heuristic: if the string starts with `+`, take the first 1-3 digits as country code; else default to `+1`; then `slice(-10)`. A user entering "555-1234" silently becomes `+1 + xxx5551234` (invalid). A user entering "+44 20 7946 0958" (UK, 10 digits after country code) gets sliced wrong.
@@ -84,6 +92,8 @@ Cross-references:
 ---
 
 ## SETTINGS-004 — Postal/ZIP code shape validation per country
+
+**[✅ SHIPPED — verified 2026-07-04]** Evidence: `packages/ui/src/platform/profile-management/customer-profile-form.tsx:89-91` — Canadian postal regex on the form, mirrored in the BFF (`apps/bff/src/domains/profile-management/common/validators/address.validator.ts` using `CANADIAN_POSTAL_CODE_PATTERN` + province-code check). Note: the product pivoted to Canada-only, so the US/UK/multi-country parts of the AC are obsolete rather than missing.
 
 - **Priority**: P1
 - **Area**: Customer profile address + Welper service-area
@@ -105,6 +115,8 @@ Cross-references:
 
 ## SETTINGS-005 — Service offering authoring: bulk actions, reordering, templates
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: no `displayOrder`/reorder/bulk/template code in `apps/bff/src/domains/profile-management/` or `packages/ui/src/platform/profile-management/service-offering-list.tsx` — authoring is still one-at-a-time.
+
 - **Priority**: P2
 - **Area**: Welper profile → Service offerings tab
 - **Problem**: Today's authoring is one-at-a-time. New welpers (especially those bringing in services from another platform) face a tedious dialog-per-offering. Established welpers with 5+ offerings can't reorder them (the current order is `createdAt DESC` from the BFF) — so the "best" or "headline" offering can't be elevated.
@@ -122,6 +134,8 @@ Cross-references:
 ---
 
 ## SETTINGS-006 — Availability authoring: copy-week, vacation mode, repeating exceptions
+
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: no copy-week, vacation-mode, or repeating-exception code in `packages/ui/src/platform/profile-management/time-slot-availability.tsx` / `availability-exceptions.tsx` or the BFF availability service; only the manual `profileVisibility` toggle exists (`privacy-settings.tsx`), with no date-ranged auto-resume.
 
 - **Priority**: P2
 - **Area**: Welper profile → Availability tab
@@ -142,6 +156,8 @@ Cross-references:
 
 ## SETTINGS-007 — Address autocomplete (Google / Mapbox)
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `packages/ui/src/platform/profile-management/address-input.tsx` is still four hand-typed fields with no suggestion UI. Note: geocoding infra now exists (`apps/bff/src/domains/geocode/` — Google Maps forward/reverse, consumed by `apps/web/lib/services/geocode.service.ts` for search filters), so an autocomplete build would start from that, not Mapbox-from-scratch.
+
 - **Priority**: P2
 - **Area**: Customer address + Welper service-area
 - **Problem**: Today's `<AddressInput>` is four hand-typed fields. Users mistype, miss the apartment number, get the postal code wrong (see SETTINGS-004). For welper service-area especially, a wrong postal code = a wrong service radius = booked rides that can't be served.
@@ -157,6 +173,8 @@ Cross-references:
 ---
 
 ## SETTINGS-008 — Photo flows: crop, multiple photos, primary selection
+
+**[🟡 PARTIAL — verified 2026-07-04]** Evidence: crop shipped — `packages/ui/src/platform/profile-management/profile-photo-crop-dialog.tsx` + `crop-profile-photo.ts` (uses `react-easy-crop`); multi-photo portfolio, drag-reorder, and primary-photo selection remain unbuilt (no `PhotoGallery`/`photo.entity`).
 
 - **Priority**: P2
 - **Area**: Profile photo upload (welper especially)
@@ -179,6 +197,8 @@ Cross-references:
 
 ## SETTINGS-009 — Concurrent edit safety (optimistic locking)
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `apps/web/lib/api/client.ts` has no `If-Match`/version/409 handling; no version column on profile entities — last-write-wins unchanged.
+
 - **Priority**: P2
 - **Area**: All profile + settings forms
 - **Problem**: User opens settings in two tabs. Tab A edits + saves. Tab B (still showing the pre-edit data) edits + saves — silently overwrites tab A. Today there's no version check, no last-modified header, no surface that says "this changed somewhere else."
@@ -193,6 +213,8 @@ Cross-references:
 ---
 
 ## SETTINGS-010 — Long-form profile abandonment: localStorage draft persistence
+
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: no `useFormDraft` (or any draft) hook in `apps/web/lib/hooks/`; profile forms have no localStorage persistence.
 
 - **Priority**: P2
 - **Area**: Welper profile editor (the heaviest form)
@@ -210,6 +232,8 @@ Cross-references:
 
 ## SETTINGS-011 — Profile completion: actionable next-step instead of % only
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `packages/ui/src/platform/profile-management/profile-completion-status.tsx` — still leads with required/optional percentage meters; no promoted next-step CTA card.
+
 - **Priority**: P2
 - **Area**: Profile overview
 - **Problem**: Even after Day10-10 honesty fix, the meter still leans on a number. Bible §17.3 (empty states) + §19.3 (stats tiles) suggest a richer treatment: show the single biggest unfilled blocker as a prompted action, not a percentage. "Add a profile photo" is more useful than "67%".
@@ -226,6 +250,8 @@ Cross-references:
 
 ## SETTINGS-012 — GDPR / CCPA: download my data
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: no `data-export` module anywhere in `apps/bff/src`; settings page has no privacy/download-my-data surface.
+
 - **Priority**: P2 (regulatory, not UX-driven, but required to launch in CA / EU)
 - **Area**: Settings — privacy tab
 - **Problem**: No "download my data" flow. We're going to need this for any serious launch (GDPR Art. 15, CCPA §1798.110). No place for it to live; settings → privacy is the natural home.
@@ -241,6 +267,8 @@ Cross-references:
 ---
 
 ## SETTINGS-013 — Welper bio profanity / safety scan
+
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: no `bio.validator.ts`, profanity lib, or contact-info regex in `apps/bff/src/domains/profile-management/` or the bio DTOs (`apps/bff/src/modules/auth/dto/welper-bio-step.dto.ts` has length checks only).
 
 - **Priority**: P3
 - **Area**: BFF welper-profile + settings
@@ -260,6 +288,8 @@ Cross-references:
 
 ## SETTINGS-014 — Settings nav: sticky header on scroll, mobile sheet
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `apps/web/app/(dashboard)/dashboard/settings/page.tsx:223-230` — plain `Tabs`/`TabsList` at the top of the page; no `position: sticky` treatment and no mobile `Sheet` navigation.
+
 - **Priority**: P3
 - **Area**: Settings page
 - **Problem**: 5 tabs is a lot; on mobile they wrap to two rows; on desktop they sit at the top of the page and disappear when scrolling a long form (notifications can run long). UX feels stale compared to the rest of the bundle.
@@ -277,6 +307,8 @@ Cross-references:
 
 ## SETTINGS-015 — Notification preference defaults: opt-in vs opt-out honesty
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `apps/bff/src/domains/notification/notification.service.ts:340-353` — `getPreferences` upserts EVERY category (incl. `system`) with `emailEnabled: true, inAppEnabled: true`; there is no `marketing` category yet, defaults are undocumented, and nothing defaults to OFF.
+
 - **Priority**: P3
 - **Area**: BFF notification-preferences seeding
 - **Problem**: Today's defaults aren't documented. Bible §22.6 honesty + GDPR/CASL both want explicit opt-in for marketing; transactional (booking, payment) is implicit. Need to verify what's seeded, document it, and make sure marketing/system rows default to OFF.
@@ -292,6 +324,8 @@ Cross-references:
 
 ## SETTINGS-016 — Resend-code countdown on email change
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: blocked as designed — SETTINGS-001 has not shipped, and the LOGIN-010 countdown pattern it would reuse doesn't exist either (`packages/ui/src/platform/user-management/account-verification.tsx` has no cooldown).
+
 - **Priority**: P3 (depends on SETTINGS-001 shipping first)
 - **Area**: Email-change verification screen
 - **Problem**: Once SETTINGS-001 lands, the user will hit the verification screen for the new email. Same UX issue as LOGIN-010: no client-side cooldown on "Resend code", users hammer it, see unexplained 429s.
@@ -301,6 +335,8 @@ Cross-references:
 ---
 
 ## SETTINGS-017 — Service-offering "active" toggle: confirm the visibility cost
+
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `packages/ui/src/platform/profile-management/service-offering-list.tsx:183` fires `onToggleActive` straight from `onCheckedChange`, and the consumer (`apps/web/app/(dashboard)/dashboard/profile/page-client.tsx:468-480`) mutates immediately — no confirmation on deactivate.
 
 - **Priority**: P3
 - **Area**: Service offering list
@@ -312,6 +348,8 @@ Cross-references:
 ---
 
 ## SETTINGS-018 — Notification mutation: confirm BFF returns full set, not diff
+
+**[✅ SHIPPED — verified 2026-07-04]** Evidence: verification complete, no change needed — `apps/bff/src/domains/notification/notification.service.ts:360-376` `updatePreferences` returns `this.getPreferences(userId)` (the full seeded list), relayed as-is by `apps/bff/src/modules/notifications/notifications.controller.ts:113-124`; so `setQueryData` in `apps/web/lib/hooks/use-notifications.ts` (`useUpdateNotificationPreferences`) caches the full set correctly.
 
 - **Priority**: P3 (verification, not implementation)
 - **Area**: Notification preferences

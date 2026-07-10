@@ -1,5 +1,28 @@
 # Audit: Search Welpers (Location, Radius, Categories, Performance)
 
+> **Validation: 2026-07-04** (commit b809feb) — historical report; per-finding status below.
+>
+> The "Resolved (2025-02)" section is confirmed against current code: 11 of 12 resolved fixes are present; one is superseded. Of the 3 deferred items, the spatial index has since shipped; 2 remain deferred. Totals: 12 resolved · 2 still open (deferred) · 0 partial · 1 obsolete.
+>
+> | Item | Status | Evidence (current code) |
+> |------|--------|-------------------------|
+> | 1.1/4.1–4.3 single SQL pipeline, radius always applied | ✅ resolved | One QueryBuilder pipeline in `service-discovery.service.ts` (~lines 200–295): base set → search-point match → rating/price → sort → `getCount()` + `skip/take`. No early-return branch |
+> | 1.2 `country_code`/`province_code` columns | ✅ resolved | `countryCode`/`provinceCode` on `WelperProfile`, used for location display with `service_area` fallback (service lines 34–42, 304) |
+> | 1.3 price/rating filters | ✅ resolved | `minPrice`/`maxPrice`/`minRating` in `SearchServicesQueryDto` (lines 64–85); applied in SQL (service lines 257–266); `rating`/`reviewCount` on profile |
+> | 2.1 Nominatim province normalization | ⚫ obsolete | Nominatim implementation replaced by `GoogleMapsGeocodeService` behind the same interface; normalization is now provider-internal |
+> | 2.2 `@Transform` optional numbers | ✅ resolved | `optionalNumberTransform()` on all optional number params (search-services-query.dto.ts:5, 37–97) |
+> | 2.3 `sort=distance` | ✅ resolved | `sort?: 'relevance' \| 'price' \| 'distance'` (DTO line 107); orders by `earth_distance` (service lines 271–277) |
+> | 2.4 postal-code forward geocode | ✅ resolved | `geocodeService.forward(postalCode, countryCode)` at start of search (service line 164); web search page has postal input + `hasSearchCenter` gate (search/page-client.tsx:177–228) |
+> | 2.5 `__any__` sentinel | ✅ resolved | `FILTER_ANY`/`__any__` in `search-filters-sidebar.tsx` |
+> | 2.6 categoryId validation | ✅ resolved | `validateCategoryId(categoryId, categoryOptions)` clears invalid IDs (search/page-client.tsx:378–381) |
+> | 4.4 geocode abstraction | ✅ resolved | `IGeocodeService` (`geocode.interface.ts`) + `GoogleMapsGeocodeService` + `RateLimiterService` |
+> | 5.2 geocode cache/throttle | ✅ resolved | LRU `reverseCache`/`forwardCache` in `google-maps-geocode.service.ts:116–117`; rate limiter service in the module |
+> | Deferred: spatial index | ✅ shipped since | Migration `20260206000001-AddSpatialAndFilterIndexes.ts` — GiST index on `ll_to_earth(latitude, longitude)` (earthdistance-based, not PostGIS, same goal) |
+> | Deferred: category counts (`includeCounts`) | 🟢 still open | Still "reserved for Phase 2" (service-discovery.service.ts:357) |
+> | Deferred: category cache invalidation | 🟢 still open | `getCachedCategories()` still 5-min TTL with no invalidation on category writes |
+>
+> **Semantics note:** search behavior has evolved past this audit — the client `radiusKm` query param is now **deprecated and ignored** when a search point exists; matching uses each welper's own service-area radius (default 25 km) around the search point (DTO line 53; service lines 239–255). Country/province search filters were removed per the "Simplified location flow" section, which matches current code.
+
 This document captures findings from an audit of the “Search Welpers” flow: search by location and radius, category/subcategory usage, potential bugs, unnecessary complexity, and improvement opportunities.
 
 ---

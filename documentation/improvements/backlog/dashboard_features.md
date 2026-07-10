@@ -1,5 +1,7 @@
 # Dashboard home — open tickets
 
+> **Validation: 2026-07-04** — every ticket below re-verified against the implementation at commit `b809feb`. Status tags: ✅ SHIPPED · 🟢 STILL OPEN · 🟡 PARTIAL · ⚫ OBSOLETE · ❓ UNVERIFIED.
+
 Source: Day 14 onboarding-welcome + dashboard home functional audit (`apps/web/AUDIT-LOG.md`).
 
 The audit shipped 2 P2/P3 fixes (catalogued first, for traceability). The remaining open work is below — each ticket-ready, severity- and effort-tagged, ordered by leverage.
@@ -22,6 +24,8 @@ Cross-references:
 ---
 
 ## DASHBOARD-001 — Fresh post-onboarding user lands on a dashboard that promises and shows nothing
+
+**[🟡 PARTIAL — verified 2026-07-04]** — setup checklists + `hideDashboardExtras` now suppress quick actions/stats until Section A completes (`apps/web/app/(dashboard)/dashboard/page-client.tsx:186-188,315`), but once past that gate a fresh user still sees zero stat tiles and no first-run hero exists.
 
 **Partially resolved (2026-05-06)** — the signup-merge guarantees fresh users
 arrive at the dashboard already-onboarded (Welper has bio + service area + ≥1
@@ -62,6 +66,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 
 ## DASHBOARD-002 — Recent-activity items never render an avatar (data shape lies)
 
+**[⚫ OBSOLETE — verified 2026-07-04]** — the dashboard no longer mounts `RecentActivity` (it renders `RecentNotifications`, `apps/web/app/(dashboard)/dashboard/page-client.tsx:333`); `buildDashboardActivities` has zero callers, so the never-set `user` field is dead code, not a live bug (cleanup candidate: `recent-activity.tsx` + `buildDashboardActivities`).
+
 - **Priority**: P1 (visual polish + correctness)
 - **Area**: `apps/web/lib/dashboard/booking-dashboard.ts`, `recent-activity.tsx`
 - **Problem**: `DashboardActivityItem` declares `user?: { name: string; image?: string }` — implying activity rows show the counterparty. `buildDashboardActivities` never sets `user`. The avatar branch in `recent-activity.tsx:36` is dead. The list reads as a wall of plain text rows where bookings should clearly attribute to a person — bible §22.6: a marketplace where strangers transact is built on faces.
@@ -76,6 +82,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 ---
 
 ## DASHBOARD-003 — Welper-side stats omit the metrics that matter (rating, reviews, response time)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — `computeWelperStatsFromBookings` still renders only Active/Earnings/Completed and its "BFF doesn't surface a welper-aggregate rating yet" comment is now stale (`apps/web/lib/dashboard/booking-dashboard.ts:132-139`): `GET /api/profiles/me` DOES hydrate `averageRating` / `reviewCount` / `responseTimeMinutes` via `apps/bff/src/domains/profile-management/welper-profile/welper-profile.service.ts` `hydrate()`.
 
 - **Priority**: P1 (welper retention)
 - **Area**: `apps/web/lib/dashboard/booking-dashboard.ts:102-117` + `apps/web/app/(dashboard)/dashboard/page-client.tsx`
@@ -97,6 +105,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 
 ## DASHBOARD-004 — Stats use the most-recent 50 bookings only; "Total spent" / "Total earnings" understate for power users
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — stats are still summed client-side over page 1 / limit 50 (`BOOKINGS_DASHBOARD_LIMIT` at `apps/web/app/(dashboard)/dashboard/page-client.tsx:36`, compute at lines 158-170, pagination footnote at 178-184); no BFF dashboard-aggregate endpoint exists (`apps/bff/src/modules/` has no dashboard module).
+
 - **Priority**: P1 (financial honesty)
 - **Area**: `apps/web/app/(dashboard)/dashboard/page-client.tsx:34, 100-103`
 - **Problem**: `BOOKINGS_DASHBOARD_LIMIT = 50`; the dashboard pulls page 1 limit 50. `computeCustomerStatsFromBookings` sums `totalPrice` over those 50. A loyal customer with 60 bookings sees "Total spent" = sum of last 50 — silently understated. The footnote "Counts use your X most recent bookings — open Bookings for the full list." is honest but easy to miss. Bible §22.6: money honesty. The aggregator endpoint should compute totals across ALL bookings, not just page 1.
@@ -111,6 +121,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 ---
 
 ## DASHBOARD-005 — Recent activity only shows bookings (messages, reviews, disputes, notifications all silent here)
+
+**[✅ SHIPPED — verified 2026-07-04]** — shipped via different means: the dashboard replaced the booking-only activity list with `RecentNotifications` (`apps/web/components/features/dashboard/recent-notifications.tsx`, mounted at `page-client.tsx:333`), fed by the notifications module that the booking, communication (messages), review, dispute, and payment domains all emit into.
 
 - **Priority**: P1 (information density)
 - **Area**: `apps/web/lib/dashboard/booking-dashboard.ts`, `recent-activity.tsx`
@@ -127,6 +139,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 
 ## DASHBOARD-006 — `aria-live="polite"` on the stats wrapper announces every fetch
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — `<Box aria-busy={loading || undefined} aria-live="polite">` still wraps the entire stats section (`apps/web/components/features/dashboard/dashboard-stats.tsx:90`).
+
 - **Priority**: P2 (a11y)
 - **Area**: `apps/web/components/features/dashboard/dashboard-stats.tsx:89`
 - **Problem**: `<Box aria-busy={loading || undefined} aria-live="polite">` wraps the section heading + grid. Every refetch triggers a polite announcement that re-reads "Your activity" + every stat tile. With React Query polling every 30s elsewhere on the page, screen reader users get hammered. Bible §17 + WCAG 4.1.3.
@@ -138,6 +152,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 ---
 
 ## DASHBOARD-007 — Profile-completion callout copy diverges between customer + welper
+
+**[✅ SHIPPED — verified 2026-07-04]** — shipped via replacement: the dual-source callout code is gone from `page-client.tsx`; both roles now render BFF-driven setup checklists (`useCustomerSetupChecklist` / `useWelperSetupChecklist` → `CustomerSetupChecklist` / `WelperSetupChecklist` in `apps/web/app/(dashboard)/dashboard/page-client.tsx:307-313`) as the single completion source.
 
 - **Priority**: P2 (consistency)
 - **Area**: `apps/web/app/(dashboard)/dashboard/page-client.tsx:105-164`
@@ -153,6 +169,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 ---
 
 ## DASHBOARD-008 — No needs-attention callout for actionable booking states (welper has pending; customer has unconfirmed)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — pending jobs still surface only in the plain-text state line (`welperHome.pendingJobs(...)` in `apps/web/app/(dashboard)/dashboard/page-client.tsx:198-215`); no warning Callout and no customer-side pending/awaiting-payment surfacing exists.
 
 - **Priority**: P2 (information surfacing)
 - **Area**: `apps/web/app/(dashboard)/dashboard/page-client.tsx:140-158`
@@ -173,6 +191,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 
 ## DASHBOARD-009 — Skeleton loader doesn't match real layout (callout, stats, activity placeholders missing)
 
+**[🟡 PARTIAL — verified 2026-07-04]** — stats tiles and notifications skeleton in-shape (`dashboard-stats.tsx` StatCard skeleton; `recent-notifications.tsx:99-106`), but the whole extras block (quick actions + stats + notifications) is unmounted until the setup checklist resolves (`hideDashboardExtras`, `page-client.tsx:188,315`), so first paint still doesn't mirror the final layout.
+
 - **Priority**: P2 (perceived perf)
 - **Area**: `apps/web/components/features/dashboard/dashboard-stats.tsx`, `recent-activity.tsx`, `apps/web/app/(dashboard)/dashboard/page-client.tsx`
 - **Problem**: Stats grid renders skeleton rectangles in real tile shells. Activity gets a skeleton list. But the page-client itself doesn't skeleton: heading + state line render with text "Loading your dashboard…" while the rest pops in beneath as data arrives. The user sees the heading first → blank → callout → tiles → activity. Bible §17.5: skeleton should mirror the final shape so layout doesn't shift.
@@ -187,6 +207,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 ---
 
 ## DASHBOARD-010 — Error state when BFF returns 5xx is invisible (silently shows zero stats)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — `page-client.tsx:142-148` still destructures only `{ data, isLoading }` from `useBookings` (`isError` unused; the hook adds no error surfacing either), so a 5xx still computes all-zero stats with the "no upcoming bookings" state line and no error callout.
 
 - **Priority**: P2 (transparency)
 - **Area**: `apps/web/lib/hooks/use-bookings.ts` consumer (`page-client.tsx`)
@@ -205,6 +227,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 
 ## DASHBOARD-011 — Customer payment-missing branch is suppressed when other steps are complete
 
+**[✅ SHIPPED — verified 2026-07-04]** — the coupled callout code was deleted; payment is now collected as its own wizard step (`customerPayment` in `apps/web/app/[locale]/(auth)/register/step-name-utils.ts`) and surfaced independently as the checklist's `bookingPayment` section (`apps/web/lib/dashboard/customer-setup-groups.ts:67-75`), regardless of other profile completeness.
+
 - **Priority**: P2 (booking activation)
 - **Area**: `apps/web/app/(dashboard)/dashboard/page-client.tsx:129-164`
 - **Problem**: `isProfileIncomplete` for customer = `profileCompletionStatusLabel !== "Complete"`. `customerPaymentMissing` = `!hasDefaultPaymentMethod`. The "Add a payment method so you can book" copy ONLY renders if `isProfileIncomplete && customerPaymentMissing`. If a customer has full name + phone + address but no payment method AND the BFF marks them complete (which it might), the payment-missing nudge never shows. They first discover the missing payment method when they click "Book" on a welper page and get a 4xx.
@@ -220,6 +244,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 
 ## DASHBOARD-012 — `firstNameOf` falls back to email local-part with dots / numbers ("john.smith42")
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — the `email.split("@")[0]` fallback survives at `apps/web/app/(dashboard)/dashboard/page-client.tsx:52-57` (largely mitigated in practice: the greeting now prefers profile `firstName`, which the wizard's identity step requires, so the fallback is a rare path — consider downgrading).
+
 - **Priority**: P3 (microcopy)
 - **Area**: `apps/web/app/(dashboard)/dashboard/page-client.tsx:46-52`
 - **Problem**: User has not set a name → fallback is `email.split("@")[0]`. For `john.smith42@gmail.com`, the dashboard greets "Welcome back, john.smith42." Bible §22.6: voice. Better to just say "Welcome back." with no name, or "Hi there." Don't pretend to know the user when we don't.
@@ -233,6 +259,8 @@ structurally fixed. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 ---
 
 ## DASHBOARD-013 — No e2e coverage for the dashboard home
+
+**[🟡 PARTIAL — verified 2026-07-04]** — `apps/web/e2e/dashboard/dashboard.spec.ts` (+ `dashboard-i18n.spec.ts`) now exists and covers customer-side smoke (content after login, greeting, completion status, stats load, callout navigation), plus `e2e/auth/registration.spec.ts` asserts both roles land on the dashboard with a setup checklist — but there is no welper-specific dashboard spec and no loading-shape/empty-state coverage from the AC.
 
 - **Priority**: P2 (quality gate)
 - **Area**: `apps/web/e2e/`

@@ -1,5 +1,7 @@
 # Signup ↔ onboarding merge — implementation plan
 
+> **Status: EXECUTED (2026-05-06) — historical plan.** The merge shipped; see apps/web/AUDIT-LOG.md Day 15. Kept for traceability.
+
 **Goal**: collapse signup + onboarding-welcome into a single role-aware wizard so an account is never "created but unusable." Subsumes the architectural concern behind `ONBOARDING-003` (P0), `ONBOARDING-005`, `ONBOARDING-008`, and parts of `LOGIN-002` + `DASHBOARD-001`.
 
 **Non-goal**: real-data migration. The product is in development; existing user_accounts can be dropped or null-filled. Schema migrations are forward-additive; no backfill scripting needed.

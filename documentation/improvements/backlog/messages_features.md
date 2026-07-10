@@ -1,5 +1,7 @@
 # Messages — open tickets
 
+> **Validation: 2026-07-04** — every ticket below re-verified against the implementation at the current commit (`b809feb`). Status tags: ✅ SHIPPED · 🟢 STILL OPEN · 🟡 PARTIAL · ⚫ OBSOLETE · ❓ UNVERIFIED.
+
 Source: Day 12 messages + reviews functional audit (`apps/web/AUDIT-LOG.md`).
 
 The audit shipped 4 P1/P2 fixes (catalogued first, for traceability). The remaining open work is below — each ticket-ready, severity- and effort-tagged, ordered by leverage.
@@ -24,6 +26,8 @@ Cross-references:
 
 ## MESSAGES-001 — Real-time message delivery (server push, not polling)
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `apps/bff/src/domains/communication/communication.controller.ts` has no SSE/events endpoint, and `apps/web/lib/hooks/use-booking-chat.ts` still fetches with `staleTime: 30 * 1000` and no `refetchInterval`. Note: `sendMessage` now emits a bell notification to the other party (`communication.service.ts`, NOTIFICATIONS-001/002 pass), but in-thread live delivery is unchanged.
+
 - **Priority**: P1 (highest leverage; trust-critical — every dispute begins here)
 - **Area**: BFF + web messages hub
 - **Problem**: Today messages are fetched on a 30s `staleTime` query (`useBookingChatMessages`) and refetched on focus. A message you sent 5 seconds ago shows up; a message the **other party** sent 5 seconds ago doesn't, until the user clicks somewhere else and back. For a marketplace where messages are the early-warning system for problems, that delay is meaningful trust damage.
@@ -41,6 +45,8 @@ Cross-references:
 
 ## MESSAGES-002 — Typing indicator
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no `typing` endpoint in `apps/bff/src/domains/communication/communication.controller.ts` and no typing UI in `packages/ui/src/platform/communication/` (grep for "typing" across communication domain + web hooks returns nothing).
+
 - **Priority**: P2
 - **Area**: BFF + platform `ChatInput` + web messages hub
 - **Problem**: When the other party is composing a long reply, today's UI gives no signal — the customer waits on a silent screen and assumes nothing is happening. A typing indicator is the cheapest possible signal and a near-universal chat affordance (bible §17.2 latency reassurance).
@@ -57,6 +63,8 @@ Cross-references:
 
 ## MESSAGES-003 — Read receipts (surface the cursor we already store)
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `apps/bff/src/domains/communication/dto/chat-thread.dto.ts` still exposes only the requester's own `lastReadAt` (service comment: "the other party's cursor is private metadata"), and `message-bubble.tsx`'s `isRead` prop is still never passed by `messages-hub-client.tsx`.
+
 - **Priority**: P2
 - **Area**: Platform `MessageBubble` + web wire
 - **Problem**: The BFF tracks `last_read_at_customer` and `last_read_at_welper` per thread (Wave 2). The other party's cursor is intentionally not exposed in the per-thread DTO today — but for own-bubble read state, we have everything we need to show `Read` vs `Delivered` honestly. Today every own-bubble shows `Delivered` regardless. The component already accepts `isRead` (line 27 of `message-bubble.tsx`); nobody passes it.
@@ -72,6 +80,8 @@ Cross-references:
 ---
 
 ## MESSAGES-004 — File / image attachments
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `apps/bff/src/domains/communication/entities/message.entity.ts` still has only `chatThreadId`/`senderId`/`content` (no attachment columns), and `chat-input.tsx`'s `onAttachment` remains unwired in the hub.
 
 - **Priority**: P2
 - **Area**: BFF + web composer + platform `MessageBubble`
@@ -90,6 +100,8 @@ Cross-references:
 
 ## MESSAGES-005 — Search within thread + jump to date
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `apps/bff/src/domains/communication/dto/messages-query.dto.ts` accepts only `page`/`limit` (no `q`), and the thread pane in `messages-hub-client.tsx` has no search box or date-jump.
+
 - **Priority**: P3
 - **Area**: Web messages hub + BFF
 - **Problem**: Long-running threads (a recurring booking with the same welper) scroll to hundreds of messages. Today the only way to find "the address you sent me last Tuesday" is to scroll. Pagination exists at 100 messages per page but there's no UI to navigate older pages.
@@ -104,6 +116,8 @@ Cross-references:
 ---
 
 ## MESSAGES-006 — Block / report user (anti-abuse foundation)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no `trust-safety` domain exists under `apps/bff/src/domains/`, and greps for `user_block`/`message_report` across the BFF return nothing; `sendMessage` in `communication.service.ts` has no block guard.
 
 - **Priority**: P1 (T&S; deferred-but-required)
 - **Area**: BFF + web (messages, welper profile, booking detail) + admin
@@ -121,6 +135,8 @@ Cross-references:
 
 ## MESSAGES-007 — Off-platform exfil + scam content filter
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: no `content-filter.service.ts` in `apps/bff/src/domains/communication/`; `communication.service.sendMessage` writes content straight through with only a trim + empty check.
+
 - **Priority**: P1 (T&S; marketplace integrity)
 - **Area**: BFF
 - **Problem**: A common marketplace exfil pattern: "Why don't you pay me directly via Venmo / Cashapp? I'll give you 10% off." That kills the trust contract — customer loses dispute protection, BFF loses the booking, welper bypasses platform fees, and the customer has no recourse if anything goes wrong. Today there's no detection.
@@ -137,6 +153,8 @@ Cross-references:
 
 ## MESSAGES-008 — Per-thread message rate limit (anti-spam)
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `communication.controller.ts` uses only `JwtAuthGuard, SignupCompletedGuard`; the repo's only rate-limit guards live in `apps/bff/src/domains/user-management/auth/guards/rate-limit.guard.ts` and `apps/bff/src/domains/geocode/rate-limiter.service.ts` — neither is applied to chat.
+
 - **Priority**: P2
 - **Area**: BFF
 - **Problem**: Today there's no rate limit on `POST /api/bookings/:bookingId/chat/messages`. A misbehaving client (or a malicious actor) can flood a thread with thousands of messages in a few seconds — which (a) abuses the recipient with notifications, (b) bloats the messages table, (c) breaks the thread UX.
@@ -152,6 +170,8 @@ Cross-references:
 
 ## MESSAGES-009 — Empty / loading thread copy honesty
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `message-thread.tsx` still hardcodes "No messages yet / Start the conversation — say hello." with no `emptyMessage` prop and no booking-status branch, and the inbox empty state in `messages-hub-client.tsx` still has no "Find a Welper" CTA. (New since ticket: a `messagingClosed` window callout exists in the thread pane, but the copy asks remain unaddressed.)
+
 - **Priority**: P3
 - **Area**: Platform `MessageThread` + messages hub
 - **Problem**: The empty-thread copy ("No messages yet — Start the conversation — say hello.") is fine for an active booking; for a `COMPLETED` booking it's tone-deaf ("say hello" — they're done). And on the inbox empty state ("No conversations yet — New chats appear here once you have a booking."), an authenticated user with zero bookings has no CTA to make a booking.
@@ -165,6 +185,8 @@ Cross-references:
 ---
 
 ## MESSAGES-010 — Mobile composer keyboard avoidance
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `message-thread.tsx` still hardcodes `height: compact ? "100%" : "600px"` (the hub's `compact` mode fills its parent, but the parent shell in `messages-hub.module.css` sizes with `vh`, not `dvh`/`svh`), and greps for `dvh`/`svh`/`interactive-widget`/`visualViewport` across `apps/web` + `packages/ui` return nothing.
 
 - **Priority**: P2
 - **Area**: Platform `MessageThread` (mobile)
@@ -180,6 +202,8 @@ Cross-references:
 
 ## MESSAGES-011 — Inbox status filter (active / completed / cancelled tabs)
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `messages-hub-client.tsx` renders the full inbox list with no tabs/filter state and no `localStorage` persistence.
+
 - **Priority**: P3
 - **Area**: Web messages hub
 - **Problem**: The inbox shows everything — active bookings mixed with cancelled ones from 6 months ago. A power user with 50 bookings has to scroll past dead threads to find the one they care about. Bible §17.3 says useful filters; this is a missing one.
@@ -193,6 +217,8 @@ Cross-references:
 ---
 
 ## MESSAGES-012 — Draft persistence per thread
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — Evidence: `chat-input.tsx` still holds the draft in local `useState` with no `value`/`onChange` props, and no `chat-draft:` localStorage key exists anywhere in `apps/web`.
 
 - **Priority**: P3
 - **Area**: Web messages hub + platform `ChatInput`

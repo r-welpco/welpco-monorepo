@@ -1,8 +1,9 @@
 # Legacy Documentation Cleanup Plan
 
 > Last verified: 2026-07-03 · commit de88bd4 · derived from the 2026-07-03 documentation audit
+> **EXECUTED 2026-07-04** — all stages completed in one pass after validation. Deviations from the plan below: `features/` was **relocated** to `documentation/improvements/backlog/` (live backlog, not deleted); `apps/web/docs/AVAILABILITY_UX.md` → `documentation/apps/web-availability-ux.md` and `docs/category-hierarchy.md` → `documentation/architecture/category-hierarchy.md` (moved, content current); `apps/bff/TESTING_UPDATES.md` and `apps/web/docs/AUTHENTICATION_*.md` deleted (content absorbed); `packages/shared/docs/nestjs-microservice-guide.md` left in place pending the `@welpco/shared` package decision (risks #9b); `docs/presentation-c-level.html` left in place (not documentation, owner's call). Deleted files remain recoverable via git history.
 
-The new `documentation/` tree is generated from the implementation and supersedes the legacy docs. **Nothing is deleted until the new tree is validated** (see process at the bottom). This file maps every legacy doc to its fate.
+The new `documentation/` tree is generated from the implementation and supersedes the legacy docs. This file maps every legacy doc to its fate (kept as the record of what was done).
 
 Legend: **Delete** = superseded, remove. **Keep** = still authoritative, referenced by the new tree. **Fold** = merge remaining useful content into the listed replacement first, then delete.
 

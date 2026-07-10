@@ -1,5 +1,22 @@
 # Vercel React Best Practices – Web App Audit
 
+> **Validation: 2026-07-04** (commit b809feb) — historical report; per-finding status below.
+>
+> Checked each item of the Recommended Action List against current `apps/web`. Totals: 4 resolved · 1 still open · 3 partial · 0 obsolete.
+>
+> | # | Recommendation | Status | Evidence (current code) |
+> |---|----------------|--------|-------------------------|
+> | 1 | CRITICAL — barrel import in `app/page.tsx` | 🟡 partial | Original instance gone (`app/page.tsx` no longer exists; routes moved under `app/[locale]` / `(marketing)`), but the pattern **regressed elsewhere**: 5 files barrel-import `from "@welpco/ui"` (messages-hub-client.tsx, bookings/page-client.tsx, bookings/[id]/page-client.tsx, disputes/page-client.tsx, disputes/[id]/page-client.tsx) and `packages/ui/package.json` sets no `"sideEffects": false` |
+> | 2 | HIGH — dedupe server auth with `cache()` | ✅ resolved | `getServerSessionCached = cache(async () => …)` in `apps/web/lib/auth/server-auth.ts:39`; pages still call `requireOnboardingComplete()` individually but the session fetch is deduped per request |
+> | 3 | MED — Suspense boundaries / loading.tsx | ✅ resolved | `app/(dashboard)/loading.tsx`, `app/(dashboard)/dashboard/search/loading.tsx`; `<Suspense>` used across 10+ pages (search, auth flow, register steps, …) |
+> | 4 | MED — useTransition for filters/search/tabs | 🟡 partial | Used only in `app/(dashboard)/dashboard/search/page-client.tsx`; no transitions for tab switches or other filter UIs |
+> | 5 | MED — derive current user in render, not effect | ✅ resolved | `useDashboardUser()` (`lib/hooks/use-dashboard-user.ts`) derives `clientUser ?? fallbackUser` via `useMemo`; effect only syncs the store. Used by layout-client and dashboard page-client |
+> | 6 | MED — content-visibility on long lists | ✅ resolved | `contentVisibility: "auto"` in bookings/page-client.tsx:383; `content-visibility: auto` + `contain-intrinsic-size` in `dashboard/search/search.module.css` |
+> | 7 | LOW — ternary over `&&` for numeric conditions | 🟢 still open | `&&` conditionals remain widespread; sampled numeric-looking cases are boolean-guarded (`.length > 0 &&`, `!x?.length &&`) so no rendered-`0` leak found, but the stylistic recommendation was not adopted |
+> | 8 | LOW — versioned localStorage schema | ✅ resolved | `stores/personalizationStore.ts` persists `{ version: STORAGE_VERSION, … }` and discards/migrates on version mismatch (lines 36–38, 67) |
+>
+> Most important still-open item: the barrel-import regression (#1) — 5 dashboard files now pull the full `@welpco/ui` index with no tree-shaking hint on the package.
+
 Audit of `apps/web` against the [Vercel React Best Practices](https://github.com/vercel/react-best-practices) (57 rules in 8 categories). Findings are grouped by priority and include file references and concrete recommendations.
 
 ---

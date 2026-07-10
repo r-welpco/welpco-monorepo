@@ -1,5 +1,7 @@
 # Notifications — open tickets
 
+> **Validation: 2026-07-04** — every ticket below re-verified against the implementation at the current commit (`b809feb`). Status tags: ✅ SHIPPED · 🟢 STILL OPEN · 🟡 PARTIAL · ⚫ OBSOLETE · ❓ UNVERIFIED.
+
 Source: Day 13 disputes + notifications functional audit (`apps/web/AUDIT-LOG.md`).
 
 The audit shipped 3 P1/P2 fixes (catalogued first, for traceability). The remaining open work is below — each ticket-ready, severity- and effort-tagged, ordered by leverage.
@@ -22,6 +24,8 @@ Cross-references:
 ---
 
 ## NOTIFICATIONS-001 — Only booking events fire notifications (review / payment / dispute / message all silent) [SHIPPED 2026-05-06]
+
+**[✅ SHIPPED — verified 2026-07-04]** — `NotificationService.emitForUser` exists (`apps/bff/src/domains/notification/notification.service.ts:125`) and honors per-category email + in-app preferences in `send()` (lines 216-232); emitters confirmed in `dispute.service.ts` (create/withdraw/resolution), `review.service.ts:127`, `payment.service.ts:551+`, `communication.service.ts:419`, and `job-posting.service.ts:941+`.
 
 **Status: SHIPPED** — see `apps/web/AUDIT-LOG.md` Day 16 dispatch 2. Every domain now emits per-recipient notifications with category + email + in-app delivery per preference. New shared `NotificationService.emitForUser` helper in `apps/bff/src/domains/notification/notification.service.ts`; per-domain emits in dispute / review / payment / communication services + 10 new unit tests. P0 launch-blocker count: 1 → 0. Original ticket entry preserved below for the audit trail.
 
@@ -55,6 +59,8 @@ Cross-references:
 
 ## NOTIFICATIONS-002 — `MESSAGE` category missing from BFF enum [SHIPPED 2026-05-06]
 
+**[🟡 PARTIAL — verified 2026-07-04]** — `MESSAGE` + `DISPUTE` exist in the enum (`apps/bff/src/domains/notification/entities/notification-category.enum.ts`) and the FE card mapper maps them (`apps/web/lib/notifications/notification-card-mapper.ts:14-15`), BUT the acceptance criterion "preferences UI shows a Messages row" is unmet: no notification-preferences UI exists anywhere in `apps/web` (`useNotificationPreferences` has zero UI consumers; `settings/page.tsx` has no notification section) — the Day-16 note's "FE settings page ... updated" claim does not match current code.
+
 **Status: SHIPPED** — see `apps/web/AUDIT-LOG.md` Day 16 dispatch 2. `MESSAGE` (and `DISPUTE`) added to `NotificationCategory` enum; preferences endpoint auto-creates default-true rows for the new categories on first read; FE settings page + notifications page-client + bell popover updated. No migration needed (the column is `varchar(32)`, not a PostgreSQL enum).
 
 - **Priority**: P1 (foundational for NOTIFICATIONS-001 message emitter)
@@ -72,6 +78,8 @@ Cross-references:
 
 ## NOTIFICATIONS-003 — Real-time push (badge + popover lag up to 30s)
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — no SSE endpoint exists in `apps/bff/src/modules/notifications/notifications.controller.ts`; `useUnreadCount` still polls with `refetchInterval: 30 * 1000` (`apps/web/lib/hooks/use-notifications.ts:36-45`).
+
 - **Priority**: P1
 - **Area**: BFF + web
 - **Problem**: `useUnreadCount` polls every 30s (`apps/web/lib/hooks/use-notifications.ts:41`). A new dispute / message / review notification can take up to 30 seconds to surface. Day 12 messages audit identified the same gap for messages (MESSAGES-001). The infrastructure is shared — design once, use everywhere.
@@ -88,6 +96,8 @@ Cross-references:
 
 ## NOTIFICATIONS-004 — Notifications list pagination missing (caps at 50)
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — `apps/web/app/(dashboard)/dashboard/notifications/page-client.tsx:35` is still `useNotifications({ limit: 50 })` with no pagination footer.
+
 - **Priority**: P1
 - **Area**: Web notifications page
 - **Problem**: `apps/web/app/(dashboard)/dashboard/notifications/page-client.tsx:44` → `useNotifications({ limit: 50 })` — silently truncates anything older. A heavy user (welper with 100+ bookings) will lose the long tail. The BFF supports `page` + `limit`; the FE doesn't expose it.
@@ -102,6 +112,8 @@ Cross-references:
 ---
 
 ## NOTIFICATIONS-005 — Mark-as-read race: badge can re-show after mark-all-read
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — `useMarkAsRead` / `useMarkAllAsRead` still only `invalidateQueries({ queryKey: ["notifications"] })` on success (`apps/web/lib/hooks/use-notifications.ts:59-77`); no optimistic `setQueryData` / `cancelQueries`.
 
 - **Priority**: P1
 - **Area**: Web hooks
@@ -119,6 +131,8 @@ Cross-references:
 
 ## NOTIFICATIONS-006 — `NotificationPreferences` reads from a single static list — no per-category surface
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — the platform component is unchanged (channel-grouped, `const categories = ["email", "push"] as const` at `packages/ui/src/platform/notification/notification-preferences.tsx:43`) and no web surface renders any preferences UI at all, despite the BFF storing per-category `emailEnabled`/`inAppEnabled` rows with GET/PUT `/preferences` endpoints.
+
 - **Priority**: P1
 - **Area**: Web settings + platform
 - **Problem**: The platform `NotificationPreferences` component groups by channel (email / push) — but the BFF stores preferences keyed by **category** (booking / payment / review / security / system) with email + in-app toggles per row. The web settings page (Day 10) needs a 2D matrix: rows = category, columns = channel. Current single-list-by-channel design loses the category dimension entirely.
@@ -135,6 +149,8 @@ Cross-references:
 
 ## NOTIFICATIONS-007 — Notification action routing has no fallback / loading state
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — `handleNotificationAction` still just `router.push(normalizeDashboardActionUrl(actionUrl))` with no mark-as-read-first and no stale-target fallback, in both `apps/web/app/(dashboard)/dashboard/notifications/page-client.tsx:65-75` and the bell popover.
+
 - **Priority**: P2
 - **Area**: Web notifications page + popover
 - **Problem**: `handleNotificationAction` calls `router.push(actionUrl)` with no ack to the user. If the link is dead (booking deleted, dispute archived), the user lands on a 404. No "Marking as read…" pulse. No "this notification's target is gone" fallback.
@@ -149,6 +165,8 @@ Cross-references:
 
 ## NOTIFICATIONS-008 — Notification center filter has no `aria-live` for filter changes
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — `packages/ui/src/platform/notification/notification-center.tsx` contains no `aria-live` region or hidden status line (only the Day-13 `showEmpty` fix at line 101).
+
 - **Priority**: P2
 - **Area**: `NotificationCenter`
 - **Problem**: When the user switches filter from All → Unread, the list updates but SR users don't get a count announcement. Bible §22 a11y baseline: any meaningful state change should be announced.
@@ -162,6 +180,8 @@ Cross-references:
 ---
 
 ## NOTIFICATIONS-009 — Notifications never auto-prune; account history grows unbounded
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — no cron/scheduled prune anywhere in `apps/bff/src/domains/notification` or `apps/bff/src/modules/notifications` (no `@Cron`/`@Interval`/retention logic in `notification.service.ts`).
 
 - **Priority**: P2 (DB cost + UX)
 - **Area**: BFF
@@ -179,6 +199,8 @@ Cross-references:
 
 ## NOTIFICATIONS-010 — `NotificationPreferences` SMS row is hidden via array filter — fragile
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — the hardcoded `const categories = ["email", "push"] as const` filter is still there verbatim (`packages/ui/src/platform/notification/notification-preferences.tsx:43`); note the component currently has no consumer in `apps/web`, so this is dead-code-adjacent until NOTIFICATIONS-006 lands.
+
 - **Priority**: P3
 - **Area**: `NotificationPreferences`
 - **Problem**: `const categories = ["email", "push"] as const;` (intentionally hardcoded; comment notes "SMS is intentionally hidden per product call (Day 9 Wave 3)"). Fragile — when SMS ships, two places need editing (this filter + the BFF). And the `SMS` `NotificationPreference.category` value is `"sms"` — never `"push"`. The whole `push` channel might be dead code.
@@ -194,6 +216,8 @@ Cross-references:
 
 ## NOTIFICATIONS-011 — Notification badge shows when `unreadCount === 0` momentarily during stale-while-revalidate
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — rolled into NOTIFICATIONS-003, which has not shipped; `useUnreadCount` still has `staleTime: 10s` + 30s poll (`apps/web/lib/hooks/use-notifications.ts:36-45`).
+
 - **Priority**: P3
 - **Area**: Web notification bell
 - **Problem**: `useUnreadCount` has `staleTime: 10s`. When the count resolves to 0, the badge unmounts. On the next 30s tick, if the request is in-flight, the cached `0` is shown — fine. But if the user just received a new notification, the SWR pattern can show `0` briefly before the count refreshes. Cosmetic; mostly fixed by NOTIFICATIONS-003.
@@ -203,6 +227,8 @@ Cross-references:
 ---
 
 ## NOTIFICATIONS-012 — No e2e spec for the notification flow
+
+**[🟡 PARTIAL — verified 2026-07-04]** — `apps/web/e2e/notifications/multi-domain.spec.ts` exists but is a skip-gated (`RUN_NOTIFICATION_SMOKE=1`) multi-domain emit smoke only; mark-as-read, click-through routing, stale-link, and preferences round-trip remain uncovered.
 
 - **Priority**: P2
 - **Area**: Web e2e

@@ -1,5 +1,7 @@
 # Onboarding-welcome — open tickets
 
+> **Validation: 2026-07-04** — every ticket below re-verified against the implementation at commit `b809feb`. Status tags: ✅ SHIPPED · 🟢 STILL OPEN · 🟡 PARTIAL · ⚫ OBSOLETE · ❓ UNVERIFIED.
+
 > **Architectural note (2026-04-29 → shipped 2026-05-06)**: most P0/P1 tickets
 > in this file have been **shipped via** `features/SIGNUP_MERGE_PLAN.md`. The
 > signup ↔ onboarding merge replaced the standalone post-login onboarding flow
@@ -34,6 +36,8 @@ Cross-references:
 
 ## ONBOARDING-001 — `?next=` deep-link target gets an unbranded "Go to dashboard" CTA
 
+**[⚫ OBSOLETE — verified 2026-07-04]** — the completion-CTA screen was deleted with the legacy flow; the wizard's finish page auto-redirects through `safeNextPath(nextRaw)` with no mislabeled button (`apps/web/app/[locale]/(auth)/register/finish/finish-page-client.tsx`); `setup-completion-step.tsx` is no longer mounted anywhere in apps/web.
+
 - **Priority**: P1 (activation)
 - **Area**: `setup-completion-step.tsx` + `onboarding-welcome/page.tsx`
 - **Problem**: A new user who clicks "Book this Welper" on a marketing page is sent through register → verify → `/onboarding-welcome?next=/dashboard/booking/new?welperId=…`. After completing onboarding the final-step CTA reads "Go to dashboard" but the actual `router.push(nextPath)` lands them on the booking flow. Bible §22.6 honesty: button copy must match the action. We promised them they could finish their booking; the button calls it "dashboard".
@@ -52,6 +56,8 @@ Cross-references:
 ---
 
 ## **[SHIPPED]** ONBOARDING-002 — Phone input has no validation feedback or country-code parsing
+
+**[✅ SHIPPED — verified 2026-07-04]** — confirmed: client and server both validate via `libphonenumber-js` (`packages/ui/src/platform/user-management/signup-steps/identity-step.tsx`; `apps/bff/src/modules/auth/dto/identity-step.dto.ts` explicitly notes "Closes ONBOARDING-002").
 
 **Shipped (2026-05-06)** — addressed in signup-merge: the wizard's identity step (`packages/ui/src/platform/user-management/signup-steps/identity-step.tsx`) parses + validates phone with `libphonenumber-js`, normalizes to E.164 at submit, and the BFF re-validates server-side. See AUDIT-LOG Day 15.
 
@@ -72,6 +78,8 @@ Cross-references:
 ---
 
 ## ~~ONBOARDING-003 — Welper has only one onboarding step (profile basics) — no service offerings, no availability, no bio, no photo~~
+
+**[✅ SHIPPED — verified 2026-07-04]** — confirmed: welper wizard steps `welperBio` / `welperServiceArea` / `welperOffering` / `welperAvailability` / `welperBackgroundCheck` / `welperPayout` exist (`apps/web/app/[locale]/(auth)/register/step-name-utils.ts`; `POST /auth/signup/step/*` in `apps/bff/src/modules/auth/auth.controller.ts`) and `signup/finish` 422-gates required fields.
 
 **Shipped (2026-05-06)** — resolved via signup-merge architecture. The wizard's role-conditional required-fields contract (welper now has bio + service-area + ≥1 service offering + availability + payout choice + notification prefs + optional photo, all server-validated before `signupCompleted: true` flips) IS the fix. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 
@@ -102,6 +110,8 @@ Cross-references:
 
 ## **[SHIPPED]** ONBOARDING-004 — Profile-step save failures are swallowed (user thinks they saved, server has empty profile)
 
+**[✅ SHIPPED — verified 2026-07-04]** — confirmed: each wizard step posts to its own BFF endpoint, and `INCOMPLETE_SIGNUP` / `missingFields` errors are surfaced inline (`apps/web/app/[locale]/(auth)/register/finish/finish-page-client.tsx` Callout `role="alert"`); no swallow-and-advance path remains.
+
 **Shipped (2026-05-06)** — addressed in signup-merge: each wizard step submits to its own BFF endpoint with structured 422 errors (`IncompleteSignupErrorBody` / DTO validation) surfaced inline; no "advance with empty server state" path remains. See AUDIT-LOG Day 15.
 
 
@@ -121,6 +131,8 @@ Cross-references:
 ---
 
 ## ~~ONBOARDING-005 — `markOnboardingComplete()` race vs `?next=` redirect~~
+
+**[✅ SHIPPED — verified 2026-07-04]** — confirmed: server-owned `signupCompleted` drives routing in `apps/web/proxy.ts` (~lines 167-171) and the finish page awaits the session update before `router.replace(safeNextPath(...))` — no 100ms-timeout heuristic remains. (Note: `markOnboardingComplete` still exists BFF-side in `apps/bff/src/modules/profiles/profiles.service.ts` but the web app no longer calls it.)
 
 **Shipped (2026-05-06)** — resolved via signup-merge architecture. Server-driven state eliminates the race entirely: the wizard's `useFinishSignup` mutation triggers a session refresh that reads the freshly-flipped `signupCompleted: true` from the BFF before the client-side `router.push(nextPath)` fires; the middleware's four-state machine handles the routing authoritatively if the JWT is still in flight. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 
@@ -152,6 +164,8 @@ Cross-references:
 
 ## ONBOARDING-006 — Customer preferences step blocks on empty `/api/content/categories` instead of degrading
 
+**[⚫ OBSOLETE — verified 2026-07-04]** — `onboarding-customer-preferences-step.tsx` has zero imports in apps/web (dead export in `packages/ui/src/platform/user-management/index.ts`); the wizard has no service-category preferences step (`apps/web/app/[locale]/(auth)/register/step-name-utils.ts`).
+
 - **Priority**: P2 (graceful degradation)
 - **Area**: `onboarding-customer-preferences-step.tsx`
 - **Problem**: The component handles `categories.length === 0` with a Callout "Service categories are not available yet" and a Continue button that submits an empty array. But if `useContentCategories()` returns `isError` (network drop, BFF down), the page-client passes `[]` to the step which then renders the "not available yet" copy. The user thinks the platform isn't ready; really the BFF is down. Bible §17.5: tell what / why / what-to-do.
@@ -166,6 +180,8 @@ Cross-references:
 
 ## ONBOARDING-007 — Skip flow has no path (welcome step's "Skip for now" never wired)
 
+**[⚫ OBSOLETE — verified 2026-07-04]** — `welcome-step.tsx` is no longer mounted anywhere in apps/web (wizard opens with the select-role step); the unused `onSkip` branch is now a dead-component-cleanup concern, not a flow fix.
+
 - **Priority**: P2 (UX consistency)
 - **Area**: `welcome-step.tsx` + `onboarding-welcome/page.tsx`
 - **Problem**: `WelcomeStep` accepts an optional `onSkip` prop and renders "Skip for now" if provided. The page-client never passes `onSkip`, so the button is never rendered. The optional prop and unused branch is dead code. Either wire it (skip onboarding entirely → mark complete → redirect to `nextPath`) or remove the prop.
@@ -179,6 +195,8 @@ Cross-references:
 ---
 
 ## ~~ONBOARDING-008 — Profile-basics step doesn't pre-fill from registration form data~~
+
+**[✅ SHIPPED — verified 2026-07-04]** — confirmed: `CustomerRegisterForm` / `WelperRegisterForm` have zero usages in apps/web; the wizard (`apps/web/app/[locale]/(auth)/register/`) IS the registration, so there is no duplicate data entry.
 
 **Shipped (2026-05-06)** — resolved via signup-merge architecture. There is no separate registration form to pre-fill from; the wizard IS the registration. See `features/SIGNUP_MERGE_PLAN.md` + AUDIT-LOG Day 15.
 
@@ -199,6 +217,8 @@ Cross-references:
 
 ## ONBOARDING-009 — Heading hierarchy skips h2 (h1 → h3 inside the workflow card)
 
+**[⚫ OBSOLETE — verified 2026-07-04]** — all four named step components (`welcome-step.tsx`, `profile-basics-step.tsx`, `onboarding-customer-preferences-step.tsx`, `setup-completion-step.tsx`) are unmounted legacy code; their heading order can't trip axe-core on any live page.
+
 - **Priority**: P3 (a11y)
 - **Area**: `welcome-step.tsx`, `profile-basics-step.tsx`, `onboarding-customer-preferences-step.tsx`, `setup-completion-step.tsx`
 - **Problem**: The welcome + completion steps render `<Heading size="7">` with default `as="h1"`. The intermediate steps render `<Heading as="h3" size="3">`. Skipping h2 trips axe-core's `heading-order` rule. The card itself is the only landmark.
@@ -210,6 +230,8 @@ Cross-references:
 ---
 
 ## ONBOARDING-010 — `nextPath` not surfaced to the user mid-flow
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — the concern transfers to the wizard: `?next=` is threaded through every step (`apps/web/app/[locale]/(auth)/register/step/[step]/step-page-client.tsx:67,127`) but never displayed to the user; ticket file paths need re-targeting from the deleted onboarding pages to the register wizard.
 
 - **Priority**: P3 (transparency)
 - **Area**: `onboarding-welcome/page.tsx`
@@ -224,6 +246,8 @@ Cross-references:
 ---
 
 ## ONBOARDING-011 — No e2e coverage for the onboarding flow
+
+**[✅ SHIPPED — verified 2026-07-04]** — `apps/web/e2e/auth/registration.spec.ts` covers customer + welper wizard happy paths, drop-and-resume, `?next=` post-signup routing, and the middleware four-state machine; the legacy `apps/web/e2e/onboarding/onboarding-flow.spec.ts` is `test.describe.skip` against the deleted flow (cleanup candidate).
 
 - **Priority**: P2 (quality gate)
 - **Area**: `apps/web/e2e/`
@@ -240,6 +264,8 @@ Cross-references:
 ---
 
 ## ONBOARDING-012 — Welcome step's "What we'll set up" list is misleading for welpers
+
+**[⚫ OBSOLETE — verified 2026-07-04]** — `welcome-step.tsx` is unmounted; the wizard has no "What we'll set up" list (it opens with the select-role step, and role-specific steps are enumerated by the server-owned `requiredSteps` in `step-name-utils.ts`).
 
 - **Priority**: P3 (microcopy)
 - **Area**: `welcome-step.tsx`

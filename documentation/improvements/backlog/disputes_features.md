@@ -1,5 +1,7 @@
 # Disputes — open tickets
 
+> **Validation: 2026-07-04** — every ticket below re-verified against the implementation at the current commit (`b809feb`). Status tags: ✅ SHIPPED · 🟢 STILL OPEN · 🟡 PARTIAL · ⚫ OBSOLETE · ❓ UNVERIFIED.
+
 Source: Day 13 disputes + notifications functional audit (`apps/web/AUDIT-LOG.md`).
 
 The audit shipped 4 P1/P2 fixes (catalogued first, for traceability). The remaining open work is below — each ticket-ready, severity- and effort-tagged, ordered by leverage.
@@ -22,6 +24,8 @@ Cross-references:
 
 ## ~~DISPUTES-001 — Evidence upload is unwired in the production "Report a problem" flow~~ [SHIPPED]
 
+**[✅ SHIPPED — verified 2026-07-04]** — `POST disputes/evidence/presign` live (`apps/bff/src/domains/dispute/dispute.controller.ts:54`, service `presignEvidenceUpload` with 15-min PUT + `disputes/<userId>/<uuid>.<ext>` keys); `DisputeForm` mounts `EvidenceUpload` via `uploadEvidence` prop and the booking detail wires `uploadDisputeEvidence` (`apps/web/lib/services/dispute-evidence-upload-service.ts`, `apps/web/app/(dashboard)/dashboard/bookings/[id]/page-client.tsx:2019-2038`). Note: the "detail page renders evidence with Download link" acceptance criterion is still unmet — tracked by DISPUTES-004, which remains open.
+
 **Shipped 2026-05-06** — Day 16. See `apps/web/AUDIT-LOG.md` Day 16 entry. The BFF gained `POST /api/disputes/evidence/presign` (15-min PUT URLs, content-type whitelist, 10 MB cap, per-user namespace `disputes/<userId>/<uuid>.<ext>`). `EvidenceUpload` (platform) was rewritten to drive the full upload lifecycle when given an `uploadFile` callback; `DisputeForm` mounts it inline and ships the resulting keys with the dispute create payload. Customer can now attach up to 5 files (jpg/png/webp/heic/pdf) per report. Empty evidence remains valid.
 
 - **Priority**: P0 (trust + safety)
@@ -40,6 +44,8 @@ Cross-references:
 ---
 
 ## ~~DISPUTES-002 — Category enum mismatch loses information ("safety" reports impossible)~~ [SHIPPED]
+
+**[✅ SHIPPED — verified 2026-07-04]** — canonical enum exists in `packages/types/src/domain/dispute-category.type.ts`; `DisputeForm` submits the five BFF values (`no_show|quality|overcharge|safety|other`) with no lossy mapping and renders the safety 911 callout (`packages/ui/src/platform/dispute-resolution/dispute-form.tsx:42-48,310-319`). Minor nit: `DISPUTE_CATEGORIES` is re-declared in `dispute-form.tsx` rather than imported from `@welpco/types` — values match 1:1 today.
 
 **Shipped 2026-05-06** — Day 16. See `apps/web/AUDIT-LOG.md` Day 16 entry. The canonical `DisputeCategory` enum (`no_show | quality | overcharge | safety | other`) lives in `@welpco/types` (`packages/types/src/domain/dispute-category.type.ts`). `DisputeForm` consumes it 1:1 with no lossy mapping; the booking-detail page-client's `categoryMap` was deleted. Selecting `safety` renders a Bible §22.6 honesty callout: "If you're in immediate danger, call 911 first. We respond to safety reports within 4 hours and may contact you directly." `<SelectTrigger>` carries `aria-required="true"` per Bible §16.3.
 
@@ -61,6 +67,8 @@ Cross-references:
 
 ## DISPUTES-003 — Booking-detail dispute dialog has no description optional path
 
+**[✅ SHIPPED — verified 2026-07-04]** — form schema is now `description: z.string().max(DISPUTE_DESCRIPTION_MAX_LENGTH).optional()` with no min-length (`packages/ui/src/platform/dispute-resolution/dispute-form.tsx:90-97`); BFF `description` remains `@IsOptional()`.
+
 - **Priority**: P1
 - **Area**: `DisputeForm`
 - **Problem**: BFF `CreateDisputeDto.description` is `@IsOptional()`. FE schema requires `min(20)` chars. A user with a clear subject ("welper didn't arrive") and no further context is forced to type 20 characters of filler — bible §22.6 honesty: don't make people lie to your validators.
@@ -75,6 +83,8 @@ Cross-references:
 ---
 
 ## DISPUTES-004 — Dispute detail never renders the actual evidence (count only)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — `apps/web/app/(dashboard)/dashboard/disputes/[id]/page-client.tsx:172-184` still renders only `d.evidenceCount(dispute.evidence.length)`; the BFF's per-item `signedUrl` (populated by `signEvidence` in `dispute.service.ts`) is never referenced by the FE.
 
 - **Priority**: P1 (paired with DISPUTES-001)
 - **Area**: Web dispute detail
@@ -91,6 +101,8 @@ Cross-references:
 ---
 
 ## DISPUTES-005 — Resolution outcome invisible to participants ("resolved" with no detail)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — participant branch of `findById` still returns `this.toDto(dispute)` with no resolution (`apps/bff/src/domains/dispute/dispute.service.ts:587-591`; `dto.resolution` is set only on the admin branch), and `ResolutionCard` has zero usages in `apps/web`.
 
 - **Priority**: P1 (money honesty)
 - **Area**: BFF + web dispute detail
@@ -109,6 +121,8 @@ Cross-references:
 
 ## DISPUTES-006 — No statute of limitations on dispute filing
 
+**[🟡 PARTIAL — verified 2026-07-04]** — the window is now enforced: BFF rejects out-of-window creates via `isDisputeReportWindowOpen` + `ApplicationSettingsService.getDisputeReportWindowMinutes()` (`apps/bff/src/domains/dispute/dispute.service.ts:409-414`), and the FE hides the entry point via `canReportDisputeForBooking` / `booking.disputeReportDeadlineAt` (`apps/web/lib/booking/dispute-report-window.ts`). Still missing: the booking-detail countdown ("closes 6d 4h") and the out-of-window explainer + contact-support copy.
+
 - **Priority**: P1 (money + abuse)
 - **Area**: BFF dispute service
 - **Problem**: `disputableStatuses = ["in_progress", "completed", "payment_released", "no_show"]` has no time bound (`apps/web/app/(dashboard)/dashboard/bookings/[id]/page-client.tsx:306`). A customer can file a dispute on a 2-year-old booking. The welper has long since spent the money; the platform has no realistic path to a fair resolution. Day 11 booking audit established "free cancellation any time before service starts" — the inverse honesty contract is missing here: when does the dispute window close?
@@ -125,6 +139,8 @@ Cross-references:
 ---
 
 ## DISPUTES-007 — Welper has no response surface (one-sided dispute)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — no `DisputeComment` entity exists (`apps/bff/src/domains/dispute/entities/` holds only dispute, resolution, support-ticket, category/status/filer enums) and `dispute.controller.ts` exposes no comments endpoints.
 
 - **Priority**: P1 (fairness; mirrors REVIEWS-002)
 - **Area**: BFF + web dispute detail
@@ -143,6 +159,8 @@ Cross-references:
 
 ## DISPUTES-008 — `relatedBookingId` field useless in the booking-context dialog
 
+**[⚫ OBSOLETE — verified 2026-07-04]** — the Day 16 `DisputeForm` rewrite removed `relatedBookingId` entirely; the schema is now `subject`/`category`/`description` only (`packages/ui/src/platform/dispute-resolution/dispute-form.tsx:83-98`), so the field this ticket wanted hidden no longer exists.
+
 - **Priority**: P3 (copy + IA)
 - **Area**: `DisputeForm`
 - **Problem**: `DisputeForm` accepts a `relatedBookingId` text field. In the booking-detail dialog, `defaultValues={{ relatedBookingId: bookingId }}` prefills it — but the field is still rendered, asking the user to confirm a UUID they don't know exists. Caller never reads the value (the booking ID is in the URL and passed separately to `createDispute`). Cognitive friction with no functional benefit.
@@ -156,6 +174,8 @@ Cross-references:
 ---
 
 ## DISPUTES-009 — Message-typed evidence is opaque
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — `signEvidence` passes `message` items through unchanged with no snippet hydration (`apps/bff/src/domains/dispute/dispute.service.ts:194-229`; only creation-time ownership validation was added via `assertMessageEvidenceBelongsToBooking`) and the dispute detail FE renders no message evidence at all.
 
 - **Priority**: P2
 - **Area**: BFF + web dispute detail
@@ -171,6 +191,8 @@ Cross-references:
 ---
 
 ## DISPUTES-010 — Dispute list lacks status filter / tabs
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — `apps/web/app/(dashboard)/dashboard/disputes/page-client.tsx` is still a flat paginated list (no `TabNav`/filter), and the BFF status filter remains admin-only (`user.effectiveRole === 'admin' && status` gate in `dispute.controller.ts:140`).
 
 - **Priority**: P2
 - **Area**: Web disputes list
@@ -188,6 +210,8 @@ Cross-references:
 
 ## DISPUTES-011 — No e2e spec for the dispute lifecycle
 
+**[🟡 PARTIAL — verified 2026-07-04]** — `apps/web/e2e/disputes/dispute-create.spec.ts` now covers the create happy path (safety category + evidence attach + payload contract), but the list → detail → withdraw arc and the non-filer-cannot-withdraw negative are still uncovered.
+
 - **Priority**: P2
 - **Area**: Web e2e
 - **Problem**: Mirrors Day 11's BOOKING-014 / Day 12's MESSAGES gap. No Playwright or equivalent covering the file → list → detail → withdraw arc. Every refactor risks silent regression on a money-flow-adjacent surface.
@@ -201,6 +225,8 @@ Cross-references:
 ---
 
 ## DISPUTES-012 — Withdraw button missing on disputes list (only on detail)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — list rows in `apps/web/app/(dashboard)/dashboard/disputes/page-client.tsx:140-151` offer only "View report" + "Open booking"; no per-row menu or withdraw action (withdraw exists only on the detail page).
 
 - **Priority**: P3
 - **Area**: Web disputes list
@@ -216,6 +242,8 @@ Cross-references:
 ---
 
 ## DISPUTES-013 — Dispute detail "What happens next" is static — never reflects the real status
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — the card still renders a single status-independent label `d.whatHappensNextDescription` (`apps/web/app/(dashboard)/dashboard/disputes/[id]/page-client.tsx:188-195`); no `nextStepCopy` derived from `dispute.status`.
 
 - **Priority**: P3
 - **Area**: Web dispute detail
@@ -236,6 +264,8 @@ Cross-references:
 
 ## DISPUTES-014 — `DisputeForm` submit button uses `primary` (green) for a serious action
 
+**[🟢 STILL OPEN — verified 2026-07-04]** — the submit button is still `color={SEMANTIC_COLOR.primary}` (`packages/ui/src/platform/dispute-resolution/dispute-form.tsx:358-366`), not `warning`.
+
 - **Priority**: P3
 - **Area**: `DisputeForm`
 - **Problem**: The "Send report" button uses `SEMANTIC_COLOR.primary` (green = success / CTA). A dispute is a problem report, not a happy moment. Bible §22 voice — visual color signals affect tone. `warning` (amber) is more honest. Day 11 booking audit used `warning` for the booking-detail Report a problem button for this exact reason.
@@ -249,6 +279,8 @@ Cross-references:
 ---
 
 ## DISPUTES-015 — `support-ticket-card` reuses `DisputeStatusBadge` but DB statuses don't match
+
+**[🟢 STILL OPEN — verified 2026-07-04]** — `SupportTicketCardProps.status` is still typed `DisputeStatus` and rendered through `DisputeStatusBadge` (`packages/ui/src/platform/dispute-resolution/support-ticket-card.tsx:16,51`); no `SupportTicketStatusBadge` exists (and priority colors are still raw `gray|amber|red`).
 
 - **Priority**: P3
 - **Area**: `SupportTicketCard` (platform)

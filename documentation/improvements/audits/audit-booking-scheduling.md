@@ -1,5 +1,21 @@
 # Booking & Scheduling Feature – Audit Report
 
+> **Validation: 2026-07-04** (commit b809feb) — historical report; per-finding status below.
+>
+> The report's unevidenced claim "all listed issues have been addressed" is now **verified accurate** against the current booking domain. 8 resolved · 0 still open · 0 partial · 1 obsolete.
+>
+> | # | Finding | Status | Evidence (current code) |
+> |---|---------|--------|-------------------------|
+> | 1 | Cancel 24h window uses server-local time | ✅ resolved | `timezone_offset_minutes` column on `booking_requests` (booking-request.entity.ts:51); cancel computes `scheduledTimeToUtcMs(date, time, offset)` (booking.service.ts ~1306; `booking-schedule-time.ts`) |
+> | 2 | No availability check on create | ✅ resolved | `create()` calls `availabilityService.isSlotAvailable(...)` (booking.service.ts:597) and `checkConflictsInTransaction(...)` (line 608) before saving |
+> | 3 | Accept race (check-then-save) | ✅ resolved | `accept()` runs inside `dataSource.transaction` with `setLock('pessimistic_write')` + in-transaction conflict check (booking.service.ts:885–913); cancel/state transitions use the same lock |
+> | 4 | BookingWizard doesn't collect schedule | ✅ resolved | Wizard has `scheduledDate/StartTime/EndTime` state and includes them + `durationMinutes` in the `onSubmit` payload (booking-wizard.tsx:96–215) |
+> | 5 | HH:mm vs HH:mm:ss mismatch | ✅ resolved | `normalizeTime()` slices times to `HH:mm` in all response mappings (booking.service.ts:276–298, 1382–1383) |
+> | 6 | ACCEPTED immediately overwritten to CONFIRMED | ⚫ obsolete | `CONFIRMED` no longer exists in `BookingRequestStatus` (removed by migration `20260403000001-RemoveConfirmedBookingStatus`); accept now sets only `ACCEPTED` + `acceptedAt` |
+> | 7 | Cancel button only for customer (marked FIXED in report) | ✅ resolved | bookings/page-client.tsx:553 gates on `booking.availableActions?.includes("cancel")` |
+> | 8 | Required number question satisfied with 0 | ✅ resolved | `normalizeAnswerValue()` enforces `validationRules.min`/`max` for NUMBER questions and treats empty answers as missing (booking.service.ts:152+) |
+> | 9 | Past-booking cancellation fee edge | ✅ resolved | Fee applies only when `hoursUntil < FREE_CANCELLATION_HOURS && hoursUntil >= 0` — the past-booking exclusion is now an explicit bound (booking.service.ts:~1315) |
+
 **Date:** February 5, 2026  
 **Scope:** Full booking cycle (create, list, detail, accept, decline, cancel, check-in, check-out) and scheduling (availability, conflicts).
 

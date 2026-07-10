@@ -1,11 +1,27 @@
 # Welpco — features inventory
 
+> **Validation: 2026-07-04 · commit b809feb** — every ticket in every file below was re-verified against the current implementation (tags: ✅ SHIPPED · 🟢 STILL OPEN · 🟡 PARTIAL · ⚫ OBSOLETE, each with an evidence citation in the file). Verified totals — **127 tickets: 84 still open · 17 shipped · 17 partial · 9 obsolete · 0 unverified**:
+>
+> | File | Tickets | ✅ | 🟢 | 🟡 | ⚫ |
+> |---|---:|---:|---:|---:|---:|
+> | login | 15 | 1 | 7 | 5 | 2 |
+> | settings | 18 | 2 | 14 | 2 | 0 |
+> | booking (incl. WELPER-PAYOUTS-001) | 19 | 1 | 16 | 2 | 0 |
+> | messages | 12 | 0 | 12 | 0 | 0 |
+> | reviews | 11 | 0 | 10 | 1 | 0 |
+> | disputes | 15 | 3 | 9 | 2 | 1 |
+> | notifications | 12 | 1 | 9 | 2 | 0 |
+> | onboarding | 12 | 6 | 1 | 0 | 5 |
+> | dashboard | 13 | 3 | 6 | 3 | 1 |
+>
+> **Key corrections found during validation** (details in each file): **NOTIFICATIONS-002** was marked shipped but is 🟡 PARTIAL — the FE notification-preferences UI does not exist (`useNotificationPreferences` has no consumers). **LOGIN-003** is more urgent than labeled — the per-email login rate limit was since removed entirely. **BOOKING-006**'s premise is stale — late-cancellation fees ARE now charged (one-hour-hold capture). Shipped without a ticket update: WELPER-PAYOUTS-001, DISPUTES-003, DASHBOARD-005/007/011, ONBOARDING-011, REVIEWS-006 (mostly). Obsolete (target deleted/unmounted code): ONBOARDING-001/006/007/009/012, DASHBOARD-002, DISPUTES-008, LOGIN-002/006. Tables and counts in the *original text below* predate this validation — trust the per-ticket tags, not the old totals.
+
 Tickets-ready record of every functional gap, bug, and improvement surfaced during the Days 9–14 audit sweep. Nine files, **125 tickets**, **0 P0 launch-blockers** (down from 5 — 2 closed by the 2026-05-06 signup-merge, 2 by the 2026-05-06 disputes pass, 1 by the 2026-05-06 notifications pass), **~13 cross-feature P1s**. **The merge-state launch gate is closed.**
 
 ## Recent architectural changes
 
 - **2026-05-06 — NOTIFICATIONS-001 + 002 shipped: dispute / review / payment / message events all emit; MESSAGE category added.**
-  Every domain that mutates user-facing state now emits a notification per affected user with category + email + in-app delivery per preference. Booking-domain pattern was the template. New `MESSAGE` and `DISPUTE` enum values added; FE settings page surfaces them in the preferences matrix automatically (Wave 3 default-true). The notification center is no longer a UI shell. Net P0 count: 1 → 0. **Launch-blocker list now empty.** See AUDIT-LOG Day 16 dispatch 2.
+  Every domain that mutates user-facing state now emits a notification per affected user with category + email + in-app delivery per preference. Booking-domain pattern was the template. New `MESSAGE` and `DISPUTE` enum values added; FE settings page surfaces them in the preferences matrix automatically (Wave 3 default-true). **[Correction 2026-07-04: the FE preferences matrix does not exist — no settings-page notification section, `useNotificationPreferences` unconsumed. See NOTIFICATIONS-002 🟡 PARTIAL.]** The notification center is no longer a UI shell. Net P0 count: 1 → 0. **Launch-blocker list now empty.** See AUDIT-LOG Day 16 dispatch 2.
 
 - **2026-05-06 — DISPUTES-001 + DISPUTES-002 shipped: evidence upload wired, category enum reconciled.**
   Customers and welpers can now attach photos / PDFs to a dispute (5 files / 10 MB each, jpg/png/webp/heic/pdf, direct-to-S3 via `POST /api/disputes/evidence/presign`). The FE `DisputeForm` category dropdown now mirrors the BFF enum 1:1 — **safety reports are fileable for the first time**. Canonical `DisputeCategory` lives in `@welpco/types`. See AUDIT-LOG Day 16. Net P0 count: 3 → 1 (only `NOTIFICATIONS-001` remains).

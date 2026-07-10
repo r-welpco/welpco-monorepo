@@ -1,11 +1,15 @@
 # Auth (login + registration + verification + password reset) — open tickets
 
+> **Validation: 2026-07-04** — every ticket below re-verified against the implementation at commit `b809feb`. Status tags: ✅ SHIPPED · 🟢 STILL OPEN · 🟡 PARTIAL · ⚫ OBSOLETE · ❓ UNVERIFIED.
+
 Source: Day 9 auth functional audit (`apps/web/AUDIT-LOG.md`).
 4 P0/P1 fixes already shipped in that audit. The 13 items below are the remaining open work, ticket-ready, ordered by priority.
 
 ---
 
 ## LOGIN-001 — Move CacheService to Redis
+
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `apps/bff/src/domains/user-management/cache/cache.module.ts` — still provides only `MemoryCacheService` (in-process `Map`); no redis dependency in `apps/bff/package.json`. Cited file split since: `cache.service.ts` now delegates to `memory-cache.service.ts`.
 
 - **Priority**: P0 (gated on multi-replica BFF deploy — single-replica = OK)
 - **Area**: BFF infra
@@ -22,6 +26,8 @@ Source: Day 9 auth functional audit (`apps/web/AUDIT-LOG.md`).
 ---
 
 ## ~~LOGIN-002 — Login of unverified accounts must route to /verification, not "Invalid credentials"~~
+
+**[⚫ OBSOLETE — verified 2026-07-04]** Evidence: `apps/bff/src/domains/user-management/auth/auth.service.ts:211-216` — login no longer throws on unverified email (verification gate moved to `EmailVerifiedGuard` on bookable actions); prior "Resolved (2026-05-06)" marker confirmed correct.
 
 **Resolved (2026-05-06)** — superseded by the signup-merge Phase 3 architecture.
 Unverified login no longer routes to /verification or shows "Invalid credentials" —
@@ -45,6 +51,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 
 ## LOGIN-003 — Add per-IP login rate limit orthogonal to per-email cap
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `apps/bff/src/modules/auth/auth.controller.ts:56-59` — the per-email login rate limit cited at `:40` has since been REMOVED (comment: brute force handled by `AccountLockoutService` only); no per-IP cap and no global throttler exist, so spray protection is weaker than when this was filed. Guard now lives at `apps/bff/src/domains/user-management/auth/guards/rate-limit.guard.ts`.
+
 - **Priority**: P1
 - **Area**: Login security
 - **Problem**: `apps/bff/src/modules/auth/auth.controller.ts:40` rate-limits per email. A password-spray attack (1 attempt per email, many emails, 1 IP) creates a fresh bucket every email — no IP-level cap fires. Per-email cap protects any single account; doesn't protect against organised spray.
@@ -59,6 +67,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 ---
 
 ## LOGIN-004 — Email normalization in DTOs + DB migration
+
+**[🟡 PARTIAL — verified 2026-07-04]** Evidence: normalization now at service level for login (`apps/bff/src/domains/user-management/auth/auth.service.ts:176`), password reset (`password-reset.service.ts:46`), verify-email compare (`email-verification.service.ts:112`), and signup wizard DTO (`apps/bff/src/modules/auth/dto/begin-signup.dto.ts:23-24`); but `login/register/verify-email/reset-password` DTOs still lack `@Transform`, legacy `POST /auth/register` stores the raw email, and no DB normalization migration exists in `apps/bff/src/domains/user-management/migrations/`.
 
 - **Priority**: P1
 - **Area**: Account uniqueness
@@ -76,6 +86,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 
 ## LOGIN-005 — Refresh-token rotation deny-list
 
+**[🟡 PARTIAL — verified 2026-07-04]** Evidence: `apps/bff/src/domains/user-management/auth/auth.service.ts:390-396` — an `authVersion` check (migration `20260608000001-AddUserAuthVersion.ts`) now revokes all pairs on password/role/status security changes; but there is no per-jti deny-list, so a rotated refresh token remains valid until natural expiry and replay is not detected.
+
 - **Priority**: P1
 - **Area**: Session security
 - **Problem**: `auth.service.ts:336` rotates both access + refresh tokens, but the OLD refresh token remains cryptographically valid until its natural expiry (it's a stateless JWT). An attacker with a leaked refresh token can keep using it after the legitimate user rotates.
@@ -92,6 +104,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 
 ## LOGIN-006 — Login rate-limit keyGen email normalization
 
+**[⚫ OBSOLETE — verified 2026-07-04]** Evidence: `apps/bff/src/modules/auth/auth.controller.ts:56-59` — the login rate limit (and its keyGen) was removed entirely; the remaining email-keyed keyGens already normalize (`auth.controller.ts:96`, `:152`), as does lockout (`account-lockout.service.ts:50`). Nothing left to fix.
+
 - **Priority**: P2
 - **Area**: Consistency
 - **Problem**: Account-lockout normalises email (`email.toLowerCase().trim()`) but `apps/bff/src/modules/auth/auth.controller.ts:40` login rate-limit keyGen does not. `Test@…` and `test@…` hit different rate buckets but the same lockout counter. Confusing semantics; defeats the rate-limit on minor variations.
@@ -103,6 +117,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 ---
 
 ## LOGIN-007 — /verification page fallback when email is missing
+
+**[🟡 PARTIAL — verified 2026-07-04]** Evidence: file moved to `apps/web/app/[locale]/(auth)/verification/verification-page-client.tsx:111-124` — the blank-page `return null` is gone; a fallback message + "Back to login" button renders, and the email fallback chain now also checks the session. Gap: the login link is a plain `href="/login"` and does not preserve `?next=` (explicit AC).
 
 - **Priority**: P2
 - **Area**: Verification UX
@@ -119,6 +135,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 
 ## LOGIN-008 — Password-reset success copy decoupled from store write
 
+**[🟡 PARTIAL — verified 2026-07-04]** Evidence: file moved to `apps/web/app/[locale]/(auth)/forgot-password/page.tsx` — success card now renders from local state (`sentEmail`, line 30/55/79), but `setPasswordResetEmail`/`setPasswordResetSent` are still written on submit (lines 53-54); the store fields have no other consumers (`apps/web/stores/userStore.ts`), so removal is still pending.
+
 - **Priority**: P2
 - **Area**: Honesty contract
 - **Problem**: Web `request-password-reset` writes `passwordResetEmail` + `passwordResetSent: true` to Zustand unconditionally on submit. The success card text is correctly enumeration-safe ("If an account exists for {email}…"), but the *store* now states a fact ("we sent a reset to this email") that isn't always true.
@@ -130,6 +148,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 ---
 
 ## LOGIN-009 — Forgot-password link in LoginForm preserves ?next=
+
+**[✅ SHIPPED — verified 2026-07-04]** Evidence: `apps/web/app/[locale]/(auth)/login/login-page-client.tsx:145` — `router.push(withNext("/forgot-password", nextRaw))` via the `onForgotPassword` callback prop now taken by `packages/ui/src/platform/user-management/login-form.tsx`; forgot-password's cancel also round-trips `next` (`forgot-password/page.tsx:66`).
 
 - **Priority**: P2
 - **Area**: Redirect chain
@@ -143,6 +163,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 
 ## LOGIN-010 — Resend-code countdown UX
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `packages/ui/src/platform/user-management/account-verification.tsx:245-249` — resend button is only `disabled={loading}`; no cooldown/countdown state exists.
+
 - **Priority**: P3
 - **Area**: Verification UX
 - **Problem**: "Resend code" button has no client-side cooldown. Backend rate-limit catches abuse but the UX is hostile — users hammer the button when frustrated and get unexplained 429s.
@@ -154,6 +176,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 ---
 
 ## LOGIN-011 — Auth observability (failed logins, password reset frequency, rate-limit hits)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `apps/bff/src/domains/user-management/auth/guards/rate-limit.guard.ts` has no logging at all; only admin-action auditing exists (`apps/bff/src/domains/user-management/admin/admin-audit.service.ts`) — no structured audit log for failed logins / 429s.
 
 - **Priority**: P3
 - **Area**: Observability + incident response
@@ -171,6 +195,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 
 ## LOGIN-012 — Email-change reverification flow
 
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `apps/bff/src/domains/user-management/users/users.service.ts:44-51` — email swap is still silent (`emailVerified = false`, no challenge to the new address, no notification to the old); web call moved to `apps/web/lib/services/user-service.ts:268` (`updateEmail` → `PUT /api/users/me`).
+
 - **Priority**: P3
 - **Area**: Account security
 - **Problem**: `apps/web/lib/services/user-service.ts:233` calls `PUT /api/users/me { email }` and the user is silently logged in with the new email — no re-verification, no notification to the OLD address. If the session is compromised, the attacker can rotate the sign-in email and lock the legitimate user out.
@@ -185,6 +211,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 ---
 
 ## LOGIN-013 — Auth options: 2FA / TOTP, magic link, social login (Google / Apple)
+
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `apps/web/lib/auth/providers.ts` — Credentials is still the only NextAuth provider; no TOTP/magic-link/social endpoints anywhere in `apps/bff/src/modules/auth/` or `apps/bff/src/domains/user-management/auth/`.
 
 - **Priority**: P3 (each is its own product call)
 - **Area**: Auth options
@@ -202,6 +230,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 ## Bonus — out-of-audit-scope but worth filing
 
 ### LOGIN-014 — Account deletion grace period
+
+**[🟢 STILL OPEN — verified 2026-07-04]** Evidence: `apps/bff/src/domains/user-management/users/users.service.ts:81-92` — problem statement is stale (it's a soft-deactivate to `status=DEACTIVATED`, not a hard-delete), but no grace window, restore-on-login (login while DEACTIVATED is rejected, `auth.service.ts:201-203`), restore email, or scheduled hard-delete exists.
 
 - **Priority**: P3
 - **Problem**: `DELETE /api/users/me` is immediate hard-delete. Industry standard: 30-day soft-delete + restore window.
@@ -223,6 +253,8 @@ a typed 403 surfaced as a focused dialog with one-click resend. See
 ---
 
 ## LOGIN-015 — Document the NextAuth JWT-refresh contract for BFF state mutations
+
+**[🟡 PARTIAL — verified 2026-07-04]** Evidence: the machinery hardened — `apps/web/lib/auth/config.ts` (~195-205) now revalidates `emailVerified`/`signupCompleted` against BFF `GET /api/auth/signup/state` on the `update()` trigger, and sync helpers exist (`apps/web/lib/auth/sync-email-verification-session.ts`); but the documented contract itself (JSDoc block in `config.ts`, `proxy.ts` comment, `use-refresh-session.ts` helper) was never written.
 
 - **Priority**: P2
 - **Area**: Session contract / developer ergonomics
