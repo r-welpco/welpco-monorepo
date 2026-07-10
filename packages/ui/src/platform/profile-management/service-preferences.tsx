@@ -9,7 +9,7 @@ import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { Checkbox } from "@welpco/ui/checkbox";
-import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -88,10 +88,10 @@ export function ServicePreferences({
         )}
 
         <form onSubmit={handleSubmit}>
-          <Box mb="3">
-            <Text as="label" size="2" weight="bold" mb="1">
+          <Box mb={FORM_SPACING.fieldGap}>
+            <Text as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap}>
               Preferred service categories
-              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1">*</Text>
+              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <Flex direction="column" gap="2">
               {serviceCategories.map((category) => (
@@ -110,13 +110,13 @@ export function ServicePreferences({
               ))}
             </Flex>
             {form.formState.errors.preferredCategories && (
-              <Text size="1" color={SEMANTIC_COLOR.danger} mt="2">
+              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.preferredCategories.message}
               </Text>
             )}
           </Box>
 
-          <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt="3">
+          <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
             {loading ? "Saving..." : "Save preferences"}
           </Button>
         </form>

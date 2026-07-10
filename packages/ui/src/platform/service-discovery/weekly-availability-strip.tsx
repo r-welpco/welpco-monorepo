@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
+import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Separator } from "@welpco/ui/separator";
 import { Text } from "@welpco/ui/text";
@@ -126,15 +127,17 @@ function DayPill({
             {dayName}
           </Text>
           <Flex direction="column" gap="1">
-            <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>
-              {slots.map((slot) => (
-                <li key={`${slot.startTime}-${slot.endTime}`}>
-                  <Text size="2" color="gray" highContrast>
-                    {formatAvailabilitySlotRange(slot, locale)}
-                  </Text>
-                </li>
-              ))}
-            </ul>
+            <Box asChild pl="4">
+              <ul style={{ margin: 0 }}>
+                {slots.map((slot) => (
+                  <li key={`${slot.startTime}-${slot.endTime}`}>
+                    <Text size="2" color="gray" highContrast>
+                      {formatAvailabilitySlotRange(slot, locale)}
+                    </Text>
+                  </li>
+                ))}
+              </ul>
+            </Box>
           </Flex>
         </Flex>
       </PopoverContent>

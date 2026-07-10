@@ -15,7 +15,7 @@ type Story = StoryObj<typeof PasswordField>;
 export const Default: Story = {
   render: () => (
     <Box style={{ width: 320 }}>
-      <Text as="label" size="2" weight="bold" htmlFor="demo-password" mb="2">
+      <Text as="label" size="2" weight="medium" htmlFor="demo-password" mb="1" style={{ display: 'block' }}>
         Password
       </Text>
       <PasswordField

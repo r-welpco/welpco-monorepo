@@ -52,6 +52,7 @@ export default function CreateAdminUserPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              // Intentionally off: admin is creating ANOTHER user; autofilling the admin's own email would be wrong.
               autoComplete="off"
             />
             <Input
@@ -73,8 +74,8 @@ export default function CreateAdminUserPage() {
               autoComplete="new-password"
             />
             {error ? <AdminErrorCallout message={error} /> : null}
-            <Button type="submit" disabled={loading}>
-              {loading ? "Creating…" : "Create admin account"}
+            <Button type="submit" loading={loading}>
+              Create admin account
             </Button>
           </Flex>
         </form>

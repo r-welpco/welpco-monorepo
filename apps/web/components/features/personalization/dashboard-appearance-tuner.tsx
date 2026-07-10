@@ -167,7 +167,7 @@ export function DashboardAppearanceTuner() {
                   value={themeMode}
                   onValueChange={(value) => setThemeMode(value as ThemeMode)}
                 >
-                  <SelectTrigger placeholder={settingsFormLabels.themeModePlaceholder} />
+                  <SelectTrigger placeholder={settingsFormLabels.themeModePlaceholder} style={{ width: "100%" }} />
                   <SelectContent>
                     <SelectItem value="light">Light</SelectItem>
                     <SelectItem value="dark">Dark</SelectItem>
@@ -181,7 +181,7 @@ export function DashboardAppearanceTuner() {
                   {settingsFormLabels.background}
                 </Text>
                 <Select value={backgroundId} onValueChange={setBackground}>
-                  <SelectTrigger placeholder={settingsFormLabels.backgroundPlaceholder} />
+                  <SelectTrigger placeholder={settingsFormLabels.backgroundPlaceholder} style={{ width: "100%" }} />
                   <SelectContent>
                     {backgrounds.map((bg) => (
                       <SelectItem key={bg.id} value={bg.id}>

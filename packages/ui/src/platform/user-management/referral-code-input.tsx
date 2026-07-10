@@ -57,7 +57,7 @@ export function ReferralCodeInput({
         )}
 
         <Box mb="3">
-          <Text as="label" size="2" weight="bold" htmlFor="referral-code" mb="1">
+          <Text as="label" size="2" weight="medium" htmlFor="referral-code" mb="1">
             Referral code
           </Text>
           <Flex gap="3" align="center" direction={{ initial: "column", sm: "row" }}>

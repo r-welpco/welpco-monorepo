@@ -7,7 +7,7 @@ import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
-import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -48,7 +48,7 @@ export function ProfileBasicsStep({
 
   return (
     <form onSubmit={handleSubmit}>
-      <Box mb="3">
+      <Box mb={FORM_SPACING.fieldGap}>
         <Heading as="h3" size="3" mb="3" trim="start">
           Profile basics
         </Heading>
@@ -57,10 +57,10 @@ export function ProfileBasicsStep({
         </Text>
       </Box>
 
-      <Box mb="3">
+      <Box mb={FORM_SPACING.fieldGap}>
         <Flex gap="3" direction={{ initial: "column", sm: "row" }}>
           <Box style={{ flex: 1 }}>
-            <Text as="label" size="2" weight="bold" htmlFor="first-name" mb="1">
+            <Text as="label" size="2" weight="medium" htmlFor="first-name" mb={FORM_SPACING.labelGap}>
               First name
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -70,17 +70,20 @@ export function ProfileBasicsStep({
               autoComplete="given-name"
               disabled={loading}
               size="2"
+              aria-required="true"
+              aria-invalid={form.formState.errors.firstName ? "true" : undefined}
+              aria-describedby={form.formState.errors.firstName ? "first-name-error" : undefined}
               {...form.register("firstName")}
             />
             {form.formState.errors.firstName && (
-              <Text size="1" color={SEMANTIC_COLOR.danger} mt="2">
+              <Text id="first-name-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.firstName.message}
               </Text>
             )}
           </Box>
 
           <Box style={{ flex: 1 }}>
-            <Text as="label" size="2" weight="bold" htmlFor="last-name" mb="1">
+            <Text as="label" size="2" weight="medium" htmlFor="last-name" mb={FORM_SPACING.labelGap}>
               Last name
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -90,10 +93,13 @@ export function ProfileBasicsStep({
               autoComplete="family-name"
               disabled={loading}
               size="2"
+              aria-required="true"
+              aria-invalid={form.formState.errors.lastName ? "true" : undefined}
+              aria-describedby={form.formState.errors.lastName ? "last-name-error" : undefined}
               {...form.register("lastName")}
             />
             {form.formState.errors.lastName && (
-              <Text size="1" color={SEMANTIC_COLOR.danger} mt="2">
+              <Text id="last-name-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.lastName.message}
               </Text>
             )}
@@ -101,8 +107,8 @@ export function ProfileBasicsStep({
         </Flex>
       </Box>
 
-      <Box mb="3">
-        <Text as="label" size="2" weight="bold" htmlFor="phone" mb="1">
+      <Box mb={FORM_SPACING.fieldGap}>
+        <Text as="label" size="2" weight="medium" htmlFor="phone" mb={FORM_SPACING.labelGap}>
           Phone
           <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
         </Text>
@@ -114,10 +120,13 @@ export function ProfileBasicsStep({
           autoComplete="tel"
           disabled={loading}
           size="2"
+          aria-required="true"
+          aria-invalid={form.formState.errors.phone ? "true" : undefined}
+          aria-describedby={form.formState.errors.phone ? "phone-error" : undefined}
           {...form.register("phone")}
         />
         {form.formState.errors.phone && (
-          <Text size="1" color={SEMANTIC_COLOR.danger} mt="2">
+          <Text id="phone-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
             {form.formState.errors.phone.message}
           </Text>
         )}

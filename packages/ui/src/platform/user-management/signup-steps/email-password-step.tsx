@@ -14,6 +14,7 @@ import { Link } from "@welpco/ui/link";
 import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { PasswordField } from "@welpco/ui/password-field";
+import { Spinner } from "@welpco/ui/spinner";
 import { TextField } from "@welpco/ui/text-field";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
@@ -175,7 +176,7 @@ export function EmailPasswordStep({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="signup-email"
               mb={FORM_SPACING.labelGap}
             >
@@ -217,7 +218,7 @@ export function EmailPasswordStep({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="signup-password"
               mb={FORM_SPACING.labelGap}
             >
@@ -288,7 +289,7 @@ export function EmailPasswordStep({
             mt={FORM_SPACING.submitGap}
             style={{ width: "100%" }}
           >
-            {loading ? labels.creatingAccount : labels.continue}
+            {loading ? <Spinner /> : labels.continue}
           </Button>
         </form>
 

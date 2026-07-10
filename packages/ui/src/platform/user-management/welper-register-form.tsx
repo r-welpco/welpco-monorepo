@@ -131,13 +131,15 @@ export function WelperRegisterForm({
 
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="welper-email" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="welper-email" mb={FORM_SPACING.labelGap}>
               {isMinor ? "Minor email" : "Email"}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
               id="welper-email"
               placeholder="you@example.com"
+              type="email"
+              inputMode="email"
               autoComplete="email"
               disabled={loading}
               size="2"
@@ -155,7 +157,7 @@ export function WelperRegisterForm({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="welper-password"
               mb={FORM_SPACING.labelGap}
             >
@@ -182,7 +184,7 @@ export function WelperRegisterForm({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="welper-confirm"
               mb={FORM_SPACING.labelGap}
             >

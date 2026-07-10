@@ -8,7 +8,7 @@ import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
-import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useState } from "react";
 
 export interface ReferralCodeDisplayProps {
@@ -62,7 +62,7 @@ export function ReferralCodeDisplay({
         </Box>
 
         <Box>
-          <Text as="label" size="2" weight="bold" mb="2" htmlFor="referral-code">
+          <Text as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap} htmlFor="referral-code">
             Referral code
           </Text>
           <Flex gap="3" align="center" direction={{ initial: "column", sm: "row" }}>
@@ -85,7 +85,7 @@ export function ReferralCodeDisplay({
         </Box>
 
         <Box>
-          <Text as="label" size="2" weight="bold" mb="2" htmlFor="referral-link">
+          <Text as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap} htmlFor="referral-link">
             Referral link
           </Text>
           <Flex gap="3" align="center" direction={{ initial: "column", sm: "row" }}>

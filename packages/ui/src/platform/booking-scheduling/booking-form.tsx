@@ -80,18 +80,25 @@ export function BookingForm({
               as="label"
               id="booking-service-label"
               size="2"
-              weight="bold"
+              weight="medium"
               mb={FORM_SPACING.labelGap}
-            >
+             style={{ display: "block" }}>
               Service
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <Select
+              size="3"
               value={form.watch("serviceId")}
               onValueChange={(value) => form.setValue("serviceId", value)}
               disabled={loading}
             >
-              <SelectTrigger aria-labelledby="booking-service-label" />
+              <SelectTrigger
+                id="booking-service"
+                aria-labelledby="booking-service-label"
+                aria-invalid={form.formState.errors.serviceId ? "true" : undefined}
+                aria-describedby={form.formState.errors.serviceId ? "booking-service-error" : undefined}
+                style={{ width: "100%" }}
+              />
               <SelectContent>
                 {services.map((service) => (
                   <SelectItem key={service.id} value={service.id}>
@@ -101,7 +108,7 @@ export function BookingForm({
               </SelectContent>
             </Select>
             {form.formState.errors.serviceId && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="booking-service-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.serviceId.message}
               </Text>
             )}
@@ -109,7 +116,7 @@ export function BookingForm({
 
           <Flex gap="3" mb={FORM_SPACING.fieldGap} direction={{ initial: "column", sm: "row" }}>
             <Box style={{ flex: 1 }}>
-              <Text as="label" size="2" weight="bold" htmlFor="booking-date" mb={FORM_SPACING.labelGap}>
+              <Text as="label" size="2" weight="medium" htmlFor="booking-date" mb={FORM_SPACING.labelGap}>
                 Date
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
@@ -119,17 +126,19 @@ export function BookingForm({
                 size="3"
                 disabled={loading}
                 aria-required="true"
+                aria-invalid={form.formState.errors.date ? "true" : undefined}
+                aria-describedby={form.formState.errors.date ? "booking-date-error" : undefined}
                 {...form.register("date")}
               />
               {form.formState.errors.date && (
-                <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+                <Text id="booking-date-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                   {form.formState.errors.date.message}
                 </Text>
               )}
             </Box>
 
             <Box style={{ flex: 1 }}>
-              <Text as="label" size="2" weight="bold" htmlFor="booking-time" mb={FORM_SPACING.labelGap}>
+              <Text as="label" size="2" weight="medium" htmlFor="booking-time" mb={FORM_SPACING.labelGap}>
                 Time
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
@@ -139,10 +148,12 @@ export function BookingForm({
                 size="3"
                 disabled={loading}
                 aria-required="true"
+                aria-invalid={form.formState.errors.time ? "true" : undefined}
+                aria-describedby={form.formState.errors.time ? "booking-time-error" : undefined}
                 {...form.register("time")}
               />
               {form.formState.errors.time && (
-                <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+                <Text id="booking-time-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                   {form.formState.errors.time.message}
                 </Text>
               )}
@@ -150,7 +161,7 @@ export function BookingForm({
           </Flex>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="booking-address" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="booking-address" mb={FORM_SPACING.labelGap}>
               Address
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -161,17 +172,19 @@ export function BookingForm({
               size="3"
               disabled={loading}
               aria-required="true"
+              aria-invalid={form.formState.errors.address ? "true" : undefined}
+              aria-describedby={form.formState.errors.address ? "booking-address-error" : undefined}
               {...form.register("address")}
             />
             {form.formState.errors.address && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="booking-address-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.address.message}
               </Text>
             )}
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="booking-notes" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="booking-notes" mb={FORM_SPACING.labelGap}>
               Notes (optional)
             </Text>
             <TextArea
@@ -180,10 +193,12 @@ export function BookingForm({
               placeholder="Share instructions, parking notes, or building access info."
               size="3"
               disabled={loading}
+              aria-invalid={form.formState.errors.notes ? "true" : undefined}
+              aria-describedby={form.formState.errors.notes ? "booking-notes-error" : undefined}
               {...form.register("notes")}
             />
             {form.formState.errors.notes && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="booking-notes-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.notes.message}
               </Text>
             )}

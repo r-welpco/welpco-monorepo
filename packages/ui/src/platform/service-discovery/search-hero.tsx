@@ -7,7 +7,7 @@ import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
-import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useState, type ChangeEvent, useEffect } from "react";
 import { Search, MapPin } from "lucide-react";
 
@@ -165,6 +165,10 @@ export function SearchHero({
                       : (l?.searchAria ?? "Search services or Welpers")
                   }
                   aria-live={ariaLive}
+                  aria-invalid={isLocationMode && locationError ? true : undefined}
+                  aria-describedby={
+                    isLocationMode && locationError ? "search-hero-location-error" : undefined
+                  }
                 >
                   <TextField.Slot>
                     <Search size={18} aria-hidden="true" />
@@ -203,9 +207,10 @@ export function SearchHero({
             </Flex>
             {isLocationMode && locationError && (
               <Text
+                id="search-hero-location-error"
                 size="1"
                 color={SEMANTIC_COLOR.danger}
-                mt="2"
+                mt={FORM_SPACING.helperGap}
                 role="alert"
                 as="p"
               >
@@ -217,7 +222,7 @@ export function SearchHero({
 
         {categories.length > 0 && (
           <Box>
-            <Text as="p" size="2" weight="bold" mb="2" id="category-pills-label">
+            <Text as="p" size="2" weight="medium" mb={FORM_SPACING.labelGap} id="category-pills-label">
               {l?.browseByCategory ?? "Browse by category"}
             </Text>
             <Flex gap="2" wrap="wrap" role="group" aria-labelledby="category-pills-label">
@@ -263,7 +268,7 @@ export function SearchHero({
 
         {suggestions.length > 0 && (
           <Box>
-            <Text size="2" weight="bold" mb="2" as="p">
+            <Text size="2" weight="medium" mb={FORM_SPACING.labelGap} as="p">
               Suggestions
             </Text>
             <Flex gap="2" wrap="wrap">

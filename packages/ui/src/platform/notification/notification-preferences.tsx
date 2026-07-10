@@ -72,7 +72,7 @@ export function NotificationPreferences({
                     <Card key={pref.id} size="2" variant="surface">
                       <Flex justify="between" align="start" gap="3">
                         <Box style={{ flex: 1 }}>
-                          <Text size="2" weight="bold" mb="1" id={`pref-${pref.id}-label`}>
+                          <Text size="2" weight="medium" mb="1" id={`pref-${pref.id}-label`}>
                             {pref.label}
                           </Text>
                           {pref.description && (

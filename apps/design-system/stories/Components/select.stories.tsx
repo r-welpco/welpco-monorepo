@@ -80,7 +80,7 @@ export const Sizes: Story = {
   render: () => (
     <Flex direction="column" gap="4">
       <Flex direction="column" gap="2">
-        <Text as="label" htmlFor="select-size-1" size="2" weight="bold">
+        <Text as="label" htmlFor="select-size-1" size="2" weight="medium">
           Size 1
         </Text>
         <Select defaultValue="1">
@@ -93,7 +93,7 @@ export const Sizes: Story = {
         </Select>
       </Flex>
       <Flex direction="column" gap="2">
-        <Text as="label" htmlFor="select-size-2" size="2" weight="bold">
+        <Text as="label" htmlFor="select-size-2" size="2" weight="medium">
           Size 2
         </Text>
         <Select defaultValue="1">
@@ -106,7 +106,7 @@ export const Sizes: Story = {
         </Select>
       </Flex>
       <Flex direction="column" gap="2">
-        <Text as="label" htmlFor="select-size-3" size="2" weight="bold">
+        <Text as="label" htmlFor="select-size-3" size="2" weight="medium">
           Size 3
         </Text>
         <Select defaultValue="1">

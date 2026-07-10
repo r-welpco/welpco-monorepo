@@ -9,6 +9,7 @@ import { Box } from "@welpco/ui/box";
 import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { Badge } from "@welpco/ui/badge";
+import { FORM_SPACING } from "@welpco/ui/tokens";
 
 export interface SearchFiltersState {
   priceRange: "any" | "0-50" | "50-100" | "100-200" | "200+";
@@ -56,7 +57,7 @@ export function SearchFilters({ value, onChange }: SearchFiltersProps) {
         <Flex direction="column" gap="4">
           {/* Location Filter */}
           <Box>
-            <Text as="label" size="2" weight="bold" htmlFor="filter-location" mb="2" style={{ display: "block" }}>
+            <Text as="label" size="2" weight="medium" htmlFor="filter-location" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
               Location
             </Text>
             <TextField.Root
@@ -74,7 +75,7 @@ export function SearchFilters({ value, onChange }: SearchFiltersProps) {
           {/* Radius Slider */}
           <Box>
             <Flex justify="between" align="center" mb="2">
-              <Text as="label" size="2" weight="bold" htmlFor="filter-radius">
+              <Text as="label" size="2" weight="medium" htmlFor="filter-radius">
                 Search radius
               </Text>
               <Badge color="green" variant="soft" size="1" highContrast>
@@ -100,7 +101,7 @@ export function SearchFilters({ value, onChange }: SearchFiltersProps) {
 
           {/* Price Range - label and select same row */}
           <Flex align="center" justify="between" gap="4" wrap="wrap">
-            <Text as="label" size="2" weight="bold" htmlFor="filter-price">
+            <Text as="label" size="2" weight="medium" id="filter-price-label" htmlFor="filter-price" style={{ display: "block" }}>
               Price range
             </Text>
             <Box style={{ flex: 1, minWidth: 0, maxWidth: 280 }}>
@@ -110,7 +111,7 @@ export function SearchFilters({ value, onChange }: SearchFiltersProps) {
                   update({ priceRange: val as SearchFiltersState["priceRange"] })
                 }
               >
-                <SelectTrigger id="filter-price" aria-label="Price range" />
+                <SelectTrigger id="filter-price" aria-labelledby="filter-price-label" style={{ width: "100%" }} />
                 <SelectContent>
                   {priceOptions.map((option) => (
                     <SelectItem key={option} value={option}>
@@ -124,7 +125,7 @@ export function SearchFilters({ value, onChange }: SearchFiltersProps) {
 
           {/* Rating - label and select same row */}
           <Flex align="center" justify="between" gap="4" wrap="wrap">
-            <Text as="label" size="2" weight="bold" htmlFor="filter-rating">
+            <Text as="label" size="2" weight="medium" id="filter-rating-label" htmlFor="filter-rating" style={{ display: "block" }}>
               Minimum rating
             </Text>
             <Box style={{ flex: 1, minWidth: 0, maxWidth: 280 }}>
@@ -134,7 +135,7 @@ export function SearchFilters({ value, onChange }: SearchFiltersProps) {
                   update({ rating: val as SearchFiltersState["rating"] })
                 }
               >
-                <SelectTrigger id="filter-rating" aria-label="Minimum rating" />
+                <SelectTrigger id="filter-rating" aria-labelledby="filter-rating-label" style={{ width: "100%" }} />
                 <SelectContent>
                   {ratingOptions.map((option) => (
                     <SelectItem key={option} value={option}>

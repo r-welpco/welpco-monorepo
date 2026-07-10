@@ -19,7 +19,7 @@ export function NativeFormField({
 }) {
   return (
     <Flex direction="column" gap="1">
-      <Text as="label" size="1" weight="medium">
+      <Text as="label" size="2" weight="medium">
         {label}
       </Text>
       {children}

@@ -10,6 +10,7 @@ import { Button } from "@welpco/ui/button";
 import { Callout } from "@welpco/ui/callout";
 import { Dialog, DialogContent } from "@welpco/ui/dialog";
 import { Skeleton } from "@welpco/ui/skeleton";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateSetupIntent } from "@/lib/hooks/use-payments";
 import { completeSetupIntent } from "@/lib/services/payment-service";
@@ -97,16 +98,16 @@ export function SetupCardForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <Flex direction="column" gap="4">
+      <Flex direction="column" gap={FORM_SPACING.fieldGap}>
         <PaymentElement />
         {err ? (
-          <Callout.Root color="red" variant="surface">
+          <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface">
             <Callout.Text>{err}</Callout.Text>
           </Callout.Root>
         ) : null}
         <Flex gap="2" wrap="wrap">
-          <Button type="submit" disabled={!stripe || busy} size="2">
-            {busy ? labels.savingCard : labels.saveCard}
+          <Button type="submit" disabled={!stripe || busy} loading={busy} size="2">
+            {labels.saveCard}
           </Button>
           <Button type="button" variant="soft" color="gray" size="2" onClick={onCancel} disabled={busy}>
             {labels.cancel}
@@ -244,7 +245,7 @@ export function AddPaymentMethodFormPanel({
         </Box>
       ) : null}
       {createSi.isError ? (
-        <Callout.Root color="red" variant="surface">
+        <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface">
           <Callout.Text>
             {(createSi.error as Error)?.message ?? actionLabels.couldNotStartSetup}
           </Callout.Text>

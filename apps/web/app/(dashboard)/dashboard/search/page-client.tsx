@@ -644,7 +644,9 @@ export default function DashboardSearchPageClient() {
               </Callout.Root>
             ) : null}
 
-            <Box
+            <Flex
+              direction="column"
+              gap="3"
               style={
                 searchAllowed
                   ? undefined
@@ -709,7 +711,7 @@ export default function DashboardSearchPageClient() {
                 {filtersSidebar}
               </Box>
             )}
-            </Box>
+            </Flex>
           </Flex>
 
           {searchAllowed && showLocationPrompt && (

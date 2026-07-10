@@ -126,7 +126,7 @@ export function RatingForm({
       <Flex asChild direction="column" gap="5">
         <form onSubmit={handleSubmit}>
           <Box>
-            <Text id="rating-group-label" as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+            <Text id="rating-group-label" as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap}>
               {labels.ratingLabel}
             </Text>
             <Controller
@@ -216,7 +216,7 @@ export function RatingForm({
           </Box>
 
           <Box>
-            <Text as="label" size="2" weight="bold" htmlFor="comment-field" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="comment-field" mb={FORM_SPACING.labelGap}>
               {labels.commentLabel}
             </Text>
             <TextArea

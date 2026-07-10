@@ -6,6 +6,7 @@ import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { TextField } from "@welpco/ui/text-field";
 import { RadioGroup } from "@welpco/ui/radio-group";
+import { Spinner } from "@welpco/ui/spinner";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
@@ -144,21 +145,27 @@ export function AccountRecoveryForm({
           </div>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="recovery-email" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="recovery-email" mb={FORM_SPACING.labelGap}>
               {labels.email}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
               id="recovery-email"
+              type="email"
+              inputMode="email"
               placeholder={labels.emailPlaceholder}
               autoComplete="email"
               disabled={loading}
               size="2"
               aria-required="true"
+              aria-invalid={form.formState.errors.email ? true : undefined}
+              aria-describedby={
+                form.formState.errors.email ? "recovery-email-error" : undefined
+              }
               {...form.register("email")}
             />
             {form.formState.errors.email && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="recovery-email-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.email.message}
               </Text>
             )}
@@ -166,7 +173,7 @@ export function AccountRecoveryForm({
 
           {!hideRecoveryMethod && (
             <Box mb={FORM_SPACING.fieldGap}>
-              <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+              <Text id="recovery-method-label" size="2" weight="medium" mb={FORM_SPACING.labelGap}>
                 Recovery method
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
@@ -176,6 +183,7 @@ export function AccountRecoveryForm({
                   form.setValue("recoveryMethod", value as "email" | "security_questions")
                 }
                 disabled={loading}
+                aria-labelledby="recovery-method-label"
               >
                 <Flex direction="column" gap="3">
                   <Text as="label" size="2">
@@ -207,7 +215,7 @@ export function AccountRecoveryForm({
 
           {!hideRecoveryMethod && recoveryMethod === "security_questions" && (
             <Box mb={FORM_SPACING.fieldGap}>
-              <Text as="label" size="2" weight="bold" htmlFor="security-answer" mb={FORM_SPACING.labelGap}>
+              <Text as="label" size="2" weight="medium" htmlFor="security-answer" mb={FORM_SPACING.labelGap}>
                 Security answer
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
@@ -216,10 +224,16 @@ export function AccountRecoveryForm({
                 placeholder="Enter your security answer"
                 disabled={loading}
                 size="2"
+                aria-invalid={form.formState.errors.securityAnswer ? true : undefined}
+                aria-describedby={
+                  form.formState.errors.securityAnswer
+                    ? "security-answer-error"
+                    : undefined
+                }
                 {...form.register("securityAnswer")}
               />
               {form.formState.errors.securityAnswer && (
-                <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+                <Text id="security-answer-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                   {form.formState.errors.securityAnswer.message}
                 </Text>
               )}
@@ -255,11 +269,13 @@ export function AccountRecoveryForm({
               title={submitDisabled ? submitTitle : undefined}
               style={{ width: "100%", flex: 1, minWidth: 0 }}
             >
-              {loading
-                ? labels.sending
-                : hideRecoveryMethod
-                  ? labels.sendResetLink
-                  : labels.recoverAccount}
+              {loading ? (
+                <Spinner />
+              ) : hideRecoveryMethod ? (
+                labels.sendResetLink
+              ) : (
+                labels.recoverAccount
+              )}
             </Button>
           </Flex>
         </form>

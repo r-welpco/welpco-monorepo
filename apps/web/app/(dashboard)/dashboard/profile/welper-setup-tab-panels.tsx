@@ -424,7 +424,13 @@ export function WelperProfileGuardianPanel() {
           ) : null}
           <Flex direction="column" gap="3">
             <Box>
-              <Text as="label" size="2" weight="bold" htmlFor="guardian-full-name" mb="1">
+              <Text
+                as="label"
+                size="2"
+                weight="medium"
+                htmlFor="guardian-full-name"
+                mb={FORM_SPACING.labelGap}
+              >
                 {t("fullName")}
               </Text>
               <TextField.Root
@@ -436,12 +442,20 @@ export function WelperProfileGuardianPanel() {
               />
             </Box>
             <Box>
-              <Text as="label" size="2" weight="bold" htmlFor="guardian-email" mb="1">
+              <Text
+                as="label"
+                size="2"
+                weight="medium"
+                htmlFor="guardian-email"
+                mb={FORM_SPACING.labelGap}
+              >
                 {t("email")}
               </Text>
               <TextField.Root
                 id="guardian-email"
                 type="email"
+                autoComplete="email"
+                inputMode="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("emailPlaceholder")}
@@ -449,12 +463,20 @@ export function WelperProfileGuardianPanel() {
               />
             </Box>
             <Box>
-              <Text as="label" size="2" weight="bold" htmlFor="guardian-phone" mb="1">
+              <Text
+                as="label"
+                size="2"
+                weight="medium"
+                htmlFor="guardian-phone"
+                mb={FORM_SPACING.labelGap}
+              >
                 {t("phone")}
               </Text>
               <TextField.Root
                 id="guardian-phone"
                 type="tel"
+                autoComplete="tel"
+                inputMode="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder={t("phonePlaceholder")}
@@ -462,7 +484,13 @@ export function WelperProfileGuardianPanel() {
               />
             </Box>
             <Box>
-              <Text as="label" size="2" weight="bold" htmlFor="guardian-relationship" mb="1">
+              <Text
+                as="label"
+                id="guardian-relationship-label"
+                size="2"
+                weight="medium"
+                mb={FORM_SPACING.labelGap}
+               style={{ display: "block" }}>
                 {t("relationship")}
               </Text>
               <Select
@@ -470,7 +498,11 @@ export function WelperProfileGuardianPanel() {
                 onValueChange={(value) => setRelationship(value as RelationshipOption)}
                 disabled={submitRequest.isPending}
               >
-                <SelectTrigger id="guardian-relationship" placeholder={t("relationship")} />
+                <SelectTrigger
+                  aria-labelledby="guardian-relationship-label"
+                  placeholder={t("relationship")}
+                style={{ width: "100%" }}
+                />
                 <SelectContent>
                   <SelectItem value="Parent">{t("relationshipParent")}</SelectItem>
                   <SelectItem value="Legal Guardian">{t("relationshipLegalGuardian")}</SelectItem>

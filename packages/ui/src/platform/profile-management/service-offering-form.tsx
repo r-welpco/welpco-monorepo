@@ -86,7 +86,7 @@ function TitleField({
 }) {
   return (
     <Box mb={FORM_SPACING.fieldGap}>
-      <Text as="label" size="2" weight="bold" htmlFor="service-title" mb={FORM_SPACING.labelGap}>
+      <Text as="label" size="2" weight="medium" htmlFor="service-title" mb={FORM_SPACING.labelGap}>
         {labels?.title ?? "Title"}
         <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
       </Text>
@@ -96,10 +96,12 @@ function TitleField({
         size="2"
         disabled={loading}
         aria-required="true"
+        aria-invalid={form.formState.errors.title ? "true" : undefined}
+        aria-describedby={form.formState.errors.title ? "service-title-error" : undefined}
         {...form.register("title")}
       />
       {form.formState.errors.title && (
-        <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>{form.formState.errors.title.message}</Text>
+        <Text id="service-title-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>{form.formState.errors.title.message}</Text>
       )}
     </Box>
   );
@@ -124,7 +126,7 @@ function CategoryField({
       <Text
         as="label"
         size="2"
-        weight="bold"
+        weight="medium"
         id="service-category-label"
         mb={FORM_SPACING.labelGap}
         style={{ display: "block" }}
@@ -140,6 +142,8 @@ function CategoryField({
         <SelectTrigger
           id="service-category"
           aria-labelledby="service-category-label"
+          aria-invalid={form.formState.errors.category ? "true" : undefined}
+          aria-describedby={form.formState.errors.category ? "service-category-error" : undefined}
           style={{ width: "100%" }}
         />
         <SelectContent>
@@ -151,7 +155,7 @@ function CategoryField({
         </SelectContent>
       </Select>
       {form.formState.errors.category && (
-        <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>{form.formState.errors.category.message}</Text>
+        <Text id="service-category-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>{form.formState.errors.category.message}</Text>
       )}
     </Box>
   );
@@ -178,7 +182,7 @@ function SubcategoriesField({
   if (subcategories.length === 0) return null;
   return (
     <Box mb={FORM_SPACING.fieldGap}>
-      <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
+      <Text as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
         {labels?.subcategories ?? "Subcategories"}
         <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
           *
@@ -234,7 +238,7 @@ function RateAndExperienceFields({
     <Box mb={FORM_SPACING.fieldGap}>
       <Flex gap="3" direction={{ initial: "column", sm: "row" }}>
         <Box style={{ flex: 1 }}>
-          <Text as="label" size="2" weight="bold" htmlFor="service-rate" mb={FORM_SPACING.labelGap}>
+          <Text as="label" size="2" weight="medium" htmlFor="service-rate" mb={FORM_SPACING.labelGap}>
             {labels?.hourlyRate ?? "Your hourly rate ($)"}
             <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
           </Text>
@@ -246,10 +250,12 @@ function RateAndExperienceFields({
             size="2"
             disabled={loading}
             aria-required="true"
+            aria-invalid={form.formState.errors.hourlyRate ? "true" : undefined}
+            aria-describedby={form.formState.errors.hourlyRate ? "service-rate-error" : undefined}
             {...form.register("hourlyRate", { valueAsNumber: true })}
           />
           {form.formState.errors.hourlyRate && (
-            <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>{form.formState.errors.hourlyRate.message}</Text>
+            <Text id="service-rate-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>{form.formState.errors.hourlyRate.message}</Text>
           )}
           <WelperRateCustomerChargeHint
             welperRate={welperRate}
@@ -257,7 +263,7 @@ function RateAndExperienceFields({
           />
         </Box>
         <Box style={{ flex: 1 }}>
-          <Text as="label" size="2" weight="bold" htmlFor="service-experience" mb={FORM_SPACING.labelGap}>
+          <Text as="label" size="2" weight="medium" htmlFor="service-experience" mb={FORM_SPACING.labelGap}>
             {labels?.experienceYears ?? "Experience (years)"}
             <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
           </Text>
@@ -269,10 +275,12 @@ function RateAndExperienceFields({
             size="2"
             disabled={loading}
             aria-required="true"
+            aria-invalid={form.formState.errors.experienceYears ? "true" : undefined}
+            aria-describedby={form.formState.errors.experienceYears ? "service-experience-error" : undefined}
             {...form.register("experienceYears", { valueAsNumber: true })}
           />
           {form.formState.errors.experienceYears && (
-            <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>{form.formState.errors.experienceYears.message}</Text>
+            <Text id="service-experience-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>{form.formState.errors.experienceYears.message}</Text>
           )}
         </Box>
       </Flex>
@@ -291,7 +299,7 @@ function DescriptionField({
 }) {
   return (
     <Box mb={FORM_SPACING.fieldGap}>
-      <Text as="label" size="2" weight="bold" htmlFor="service-desc" mb={FORM_SPACING.labelGap}>
+      <Text as="label" size="2" weight="medium" htmlFor="service-desc" mb={FORM_SPACING.labelGap}>
         {labels?.description ?? "Description"}
         <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
       </Text>
@@ -305,10 +313,12 @@ function DescriptionField({
         size="2"
         disabled={loading}
         aria-required="true"
+        aria-invalid={form.formState.errors.description ? "true" : undefined}
+        aria-describedby={form.formState.errors.description ? "service-desc-error" : undefined}
         {...form.register("description")}
       />
       {form.formState.errors.description && (
-        <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>{form.formState.errors.description.message}</Text>
+        <Text id="service-desc-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>{form.formState.errors.description.message}</Text>
       )}
     </Box>
   );
@@ -336,7 +346,7 @@ function ServiceAreaField({
     <Box mb={FORM_SPACING.fieldGap}>
       <Flex direction="column" gap="2">
         <Flex align="center" justify="between">
-          <Text as="label" size="2" weight="bold" id="so-service-area-label">
+          <Text as="label" size="2" weight="medium" id="so-service-area-label">
             {labels?.serviceArea ?? "Service area"}
           </Text>
           <Controller
@@ -407,7 +417,7 @@ function ActiveStatusField({
     <Box mb={FORM_SPACING.fieldGap}>
       <Flex direction="column" gap="2">
         <Flex align="center" justify="between">
-          <Text as="label" size="2" weight="bold" id="so-active-label">
+          <Text as="label" size="2" weight="medium" id="so-active-label">
             {labels?.activeStatus ?? "Active status"}
           </Text>
           <Controller

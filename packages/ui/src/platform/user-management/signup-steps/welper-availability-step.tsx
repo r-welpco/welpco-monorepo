@@ -13,6 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@welpco/ui/select";
+import { Spinner } from "@welpco/ui/spinner";
 import { Text } from "@welpco/ui/text";
 import { TextField } from "@welpco/ui/text-field";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
@@ -157,10 +158,11 @@ export function WelperAvailabilityStep({
           <Box mb={FORM_SPACING.fieldGap}>
             <Text
               as="label"
+              id="availability-add-slot-label"
               size="2"
-              weight="bold"
+              weight="medium"
               mb={FORM_SPACING.labelGap}
-            >
+             style={{ display: "block" }}>
               {labels.addSlotLabel}
             </Text>
             <Flex direction={{ initial: "column", sm: "row" }} gap="2">
@@ -172,7 +174,7 @@ export function WelperAvailabilityStep({
                   onValueChange={setDraftDay}
                 >
                   <SelectTrigger
-                    aria-label={labels.dayPlaceholder}
+                    aria-labelledby="availability-add-slot-label"
                     placeholder={labels.dayPlaceholder}
                     style={{ width: "100%" }}
                   />
@@ -190,6 +192,8 @@ export function WelperAvailabilityStep({
                   type="time"
                   size="2"
                   aria-label="Start time"
+                  aria-invalid={slotError ? true : undefined}
+                  aria-describedby={slotError ? "availability-slot-error" : undefined}
                   disabled={loading}
                   value={draftStart}
                   onChange={(e) => setDraftStart(e.target.value)}
@@ -200,6 +204,8 @@ export function WelperAvailabilityStep({
                   type="time"
                   size="2"
                   aria-label="End time"
+                  aria-invalid={slotError ? true : undefined}
+                  aria-describedby={slotError ? "availability-slot-error" : undefined}
                   disabled={loading}
                   value={draftEnd}
                   onChange={(e) => setDraftEnd(e.target.value)}
@@ -218,6 +224,7 @@ export function WelperAvailabilityStep({
             </Flex>
             {slotError && (
               <Text
+                id="availability-slot-error"
                 role="alert"
                 size="1"
                 color={SEMANTIC_COLOR.danger}
@@ -230,7 +237,7 @@ export function WelperAvailabilityStep({
 
           {slots.length > 0 && (
             <Box mb={FORM_SPACING.fieldGap}>
-              <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+              <Text size="2" weight="medium" mb={FORM_SPACING.labelGap}>
                 {labels.yourWeeklyHours}
               </Text>
               <Flex direction="column" gap="2">
@@ -290,7 +297,7 @@ export function WelperAvailabilityStep({
               disabled={loading}
               style={navButtonStyle}
             >
-              {loading ? labels.saving : labels.continue}
+              {loading ? <Spinner /> : labels.continue}
             </Button>
             {onBack && (
               <Button

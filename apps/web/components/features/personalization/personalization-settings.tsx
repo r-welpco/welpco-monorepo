@@ -7,6 +7,7 @@ import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Switch } from "@welpco/ui/switch";
+import { FORM_SPACING } from "@welpco/ui/tokens";
 import { usePersonalizationStore, type ThemeMode } from "@/stores/personalizationStore";
 import { backgrounds, type BackgroundDefinition } from "@/lib/personalization/backgrounds";
 import { Check, Sun, Moon, Monitor } from "lucide-react";
@@ -50,8 +51,14 @@ export function PersonalizationSettings({
           </Text>
         </Box>
 
-        <Box>
-          <Text as="label" size="2" weight="bold" mb="3" style={{ display: "block" }}>
+        <Box role="group" aria-labelledby="personalization-theme-mode-label">
+          <Text
+            id="personalization-theme-mode-label"
+            size="2"
+            weight="medium"
+            mb={FORM_SPACING.titleGap}
+            style={{ display: "block" }}
+          >
             {labels?.themeMode ?? "Theme Mode"}
           </Text>
           <Flex wrap="wrap" gap="3">
@@ -94,8 +101,14 @@ export function PersonalizationSettings({
           </Flex>
         </Box>
 
-        <Box>
-          <Text as="label" size="2" weight="bold" mb="3" style={{ display: "block" }}>
+        <Box role="group" aria-labelledby="personalization-background-label">
+          <Text
+            id="personalization-background-label"
+            size="2"
+            weight="medium"
+            mb={FORM_SPACING.titleGap}
+            style={{ display: "block" }}
+          >
             {labels?.background ?? "Background Color"}
           </Text>
           <Flex wrap="wrap" gap="3">

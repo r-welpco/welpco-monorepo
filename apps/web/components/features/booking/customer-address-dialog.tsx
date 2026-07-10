@@ -8,6 +8,7 @@ import { Dialog, DialogContent } from "@welpco/ui/dialog";
 import { Flex } from "@welpco/ui/flex";
 import { Button } from "@welpco/ui/button";
 import { Callout } from "@welpco/ui/callout";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
   AddressInput,
   CANADIAN_PROVINCE_CODES,
@@ -120,7 +121,7 @@ export function CustomerAddressDialog({
       >
         {open ? (
           <form onSubmit={handleSubmit}>
-            <Flex direction="column" gap="4">
+            <Flex direction="column" gap={FORM_SPACING.fieldGap}>
               <AddressInput
                 layout="split"
                 values={form.watch()}
@@ -143,13 +144,18 @@ export function CustomerAddressDialog({
                 required
               />
                 {submitError ? (
-                  <Callout.Root color="red" variant="surface" role="alert">
+                  <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
                     <Callout.Text>{submitError}</Callout.Text>
                   </Callout.Root>
                 ) : null}
                 <Flex gap="2" wrap="wrap">
-                  <Button type="submit" size="2" disabled={updateProfile.isPending}>
-                    {updateProfile.isPending ? labels.form.saving : labels.form.save}
+                  <Button
+                    type="submit"
+                    size="2"
+                    loading={updateProfile.isPending}
+                    disabled={updateProfile.isPending}
+                  >
+                    {labels.form.save}
                   </Button>
                   <Button
                     type="button"

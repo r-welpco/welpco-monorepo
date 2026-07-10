@@ -9,7 +9,7 @@ import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { Checkbox } from "@welpco/ui/checkbox";
-import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useState, useEffect } from "react";
 import { Plus, X } from "lucide-react";
 
@@ -245,7 +245,7 @@ export function TimeSlotAvailability({
               <>
                 <Flex gap="3" align="end">
                   <Box style={{ flex: 1 }}>
-                    <Text as="label" size="2" weight="bold" htmlFor="start-time-input" mb="1">
+                    <Text as="label" size="2" weight="medium" htmlFor="start-time-input" mb={FORM_SPACING.labelGap}>
                       {labels?.startTime ?? "Start time"}
                     </Text>
                     <TextField.Root
@@ -263,7 +263,7 @@ export function TimeSlotAvailability({
                     />
                   </Box>
                   <Box style={{ flex: 1 }}>
-                    <Text as="label" size="2" weight="bold" htmlFor="end-time-input" mb="1">
+                    <Text as="label" size="2" weight="medium" htmlFor="end-time-input" mb={FORM_SPACING.labelGap}>
                       {labels?.endTime ?? "End time"}
                     </Text>
                     <TextField.Root
@@ -294,7 +294,7 @@ export function TimeSlotAvailability({
                   </Button>
                 </Flex>
                 {addSlotError && (
-                  <Text id="add-slot-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="1">
+                  <Text id="add-slot-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                     {addSlotError}
                   </Text>
                 )}

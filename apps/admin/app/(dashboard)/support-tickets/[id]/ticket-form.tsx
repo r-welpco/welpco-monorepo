@@ -125,7 +125,6 @@ export function SupportTicketForm({ ticket }: { ticket: SupportTicketItem }) {
             value={assignee}
             onChange={(e) => setAssignee(e.target.value)}
             placeholder="Empty = unassigned"
-            style={{ padding: "0.5rem", borderRadius: 6, border: "1px solid var(--admin-border)" }}
           />
           <datalist id="admin-assignees">
             {adminOptions.map((a) => (
@@ -142,7 +141,6 @@ export function SupportTicketForm({ ticket }: { ticket: SupportTicketItem }) {
             value={internalNote}
             onChange={(e) => setInternalNote(e.target.value)}
             rows={4}
-            style={{ padding: "0.5rem", borderRadius: 6, border: "1px solid var(--admin-border)" }}
           />
         </label>
       </div>

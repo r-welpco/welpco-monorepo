@@ -241,7 +241,7 @@ export function DisputeForm({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="dispute-subject"
               mb={FORM_SPACING.labelGap}
               style={{ display: "block" }}
@@ -271,7 +271,7 @@ export function DisputeForm({
               as="label"
               id="dispute-category-label"
               size="2"
-              weight="bold"
+              weight="medium"
               mb={FORM_SPACING.labelGap}
               style={{ display: "block" }}
             >
@@ -322,7 +322,7 @@ export function DisputeForm({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="dispute-description"
               mb={FORM_SPACING.labelGap}
               style={{ display: "block" }}

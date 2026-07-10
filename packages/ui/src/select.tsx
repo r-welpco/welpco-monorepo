@@ -1,9 +1,15 @@
 "use client";
 
+import * as React from "react";
 import { Select as RadixSelect } from "@radix-ui/themes";
 
-// Simple Radix Themes passthrough for consistent styling with other Theme components
-export const Select = RadixSelect.Root;
+// Radix Themes passthrough with the same `size="2"` default as TextField /
+// TextArea / Button, so a Select dropped next to sibling controls aligns
+// without callers remembering to pin the size (bible §16: controls sharing a
+// row share a size).
+export const Select = (
+  props: React.ComponentProps<typeof RadixSelect.Root>,
+) => <RadixSelect.Root size="2" {...props} />;
 export const SelectTrigger = RadixSelect.Trigger;
 export const SelectContent = RadixSelect.Content;
 export const SelectItem = RadixSelect.Item;

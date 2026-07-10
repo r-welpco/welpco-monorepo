@@ -174,9 +174,11 @@ export default function NewQuestionPage() {
 
         {error ? <p className="err">{error}</p> : null}
 
-        <button type="submit" className="btn btn-primary" disabled={loading} style={{ marginTop: "1rem" }}>
-          {loading ? "Creating..." : "Create question"}
-        </button>
+        <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? "Creating..." : "Create question"}
+          </button>
+        </div>
       </form>
     </div>
   );

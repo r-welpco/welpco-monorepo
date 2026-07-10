@@ -120,10 +120,10 @@ export const WithLabel: Story = {
   render: () => (
     <Flex gap="4" direction="column" style={{ width: '400px' }}>
       <Box>
-        <Text size="2" weight="bold" mb="2" as="div">
+        <Text as="label" size="2" weight="medium" htmlFor="text-area-description" mb="1" style={{ display: 'block' }}>
           Description
         </Text>
-        <TextArea placeholder="Enter a description..." rows={5} />
+        <TextArea id="text-area-description" placeholder="Enter a description..." rows={5} />
       </Box>
     </Flex>
   ),

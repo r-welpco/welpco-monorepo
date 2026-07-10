@@ -19,6 +19,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@welpco/ui/select";
+import { Spinner } from "@welpco/ui/spinner";
 import { Text } from "@welpco/ui/text";
 import { TextField } from "@welpco/ui/text-field";
 import {
@@ -261,7 +262,7 @@ export function IdentityStep({
               <Text
                 as="label"
                 size="2"
-                weight="bold"
+                weight="medium"
                 htmlFor="signup-first-name"
                 mb={FORM_SPACING.labelGap}
               >
@@ -279,10 +280,16 @@ export function IdentityStep({
                 required
                 aria-required="true"
                 aria-invalid={form.formState.errors.firstName ? true : undefined}
+                aria-describedby={
+                  form.formState.errors.firstName
+                    ? "signup-first-name-error"
+                    : undefined
+                }
                 {...form.register("firstName")}
               />
               {form.formState.errors.firstName && (
                 <Text
+                  id="signup-first-name-error"
                   role="alert"
                   size="1"
                   color={SEMANTIC_COLOR.danger}
@@ -297,7 +304,7 @@ export function IdentityStep({
               <Text
                 as="label"
                 size="2"
-                weight="bold"
+                weight="medium"
                 htmlFor="signup-last-name"
                 mb={FORM_SPACING.labelGap}
               >
@@ -315,10 +322,16 @@ export function IdentityStep({
                 required
                 aria-required="true"
                 aria-invalid={form.formState.errors.lastName ? true : undefined}
+                aria-describedby={
+                  form.formState.errors.lastName
+                    ? "signup-last-name-error"
+                    : undefined
+                }
                 {...form.register("lastName")}
               />
               {form.formState.errors.lastName && (
                 <Text
+                  id="signup-last-name-error"
                   role="alert"
                   size="1"
                   color={SEMANTIC_COLOR.danger}
@@ -335,9 +348,9 @@ export function IdentityStep({
               as="label"
               id="signup-phone-label"
               size="2"
-              weight="bold"
+              weight="medium"
               mb={FORM_SPACING.labelGap}
-            >
+             style={{ display: "block" }}>
               {labels.phone}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                 {labels.requiredMarker}
@@ -383,12 +396,18 @@ export function IdentityStep({
                   aria-invalid={
                     form.formState.errors.phoneNational ? true : undefined
                   }
+                  aria-describedby={
+                    form.formState.errors.phoneNational
+                      ? "signup-phone-error"
+                      : undefined
+                  }
                   {...form.register("phoneNational")}
                 />
               </Box>
             </Flex>
             {form.formState.errors.phoneNational && (
               <Text
+                id="signup-phone-error"
                 role="alert"
                 size="1"
                 color={SEMANTIC_COLOR.danger}
@@ -403,7 +422,7 @@ export function IdentityStep({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="signup-dob"
               mb={FORM_SPACING.labelGap}
             >
@@ -422,10 +441,14 @@ export function IdentityStep({
               required
               aria-required="true"
               aria-invalid={form.formState.errors.dateOfBirth ? true : undefined}
+              aria-describedby={
+                form.formState.errors.dateOfBirth ? "signup-dob-error" : undefined
+              }
               {...form.register("dateOfBirth")}
             />
             {form.formState.errors.dateOfBirth ? (
               <Text
+                id="signup-dob-error"
                 role="alert"
                 size="1"
                 color={SEMANTIC_COLOR.danger}
@@ -451,6 +474,10 @@ export function IdentityStep({
                 disabled={loading}
                 size="2"
                 aria-required="true"
+                aria-invalid={form.formState.errors.acceptTos ? true : undefined}
+                aria-describedby={
+                  form.formState.errors.acceptTos ? "signup-tos-error" : undefined
+                }
               />
               <Text as="label" size="2" htmlFor="signup-tos">
                 {labels.tosPrefix}{" "}
@@ -464,6 +491,7 @@ export function IdentityStep({
             </Flex>
             {form.formState.errors.acceptTos && (
               <Text
+                id="signup-tos-error"
                 role="alert"
                 size="1"
                 color={SEMANTIC_COLOR.danger}
@@ -487,6 +515,14 @@ export function IdentityStep({
                 disabled={loading}
                 size="2"
                 aria-required="true"
+                aria-invalid={
+                  form.formState.errors.acceptPrivacy ? true : undefined
+                }
+                aria-describedby={
+                  form.formState.errors.acceptPrivacy
+                    ? "signup-privacy-error"
+                    : undefined
+                }
               />
               <Text as="label" size="2" htmlFor="signup-privacy">
                 {labels.privacyPrefix}{" "}
@@ -500,6 +536,7 @@ export function IdentityStep({
             </Flex>
             {form.formState.errors.acceptPrivacy && (
               <Text
+                id="signup-privacy-error"
                 role="alert"
                 size="1"
                 color={SEMANTIC_COLOR.danger}
@@ -523,7 +560,7 @@ export function IdentityStep({
               disabled={loading}
               style={navButtonStyle}
             >
-              {loading ? labels.saving : labels.continue}
+              {loading ? <Spinner /> : labels.continue}
             </Button>
             {onBack && (
               <Button

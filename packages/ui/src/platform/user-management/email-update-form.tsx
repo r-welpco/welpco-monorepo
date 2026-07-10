@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { TextField } from "@welpco/ui/text-field";
+import { Spinner } from "@welpco/ui/spinner";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
@@ -110,7 +111,7 @@ export function EmailUpdateForm({
 
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="email-update" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="email-update" mb={FORM_SPACING.labelGap}>
               {labels.emailLabel}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -121,10 +122,14 @@ export function EmailUpdateForm({
               disabled={loading}
               required
               aria-required="true"
+              aria-invalid={form.formState.errors.email ? true : undefined}
+              aria-describedby={
+                form.formState.errors.email ? "email-update-error" : undefined
+              }
               {...form.register("email")}
             />
             {form.formState.errors.email && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="email-update-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.email.message}
               </Text>
             )}
@@ -134,7 +139,7 @@ export function EmailUpdateForm({
           </Box>
 
           <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
-            {loading ? (labels.submitting ?? "Updating...") : labels.submit}
+            {loading ? <Spinner /> : labels.submit}
           </Button>
         </form>
       </Flex>

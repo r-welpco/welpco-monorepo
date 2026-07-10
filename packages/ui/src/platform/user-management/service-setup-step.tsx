@@ -50,7 +50,7 @@ export function ServiceSetupStep({
       </Box>
 
       <Box mb="3">
-        <Text as="label" size="2" weight="bold" htmlFor="hourly-rate" mb="1">
+        <Text as="label" size="2" weight="medium" htmlFor="hourly-rate" mb="1">
           Hourly rate (optional)
         </Text>
         <TextField.Root
@@ -73,7 +73,7 @@ export function ServiceSetupStep({
       </Box>
 
       <Box mb="3">
-        <Text as="label" size="2" weight="bold" htmlFor="service-area" mb="1">
+        <Text as="label" size="2" weight="medium" htmlFor="service-area" mb="1">
           Service area (optional)
         </Text>
         <TextField.Root

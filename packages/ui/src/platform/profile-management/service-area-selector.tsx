@@ -9,7 +9,7 @@ import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Callout } from "@welpco/ui/callout";
 import { RadioGroup } from "@welpco/ui/radio-group";
-import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
   AddressInput,
   type AddressInputLabels,
@@ -292,7 +292,7 @@ export function ServiceAreaSelector({
             <>
               <Box mb="3">
                 {showCenterAddressLabel ? (
-                  <Text as="label" size="2" weight="bold" mb="1">
+                  <Text as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap}>
                     {selectorLabels.centerAddress}
                     <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
                   </Text>
@@ -311,7 +311,7 @@ export function ServiceAreaSelector({
               </Box>
 
               <Box mb="3">
-                <Text as="label" size="2" weight="bold" htmlFor="service-radius" mb="1">
+                <Text as="label" size="2" weight="medium" htmlFor="service-radius" mb={FORM_SPACING.labelGap}>
                   {selectorLabels.serviceRadius}
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
                 </Text>
@@ -327,7 +327,7 @@ export function ServiceAreaSelector({
                   value={radiusInput}
                   onChange={(e) => handleRadiusChange(e.target.value)}
                 />
-                <Text size="1" color="gray" highContrast mt="2">
+                <Text size="1" color="gray" highContrast mt={FORM_SPACING.helperGap}>
                   {formatLabel(selectorLabels.radiusHint, {
                     km:
                       parseRadiusKm(radiusInput) ??
@@ -343,7 +343,7 @@ export function ServiceAreaSelector({
         <>
           <Box mb="3">
             {showCenterAddressLabel ? (
-              <Text as="label" size="2" weight="bold" mb="1">
+              <Text as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap}>
                 {selectorLabels.centerAddress}
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
@@ -362,7 +362,7 @@ export function ServiceAreaSelector({
           </Box>
 
           <Box mb="3">
-            <Text as="label" size="2" weight="bold" htmlFor="service-radius" mb="1">
+            <Text as="label" size="2" weight="medium" htmlFor="service-radius" mb={FORM_SPACING.labelGap}>
               {selectorLabels.serviceRadius}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -377,7 +377,7 @@ export function ServiceAreaSelector({
               value={radiusInput}
               onChange={(e) => handleRadiusChange(e.target.value)}
             />
-            <Text size="1" color="gray" mt="2">
+            <Text size="1" color="gray" mt={FORM_SPACING.helperGap}>
               {formatLabel(selectorLabels.radiusHint, {
                 km:
                   parseRadiusKm(radiusInput) ??

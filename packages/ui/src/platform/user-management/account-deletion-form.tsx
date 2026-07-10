@@ -6,6 +6,7 @@ import { Button } from "@welpco/ui/button";
 import { TextField } from "@welpco/ui/text-field";
 import { TextArea } from "@welpco/ui/text-area";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@welpco/ui/select";
+import { Spinner } from "@welpco/ui/spinner";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
@@ -164,7 +165,7 @@ export function AccountDeletionForm({
 
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="reason" mb={FORM_SPACING.labelGap}>
+            <Text as="label" id="reason-label" size="2" weight="medium" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
               {labels.reasonLabel}
             </Text>
             <Select
@@ -174,8 +175,9 @@ export function AccountDeletionForm({
             >
               <SelectTrigger
                 id="reason"
-                aria-label={labels.reasonLabel}
+                aria-labelledby="reason-label"
                 placeholder={labels.reasonPlaceholder}
+                style={{ width: "100%" }}
               />
               <SelectContent>
                 {labels.reasons.map((reason) => (
@@ -188,7 +190,7 @@ export function AccountDeletionForm({
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="feedback" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="feedback" mb={FORM_SPACING.labelGap}>
               {labels.feedbackLabel}
             </Text>
             <TextArea
@@ -197,17 +199,21 @@ export function AccountDeletionForm({
               placeholder={labels.feedbackPlaceholder}
               disabled={loading}
               size="2"
+              aria-invalid={form.formState.errors.feedback ? true : undefined}
+              aria-describedby={
+                form.formState.errors.feedback ? "feedback-error" : undefined
+              }
               {...form.register("feedback")}
             />
             {form.formState.errors.feedback && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="feedback-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.feedback.message}
               </Text>
             )}
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="confirm-delete" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="confirm-delete" mb={FORM_SPACING.labelGap}>
               {labels.confirmLabel}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -248,7 +254,7 @@ export function AccountDeletionForm({
               disabled={loading || !isConfirmValid}
               style={{ flex: 1, width: "100%", minWidth: 0 }}
             >
-              {loading ? labels.submitting : labels.submit}
+              {loading ? <Spinner /> : labels.submit}
             </Button>
           </Flex>
         </form>

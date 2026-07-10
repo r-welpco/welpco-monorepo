@@ -136,19 +136,19 @@ export const NotificationsSettings: Story = {
           </Text>
         </Box>
         <Flex direction="column" gap="4" mt="1">
-          <Text as="label" size="2" weight="bold">
+          <Text as="label" size="2">
             <Flex gap="2">
               <Switch defaultChecked />
               <Text>Push</Text>
             </Flex>
           </Text>
-          <Text as="label" size="2" weight="bold">
+          <Text as="label" size="2">
             <Flex gap="2">
               <Switch defaultChecked />
               <Text>Email</Text>
             </Flex>
           </Text>
-          <Text as="label" size="2" weight="bold">
+          <Text as="label" size="2">
             <Flex gap="2">
               <Switch />
               <Text>Slack</Text>
@@ -346,7 +346,14 @@ export const SignUpForm: Story = {
       </Heading>
 
       <Box mb="5">
-        <Text as="label" htmlFor="email-field" size="2" weight="bold" mb="1">
+        <Text
+          as="label"
+          htmlFor="email-field"
+          size="2"
+          weight="medium"
+          mb="1"
+          style={{ display: 'block' }}
+        >
           Email address
         </Text>
         <TextField.Root
@@ -357,7 +364,7 @@ export const SignUpForm: Story = {
 
       <Box mb="5" position="relative">
         <Flex align="baseline" justify="between" mb="1">
-          <Text as="label" htmlFor="password-field" size="2" weight="bold">
+          <Text as="label" htmlFor="password-field" size="2" weight="medium">
             Password
           </Text>
           <Link href="#" size="2" onClick={(e) => e.preventDefault()}>

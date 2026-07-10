@@ -1772,7 +1772,7 @@ export default function BookingDetailClient({
                     as="label"
                     htmlFor="receipt-billing-in"
                     size="2"
-                    weight="bold"
+                    weight="medium"
                     mb={FORM_SPACING.labelGap}
                   >
                     {welperDetail.receiptDialog.billingIn}
@@ -1795,7 +1795,7 @@ export default function BookingDetailClient({
                     as="label"
                     htmlFor="receipt-billing-out"
                     size="2"
-                    weight="bold"
+                    weight="medium"
                     mb={FORM_SPACING.labelGap}
                   >
                     {welperDetail.receiptDialog.billingOut}
@@ -1818,7 +1818,7 @@ export default function BookingDetailClient({
                     as="label"
                     htmlFor="receipt-notes"
                     size="2"
-                    weight="bold"
+                    weight="medium"
                     mb={FORM_SPACING.labelGap}
                   >
                     {welperDetail.receiptDialog.notes}

@@ -233,7 +233,7 @@ export function CustomerProfileForm({
                 <Text
                   as="label"
                   size="2"
-                  weight="bold"
+                  weight="medium"
                   htmlFor="customer-first-name"
                   mb={FORM_SPACING.labelGap}
                 >
@@ -249,10 +249,13 @@ export function CustomerProfileForm({
                   size="2"
                   disabled={loading}
                   aria-required="true"
+                  aria-invalid={form.formState.errors.firstName ? "true" : undefined}
+                  aria-describedby={form.formState.errors.firstName ? "customer-first-name-error" : undefined}
                   {...form.register("firstName")}
                 />
                 {form.formState.errors.firstName && (
                   <Text
+                    id="customer-first-name-error"
                     size="1"
                     role="alert"
                     color={SEMANTIC_COLOR.danger}
@@ -267,7 +270,7 @@ export function CustomerProfileForm({
                 <Text
                   as="label"
                   size="2"
-                  weight="bold"
+                  weight="medium"
                   htmlFor="customer-last-name"
                   mb={FORM_SPACING.labelGap}
                 >
@@ -283,10 +286,13 @@ export function CustomerProfileForm({
                   size="2"
                   disabled={loading}
                   aria-required="true"
+                  aria-invalid={form.formState.errors.lastName ? "true" : undefined}
+                  aria-describedby={form.formState.errors.lastName ? "customer-last-name-error" : undefined}
                   {...form.register("lastName")}
                 />
                 {form.formState.errors.lastName && (
                   <Text
+                    id="customer-last-name-error"
                     size="1"
                     role="alert"
                     color={SEMANTIC_COLOR.danger}
@@ -300,7 +306,7 @@ export function CustomerProfileForm({
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="customer-phone" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="customer-phone" mb={FORM_SPACING.labelGap}>
               {labels.phone}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                 *
@@ -313,17 +319,19 @@ export function CustomerProfileForm({
               size="2"
               disabled={loading}
               aria-required="true"
+              aria-invalid={form.formState.errors.phone ? "true" : undefined}
+              aria-describedby={form.formState.errors.phone ? "customer-phone-error" : undefined}
               {...form.register("phone")}
             />
             {form.formState.errors.phone && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="customer-phone-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.phone.message}
               </Text>
             )}
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap}>
               {labels.address}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                 *

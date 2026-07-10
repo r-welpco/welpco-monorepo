@@ -21,6 +21,10 @@ const QUESTION_TYPES: QuestionType[] = [
 
 const ENTITY_TYPES = ["child", "person", "pet"] as const;
 
+// Shared widths for the hand-sized validation inputs so the fieldset aligns consistently.
+const boundInputStyle: React.CSSProperties = { width: 96 };
+const patternInputStyle: React.CSSProperties = { width: 200 };
+
 export function QuestionForm({ question }: { question: AdminQuestion }) {
   const router = useRouter();
   const [label, setLabel] = useState(question.label);
@@ -198,23 +202,23 @@ export function QuestionForm({ question }: { question: AdminQuestion }) {
       )}
 
       <fieldset style={{ border: "1px solid var(--admin-border)", padding: "1rem", borderRadius: 6, marginTop: "1rem" }}>
-        <legend style={{ fontSize: "0.85rem", fontWeight: "bold" }}>Validation Rules</legend>
+        <legend style={{ fontSize: "0.875rem", fontWeight: "bold" }}>Validation Rules</legend>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.875rem" }}>
             <input type="checkbox" checked={valRequired} onChange={(e) => setValRequired(e.target.checked)} />
             Required
           </label>
-          <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.875rem" }}>
             Min
-            <input className="admin-input" type="number" value={valMin} onChange={(e) => setValMin(e.target.value)} style={{ width: 80 }} />
+            <input className="admin-input" type="number" value={valMin} onChange={(e) => setValMin(e.target.value)} style={boundInputStyle} />
           </label>
-          <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.875rem" }}>
             Max
-            <input className="admin-input" type="number" value={valMax} onChange={(e) => setValMax(e.target.value)} style={{ width: 80 }} />
+            <input className="admin-input" type="number" value={valMax} onChange={(e) => setValMax(e.target.value)} style={boundInputStyle} />
           </label>
-          <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.85rem" }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "0.875rem" }}>
             Pattern (regex)
-            <input className="admin-input" value={valPattern} onChange={(e) => setValPattern(e.target.value)} style={{ width: 200 }} />
+            <input className="admin-input" value={valPattern} onChange={(e) => setValPattern(e.target.value)} style={patternInputStyle} />
           </label>
         </div>
       </fieldset>

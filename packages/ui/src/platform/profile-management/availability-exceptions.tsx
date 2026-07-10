@@ -11,7 +11,7 @@ import { Text } from "@welpco/ui/text";
 import { Badge } from "@welpco/ui/badge";
 import { Callout } from "@welpco/ui/callout";
 import { Dialog, DialogTrigger, DialogContent } from "@welpco/ui/dialog";
-import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useState } from "react";
 import { format } from "date-fns";
 import type { Locale } from "date-fns";
@@ -208,9 +208,9 @@ export function AvailabilityExceptions({
             >
               <Flex direction="column" gap="5">
                 <Box mb="3">
-                  <Text as="label" size="2" weight="bold" htmlFor="exception-date" mb="1">
+                  <Text as="label" size="2" weight="medium" htmlFor="exception-date" mb={FORM_SPACING.labelGap}>
                     {labels?.startDate ?? "Start date"}
-                    <Text as="span" color={SEMANTIC_COLOR.danger} ml="1">*</Text>
+                    <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
                   </Text>
                   <TextField.Root
                     id="exception-date"
@@ -222,7 +222,7 @@ export function AvailabilityExceptions({
                   />
                 </Box>
                 <Box mb="3">
-                  <Text as="label" size="2" weight="bold" htmlFor="exception-end-date" mb="1">
+                  <Text as="label" size="2" weight="medium" htmlFor="exception-end-date" mb={FORM_SPACING.labelGap}>
                     {labels?.endDateOptional ?? "End date (optional)"}
                   </Text>
                   <TextField.Root
@@ -234,13 +234,13 @@ export function AvailabilityExceptions({
                     disabled={loading}
                     min={selectedDate || undefined}
                   />
-                  <Text size="1" color="gray" mt="1" highContrast>
+                  <Text size="1" color="gray" mt={FORM_SPACING.helperGap} highContrast>
                     {labels?.endDateHint ?? "Leave blank for a single day."}
                   </Text>
                 </Box>
 
                 <Box mb="3">
-                  <Text as="label" size="2" weight="bold" mb="1">
+                  <Text as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap}>
                     {labels?.availabilityStatus ?? "Availability status"}
                   </Text>
                   <Flex gap="3">
@@ -268,7 +268,7 @@ export function AvailabilityExceptions({
                 </Box>
 
                 <Box mb="3">
-                  <Text as="label" size="2" weight="bold" htmlFor="exception-reason" mb="1">
+                  <Text as="label" size="2" weight="medium" htmlFor="exception-reason" mb={FORM_SPACING.labelGap}>
                     {labels?.reasonOptional ?? "Reason (optional)"}
                   </Text>
                   <TextArea
@@ -285,7 +285,7 @@ export function AvailabilityExceptions({
                     maxLength={REASON_MAX}
                     aria-describedby="exception-reason-counter"
                   />
-                  <Text id="exception-reason-counter" size="1" color="gray" highContrast mt="1">
+                  <Text id="exception-reason-counter" size="1" color="gray" highContrast mt={FORM_SPACING.helperGap}>
                     {labels?.charCount
                       ? labels.charCount(reason.length, REASON_MAX)
                       : `${reason.length} / ${REASON_MAX} characters`}

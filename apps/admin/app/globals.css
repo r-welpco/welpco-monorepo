@@ -146,6 +146,17 @@ textarea {
   resize: vertical;
 }
 
+/* Shared control chrome for any input/select/textarea tagged with .admin-input,
+   matching the .field control styling above so forms render identically
+   whether or not they use a .field wrapper. */
+.admin-input {
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-bg);
+  color: var(--admin-text);
+}
+
 .err {
   color: var(--admin-danger);
   font-size: 0.875rem;

@@ -28,7 +28,10 @@ export function VerifiedTrustBadge({ size = "2" }: VerifiedTrustBadgeProps) {
         highContrast
         size={size}
         aria-label={TOOLTIP_LABEL}
-        style={{ cursor: "default", paddingInline: size === "1" ? "5px" : "7px" }}
+        style={{
+          cursor: "default",
+          paddingInline: size === "1" ? "var(--space-1)" : "var(--space-2)",
+        }}
       >
         <ShieldCheck size={iconSize} aria-hidden="true" strokeWidth={2.25} />
       </Badge>

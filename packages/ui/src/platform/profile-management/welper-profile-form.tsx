@@ -192,7 +192,7 @@ export function WelperProfileForm({
           <Box mb={FORM_SPACING.fieldGap}>
             <Flex gap="3" direction={{ initial: "column", sm: "row" }}>
               <Box style={{ flex: 1 }}>
-                <Text as="label" size="2" weight="bold" htmlFor="welper-first-name" mb={FORM_SPACING.labelGap}>
+                <Text as="label" size="2" weight="medium" htmlFor="welper-first-name" mb={FORM_SPACING.labelGap}>
                   {labels.firstName}
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
                 </Text>
@@ -203,17 +203,19 @@ export function WelperProfileForm({
                   size="2"
                   disabled={loading}
                   aria-required="true"
+                  aria-invalid={form.formState.errors.firstName ? "true" : undefined}
+                  aria-describedby={form.formState.errors.firstName ? "welper-first-name-error" : undefined}
                   {...form.register("firstName")}
                 />
                 {form.formState.errors.firstName && (
-                  <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+                  <Text id="welper-first-name-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                     {form.formState.errors.firstName.message}
                   </Text>
                 )}
               </Box>
 
               <Box style={{ flex: 1 }}>
-                <Text as="label" size="2" weight="bold" htmlFor="welper-last-name" mb={FORM_SPACING.labelGap}>
+                <Text as="label" size="2" weight="medium" htmlFor="welper-last-name" mb={FORM_SPACING.labelGap}>
                   {labels.lastName}
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
                 </Text>
@@ -224,10 +226,12 @@ export function WelperProfileForm({
                   size="2"
                   disabled={loading}
                   aria-required="true"
+                  aria-invalid={form.formState.errors.lastName ? "true" : undefined}
+                  aria-describedby={form.formState.errors.lastName ? "welper-last-name-error" : undefined}
                   {...form.register("lastName")}
                 />
                 {form.formState.errors.lastName && (
-                  <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+                  <Text id="welper-last-name-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                     {form.formState.errors.lastName.message}
                   </Text>
                 )}
@@ -236,7 +240,7 @@ export function WelperProfileForm({
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="welper-phone" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="welper-phone" mb={FORM_SPACING.labelGap}>
               {labels.phone}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -247,17 +251,19 @@ export function WelperProfileForm({
               size="2"
               disabled={loading}
               aria-required="true"
+              aria-invalid={form.formState.errors.phone ? "true" : undefined}
+              aria-describedby={form.formState.errors.phone ? "welper-phone-error" : undefined}
               {...form.register("phone")}
             />
             {form.formState.errors.phone && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="welper-phone-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.phone.message}
               </Text>
             )}
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="welper-bio" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="welper-bio" mb={FORM_SPACING.labelGap}>
               {labels.bio}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -269,10 +275,12 @@ export function WelperProfileForm({
               disabled={loading}
               maxLength={WELPER_BIO_MAX_LENGTH}
               aria-required="true"
+              aria-invalid={form.formState.errors.bio ? "true" : undefined}
+              aria-describedby={form.formState.errors.bio ? "welper-bio-error" : undefined}
               {...form.register("bio")}
             />
             {form.formState.errors.bio && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="welper-bio-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.bio.message}
               </Text>
             )}
@@ -285,7 +293,7 @@ export function WelperProfileForm({
             <Box mb={FORM_SPACING.fieldGap}>
               <Flex align="center" justify="between">
                 <Box style={{ flex: 1 }}>
-                  <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap} id="wpf-visibility-label">
+                  <Text as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap} id="wpf-visibility-label">
                     {labels.visibility}
                   </Text>
                 </Box>

@@ -94,7 +94,7 @@ export function AgeVerification({
 
         <form onSubmit={handleSubmit}>
           <Box mb="3">
-            <Text as="label" size="2" weight="bold" htmlFor="dob-field" mb="1">
+            <Text as="label" size="2" weight="medium" htmlFor="dob-field" mb="1">
               Date of birth
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1">*</Text>
             </Text>

@@ -105,7 +105,8 @@ export function ChatInput({
             highContrast={!overLimit}
             role={overLimit ? "alert" : undefined}
             aria-live={overLimit ? "polite" : undefined}
-            style={{ alignSelf: "flex-end", paddingRight: 4 }}
+            mr="1"
+            style={{ alignSelf: "flex-end" }}
           >
             {overLimit
               ? `Message is too long — trim ${message.length - CHAT_MESSAGE_MAX_LENGTH} characters`

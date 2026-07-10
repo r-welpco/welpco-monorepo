@@ -11,6 +11,7 @@ import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { Button } from "@welpco/ui/button";
 import { X } from "lucide-react";
+import { FORM_SPACING } from "@welpco/ui/tokens";
 
 export interface SearchFiltersSidebarState {
   priceRange: "any" | "0-50" | "50-100" | "100-200" | "200+";
@@ -150,12 +151,12 @@ export function SearchFiltersSidebar({
         key="category"
         align="center"
         justify="between"
-        gap="3"
+        gap={isPanel ? FORM_SPACING.labelGap : "3"}
         wrap="wrap"
         direction={fieldDirection}
         style={fieldAlign}
       >
-        <Text as="label" size="2" weight="bold" htmlFor="sidebar-category">
+        <Text as="label" size="2" weight="medium" id="sidebar-category-label" htmlFor="sidebar-category" style={{ display: "block" }}>
           {l?.serviceCategory ?? "Service category"}
         </Text>
         <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
@@ -163,10 +164,7 @@ export function SearchFiltersSidebar({
             value={categoryId ?? FILTER_ANY}
             onValueChange={(v) => onCategoryChange(v === FILTER_ANY ? undefined : v)}
           >
-            <SelectTrigger
-              id="sidebar-category"
-              aria-label={l?.serviceCategoryAria ?? "Service category"}
-            />
+            <SelectTrigger id="sidebar-category" aria-labelledby="sidebar-category-label" style={{ width: "100%" }} />
             <SelectContent>
               <SelectItem value={FILTER_ANY}>{l?.anyCategory ?? "Any category"}</SelectItem>
               {categoryOptions.map((c) => (
@@ -183,8 +181,8 @@ export function SearchFiltersSidebar({
 
   if (onKeywordChange) {
     fieldNodes.push(
-      <Flex key="keyword" direction="column" gap="1">
-        <Text as="label" size="2" weight="bold" htmlFor="sidebar-keyword">
+      <Flex key="keyword" direction="column" gap={FORM_SPACING.labelGap}>
+        <Text as="label" size="2" weight="medium" htmlFor="sidebar-keyword">
           {l?.keyword ?? "Keyword (optional)"}
         </Text>
         <Input
@@ -204,12 +202,12 @@ export function SearchFiltersSidebar({
         key="radius"
         align="center"
         justify="between"
-        gap="3"
+        gap={isPanel ? FORM_SPACING.labelGap : "3"}
         wrap="wrap"
         direction={fieldDirection}
         style={fieldAlign}
       >
-        <Text as="label" size="2" weight="bold" htmlFor="sidebar-radius">
+        <Text as="label" size="2" weight="medium" id="sidebar-radius-label" htmlFor="sidebar-radius" style={{ display: "block" }}>
           {l?.withinKm ?? "Within (km)"}
         </Text>
         <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
@@ -217,7 +215,7 @@ export function SearchFiltersSidebar({
             value={radiusKm !== undefined ? String(radiusKm) : "__any__"}
             onValueChange={(v) => onRadiusChange(v === "__any__" ? undefined : parseInt(v, 10))}
           >
-            <SelectTrigger id="sidebar-radius" aria-label={l?.radiusAria ?? "Radius in km"} />
+            <SelectTrigger id="sidebar-radius" aria-labelledby="sidebar-radius-label" style={{ width: "100%" }} />
             <SelectContent>
               <SelectItem value="__any__">{l?.anyDistance ?? "Any distance"}</SelectItem>
               {radiusOptions.map((opt) => (
@@ -237,12 +235,12 @@ export function SearchFiltersSidebar({
       key="price"
       align="center"
       justify="between"
-      gap="3"
+      gap={isPanel ? FORM_SPACING.labelGap : "3"}
       wrap="wrap"
       direction={fieldDirection}
       style={fieldAlign}
     >
-      <Text as="label" size="2" weight="bold" htmlFor="sidebar-price">
+      <Text as="label" size="2" weight="medium" id="sidebar-price-label" htmlFor="sidebar-price" style={{ display: "block" }}>
         {l?.priceRange ?? "Price range"}
       </Text>
       <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
@@ -250,7 +248,7 @@ export function SearchFiltersSidebar({
           value={value.priceRange}
           onValueChange={(v) => update({ priceRange: v as SearchFiltersSidebarState["priceRange"] })}
         >
-          <SelectTrigger id="sidebar-price" aria-label={l?.priceAria ?? "Price range"} />
+          <SelectTrigger id="sidebar-price" aria-labelledby="sidebar-price-label" style={{ width: "100%" }} />
           <SelectContent>
             {priceOptions.map((opt) => (
               <SelectItem key={opt} value={opt}>
@@ -270,12 +268,12 @@ export function SearchFiltersSidebar({
       key="rating"
       align="center"
       justify="between"
-      gap="3"
+      gap={isPanel ? FORM_SPACING.labelGap : "3"}
       wrap="wrap"
       direction={fieldDirection}
       style={fieldAlign}
     >
-      <Text as="label" size="2" weight="bold" htmlFor="sidebar-rating">
+      <Text as="label" size="2" weight="medium" id="sidebar-rating-label" htmlFor="sidebar-rating" style={{ display: "block" }}>
         {l?.minRating ?? "Min. rating"}
       </Text>
       <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
@@ -283,7 +281,7 @@ export function SearchFiltersSidebar({
           value={value.rating}
           onValueChange={(v) => update({ rating: v as SearchFiltersSidebarState["rating"] })}
         >
-          <SelectTrigger id="sidebar-rating" aria-label={l?.ratingAria ?? "Minimum rating"} />
+          <SelectTrigger id="sidebar-rating" aria-labelledby="sidebar-rating-label" style={{ width: "100%" }} />
           <SelectContent>
             {ratingOptions.map((opt) => (
               <SelectItem key={opt} value={opt}>

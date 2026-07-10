@@ -676,6 +676,12 @@ Every `forwardRef`-wrapped or wrapper component sets `displayName` so DevTools s
 
 ## 16. Forms & input
 
+### 16.0 Non-negotiables (ruled 2026-07-04)
+
+- **Label weight is `medium`. Everywhere.** Bold labels are reserved for nothing — bold belongs to headings. (Earlier revisions of this document showed `bold` in one example and `medium` in another; `medium` is the ruling, and the platform components were migrated.)
+- **Labels sit above their control**, never inline-left — except the companion labels of Checkbox/Radio/Switch (§16.9).
+- **One field size per form.** The default is `size="2"`; a form may choose `size="3"` for prominence, but then *every* control in it — including Selects and the submit row's inputs — uses that size (§16.8).
+
 ### 16.1 The canonical field
 
 ```tsx
@@ -735,15 +741,16 @@ Why `*` as the canonical choice: Welpco forms vary in required-to-optional ratio
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 
 // ✅
-<Text as="label" htmlFor="email" size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+<Text as="label" htmlFor="email" size="2" weight="medium" mb={FORM_SPACING.labelGap}>
   Email
   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
 </Text>
 <TextField.Root id="email" type="email" required aria-required="true" />
 
 // For Select (whose trigger is a button, not a form field),
-// use `aria-labelledby` on the trigger:
-<Text as="label" id="frequency-label" size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+// use `aria-labelledby` on the trigger. `htmlFor` pointing at a Select
+// trigger does nothing — it is a banned anti-pattern.
+<Text as="label" id="frequency-label" size="2" weight="medium" mb={FORM_SPACING.labelGap}>
   Frequency
   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
 </Text>
@@ -795,6 +802,49 @@ Use `TextField.Slot` for leading/trailing adornments (search icon, unit, clear b
   <TextField.Slot side="right"><Kbd>⌘F</Kbd></TextField.Slot>
 </TextField.Root>
 ```
+
+### 16.8 Control metrics & size pairing
+
+Every form control on the same Radix size renders the same height (verified in Storybook, 2026-07-04):
+
+| Size | TextField / Select / Button height | Font size |
+| ---- | ---------------------------------- | --------- |
+| 1    | 24px                               | 12px      |
+| 2    | 32px (default)                     | 14px      |
+| 3    | 40px                               | 16px      |
+| 4    | 48px (Button/IconButton only)      | 18px      |
+
+Rules:
+- **Controls sharing a row share a size.** An input with an adjacent button (search bar, promo code, referral code) uses the same numeric size on both — this is what keeps their heights identical.
+- **One field size per form** (§16.0). Mixing a `size="2"` Select into a `size="3"` form is the classic misalignment bug — banned.
+- In a stacked form, **fields span the full form column width**, including Select triggers. A Select that hugs its content next to full-width inputs reads as broken. A `SelectTrigger` is inline-flex and hugs content by default — a `width: 100%` wrapper Box does **not** fix it; put `style={{ width: "100%" }}` on the trigger itself.
+- **`Text as="label"` renders inline — always add `style={{ display: "block" }}`.** Inside a `Flex` column the label happens to be blockified, but in a plain `Box` an inline label lets an inline-flex control (SelectTrigger) flow onto the *same line*, and whether it wraps depends on content width — two identical columns can render with different label/control layouts (found live in SupportForm, 2026-07-04). `display: block` on the label is the §15.5-sanctioned escape hatch; don't rely on the container.
+- Deliberate multi-up rows of intrinsically short fields (date | time, expiry | CVC | postal, first | last name) are fine (§16.10) — the rule is *uniform widths within the row* and same size, not that every field must be full-width.
+
+### 16.9 Companion labels (Checkbox, Radio, Switch)
+
+These controls carry their label *beside* them, not above. Canonical pattern — wrap in a real `<label>` so the text is clickable and centering is automatic:
+
+```tsx
+<Text as="label" size="2">
+  <Flex align="center" gap="2">
+    <Checkbox checked={value} onCheckedChange={setValue} />
+    Email me when a booking is confirmed
+  </Flex>
+</Text>
+```
+
+- Companion labels are `size="2"` **regular** weight (they are values, not field labels).
+- Group captions above a radio/checkbox group follow §16.1 label styling (`size="2" weight="medium"`), with the group container carrying `role="group"` + `aria-labelledby` — a caption is not a `<label>` because it labels no single control.
+
+### 16.10 Form and field width
+
+- A standalone form column (auth pages, dialogs) is **max-width 480px**. Wider forms drift toward unscannable line lengths on labels/helpers.
+- Fields fill the form column width by default. Fixed-width fields are allowed only for intrinsically short values (postal code, expiry, OTP) — size them with Radix `width`/`maxWidth` props on the 4pt grid, not hand-written pixel styles.
+
+### 16.11 Disabled during submit
+
+While a submission is in flight: disable the submit button and swap its label for `<Spinner />` (§16.6), and disable the form's fields — prefer one `<fieldset disabled={loading}>` (or a shared `disabled={loading}` prop) over sprinkling per-field logic. Never leave fields editable while their submit is pending.
 
 ---
 

@@ -343,7 +343,7 @@ export function ProfilePhotoUpload({
           <Heading size="4" mb="1">
             {labels.title}
             {required ? (
-              <Text as="span" color="red" ml="1">
+              <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                 *
               </Text>
             ) : null}

@@ -9,7 +9,7 @@ import { Button } from '@welpco/ui/button';
 import { Separator } from '@welpco/ui/separator';
 import { SEMANTIC_COLOR } from '@welpco/ui/tokens';
 import { JobApplicationForm } from '@welpco/ui';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeftIcon, CheckIcon } from '@radix-ui/react-icons';
 
 const STEPS = [
   { key: 'review', label: 'Review job' },
@@ -38,7 +38,7 @@ function ApplyStepper({ activeIndex }: { activeIndex: number }) {
                 color: accent ? `var(--${primary}-11)` : 'var(--gray-11)',
               }}
             >
-              {isDone ? <Check size={14} aria-hidden /> : <Text size="1" weight="bold">{i + 1}</Text>}
+              {isDone ? <CheckIcon width={14} height={14} aria-hidden /> : <Text size="1" weight="bold">{i + 1}</Text>}
               <Text size="2" weight={isActive ? 'bold' : 'medium'}>
                 {step.label}
               </Text>
@@ -87,7 +87,7 @@ function ModalShell({ activeIndex }: { activeIndex: number }) {
 
           <Flex justify="between" align="center" gap="3">
             <Button variant="ghost" color="gray">
-              <ArrowLeft size={16} aria-hidden />
+              <ArrowLeftIcon width={16} height={16} aria-hidden />
               Back
             </Button>
             <Button type="submit" form="welper-apply-form" color={SEMANTIC_COLOR.primary}>

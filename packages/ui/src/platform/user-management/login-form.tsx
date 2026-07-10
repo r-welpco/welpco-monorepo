@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { PasswordField } from "@welpco/ui/password-field";
+import { Spinner } from "@welpco/ui/spinner";
 import { TextField } from "@welpco/ui/text-field";
 import { Checkbox } from "@welpco/ui/checkbox";
 import { Box } from "@welpco/ui/box";
@@ -93,21 +94,27 @@ export function LoginForm({
 
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="login-email" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="login-email" mb={FORM_SPACING.labelGap}>
               {labels.email}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
               id="login-email"
               placeholder={labels.emailPlaceholder}
+              type="email"
+              inputMode="email"
               autoComplete="email"
               size="2"
               aria-required="true"
+              aria-invalid={form.formState.errors.email ? true : undefined}
+              aria-describedby={
+                form.formState.errors.email ? "login-email-error" : undefined
+              }
               disabled={loading}
               {...form.register("email")}
             />
             {form.formState.errors.email && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="login-email-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.email.message}
               </Text>
             )}
@@ -115,7 +122,7 @@ export function LoginForm({
 
           <Box mb={FORM_SPACING.fieldGap} position="relative">
             <Flex align="baseline" justify="between" mb={FORM_SPACING.labelGap}>
-              <Text as="label" size="2" weight="bold" htmlFor="login-password">
+              <Text as="label" size="2" weight="medium" htmlFor="login-password">
                 {labels.password}
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
@@ -138,11 +145,15 @@ export function LoginForm({
               autoComplete="current-password"
               size="2"
               aria-required="true"
+              aria-invalid={form.formState.errors.password ? true : undefined}
+              aria-describedby={
+                form.formState.errors.password ? "login-password-error" : undefined
+              }
               disabled={loading}
               {...form.register("password")}
             />
             {form.formState.errors.password && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="login-password-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.password.message}
               </Text>
             )}
@@ -166,7 +177,7 @@ export function LoginForm({
           </Box>
 
           <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
-            {loading ? labels.signingIn : labels.signIn}
+            {loading ? <Spinner /> : labels.signIn}
           </Button>
         </form>
 

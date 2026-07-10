@@ -70,7 +70,6 @@ export default function AdminSettingsPage() {
             required
             value={minutes}
             onChange={(e) => setMinutes(e.target.value)}
-            style={{ padding: "0.5rem", borderRadius: 6, border: "1px solid var(--admin-border)" }}
           />
         </label>
         <button type="submit" className="btn btn-primary" disabled={busy || !loaded}>

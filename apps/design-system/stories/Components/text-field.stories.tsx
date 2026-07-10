@@ -105,16 +105,16 @@ export const WithLabel: Story = {
   render: () => (
     <Flex gap="4" direction="column" style={{ width: '300px' }}>
       <Box>
-        <Text size="2" weight="bold" mb="2" as="div">
+        <Text as="label" size="2" weight="medium" htmlFor="text-field-email" mb="1" style={{ display: 'block' }}>
           Email address
         </Text>
-        <TextField.Root placeholder="Enter your email" type="email" />
+        <TextField.Root id="text-field-email" placeholder="Enter your email" type="email" />
       </Box>
       <Box>
-        <Text size="2" weight="bold" mb="2" as="div">
+        <Text as="label" size="2" weight="medium" htmlFor="text-field-password" mb="1" style={{ display: 'block' }}>
           Password
         </Text>
-        <TextField.Root placeholder="Enter your password" type="password" />
+        <TextField.Root id="text-field-password" placeholder="Enter your password" type="password" />
       </Box>
     </Flex>
   ),

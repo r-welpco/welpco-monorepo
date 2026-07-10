@@ -8,7 +8,7 @@ import { Flex } from "@welpco/ui/flex";
 import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { Separator } from "@welpco/ui/separator";
-import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { useState, type ChangeEvent } from "react";
 
 export interface ServiceSearchBarProps {
@@ -56,7 +56,7 @@ export function ServiceSearchBar({
         <form onSubmit={handleSubmit}>
           <Flex gap="3" align="end" direction={{ initial: "column", sm: "row" }}>
             <Box style={{ flex: 1, width: "100%", minWidth: 0 }}>
-              <Text as="label" size="2" weight="bold" htmlFor="service-search" mb="2" style={{ display: "block" }}>
+              <Text as="label" size="2" weight="medium" htmlFor="service-search" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
                 Search for services
               </Text>
               <TextField.Root

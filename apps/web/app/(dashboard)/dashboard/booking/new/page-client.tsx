@@ -496,9 +496,8 @@ export default function NewBookingPageClient({
 
   const today = new Date().toISOString().split("T")[0];
 
-  const submitLabel = createBooking.isPending
-    ? bookingLabels.submitConfirming
-    : oneHourHoldSubtotal !== null
+  const submitLabel =
+    oneHourHoldSubtotal !== null
       ? bookingLabels.submitRequest
       : bookingLabels.submitContinue;
 
@@ -650,7 +649,7 @@ export default function NewBookingPageClient({
                   as="label"
                   id="booking-service-label"
                   size="2"
-                  weight="bold"
+                  weight="medium"
                   mb={FORM_SPACING.labelGap}
                   style={{ display: "block" }}
                 >
@@ -712,7 +711,7 @@ export default function NewBookingPageClient({
                     as="label"
                     id="booking-service-type-label"
                     size="2"
-                    weight="bold"
+                    weight="medium"
                     mb={FORM_SPACING.labelGap}
                     style={{ display: "block" }}
                   >
@@ -825,7 +824,7 @@ export default function NewBookingPageClient({
                     <Text
                       as="label"
                       size="2"
-                      weight="bold"
+                      weight="medium"
                       htmlFor="booking-date"
                       mb={FORM_SPACING.labelGap}
                       style={{ display: "block" }}
@@ -853,7 +852,7 @@ export default function NewBookingPageClient({
                       <Text
                         as="label"
                         size="2"
-                        weight="bold"
+                        weight="medium"
                         htmlFor="booking-start"
                         mb={FORM_SPACING.labelGap}
                         style={{ display: "block" }}
@@ -887,7 +886,7 @@ export default function NewBookingPageClient({
                       <Text
                         as="label"
                         size="2"
-                        weight="bold"
+                        weight="medium"
                         htmlFor="booking-end"
                         mb={FORM_SPACING.labelGap}
                         style={{ display: "block" }}
@@ -960,7 +959,7 @@ export default function NewBookingPageClient({
                   <Text
                     as="label"
                     size="2"
-                    weight="bold"
+                    weight="medium"
                     htmlFor="booking-notes"
                     style={{ display: "block" }}
                   >
@@ -1002,6 +1001,7 @@ export default function NewBookingPageClient({
                   type="submit"
                   size="3"
                   color={SEMANTIC_COLOR.primary}
+                  loading={createBooking.isPending}
                   disabled={!canSubmit || createBooking.isPending}
                   onClick={handleSubmit}
                   style={{ width: "100%" }}
@@ -1058,6 +1058,7 @@ export default function NewBookingPageClient({
             type="submit"
             size="3"
             color={SEMANTIC_COLOR.primary}
+            loading={createBooking.isPending}
             disabled={!canSubmit || createBooking.isPending}
             onClick={handleSubmit}
             style={{ width: "100%" }}

@@ -79,8 +79,8 @@ export function LoginForm({
               required
             />
             {error ? <AdminErrorCallout message={error} /> : null}
-            <Button type="submit" disabled={loading} style={{ width: "100%" }}>
-              {loading ? "Signing in…" : "Sign in"}
+            <Button type="submit" loading={loading} style={{ width: "100%" }}>
+              Sign in
             </Button>
           </Flex>
         </form>

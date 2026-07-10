@@ -77,7 +77,7 @@ export function JobPostingForm({
         <Flex asChild direction="column" gap="5">
           <form onSubmit={handleSubmit}>
           <Box>
-            <Text as="label" size="2" weight="bold" htmlFor="job-title" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="job-title" mb={FORM_SPACING.labelGap}>
               Title
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -87,10 +87,12 @@ export function JobPostingForm({
               size="3"
               disabled={loading}
               aria-required="true"
+              aria-invalid={form.formState.errors.title ? "true" : undefined}
+              aria-describedby={form.formState.errors.title ? "job-title-error" : undefined}
               {...form.register("title")}
             />
             {form.formState.errors.title && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="job-title-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.title.message}
               </Text>
             )}
@@ -101,18 +103,26 @@ export function JobPostingForm({
               as="label"
               id="job-category-label"
               size="2"
-              weight="bold"
+              weight="medium"
               mb={FORM_SPACING.labelGap}
-            >
+             style={{ display: "block" }}>
               Category
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <Select
+              size="3"
               value={form.watch("categoryId")}
               onValueChange={(value) => form.setValue("categoryId", value)}
               disabled={loading}
             >
-              <SelectTrigger aria-labelledby="job-category-label" placeholder="Select category" />
+              <SelectTrigger
+                id="job-category"
+                aria-labelledby="job-category-label"
+                aria-invalid={form.formState.errors.categoryId ? "true" : undefined}
+                aria-describedby={form.formState.errors.categoryId ? "job-category-error" : undefined}
+                placeholder="Select category"
+                style={{ width: "100%" }}
+              />
               <SelectContent>
                 {categories.map((cat) => (
                   <SelectItem key={cat.id} value={cat.id}>
@@ -122,7 +132,7 @@ export function JobPostingForm({
               </SelectContent>
             </Select>
             {form.formState.errors.categoryId && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="job-category-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.categoryId.message}
               </Text>
             )}
@@ -130,7 +140,7 @@ export function JobPostingForm({
 
           <Flex gap="3" direction={{ initial: "column", sm: "row" }}>
             <Box style={{ flex: 1 }}>
-              <Text as="label" size="2" weight="bold" htmlFor="job-budget" mb={FORM_SPACING.labelGap}>
+              <Text as="label" size="2" weight="medium" htmlFor="job-budget" mb={FORM_SPACING.labelGap}>
                 Budget
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
@@ -140,16 +150,18 @@ export function JobPostingForm({
                 size="3"
                 disabled={loading}
                 aria-required="true"
+                aria-invalid={form.formState.errors.budget ? "true" : undefined}
+                aria-describedby={form.formState.errors.budget ? "job-budget-error" : undefined}
                 {...form.register("budget")}
               />
               {form.formState.errors.budget && (
-                <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+                <Text id="job-budget-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                   {form.formState.errors.budget.message}
                 </Text>
               )}
             </Box>
             <Box style={{ flex: 1 }}>
-              <Text as="label" size="2" weight="bold" htmlFor="job-location" mb={FORM_SPACING.labelGap}>
+              <Text as="label" size="2" weight="medium" htmlFor="job-location" mb={FORM_SPACING.labelGap}>
                 Location
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
@@ -159,10 +171,12 @@ export function JobPostingForm({
                 size="3"
                 disabled={loading}
                 aria-required="true"
+                aria-invalid={form.formState.errors.location ? "true" : undefined}
+                aria-describedby={form.formState.errors.location ? "job-location-error" : undefined}
                 {...form.register("location")}
               />
               {form.formState.errors.location && (
-                <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+                <Text id="job-location-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                   {form.formState.errors.location.message}
                 </Text>
               )}
@@ -170,7 +184,7 @@ export function JobPostingForm({
           </Flex>
 
           <Box>
-            <Text as="label" size="2" weight="bold" htmlFor="job-description" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="job-description" mb={FORM_SPACING.labelGap}>
               Description
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -181,10 +195,12 @@ export function JobPostingForm({
               size="3"
               disabled={loading}
               aria-required="true"
+              aria-invalid={form.formState.errors.description ? "true" : undefined}
+              aria-describedby={form.formState.errors.description ? "job-description-error" : undefined}
               {...form.register("description")}
             />
             {form.formState.errors.description && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="job-description-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.description.message}
               </Text>
             )}

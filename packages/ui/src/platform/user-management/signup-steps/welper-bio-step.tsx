@@ -10,6 +10,7 @@ import { Callout } from "@welpco/ui/callout";
 import { Card } from "@welpco/ui/card";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
+import { Spinner } from "@welpco/ui/spinner";
 import { Text } from "@welpco/ui/text";
 import { TextArea } from "@welpco/ui/text-area";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
@@ -123,7 +124,7 @@ export function WelperBioStep({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="signup-bio"
               mb={FORM_SPACING.labelGap}
             >
@@ -142,7 +143,9 @@ export function WelperBioStep({
               maxLength={MAX_BIO}
               aria-required="true"
               aria-invalid={form.formState.errors.bio ? true : undefined}
-              aria-describedby="signup-bio-helper"
+              aria-describedby={
+                form.formState.errors.bio ? "signup-bio-error" : "signup-bio-helper"
+              }
               {...form.register("bio")}
             />
             <Flex justify="between" align="center" mt={FORM_SPACING.helperGap}>
@@ -164,6 +167,7 @@ export function WelperBioStep({
             </Flex>
             {form.formState.errors.bio && (
               <Text
+                id="signup-bio-error"
                 role="alert"
                 size="1"
                 color={SEMANTIC_COLOR.danger}
@@ -187,7 +191,7 @@ export function WelperBioStep({
               disabled={loading}
               style={navButtonStyle}
             >
-              {loading ? labels.saving : labels.continue}
+              {loading ? <Spinner /> : labels.continue}
             </Button>
             {onBack && (
               <Button

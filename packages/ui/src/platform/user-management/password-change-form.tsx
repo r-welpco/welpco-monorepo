@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { PasswordField } from "@welpco/ui/password-field";
+import { Spinner } from "@welpco/ui/spinner";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
@@ -115,13 +116,13 @@ export function PasswordChangeForm({
 
   const newPassword = form.watch("newPassword");
   const getPasswordStrength = (password: string) => {
-    if (password.length === 0) return { strength: 0, label: "", color: "gray" };
-    if (password.length < 8) return { strength: 1, label: labels.passwordStrengthWeak, color: "red" };
-    if (password.length < 12) return { strength: 2, label: labels.passwordStrengthMedium, color: "amber" };
+    if (password.length === 0) return { strength: 0, label: "", color: SEMANTIC_COLOR.neutral };
+    if (password.length < 8) return { strength: 1, label: labels.passwordStrengthWeak, color: SEMANTIC_COLOR.danger };
+    if (password.length < 12) return { strength: 2, label: labels.passwordStrengthMedium, color: SEMANTIC_COLOR.warning };
     if (/[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password)) {
-      return { strength: 3, label: labels.passwordStrengthStrong, color: "green" };
+      return { strength: 3, label: labels.passwordStrengthStrong, color: SEMANTIC_COLOR.success };
     }
-    return { strength: 2, label: labels.passwordStrengthMedium, color: "amber" };
+    return { strength: 2, label: labels.passwordStrengthMedium, color: SEMANTIC_COLOR.warning };
   };
 
   const passwordStrength = getPasswordStrength(newPassword);
@@ -150,7 +151,7 @@ export function PasswordChangeForm({
 
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="current-password" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="current-password" mb={FORM_SPACING.labelGap}>
               {labels.currentPassword}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -161,17 +162,23 @@ export function PasswordChangeForm({
               disabled={loading}
               size="2"
               aria-required="true"
+              aria-invalid={form.formState.errors.currentPassword ? true : undefined}
+              aria-describedby={
+                form.formState.errors.currentPassword
+                  ? "current-password-error"
+                  : undefined
+              }
               {...form.register("currentPassword")}
             />
             {form.formState.errors.currentPassword && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="current-password-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.currentPassword.message}
               </Text>
             )}
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="new-password" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="new-password" mb={FORM_SPACING.labelGap}>
               {labels.newPassword}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -182,6 +189,10 @@ export function PasswordChangeForm({
               disabled={loading}
               size="2"
               aria-required="true"
+              aria-invalid={form.formState.errors.newPassword ? true : undefined}
+              aria-describedby={
+                form.formState.errors.newPassword ? "new-password-error" : undefined
+              }
               {...form.register("newPassword")}
             />
             {newPassword && passwordStrength.label && (
@@ -190,7 +201,7 @@ export function PasswordChangeForm({
               </Text>
             )}
             {form.formState.errors.newPassword && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="new-password-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.newPassword.message}
               </Text>
             )}
@@ -200,7 +211,7 @@ export function PasswordChangeForm({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="confirm-password"
               mb={FORM_SPACING.labelGap}
             >
@@ -214,10 +225,16 @@ export function PasswordChangeForm({
               disabled={loading}
               size="2"
               aria-required="true"
+              aria-invalid={form.formState.errors.confirmPassword ? true : undefined}
+              aria-describedby={
+                form.formState.errors.confirmPassword
+                  ? "confirm-password-error"
+                  : undefined
+              }
               {...form.register("confirmPassword")}
             />
             {form.formState.errors.confirmPassword && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="confirm-password-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.confirmPassword.message}
               </Text>
             )}
@@ -230,7 +247,7 @@ export function PasswordChangeForm({
             disabled={loading}
             mt={FORM_SPACING.submitGap}
           >
-            {loading ? (labels.submitting ?? "Updating...") : labels.submit}
+            {loading ? <Spinner /> : labels.submit}
           </Button>
         </form>
       </Flex>

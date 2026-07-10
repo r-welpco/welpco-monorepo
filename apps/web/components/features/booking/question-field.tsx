@@ -100,17 +100,24 @@ export function QuestionField({ sq, value, onChange, labels }: QuestionFieldProp
       {matchesQuestionType(question.type, "NUMBER") && (
         <TextField.Root
           id={fieldId}
-          type="number"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           value={strVal}
           placeholder={question.placeholder ?? undefined}
-          min={question.validationRules?.min}
-          max={question.validationRules?.max}
           required={isRequired}
           aria-required={isRequired || undefined}
           aria-describedby={helpId}
           onChange={(e) => {
             const v = e.target.value;
-            onChange(v === "" ? "" : Number(v));
+            if (v === "") {
+              onChange("");
+              return;
+            }
+            // Text input no longer filters keystrokes like type="number" did:
+            // ignore non-numeric input so the stored answer stays a number.
+            const n = Number(v);
+            if (!Number.isNaN(n)) onChange(n);
           }}
         />
       )}

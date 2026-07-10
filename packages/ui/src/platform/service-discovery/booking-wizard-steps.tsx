@@ -8,7 +8,7 @@ import { Heading } from "@welpco/ui/heading";
 import { TextField } from "@welpco/ui/text-field";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@welpco/ui/select";
 import { Skeleton } from "@welpco/ui/skeleton";
-import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import type { WelperProfileDialogOffering } from "./welper-profile-dialog";
 import type { BookingWizardQuestion } from "./booking-wizard";
 
@@ -69,7 +69,7 @@ export function QuestionInput({
         }
         onValueChange={(v) => onChange(v === "true")}
       >
-        <SelectTrigger id={id} aria-label={question.label} placeholder="Select…" />
+        <SelectTrigger id={id} aria-labelledby={`${id}-label`} placeholder="Select…" />
         <SelectContent>
           <SelectItem value="true">Yes</SelectItem>
           <SelectItem value="false">No</SelectItem>
@@ -81,7 +81,7 @@ export function QuestionInput({
   if (type === "choice" && question.options && question.options.length > 0) {
     return (
       <Select value={strVal || undefined} onValueChange={(v) => onChange(v)}>
-        <SelectTrigger id={id} aria-label={question.label} />
+        <SelectTrigger id={id} aria-labelledby={`${id}-label`} />
         <SelectContent>
           {question.options.map((opt) => (
             <SelectItem key={opt.value} value={opt.value}>
@@ -194,6 +194,9 @@ export function ScheduleStep({
 }) {
   const nextDisabled =
     !scheduledDate || !scheduledStartTime || !scheduledEndTime || (durationMinutes ?? 0) <= 0;
+  const timeInvalid = Boolean(
+    scheduledStartTime && scheduledEndTime && durationMinutes !== null && durationMinutes <= 0,
+  );
 
   return (
     <Box>
@@ -202,7 +205,7 @@ export function ScheduleStep({
       </Heading>
       <Flex direction="column" gap="4">
         <Box>
-          <Text as="label" size="2" weight="bold" htmlFor="wizard-date" mb="2" style={{ display: "block" }}>
+          <Text as="label" size="2" weight="medium" htmlFor="wizard-date" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
             Date
           </Text>
           <TextField.Root
@@ -216,7 +219,7 @@ export function ScheduleStep({
         </Box>
         <Flex gap="3" wrap="wrap">
           <Box style={{ flex: 1, minWidth: 120 }}>
-            <Text as="label" size="2" weight="bold" htmlFor="wizard-start" mb="2" style={{ display: "block" }}>
+            <Text as="label" size="2" weight="medium" htmlFor="wizard-start" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
               Start time
             </Text>
             <TextField.Root
@@ -226,10 +229,12 @@ export function ScheduleStep({
               onChange={(e) => onStartTimeChange(e.target.value)}
               size="2"
               style={{ width: "100%" }}
+              aria-invalid={timeInvalid || undefined}
+              aria-describedby={timeInvalid ? "wizard-time-error" : undefined}
             />
           </Box>
           <Box style={{ flex: 1, minWidth: 120 }}>
-            <Text as="label" size="2" weight="bold" htmlFor="wizard-end" mb="2" style={{ display: "block" }}>
+            <Text as="label" size="2" weight="medium" htmlFor="wizard-end" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
               End time
             </Text>
             <TextField.Root
@@ -239,11 +244,13 @@ export function ScheduleStep({
               onChange={(e) => onEndTimeChange(e.target.value)}
               size="2"
               style={{ width: "100%" }}
+              aria-invalid={timeInvalid || undefined}
+              aria-describedby={timeInvalid ? "wizard-time-error" : undefined}
             />
           </Box>
         </Flex>
-        {scheduledStartTime && scheduledEndTime && durationMinutes !== null && durationMinutes <= 0 && (
-          <Text size="2" color={SEMANTIC_COLOR.danger}>
+        {timeInvalid && (
+          <Text id="wizard-time-error" role="alert" size="1" color={SEMANTIC_COLOR.danger}>
             End time must be after start time.
           </Text>
         )}
@@ -286,10 +293,17 @@ export function QuestionsStep({
       ) : currentQuestion ? (
         <Box>
           <Box mb="3">
-            <Text as="label" size="2" weight="bold" htmlFor={`wizard-q-${currentQuestion.questionId}`} mb="1">
+            <Text
+              as="label"
+              size="2"
+              weight="medium"
+              id={`wizard-q-${currentQuestion.questionId}-label`}
+              htmlFor={`wizard-q-${currentQuestion.questionId}`}
+              mb={FORM_SPACING.labelGap}
+            >
               {currentQuestion.question.label}
               {currentQuestion.isRequired && (
-                <Text as="span" color={SEMANTIC_COLOR.danger} ml="1">
+                <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                   *
                 </Text>
               )}

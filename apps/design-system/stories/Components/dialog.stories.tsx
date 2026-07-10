@@ -38,13 +38,13 @@ export const Default: Story = {
         </DialogTrigger>
         <DialogContent title="Edit Profile" description="Make changes to your profile here.">
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap} htmlFor="dlg-name">
+            <Text as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap} htmlFor="dlg-name">
               Name
             </Text>
             <TextField.Root id="dlg-name" placeholder="Enter your name" />
           </Box>
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap} htmlFor="dlg-email">
+            <Text as="label" size="2" weight="medium" mb={FORM_SPACING.labelGap} htmlFor="dlg-email">
               Email
             </Text>
             <TextField.Root id="dlg-email" type="email" placeholder="Enter your email" />

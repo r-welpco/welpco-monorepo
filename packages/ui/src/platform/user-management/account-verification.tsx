@@ -175,7 +175,7 @@ export function AccountVerification({
           </div>
 
           <Box mb="3">
-            <Text as="label" size="2" weight="bold" mb="1">
+            <Text as="label" size="2" weight="medium" mb="1">
               {labels.codeLabel}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                 {labels.requiredMarker}

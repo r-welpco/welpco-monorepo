@@ -6,6 +6,7 @@ import { Flex } from "@welpco/ui/flex";
 import { Text } from "@welpco/ui/text";
 import { Button } from "@welpco/ui/button";
 import { Switch } from "@welpco/ui/switch";
+import { Separator } from "@welpco/ui/separator";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
   Select,
@@ -77,12 +78,17 @@ export function MarketplaceFilters({
               </Text>
             </Flex>
 
-            <Box style={{ minWidth: 180 }}>
+            <Box minWidth="180px">
               <Select
                 value={categoryId || "__all__"}
                 onValueChange={(v) => onCategoryChange(v === "__all__" ? "" : v)}
               >
-                <SelectTrigger placeholder={labels.filters.allCategories} />
+                {/* Compact toolbar: a visible label would break the single-row
+                    layout, so the trigger carries an aria-label instead. */}
+                <SelectTrigger
+                  aria-label={labels.filters.allCategories}
+                  placeholder={labels.filters.allCategories}
+                />
                 <SelectContent>
                   <SelectItem value="__all__">{labels.filters.allCategories}</SelectItem>
                   {parentCategories.map((c) => (
@@ -95,12 +101,15 @@ export function MarketplaceFilters({
             </Box>
 
             {categoryId && subcategories.length > 0 && (
-              <Box style={{ minWidth: 180 }}>
+              <Box minWidth="180px">
                 <Select
                   value={subcategoryId || "__all__"}
                   onValueChange={(v) => onSubcategoryChange(v === "__all__" ? "" : v)}
                 >
-                  <SelectTrigger placeholder={labels.filters.allServices} />
+                  <SelectTrigger
+                    aria-label={labels.filters.allServices}
+                    placeholder={labels.filters.allServices}
+                  />
                   <SelectContent>
                     <SelectItem value="__all__">{labels.filters.allServices}</SelectItem>
                     {subcategories.map((c) => (
@@ -158,7 +167,7 @@ export function MarketplaceFilters({
 
           {hasFilters && (
             <>
-              <Box style={{ width: "1px", height: "16px", backgroundColor: "var(--gray-5)" }} />
+              <Separator orientation="vertical" size="1" />
               {selectedCategory && (
                 <FilterChip
                   label={categoryDisplayName(selectedCategory.name)}

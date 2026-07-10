@@ -103,6 +103,11 @@ export default function NewJobPageClient() {
     return end - start;
   }, [startTime, endTime]);
 
+  /** True when either time error message is showing (drives aria-invalid/aria-describedby). */
+  const timeErrorVisible =
+    (!!startTime && !!endTime && durationMinutes === null) ||
+    (durationMinutes != null && durationMinutes < MIN_BOOKING_DURATION_MINUTES);
+
   /** Step 2: service questions (schedule collected in the When section below). */
   const visibleQuestions = useMemo(
     () =>
@@ -231,13 +236,23 @@ export default function NewJobPageClient() {
 
         <Card size="4" variant="surface">
           {step === 1 && (
-            <Flex direction="column" gap="4">
+            <Flex direction="column" gap={FORM_SPACING.fieldGap}>
               <Box>
-                <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+                <Text
+                  as="label"
+                  id="job-category-label"
+                  size="2"
+                  weight="medium"
+                  mb={FORM_SPACING.labelGap}
+                  style={{ display: "block" }}
+                >
                   {labels.new.category}
                 </Text>
                 <Select value={categoryId || undefined} onValueChange={(v) => { setCategoryId(v); setSubcategoryId(""); }}>
-                  <SelectTrigger placeholder={labels.new.selectCategory} />
+                  <SelectTrigger
+                    aria-labelledby="job-category-label"
+                    placeholder={labels.new.selectCategory}
+                  />
                   <SelectContent>
                     {parentCategories.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
@@ -248,7 +263,14 @@ export default function NewJobPageClient() {
                 </Select>
               </Box>
               <Box>
-                <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+                <Text
+                  as="label"
+                  id="job-subcategory-label"
+                  size="2"
+                  weight="medium"
+                  mb={FORM_SPACING.labelGap}
+                  style={{ display: "block" }}
+                >
                   {labels.new.subcategory}
                 </Text>
                 <Select
@@ -256,7 +278,10 @@ export default function NewJobPageClient() {
                   onValueChange={setSubcategoryId}
                   disabled={!categoryId}
                 >
-                  <SelectTrigger placeholder={labels.new.selectSubcategory} />
+                  <SelectTrigger
+                    aria-labelledby="job-subcategory-label"
+                    placeholder={labels.new.selectSubcategory}
+                  />
                   <SelectContent>
                     {subcategories.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
@@ -275,14 +300,23 @@ export default function NewJobPageClient() {
           )}
 
           {step === 2 && (
-            <Flex direction="column" gap="4">
+            <Flex direction="column" gap={FORM_SPACING.fieldGap}>
               <Box>
                 <Heading as="h2" size="4" mb="3" trim="start">
                   {labels.new.aboutJob}
                 </Heading>
                 <Box>
-                  <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>{labels.new.titleLabel}</Text>
-                  <TextField.Root value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
+                  <Text
+                    as="label"
+                    htmlFor="job-title"
+                    size="2"
+                    weight="medium"
+                    mb={FORM_SPACING.labelGap}
+                    style={{ display: "block" }}
+                  >
+                    {labels.new.titleLabel}
+                  </Text>
+                  <TextField.Root id="job-title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} />
                 </Box>
               </Box>
 
@@ -291,7 +325,7 @@ export default function NewJobPageClient() {
                   <Heading as="h2" size="4" mb="3" trim="start">
                     {labels.new.serviceQuestions}
                   </Heading>
-                  <Flex direction="column" gap="4">
+                  <Flex direction="column" gap={FORM_SPACING.fieldGap}>
                     {visibleQuestions.map((sq) => (
                       <QuestionField
                         key={sq.id}
@@ -314,28 +348,71 @@ export default function NewJobPageClient() {
                 <Heading as="h2" size="4" mb="3" trim="start">
                   {labels.new.when}
                 </Heading>
-                <Flex direction="column" gap="4">
+                <Flex direction="column" gap={FORM_SPACING.fieldGap}>
                   <Box>
-                    <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>{labels.new.date}</Text>
-                    <TextField.Root type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
+                    <Text
+                      as="label"
+                      htmlFor="job-date"
+                      size="2"
+                      weight="medium"
+                      mb={FORM_SPACING.labelGap}
+                      style={{ display: "block" }}
+                    >
+                      {labels.new.date}
+                    </Text>
+                    <TextField.Root id="job-date" type="date" value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
                   </Box>
+                  {/* Time error renders below the whole row (not inside a column)
+                      so an appearing error never shifts the sibling time field. */}
                   <Flex gap="3" wrap="wrap">
                     <Box flexGrow="1">
-                      <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>{labels.new.startTime}</Text>
-                      <TextField.Root type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                      <Text
+                        as="label"
+                        htmlFor="job-start-time"
+                        size="2"
+                        weight="medium"
+                        mb={FORM_SPACING.labelGap}
+                        style={{ display: "block" }}
+                      >
+                        {labels.new.startTime}
+                      </Text>
+                      <TextField.Root
+                        id="job-start-time"
+                        type="time"
+                        value={startTime}
+                        aria-invalid={timeErrorVisible ? true : undefined}
+                        aria-describedby={timeErrorVisible ? "job-time-error" : undefined}
+                        onChange={(e) => setStartTime(e.target.value)}
+                      />
                     </Box>
                     <Box flexGrow="1">
-                      <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>{labels.new.endTime}</Text>
-                      <TextField.Root type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+                      <Text
+                        as="label"
+                        htmlFor="job-end-time"
+                        size="2"
+                        weight="medium"
+                        mb={FORM_SPACING.labelGap}
+                        style={{ display: "block" }}
+                      >
+                        {labels.new.endTime}
+                      </Text>
+                      <TextField.Root
+                        id="job-end-time"
+                        type="time"
+                        value={endTime}
+                        aria-invalid={timeErrorVisible ? true : undefined}
+                        aria-describedby={timeErrorVisible ? "job-time-error" : undefined}
+                        onChange={(e) => setEndTime(e.target.value)}
+                      />
                     </Box>
                   </Flex>
                   {startTime && endTime && durationMinutes === null && (
-                    <Text size="1" color={SEMANTIC_COLOR.danger}>
+                    <Text id="job-time-error" role="alert" size="1" color={SEMANTIC_COLOR.danger}>
                       {labels.new.endAfterStart}
                     </Text>
                   )}
                   {durationMinutes != null && durationMinutes < MIN_BOOKING_DURATION_MINUTES && (
-                    <Text size="1" color={SEMANTIC_COLOR.danger}>
+                    <Text id="job-time-error" role="alert" size="1" color={SEMANTIC_COLOR.danger}>
                       {labels.new.minDuration}
                     </Text>
                   )}

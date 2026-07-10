@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { PasswordField } from "@welpco/ui/password-field";
+import { Spinner } from "@welpco/ui/spinner";
 import { TextField } from "@welpco/ui/text-field";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
@@ -98,7 +99,7 @@ export function PasswordReset({
 
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="reset-email" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="reset-email" mb={FORM_SPACING.labelGap}>
               {labels.email}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                 {labels.requiredMarker}
@@ -107,21 +108,27 @@ export function PasswordReset({
             <TextField.Root
               id="reset-email"
               placeholder={labels.emailPlaceholder}
+              type="email"
+              inputMode="email"
               autoComplete="email"
               size="2"
               aria-required="true"
+              aria-invalid={form.formState.errors.email ? true : undefined}
+              aria-describedby={
+                form.formState.errors.email ? "reset-email-error" : undefined
+              }
               disabled={loading}
               {...form.register("email")}
             />
             {form.formState.errors.email && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="reset-email-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.email.message}
               </Text>
             )}
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="reset-password" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="reset-password" mb={FORM_SPACING.labelGap}>
               {labels.newPassword}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                 {labels.requiredMarker}
@@ -133,11 +140,15 @@ export function PasswordReset({
               autoComplete="new-password"
               size="2"
               aria-required="true"
+              aria-invalid={form.formState.errors.newPassword ? true : undefined}
+              aria-describedby={
+                form.formState.errors.newPassword ? "reset-password-error" : undefined
+              }
               disabled={loading}
               {...form.register("newPassword")}
             />
             {form.formState.errors.newPassword && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="reset-password-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.newPassword.message}
               </Text>
             )}
@@ -147,9 +158,9 @@ export function PasswordReset({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="reset-confirm"
-              mb="1"
+              mb={FORM_SPACING.labelGap}
             >
               {labels.confirmPassword}
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
@@ -162,11 +173,15 @@ export function PasswordReset({
               autoComplete="new-password"
               size="2"
               aria-required="true"
+              aria-invalid={form.formState.errors.confirmPassword ? true : undefined}
+              aria-describedby={
+                form.formState.errors.confirmPassword ? "reset-confirm-error" : undefined
+              }
               disabled={loading}
               {...form.register("confirmPassword")}
             />
             {form.formState.errors.confirmPassword && (
-              <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+              <Text id="reset-confirm-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {form.formState.errors.confirmPassword.message}
               </Text>
             )}
@@ -174,7 +189,7 @@ export function PasswordReset({
 
           <Flex gap="2" mt={FORM_SPACING.submitGap}>
             <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading}>
-              {loading ? labels.updating : labels.updatePassword}
+              {loading ? <Spinner /> : labels.updatePassword}
             </Button>
             {onCancel && (
               <Button type="button" size="2" variant="soft" color="gray" disabled={loading} onClick={onCancel}>

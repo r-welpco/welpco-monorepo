@@ -116,7 +116,7 @@ export function ActionConfirmDialog({
                 id={reasonLabelId}
                 htmlFor={reasonInputId}
                 size="2"
-                weight="bold"
+                weight="medium"
                 mb={FORM_SPACING.labelGap}
               >
                 {reasonField.label}

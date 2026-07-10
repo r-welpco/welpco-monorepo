@@ -292,7 +292,7 @@ export function WelperOfferingStep({
 
         {canAddMore && (savedOfferings.length === 0 || addFormExpanded) && (
         <Box>
-          <Text size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+          <Text size="2" weight="medium" mb={FORM_SPACING.labelGap}>
             {savedOfferings.length === 0 ? labels.firstService : labels.addAnother}
           </Text>
 
@@ -308,9 +308,9 @@ export function WelperOfferingStep({
                 as="label"
                 id="signup-offering-parent-label"
                 size="2"
-                weight="bold"
+                weight="medium"
                 mb={FORM_SPACING.labelGap}
-              >
+               style={{ display: "block" }}>
                 {labels.category}
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                   {labels.requiredMarker}
@@ -357,9 +357,9 @@ export function WelperOfferingStep({
                 as="label"
                 id="signup-offering-sub-label"
                 size="2"
-                weight="bold"
+                weight="medium"
                 mb={FORM_SPACING.labelGap}
-              >
+               style={{ display: "block" }}>
                 {labels.subcategory}
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
                   {labels.requiredMarker}
@@ -410,7 +410,7 @@ export function WelperOfferingStep({
               <Text
                 as="label"
                 size="2"
-                weight="bold"
+                weight="medium"
                 htmlFor="signup-offering-title"
                 mb={FORM_SPACING.labelGap}
               >
@@ -441,7 +441,7 @@ export function WelperOfferingStep({
               <Text
                 as="label"
                 size="2"
-                weight="bold"
+                weight="medium"
                 htmlFor="signup-offering-rate"
                 mb={FORM_SPACING.labelGap}
               >
@@ -480,7 +480,7 @@ export function WelperOfferingStep({
               <Text
                 as="label"
                 size="2"
-                weight="bold"
+                weight="medium"
                 htmlFor="signup-offering-description"
                 mb={FORM_SPACING.labelGap}
               >

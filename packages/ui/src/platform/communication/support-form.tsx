@@ -73,7 +73,7 @@ export function SupportForm({
         <Flex asChild direction="column" gap="5">
           <form onSubmit={handleSubmit}>
             <Box>
-              <Text as="label" size="2" weight="bold" htmlFor="subject-field" mb={FORM_SPACING.labelGap}>
+              <Text as="label" size="2" weight="medium" htmlFor="subject-field" mb={FORM_SPACING.labelGap}>
                 Subject
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
@@ -98,8 +98,9 @@ export function SupportForm({
                   as="label"
                   id="support-category-label"
                   size="2"
-                  weight="bold"
+                  weight="medium"
                   mb={FORM_SPACING.labelGap}
+                  style={{ display: "block" }}
                 >
                   Category
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
@@ -111,7 +112,7 @@ export function SupportForm({
                   }
                   disabled={loading}
                 >
-                  <SelectTrigger aria-labelledby="support-category-label" />
+                  <SelectTrigger aria-labelledby="support-category-label" style={{ width: "100%" }} />
                   <SelectContent>
                     <SelectItem value="technical">Technical</SelectItem>
                     <SelectItem value="billing">Billing</SelectItem>
@@ -131,8 +132,9 @@ export function SupportForm({
                   as="label"
                   id="support-priority-label"
                   size="2"
-                  weight="bold"
+                  weight="medium"
                   mb={FORM_SPACING.labelGap}
+                  style={{ display: "block" }}
                 >
                   Priority
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
@@ -144,7 +146,7 @@ export function SupportForm({
                   }
                   disabled={loading}
                 >
-                  <SelectTrigger aria-labelledby="support-priority-label" />
+                  <SelectTrigger aria-labelledby="support-priority-label" style={{ width: "100%" }} />
                   <SelectContent>
                     <SelectItem value="low">Low</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
@@ -161,7 +163,7 @@ export function SupportForm({
             </Flex>
 
             <Box>
-              <Text as="label" size="2" weight="bold" htmlFor="message-field" mb={FORM_SPACING.labelGap}>
+              <Text as="label" size="2" weight="medium" htmlFor="message-field" mb={FORM_SPACING.labelGap}>
                 Message
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>

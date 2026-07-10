@@ -6,6 +6,7 @@ import { Callout } from "@welpco/ui/callout";
 import { Card } from "@welpco/ui/card";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
+import { Spinner } from "@welpco/ui/spinner";
 import { Text } from "@welpco/ui/text";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
@@ -17,7 +18,6 @@ import { SIGNUP_STEP_CARD_STYLE, type SignupStateLite } from "./types";
 function StripeSetupGuide({ labels }: { labels: WelperPayoutStepLabels }) {
   const listStyle = {
     margin: 0,
-    paddingLeft: "1.25rem",
     color: "var(--gray-11)",
     fontSize: "var(--font-size-2)",
     lineHeight: 1.6,
@@ -31,18 +31,30 @@ function StripeSetupGuide({ labels }: { labels: WelperPayoutStepLabels }) {
       <Text size="2" color="gray" highContrast as="p" mb="3">
         {labels.stripeSetupGuideIntro}
       </Text>
-      <Box asChild>
+      <Box asChild pl="4">
         <ol style={listStyle}>
-          <li style={{ marginBottom: 8 }}>{labels.stripeSetupStepBusinessType}</li>
-          <li style={{ marginBottom: 8 }}>{labels.stripeSetupStepPersonalDetails}</li>
-          <li style={{ marginBottom: 8 }}>
-            {labels.stripeSetupBusinessDetailsLead}
-            <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: "1.25rem", listStyle: "disc" }}>
-              <li style={{ marginBottom: 4 }}>{labels.stripeSetupBusinessIndustry}</li>
-              <li style={{ marginBottom: 4 }}>{labels.stripeSetupBusinessWebsite}</li>
-              <li>{labels.stripeSetupBusinessProduct}</li>
-            </ul>
-          </li>
+          <Box asChild mb="2">
+            <li>{labels.stripeSetupStepBusinessType}</li>
+          </Box>
+          <Box asChild mb="2">
+            <li>{labels.stripeSetupStepPersonalDetails}</li>
+          </Box>
+          <Box asChild mb="2">
+            <li>
+              {labels.stripeSetupBusinessDetailsLead}
+              <Box asChild mt="2" mb="0" pl="4">
+                <ul style={{ listStyle: "disc" }}>
+                  <Box asChild mb="1">
+                    <li>{labels.stripeSetupBusinessIndustry}</li>
+                  </Box>
+                  <Box asChild mb="1">
+                    <li>{labels.stripeSetupBusinessWebsite}</li>
+                  </Box>
+                  <li>{labels.stripeSetupBusinessProduct}</li>
+                </ul>
+              </Box>
+            </li>
+          </Box>
           <li>{labels.stripeSetupStepBankDetails}</li>
         </ol>
       </Box>
@@ -115,7 +127,7 @@ export function WelperPayoutStep({
               onClick={() => void handleContinue()}
               style={{ width: "100%" }}
             >
-              {loading ? labels.saving : labels.continue}
+              {loading ? <Spinner /> : labels.continue}
             </Button>
           ) : (
             <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
@@ -143,7 +155,7 @@ export function WelperPayoutStep({
                 onClick={() => void onStripeOnboardingStart?.()}
                 style={{ width: "100%" }}
               >
-                {connectLoading ? labels.connectInProgress : labels.connectCta}
+                {connectLoading ? <Spinner /> : labels.connectCta}
               </Button>
             </Flex>
           </Card>

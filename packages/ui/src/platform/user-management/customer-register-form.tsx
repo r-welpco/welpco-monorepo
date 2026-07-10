@@ -99,13 +99,15 @@ export function CustomerRegisterForm({
 
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="customer-email" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="customer-email" mb={FORM_SPACING.labelGap}>
               Email
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
               id="customer-email"
               placeholder="you@example.com"
+              type="email"
+              inputMode="email"
               autoComplete="email"
               disabled={loading}
               size="2"
@@ -123,7 +125,7 @@ export function CustomerRegisterForm({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="customer-password"
               mb={FORM_SPACING.labelGap}
             >
@@ -150,7 +152,7 @@ export function CustomerRegisterForm({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="customer-confirm"
               mb={FORM_SPACING.labelGap}
             >

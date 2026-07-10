@@ -89,9 +89,9 @@ export function RecurringBookingForm({
               as="label"
               id="recurring-frequency-label"
               size="2"
-              weight="bold"
+              weight="medium"
               mb={FORM_SPACING.labelGap}
-            >
+             style={{ display: "block" }}>
               Frequency
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -102,7 +102,7 @@ export function RecurringBookingForm({
               }
               disabled={loading}
             >
-              <SelectTrigger aria-labelledby="recurring-frequency-label" />
+              <SelectTrigger aria-labelledby="recurring-frequency-label" style={{ width: "100%" }} />
               <SelectContent>
                 <SelectItem value="weekly">Weekly</SelectItem>
                 <SelectItem value="biweekly">Every 2 weeks</SelectItem>
@@ -118,7 +118,7 @@ export function RecurringBookingForm({
 
           <Flex gap="3" mb={FORM_SPACING.fieldGap} direction={{ initial: "column", sm: "row" }}>
             <Box style={{ flex: 1 }}>
-              <Text as="label" size="2" weight="bold" htmlFor="recurring-start" mb={FORM_SPACING.labelGap}>
+              <Text as="label" size="2" weight="medium" htmlFor="recurring-start" mb={FORM_SPACING.labelGap}>
                 Start date
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
@@ -136,7 +136,7 @@ export function RecurringBookingForm({
               )}
             </Box>
             <Box style={{ flex: 1 }}>
-              <Text as="label" size="2" weight="bold" htmlFor="recurring-end" mb={FORM_SPACING.labelGap}>
+              <Text as="label" size="2" weight="medium" htmlFor="recurring-end" mb={FORM_SPACING.labelGap}>
                 End date (optional)
               </Text>
               <TextField.Root
@@ -154,7 +154,7 @@ export function RecurringBookingForm({
           </Flex>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="span" size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+            <Text as="span" size="2" weight="medium" mb={FORM_SPACING.labelGap}>
               Days of week
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>

@@ -86,7 +86,7 @@ export function RegisterForm({
 
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="register-name" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="register-name" mb={FORM_SPACING.labelGap}>
               Full name
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -107,13 +107,15 @@ export function RegisterForm({
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="register-email" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="register-email" mb={FORM_SPACING.labelGap}>
               Email
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
             <TextField.Root
               id="register-email"
               placeholder="you@example.com"
+              type="email"
+              inputMode="email"
               autoComplete="email"
               size="2"
               aria-required="true"
@@ -131,7 +133,7 @@ export function RegisterForm({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="register-password"
               mb={FORM_SPACING.labelGap}
             >
@@ -158,7 +160,7 @@ export function RegisterForm({
             <Text
               as="label"
               size="2"
-              weight="bold"
+              weight="medium"
               htmlFor="register-confirm"
               mb={FORM_SPACING.labelGap}
             >
@@ -182,7 +184,7 @@ export function RegisterForm({
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" id="register-role-label" size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+            <Text as="label" id="register-role-label" size="2" weight="medium" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
               Role
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -193,7 +195,7 @@ export function RegisterForm({
               value={form.watch("role")}
               disabled={loading}
             >
-              <SelectTrigger id="register-role" aria-labelledby="register-role-label" placeholder="Select role" />
+              <SelectTrigger id="register-role" aria-labelledby="register-role-label" placeholder="Select role" style={{ width: "100%" }} />
               <SelectContent>
                 <SelectItem value="customer">Customer</SelectItem>
                 <SelectItem value="welper">Welper (service provider)</SelectItem>

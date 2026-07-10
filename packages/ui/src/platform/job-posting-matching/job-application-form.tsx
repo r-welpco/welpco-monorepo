@@ -128,7 +128,7 @@ export function JobApplicationForm({
           <form id={formId} onSubmit={handleSubmit}>
             {matchingOfferings.length > 1 && (
               <Box>
-                <Text as="label" size="2" weight="bold" mb={FORM_SPACING.labelGap}>
+                <Text as="label" size="2" weight="medium" id="application-offering-label" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
                   {labels.serviceOffering}
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
                 </Text>
@@ -136,8 +136,15 @@ export function JobApplicationForm({
                   control={form.control}
                   name="offeringId"
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange} disabled={loading}>
-                      <SelectTrigger placeholder={labels.selectOffering} />
+                    <Select size="3" value={field.value} onValueChange={field.onChange} disabled={loading}>
+                      <SelectTrigger
+                        id="application-offering"
+                        aria-labelledby="application-offering-label"
+                        aria-invalid={form.formState.errors.offeringId ? "true" : undefined}
+                        aria-describedby={form.formState.errors.offeringId ? "application-offering-error" : undefined}
+                        placeholder={labels.selectOffering}
+                        style={{ width: "100%" }}
+                      />
                       <SelectContent>
                         {matchingOfferings.map((o) => (
                           <SelectItem key={o.id} value={o.id}>
@@ -149,7 +156,7 @@ export function JobApplicationForm({
                   )}
                 />
                 {form.formState.errors.offeringId && (
-                  <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+                  <Text id="application-offering-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                     {form.formState.errors.offeringId.message}
                   </Text>
                 )}
@@ -165,7 +172,7 @@ export function JobApplicationForm({
             )}
 
             <Box>
-              <Text as="label" size="2" weight="bold" htmlFor="application-proposal" mb={FORM_SPACING.labelGap}>
+              <Text as="label" size="2" weight="medium" htmlFor="application-proposal" mb={FORM_SPACING.labelGap}>
                 {labels.proposalMessage}
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
               </Text>
@@ -176,10 +183,12 @@ export function JobApplicationForm({
                 size="3"
                 disabled={loading}
                 aria-required="true"
+                aria-invalid={form.formState.errors.proposalMessage ? "true" : undefined}
+                aria-describedby={form.formState.errors.proposalMessage ? "application-proposal-error" : undefined}
                 {...form.register("proposalMessage")}
               />
               {form.formState.errors.proposalMessage && (
-                <Text size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
+                <Text id="application-proposal-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                   {form.formState.errors.proposalMessage.message}
                 </Text>
               )}

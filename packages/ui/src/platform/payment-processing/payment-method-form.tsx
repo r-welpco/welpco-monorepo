@@ -74,7 +74,7 @@ export function PaymentMethodForm({
 
         <form onSubmit={handleSubmit}>
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="pm-name" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="pm-name" mb={FORM_SPACING.labelGap}>
               Name on card
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -94,7 +94,7 @@ export function PaymentMethodForm({
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="pm-number" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="pm-number" mb={FORM_SPACING.labelGap}>
               Card number
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -115,7 +115,7 @@ export function PaymentMethodForm({
           </Box>
 
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="span" id="pm-exp-cvc-label" size="2" weight="bold" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
+            <Text as="span" id="pm-exp-cvc-label" size="2" weight="medium" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
               Expiration & CVC
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>
@@ -167,7 +167,7 @@ export function PaymentMethodForm({
             )}
           </Box>
           <Box mb={FORM_SPACING.fieldGap}>
-            <Text as="label" size="2" weight="bold" htmlFor="pm-postal" mb={FORM_SPACING.labelGap}>
+            <Text as="label" size="2" weight="medium" htmlFor="pm-postal" mb={FORM_SPACING.labelGap}>
               Postal code
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">*</Text>
             </Text>

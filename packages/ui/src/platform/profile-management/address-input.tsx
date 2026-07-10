@@ -5,7 +5,7 @@ import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Text } from "@welpco/ui/text";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@welpco/ui/select";
-import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import {
   CANADA_COUNTRY_CODE,
   CANADIAN_PROVINCES,
@@ -104,7 +104,7 @@ export function AddressInput({
   return (
     <Flex direction="column" gap="3">
       <Box>
-        <Text as="label" size="2" weight="bold" htmlFor="address-street" mb="1">
+        <Text as="label" size="2" weight="medium" htmlFor="address-street" mb={FORM_SPACING.labelGap}>
           {labels.streetAddress}
           {required && (
             <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
@@ -125,7 +125,7 @@ export function AddressInput({
           onChange={(e) => handleChange("streetAddress", e.target.value)}
         />
         {errors?.streetAddress && (
-          <Text id="address-street-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
+          <Text id="address-street-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
             {errors.streetAddress}
           </Text>
         )}
@@ -142,7 +142,7 @@ export function AddressInput({
             }}
           >
             <Box style={{ minWidth: 0 }}>
-              <Text as="label" size="2" weight="bold" htmlFor="address-city" mb="1">
+              <Text as="label" size="2" weight="medium" htmlFor="address-city" mb={FORM_SPACING.labelGap}>
                 {labels.city}
                 {required && (
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
@@ -163,14 +163,14 @@ export function AddressInput({
                 onChange={(e) => handleChange("city", e.target.value)}
               />
               {errors?.city && (
-                <Text id="address-city-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
+                <Text id="address-city-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                   {errors.city}
                 </Text>
               )}
             </Box>
 
             <Box style={{ minWidth: 0 }}>
-              <Text as="label" size="2" weight="bold" htmlFor="address-state" mb="1">
+              <Text as="label" size="2" weight="medium" id="address-state-label" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
                 {labels.stateProvince}
                 {required && (
                   <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
@@ -186,6 +186,7 @@ export function AddressInput({
               >
                 <SelectTrigger
                   id="address-state"
+                  aria-labelledby="address-state-label"
                   style={{ width: "100%" }}
                   aria-required={required || undefined}
                   aria-invalid={errors?.stateProvince ? "true" : undefined}
@@ -201,7 +202,7 @@ export function AddressInput({
                 </SelectContent>
               </Select>
               {errors?.stateProvince && (
-                <Text id="address-state-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
+                <Text id="address-state-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                   {errors.stateProvince}
                 </Text>
               )}
@@ -209,7 +210,7 @@ export function AddressInput({
           </Box>
 
           <Box>
-            <Text as="label" size="2" weight="bold" htmlFor="address-zip" mb="1">
+            <Text as="label" size="2" weight="medium" htmlFor="address-zip" mb={FORM_SPACING.labelGap}>
               {labels.zipPostalCode}
               {required && (
                 <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
@@ -230,7 +231,7 @@ export function AddressInput({
               onChange={(e) => handleChange("zipPostalCode", e.target.value.toUpperCase())}
             />
             {errors?.zipPostalCode && (
-              <Text id="address-zip-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
+              <Text id="address-zip-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
                 {errors.zipPostalCode}
               </Text>
             )}
@@ -247,7 +248,7 @@ export function AddressInput({
         }}
       >
         <Box style={{ minWidth: 0 }}>
-          <Text as="label" size="2" weight="bold" htmlFor="address-city" mb="1">
+          <Text as="label" size="2" weight="medium" htmlFor="address-city" mb={FORM_SPACING.labelGap}>
             {labels.city}
             {required && (
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
@@ -268,14 +269,14 @@ export function AddressInput({
             onChange={(e) => handleChange("city", e.target.value)}
           />
           {errors?.city && (
-            <Text id="address-city-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
+            <Text id="address-city-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
               {errors.city}
             </Text>
           )}
         </Box>
 
         <Box style={{ minWidth: 0 }}>
-          <Text as="label" size="2" weight="bold" htmlFor="address-state" mb="1">
+          <Text as="label" size="2" weight="medium" id="address-state-label" mb={FORM_SPACING.labelGap} style={{ display: "block" }}>
             {labels.stateProvince}
             {required && (
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
@@ -291,6 +292,7 @@ export function AddressInput({
           >
             <SelectTrigger
               id="address-state"
+              aria-labelledby="address-state-label"
               style={{ width: "100%" }}
               aria-required={required || undefined}
               aria-invalid={errors?.stateProvince ? "true" : undefined}
@@ -306,14 +308,14 @@ export function AddressInput({
             </SelectContent>
           </Select>
           {errors?.stateProvince && (
-            <Text id="address-state-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
+            <Text id="address-state-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
               {errors.stateProvince}
             </Text>
           )}
         </Box>
 
         <Box style={{ minWidth: 0 }}>
-          <Text as="label" size="2" weight="bold" htmlFor="address-zip" mb="1">
+          <Text as="label" size="2" weight="medium" htmlFor="address-zip" mb={FORM_SPACING.labelGap}>
             {labels.zipPostalCode}
             {required && (
               <Text as="span" color={SEMANTIC_COLOR.danger} ml="1" aria-hidden="true">
@@ -334,7 +336,7 @@ export function AddressInput({
             onChange={(e) => handleChange("zipPostalCode", e.target.value.toUpperCase())}
           />
           {errors?.zipPostalCode && (
-            <Text id="address-zip-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt="2">
+            <Text id="address-zip-error" size="1" role="alert" color={SEMANTIC_COLOR.danger} mt={FORM_SPACING.helperGap}>
               {errors.zipPostalCode}
             </Text>
           )}

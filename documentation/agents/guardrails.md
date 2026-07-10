@@ -57,3 +57,7 @@ web **8081**, admin **8082**, bff **3000**, storybook **6006**. These are delibe
 ## .env.local is user state
 
 `.env` and `.env*.local` are gitignored (root `.gitignore`) and contain the user's local secrets (e.g. `apps/bff/.env.local` exists on this machine). **Never overwrite or delete them without asking.** To add a new variable, update the relevant `.env.example` and tell the user to copy it over.
+
+## @welpco/ui changes require a rebuild to be visible
+
+`@welpco/ui`'s package exports point at compiled output (`packages/ui/package.json` → `./dist/*.js`), not `src/`. Editing `packages/ui/src/**` does **nothing** for consumers (web, admin, Storybook) until you run `pnpm --filter @welpco/ui build`. If a UI change "isn't showing up" in an app or a story — even after a dev-server restart and cache clear — rebuild the package first. (Verified 2026-07-04 during the forms refinement pass: Storybook served week-old components until `dist/` was rebuilt.)

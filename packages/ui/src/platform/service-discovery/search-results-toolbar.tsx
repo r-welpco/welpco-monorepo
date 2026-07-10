@@ -92,7 +92,7 @@ export function SearchResultsToolbar({
       <Flex gap="5" align="center" wrap="wrap">
         {onSortChange && (
           <Flex align="center" gap="3">
-            <Text as="label" size="2" weight="bold" htmlFor="search-sort">
+            <Text as="label" size="2" weight="medium" id="search-sort-label" htmlFor="search-sort" style={{ display: "block" }}>
               {l?.sortBy ?? "Sort by"}
             </Text>
             <Box style={{ minWidth: 160 }}>
@@ -101,7 +101,7 @@ export function SearchResultsToolbar({
                 onValueChange={(v) => onSortChange(v as "relevance" | "price" | "distance")}
                 disabled={loading}
               >
-                <SelectTrigger id="search-sort" aria-label={l?.sortAria ?? "Sort results"} />
+                <SelectTrigger id="search-sort" aria-labelledby="search-sort-label" />
                 <SelectContent>
                   <SelectItem value="relevance">{l?.sortRelevance ?? "Relevance"}</SelectItem>
                   <SelectItem value="price">{l?.sortPrice ?? "Price: low to high"}</SelectItem>
