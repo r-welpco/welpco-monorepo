@@ -2,7 +2,7 @@
 
 > Last verified: 2026-07-03 · commit de88bd4 · generated from implementation
 
-This is the **authoritative documentation tree** for the welpco monorepo, generated directly from the code — every file states what it was verified against. The legacy doc trees (`updated_functional_architecture/`, `features/`, `bible/`, `docs/`, scattered app READMEs) are superseded and scheduled for removal; see [improvements/documentation-cleanup.md](improvements/documentation-cleanup.md). **When docs and code disagree, the code wins — fix the doc.**
+This is the **authoritative documentation tree** for the welpco monorepo, generated directly from the code — every file states what it was verified against. The legacy doc trees (`updated_functional_architecture/`, `features/`, `bible/`, `docs/`, scattered app READMEs) were **removed on 2026-07-04** per [improvements/documentation-cleanup.md](improvements/documentation-cleanup.md); the live feature backlog moved to [improvements/backlog/](improvements/backlog/README.md) and historical audit reports to [improvements/audits/](improvements/audits/). **When docs and code disagree, the code wins — fix the doc.**
 
 Two legacy documents remain authoritative and are referenced from here: `packages/ui/ui-ux-bible.md` (design rules) and `packages/ui/PLATFORM-UX.md` (canonical components & journeys).
 
@@ -25,6 +25,7 @@ Two legacy documents remain authoritative and are referenced from here: `package
 | [architecture/domains/payment.md](architecture/domains/payment.md) | Deepest domain doc: entities & enums, hold→capture→release→ledger→Friday-batch lifecycle, Stripe, migrations, admin endpoints |
 | [architecture/domains/booking.md](architecture/domains/booking.md) | Booking state machine (9 statuses, verified transition table), payment touch points |
 | …plus [11 more domain docs](architecture/domains/) | user-management, profile-management, service-discovery, job-posting, communication, notification, safety-verification, content-management, geocode, dispute, review |
+| [architecture/category-hierarchy.md](architecture/category-hierarchy.md) | Service category/subcategory reference (relocated from `docs/`, verified against `seed-content.ts`) |
 
 ## Apps & packages
 
@@ -34,6 +35,7 @@ Two legacy documents remain authoritative and are referenced from here: `package
 | [apps/admin.md](apps/admin.md) | Admin app (:8082): 17 dashboard sections, admin-only auth gating, service layer → BFF endpoints |
 | [apps/bff.md](apps/bff.md) | Backend-for-frontend (:3000) pointer doc + scripts |
 | [apps/design-system.md](apps/design-system.md) | Storybook host (:6006) for `@welpco/ui` |
+| [apps/web-availability-ux.md](apps/web-availability-ux.md) | Availability calendar/exceptions UX spec (relocated from `apps/web/docs/`) |
 | [packages/](packages/) | One doc per package: ui, database, shared, types, events, email, eslint-plugin-design — including which are vestigial |
 
 ## Operations
@@ -61,7 +63,9 @@ Two legacy documents remain authoritative and are referenced from here: `package
 | Doc | Contents |
 |---|---|
 | [improvements/implementation-risks.md](improvements/implementation-risks.md) | Prioritized code/tooling/process risks found in the 2026-07-03 audit (P0–P3) |
-| [improvements/documentation-cleanup.md](improvements/documentation-cleanup.md) | Legacy-doc → replacement mapping and the staged removal plan |
+| [improvements/documentation-cleanup.md](improvements/documentation-cleanup.md) | Legacy-doc → replacement mapping and the staged removal plan (executed 2026-07-04) |
+| [improvements/backlog/](improvements/backlog/README.md) | Live feature-ticket backlog (125 tickets, sprint groupings) — relocated from `features/` |
+| [improvements/audits/](improvements/audits/) | Historical audit reports (booking, search, React best practices, documentation) |
 
 ## Maintaining this tree
 

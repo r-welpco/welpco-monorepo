@@ -14,7 +14,7 @@ Guidance for AI coding agents (Claude Code and similar) working in this repo. Re
 
 **Implementation beats documentation.** When a doc and the code disagree, the code is right — verify claims in source before relying on them.
 
-- The old doc trees at the repo root — `updated_functional_architecture/`, `features/`, `bible/` — are **stale and pending removal. Do not trust them, do not cite them, do not copy from them.**
+- The old doc trees (`updated_functional_architecture/`, `features/`, `bible/`, most of `docs/`) were **removed on 2026-07-04** — they were stale. If you find references to them, or resurrect them from git history, treat the content as unverified. The feature-ticket backlog formerly at `features/` now lives at [../improvements/backlog/](../improvements/backlog/README.md).
 - Current documentation lives in `documentation/`.
 - Three exceptions are audited current and authoritative:
   - `packages/ui/ui-ux-bible.md` — design rules (lint-enforced, see [conventions.md](conventions.md))
