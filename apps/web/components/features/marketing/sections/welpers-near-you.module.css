@@ -1,0 +1,223 @@
+/* WelpersNearYou — scroll-snap rail of real Welper profiles. */
+
+/* Clip the rail's viewport bleed so the page never scrolls horizontally. */
+.section {
+  overflow-x: clip;
+}
+
+.railWrap {
+  position: relative;
+  margin-top: 48px;
+}
+
+/*
+ * The rail lives inside `.container` but bleeds to the viewport edges so a
+ * partial card peeks at the right edge — that peek is the scroll affordance.
+ * `scroll-padding-inline` keeps snap positions aligned with the container
+ * content edge.
+ */
+.rail {
+  --peek-bleed: calc((100vw - 100%) / 2);
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  margin-inline: calc(-1 * var(--peek-bleed));
+  padding-inline: var(--peek-bleed);
+  scroll-padding-inline: var(--peek-bleed);
+  padding-top: 4px;
+  padding-bottom: 10px;
+}
+
+.rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail:focus-visible {
+  outline: 2px solid var(--evergreen);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.card {
+  flex: 0 0 300px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--fg);
+  text-decoration: none;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 14px 30px rgba(0, 73, 47, 0.1);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--evergreen);
+  outline-offset: 3px;
+}
+
+/* End card — "See all Welpers near you" */
+.endCard {
+  justify-content: center;
+  align-items: flex-start;
+  gap: 18px;
+  background: var(--evergreen);
+  border-color: var(--evergreen);
+  color: var(--cream);
+}
+
+.endCard:hover {
+  border-color: var(--accent);
+  box-shadow: 0 14px 30px rgba(0, 73, 47, 0.22);
+}
+
+/* Desktop prev/next arrows — revealed on hover / keyboard focus. */
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--evergreen);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  box-shadow: 0 8px 22px rgba(0, 73, 47, 0.14);
+  transition: opacity 160ms ease, border-color 160ms ease;
+}
+
+.arrowPrev {
+  left: -22px;
+}
+
+.arrowNext {
+  right: -22px;
+}
+
+.railWrap:hover .arrow:not([disabled]),
+.railWrap:focus-within .arrow:not([disabled]),
+.arrow:focus-visible {
+  opacity: 1;
+}
+
+.arrow:hover {
+  border-color: var(--accent);
+}
+
+.arrow:focus-visible {
+  outline: 2px solid var(--evergreen);
+  outline-offset: 2px;
+}
+
+.arrow[disabled] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (min-width: 1025px) {
+  .arrow {
+    display: flex;
+  }
+}
+
+/* Postal-code personalization — one quiet input + button. */
+.postalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.postalLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+
+.postalRow {
+  display: flex;
+  gap: 8px;
+}
+
+.postalInput {
+  width: 150px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--card);
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+}
+
+.postalInput::placeholder {
+  color: var(--fg-faint);
+}
+
+.postalInput:focus-visible {
+  outline: 2px solid var(--evergreen);
+  outline-offset: 1px;
+}
+
+/* Honest empty state after a visitor-typed postal yields nothing. */
+.emptyNote {
+  margin-top: 48px;
+  font-size: 15px;
+  color: var(--fg-muted);
+  line-height: 1.55;
+}
+
+.emptyNote a {
+  color: var(--evergreen);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .card {
+    /* One full card + a real peek of the next at 375px. */
+    flex-basis: min(300px, calc(100vw - var(--container-pad, 18px) * 2 - 60px));
+  }
+
+  .railWrap {
+    margin-top: 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail {
+    scroll-behavior: auto;
+  }
+
+  .card,
+  .arrow {
+    transition: none;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+}

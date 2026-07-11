@@ -65,7 +65,7 @@ The config loads `apps/web/.env.test.local` if present (template: `apps/web/.env
 | `PLAYWRIGHT_TEST_BASE_URL` / `BASE_URL` | `http://localhost:8081` | frontend under test |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:3000` | BFF health check + login verification in global setup |
 
-Prereqs for login-dependent suites: BFF running on 3000, database migrated and seeded (`pnpm db:migrate`, `pnpm seed:users`), Turnstile keys omitted locally so verification is skipped (`apps/web/.env.example`), and platform gating disabled (`PLATFORM_ACCESS_GATED=false` + `NEXT_PUBLIC_PLATFORM_ACCESS_GATED=false` on web, mirrored on the BFF) so seeded users can reach `/dashboard`. Welper-signup tests send the `x-welpco-signup-e2e: 1` header (honored in non-production only) to skip real Stripe/Certn calls (`apps/bff/.env.example`).
+Prereqs for login-dependent suites: BFF running on 3000, database migrated and seeded (`pnpm db:migrate`, `pnpm seed:users`), and Turnstile keys omitted locally so verification is skipped (`apps/web/.env.example`). Welper-signup tests send the `x-welpco-signup-e2e: 1` header (honored in non-production only) to skip real Stripe/Certn calls (`apps/bff/.env.example`).
 
 ## Design system — Storybook a11y
 

@@ -30,7 +30,7 @@
       "findHelp": "Trouver de l'aide"
     },
     "footer": {
-      "tagline": "Une place de marché de services locaux. Profils de prestataires, paiements sécurisés en dépôt et messagerie sur la plateforme.",
+      "tagline": "Une place de marché de services locaux. Profils de prestataires, paiements sécurisés et messagerie sur la plateforme.",
       "cols": {
         "welpco": "Welpco",
         "customers": "Pour les clients",
@@ -179,7 +179,7 @@
           {
             "n": "02",
             "title": "Réserver et planifier",
-            "body": "Choisissez un Welper, fixez un horaire et confirmez. Payez en toute sécurité — les fonds sont retenus jusqu'à la fin du travail."
+            "body": "Choisissez un Welper, fixez un horaire et confirmez. Vous n'êtes pas débité à la réservation — une retenue d'une heure est placée sur votre carte quand votre Welper accepte."
           },
           {
             "n": "03",
@@ -205,6 +205,25 @@
           }
         ]
       },
+      "nearYou": {
+        "eyebrow": "Près de chez vous",
+        "titleLine1": "Des Welpers",
+        "titleLine2": "près de chez vous.",
+        "subtitle": "De vraies personnes, des badges de vérification d'antécédents, des avis honnêtes — réservez en quelques minutes.",
+        "postalLabel": "Votre code postal",
+        "postalPlaceholder": "p. ex. H2X 1Y4",
+        "postalSubmit": "Mettre à jour",
+        "railLabel": "Welpers près de chez vous",
+        "prevAria": "Afficher les Welpers précédents",
+        "nextAria": "Afficher les Welpers suivants",
+        "fromRate": "À partir de {rate} $/h",
+        "reviewCount": "({count})",
+        "ratingAria": "Note de {rating} sur 5 d'après {count} avis",
+        "verified": "Antécédents vérifiés",
+        "seeAll": "Voir tous les Welpers près de chez vous",
+        "emptyForPostal": "Pas encore de Welpers à cet endroit — essayez un autre code postal ou parcourez tous les profils.",
+        "browseAll": "Parcourir tous les Welpers"
+      },
       "minors": {
         "badge": "Bientôt disponible",
         "titleLine1": "Comptes prestataires",
@@ -220,23 +239,23 @@
         "eyebrow": "— Confiance et sécurité",
         "titleLine1": "Confiance et",
         "titleLine2": "sécurité.",
-        "subtitle": "Paiements sécurisés en dépôt, messagerie intégrée à la plateforme et évaluations bidirectionnelles — inclus dans chaque réservation.",
+        "subtitle": "Paiements sécurisés débités seulement une fois le travail terminé, messagerie intégrée à la plateforme et évaluations bidirectionnelles — inclus dans chaque réservation.",
         "items": [
           {
-            "title": "Welpers vérifiés",
-            "body": "Une vérification des antécédents est disponible pour les Welpers adultes afin de renforcer la confiance et obtenir un badge sur leur profil."
+            "title": "Antécédents vérifiés — cherchez le badge",
+            "body": "Les Welpers peuvent effectuer une vraie vérification d'antécédents par un tiers. S'ils la réussissent, un badge apparaît sur leur profil — pas de badge, pas de vérification."
           },
           {
-            "title": "Fonds retenus jusqu'à la fin",
-            "body": "Vous payez à l'avance, mais l'argent est retenu jusqu'à ce que vous confirmiez que le travail est terminé."
+            "title": "Débité seulement à la fin",
+            "body": "Vous n'êtes pas débité à la réservation. Quand votre Welper accepte, nous plaçons une retenue d'une heure sur votre carte — vous n'êtes débité qu'une fois le travail terminé."
           },
           {
-            "title": "Messagerie sur la plateforme",
-            "body": "Toute communication passe par Welpco — transparente, respectueuse et consignée."
+            "title": "Signalez un problème sur toute réservation",
+            "body": "Quelque chose cloche? Chaque réservation offre une option de signalement. Signalez le problème et nous l'examinerons avec les deux parties."
           },
           {
-            "title": "Évaluations bidirectionnelles",
-            "body": "Clients et Welpers s'évaluent après chaque travail. La communauté se responsabilise."
+            "title": "Un vrai soutien en moins de 48 heures",
+            "body": "Écrivez à support@welpco.com et une vraie personne vous répond en moins de 48 heures. Annulation gratuite jusqu'à 24 heures avant le début."
           }
         ]
       },
@@ -246,9 +265,10 @@
         "titleLine2": "Fixez vos heures.",
         "body": "Un premier emploi, un revenu d'appoint flexible ou une retraite active — le Welping s'adapte à votre vie.",
         "points": [
-          "Choisissez les services qui correspondent à vos compétences",
+          "Inscription gratuite — choisissez les services qui correspondent à vos compétences",
           "Fixez vos tarifs et votre disponibilité hebdomadaire",
-          "Recevez votre paiement le vendredi de la semaine suivante",
+          "Vérification d'antécédents optionnelle (19,99 $ CA) pour obtenir le badge sur votre profil",
+          "Payé chaque semaine via Stripe — virements bancaires sans frais",
           "Bâtissez un profil, des évaluations et une clientèle régulière"
         ],
         "ctaPrimary": "Devenir Welper",
@@ -277,11 +297,11 @@
           },
           {
             "q": "Quand et comment payer un service?",
-            "a": "Paiement à la confirmation, retenu jusqu'à la fin du travail."
+            "a": "Vous n'êtes pas débité à la réservation. Quand votre Welper accepte, nous plaçons une retenue d'une heure sur votre carte. Vous n'êtes débité qu'une fois le travail terminé."
           },
           {
             "q": "Est-ce sécuritaire d'avoir un Welper chez moi?",
-            "a": "La sécurité est une priorité sur Welpco. Les Welpers adultes peuvent compléter une vérification des antécédents pour obtenir un badge de confiance. Les Welpers âgés de 14 ans à 17 ans utilisent un compte supervisé par un tuteur légal, qui est informé de toutes les activités et réservations."
+            "a": "La sécurité est une priorité sur Welpco. Tous les Welpers sont des adultes (18 ans et plus), et les Welpers peuvent compléter une vérification des antécédents pour obtenir un badge sur leur profil — cherchez-le en parcourant les profils. Vous pouvez aussi signaler un problème sur toute réservation."
           }
         ]
       }
@@ -344,7 +364,7 @@
           {
             "n": "02",
             "t": "Confiance par le système",
-            "b": "Vérifications, paiements sous séquestre, messagerie sur la plateforme, évaluations bidirectionnelles."
+            "b": "Vérifications, retenues de paiement sécurisées, messagerie sur la plateforme, évaluations bidirectionnelles."
           },
           {
             "n": "03",
@@ -428,6 +448,14 @@
               ]
             ],
             [
+              "Combien coûte le fait d'être Welper?",
+              [
+                "Devenir Welper sur Welpco est gratuit — aucuns frais d'inscription, aucun abonnement.",
+                "Le seul coût optionnel est la vérification d'antécédents : 19,99 $ CA, payés une seule fois auprès de notre partenaire de vérification. Si vous la réussissez, un badge apparaît sur votre profil.",
+                "Vous êtes payé chaque semaine via Stripe, et le virement de votre paiement vers votre compte bancaire est sans frais."
+              ]
+            ],
+            [
               "Comment suis-je payé?",
               [
                 "Une fois le travail terminé, le Welper confirme « Travail terminé » via l'application ou le site web. Un reçu est automatiquement envoyé au client, puis le paiement est finalisé.",
@@ -460,7 +488,7 @@
             ],
             [
               "Un mineur peut-il devenir Welper?",
-              "Les mineurs de plus de 14 ans peuvent devenir Welper via notre plateforme, mais leur compte doit être créé et géré par un tuteur légal. Les Welpers mineurs ne sont pas soumis à la vérification d'antécédents."
+              "Pas encore. Pour l'instant, il faut avoir 18 ans ou plus pour s'inscrire comme Welper ou comme client. Nous travaillons sur des comptes supervisés par un tuteur pour les plus jeunes Welpers — ils ne sont pas encore disponibles."
             ],
             [
               "Que se passe-t-il si un client refuse de payer?",
@@ -479,7 +507,7 @@
             ],
             [
               "Quand et comment dois-je payer?",
-              "Lorsque la réservation est confirmée entre vous et un Welper, vous effectuez le paiement, mais nous retenons les fonds jusqu'à ce que le travail soit terminé. Une fois le travail confirmé comme complété, nous libérons le paiement au Welper."
+              "Vous n'êtes pas débité à la réservation. Lorsqu'un Welper accepte votre réservation, nous plaçons une retenue d'une heure sur votre carte. Vous n'êtes débité qu'une fois le travail terminé — le Welper confirme la fin du travail via le site ou l'application et soumet l'heure finale, puis votre carte est débitée pour le service rendu."
             ],
             [
               "Que se passe-t-il si un Welper fait un travail insatisfaisant?",
@@ -487,7 +515,7 @@
             ],
             [
               "Comment savoir si un Welper est sécuritaire?",
-              "Welpco met la sécurité au premier plan. Les Welpers adultes peuvent effectuer une vérification des antécédents afin d'obtenir un badge de vérification sur leur profil. Les Welpers âgés de 14 ans et plus utilisent un compte supervisé par un tuteur légal et affichent un badge « Mineur »."
+              "Welpco met la sécurité au premier plan. Tous les Welpers sont des adultes (18 ans et plus), et les Welpers peuvent effectuer une vérification des antécédents afin d'obtenir un badge sur leur profil — cherchez-le en parcourant les profils. Les messages et les paiements restent sur la plateforme, et vous pouvez signaler un problème sur toute réservation."
             ],
             [
               "Et si un service dont j'ai besoin n'est pas offert?",
@@ -1343,7 +1371,7 @@
       "statusGuardianPending": "En attente de l'approbation du tuteur",
       "optionalHints": {
         "welperBackgroundCheck": "Ajoute un badge vérifié à votre profil pour une meilleure visibilité et la confiance des clients.",
-        "welperPayout": "Nécessaire pour recevoir vos paiements une fois les mandats terminés.",
+        "welperPayout": "Requis pour accepter des réservations et recevoir vos paiements une fois les mandats terminés.",
         "welperGuardian": "Votre parent ou tuteur légal doit approuver votre compte avant que vous apparaissiez dans la recherche."
       },
       "open": "Ouvrir",
@@ -1359,7 +1387,7 @@
       "customerSections": {
         "account": {
           "title": "Votre compte — vérifier le courriel et ajouter votre adresse",
-          "complete": "Votre compte est configuré — ajoutez un mode de paiement lorsque vous êtes prêt à réserver.",
+          "complete": "Votre compte est configuré. Prochaine étape : ajoutez un mode de paiement — il est requis avant votre première réservation (vous n'êtes débité qu'une fois le service terminé).",
           "compactProgress": "Compte — {done} sur {total} étapes"
         },
         "bookingPayment": {
@@ -1380,7 +1408,7 @@
         },
         "payout": {
           "title": "Paiement hebdomadaire — connecter Stripe",
-          "subtitle": "Nécessaire pour recevoir vos paiements une fois les mandats terminés.",
+          "subtitle": "Requis pour accepter des réservations et recevoir vos paiements une fois les mandats terminés.",
           "complete": "Stripe est connecté — vous êtes prêt à recevoir vos paiements."
         },
         "trust": {
@@ -1502,8 +1530,14 @@
       "stats": {
         "activeJobs": "Mandats actifs",
         "totalEarnings": "Revenus totaux",
-        "completedJobs": "Mandats terminés"
+        "completedJobs": "Mandats terminés",
+        "rating": "Votre note",
+        "reviews": "Avis",
+        "responseTime": "Réponse typique"
       },
+      "statsResponseMinutes": "~{minutes} min",
+      "statsResponseHours": "~{hours} h",
+      "statsReviewsEmptyHint": "Les avis apparaissent après votre première réservation terminée.",
       "statsFootnote": "Les totaux utilisent vos {count} réservations les plus récentes — ouvrez Réservations pour la liste complète.",
       "activityTitle": "Mandat",
       "quickActions": {
@@ -1588,12 +1622,15 @@
       "cancelBooking": "Annuler la réservation",
       "viewDetails": "Voir les détails",
       "customerFallback": "Client",
+      "pendingWaitCustomer": "En attente de l'acceptation de votre Welper. Vous recevrez une notification — et aucune retenue n'est placée sur votre carte avant son acceptation.",
       "pageOf": "Page {page} sur {total}",
       "prevPage": "Page précédente",
       "nextPage": "Page suivante",
       "acceptFailed": "Impossible d'accepter la réservation.",
       "declineFailed": "Impossible de refuser la réservation.",
       "cancelFailed": "Impossible d'annuler la réservation.",
+      "payoutRequired": "Connectez votre compte de paiement pour accepter des réservations — cela prend environ 2 minutes.",
+      "payoutRequiredCta": "Configurer les paiements",
       "tabs": {
         "all": "Toutes",
         "pending": "En attente",
@@ -2188,6 +2225,7 @@
       "profileSettings": "Paramètres du profil",
       "paymentSettings": "Ajouter un moyen de paiement",
       "paymentRequired": "Ajoutez un moyen de paiement enregistré avant de réserver.",
+      "noPaymentMethodCallout": "Ajoutez un moyen de paiement avant de réserver — vous ne serez débité qu'une fois le travail terminé.",
       "createFailed": "Impossible de créer la réservation. Réessayez.",
       "mobileHoldLabel": "Retenue carte (1 h)",
       "durationMinutes": "{minutes} min",
@@ -2285,7 +2323,7 @@
         "descriptionLabel": "Ce qui s'est passé",
         "descriptionPlaceholder": "Dites-nous ce qui s'est passé, quand, et comment cela vous a affecté. Plus c'est précis, plus vite nous pourrons vous aider.",
         "safetyBold": "Si vous êtes en danger immédiat, composez le 911 d'abord.",
-        "safetyRest": "Nous répondons aux signalements de sécurité dans les 4 heures et pouvons vous contacter directement.",
+        "safetyRest": "Les signalements de sécurité sont prioritaires — nous examinons chaque signalement sous 48 heures et pouvons vous contacter directement.",
         "submit": "Envoyer le signalement",
         "submitting": "Envoi…",
         "validation": {
@@ -2371,7 +2409,9 @@
           "saveChanges": "Enregistrer les modifications",
           "skip": "Passer pour l'instant"
         },
-        "receiptAlreadyConfirmed": "Cette réservation a déjà un reçu confirmé."
+        "receiptAlreadyConfirmed": "Cette réservation a déjà un reçu confirmé.",
+        "pendingWhatNext": "En attente de l'acceptation de {name}. Vous recevrez une notification — et aucune retenue n'est placée sur votre carte avant son acceptation.",
+        "yourWelper": "votre Welper"
       }
     },
     "search": {
@@ -2473,7 +2513,9 @@
         "loadFailed": "Impossible de charger le profil.",
         "experienceYears": "{years}+ ans d'exp.",
         "minorBadge": "Mineur",
-        "minorBadgeTooltip": "Le Welper a moins de 18 ans"
+        "minorBadgeTooltip": "Le Welper a moins de 18 ans",
+        "respondsInMinutes": "Répond en ~{minutes} min",
+        "respondsInHours": "Répond en ~{hours} h"
       },
       "serviceDialog": {
         "loading": "Chargement…",

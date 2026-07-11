@@ -44,6 +44,11 @@ export interface WelperProfileDialogProfile {
   verified?: boolean;
   /** Minor welper (14–17) — render badge only when explicitly true. */
   isMinor?: boolean;
+  /**
+   * Median accept-latency in minutes (BFF trust aggregate). Rendered only
+   * when a number — null/undefined hides the line (no fabricated SLA).
+   */
+  responseTimeMinutes?: number | null;
   serviceOfferings: WelperProfileDialogOffering[];
   weeklyAvailability?: WeeklyAvailabilitySummary | null;
 }
@@ -61,6 +66,8 @@ export interface WelperProfileDialogLabels {
   experienceYears?: (years: number) => string;
   minorBadge?: string;
   minorBadgeTooltip?: string;
+  respondsInMinutes?: (minutes: number) => string;
+  respondsInHours?: (hours: number) => string;
 }
 
 export interface WelperProfileDialogProps {
@@ -138,6 +145,20 @@ export function WelperProfileDialog({
                     </Heading>
                     {profile.verified === true ? <VerifiedTrustBadge size="2" /> : null}
                   </Flex>
+                  {typeof profile.responseTimeMinutes === "number" && (
+                    <Text as="p" size="2" color="gray" highContrast mb="1">
+                      {profile.responseTimeMinutes < 60
+                        ? (l?.respondsInMinutes?.(profile.responseTimeMinutes) ??
+                          `Responds in ~${profile.responseTimeMinutes} min`)
+                        : (l?.respondsInHours?.(
+                            Math.max(1, Math.round(profile.responseTimeMinutes / 60)),
+                          ) ??
+                          `Responds in ~${Math.max(
+                            1,
+                            Math.round(profile.responseTimeMinutes / 60),
+                          )}h`)}
+                    </Text>
+                  )}
                   <Text size="2" color="gray" highContrast>
                     {profile.bio || (l?.noBio ?? "No bio provided.")}
                   </Text>

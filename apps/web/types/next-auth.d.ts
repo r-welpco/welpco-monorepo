@@ -21,8 +21,6 @@ declare module "next-auth" {
        * dashboard access; Phase 1 BFF already maintains the column.
        */
       signupCompleted?: boolean;
-      /** False after signup finish while launch access is gated. */
-      platformAccessEnabled?: boolean;
     } & Omit<
       DefaultSession["user"],
       "emailVerified" | "email" | "name" | "image"
@@ -39,7 +37,6 @@ declare module "next-auth" {
     onboardingCompleted?: boolean;
     /** See Session.user.signupCompleted. */
     signupCompleted?: boolean;
-    platformAccessEnabled?: boolean;
   }
 }
 
@@ -59,6 +56,5 @@ declare module "next-auth/jwt" {
     onboardingCompleted?: boolean;
     /** See Session.user.signupCompleted. */
     signupCompleted?: boolean;
-    platformAccessEnabled?: boolean;
   }
 }

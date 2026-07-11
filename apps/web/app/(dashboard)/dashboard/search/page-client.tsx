@@ -99,6 +99,7 @@ function mapToWelperProfileDialogProfile(
     };
     verified?: boolean;
     isMinor?: boolean;
+    responseTimeMinutes?: number | null;
   } | null
 ): WelperProfileDialogProfile | null {
   if (!data) return null;
@@ -111,6 +112,7 @@ function mapToWelperProfileDialogProfile(
     profilePhotoUrl: data.profilePhotoUrl,
     verified: data.verified === true ? true : undefined,
     isMinor: data.isMinor === true ? true : undefined,
+    responseTimeMinutes: data.responseTimeMinutes,
     serviceOfferings: (data.serviceOfferings ?? []).map((o) => ({
       id: o.id,
       serviceCategoryId: o.serviceCategoryId,

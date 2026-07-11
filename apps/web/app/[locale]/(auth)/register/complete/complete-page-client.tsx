@@ -15,7 +15,6 @@ import { Text } from "@welpco/ui/text";
 import { FORM_SPACING } from "@welpco/ui/tokens";
 import { hasFrenchPrefix } from "@/i18n/locale-routes";
 import { useAppRouter } from "@/lib/i18n/use-app-router";
-import { hasPlatformAccess } from "@/lib/auth/platform-access";
 import { useEffect, useRef } from "react";
 import { useSignupState } from "@/lib/hooks/use-signup";
 
@@ -48,9 +47,7 @@ export default function CompletePageClient() {
       router.replace("/register");
       return;
     }
-    if (hasPlatformAccess({ signupCompleted: true })) {
-      router.replace("/dashboard");
-    }
+    router.replace("/dashboard");
   }, [status, signupCompleted, router]);
 
   const sessionSyncStartedRef = useRef(false);

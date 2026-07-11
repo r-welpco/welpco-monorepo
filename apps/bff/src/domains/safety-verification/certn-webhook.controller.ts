@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Logger,
   Post,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -37,8 +38,17 @@ export class CertnWebhookController {
       if (!sig || !this.verifySignature(JSON.stringify(body), sig, secret)) {
         throw new BadRequestException('Invalid Certn webhook signature');
       }
+    } else if (process.env.NODE_ENV === 'production') {
+      // Fail closed: a misconfigured production environment must never accept
+      // unsigned payloads — anyone could forge background-check results.
+      this.logger.error(
+        'CERTN_WEBHOOK_SECRET not set in production — rejecting webhook (fail-closed)',
+      );
+      throw new ServiceUnavailableException('Webhook verification is not configured');
     } else {
-      this.logger.warn('CERTN_WEBHOOK_SECRET not set — accepting webhook without verification');
+      this.logger.warn(
+        'CERTN_WEBHOOK_SECRET not set — accepting webhook without verification (non-production only)',
+      );
     }
 
     await this.backgroundCheckService.handleCertnWebhook(body as never);

@@ -59,7 +59,7 @@ export function ReviewCard({
                   >
                     <Flex align="center" gap="1">
                       <BadgeCheck size={12} aria-hidden="true" />
-                      Verified
+                      Booked through Welpco
                     </Flex>
                   </Badge>
                 )}

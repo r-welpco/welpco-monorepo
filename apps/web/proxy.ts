@@ -12,7 +12,6 @@ import {
 } from "@/i18n/locale-routes";
 import { resolveRequestLocale } from "@/i18n/resolve-locale";
 import { routing } from "@/i18n/routing";
-import { hasPlatformAccess } from "@/lib/auth/platform-access";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 
 const intlMiddleware = createIntlMiddleware(routing);
@@ -76,7 +75,6 @@ type AuthUser = {
   emailVerified?: boolean;
   signupCompleted?: boolean;
   onboardingCompleted?: boolean;
-  platformAccessEnabled?: boolean;
 };
 
 /** Legacy next-intl links used `/fr/dashboard/*`; redirect to unprefixed app shell. */
@@ -166,7 +164,6 @@ export default auth((req) => {
 
   const signupCompleted = user?.signupCompleted === true;
   const emailVerified = user?.emailVerified === true;
-  const platformAccess = hasPlatformAccess({ signupCompleted });
 
   if (!signupCompleted) {
     if (isOnRegister || isOnLogin) {
@@ -199,15 +196,6 @@ export default auth((req) => {
     return NextResponse.redirect(
       new URL(localizedPathFromRequest("/dashboard", pathname), nextUrl),
     );
-  }
-
-  if (!platformAccess) {
-    if (isOnLogin || isOnOnboarding) {
-      return NextResponse.redirect(
-        new URL(localizedPathFromRequest("/dashboard", pathname), nextUrl),
-      );
-    }
-    return intlResponse ?? NextResponse.next();
   }
 
   if (isOnLogin || isOnRegister || isOnOnboarding) {

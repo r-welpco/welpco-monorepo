@@ -75,7 +75,6 @@ Every variable below was verified against actual code reads (`ConfigService.get(
 
 | Variable | Required | Purpose | Where used |
 |---|---|---|---|
-| `PLATFORM_ACCESS_GATED` | no (default gated) | Launch gate blocking `/dashboard` | `src/common/platform-access.ts` |
 | `NODE_ENV` | yes | Env detection (SSL, rate limits, E2E Stripe bypass, seed guards) | throughout |
 
 ## Web (`apps/web`) — source: `apps/web/.env.example` · runs on port **8081**
@@ -91,7 +90,6 @@ Every variable below was verified against actual code reads (`ConfigService.get(
 | `PUBLIC_APP_URL` | no | Email asset URL for contact route | `app/api/contact/route.ts` |
 | `NEXT_PUBLIC_SITE_URL` | no (default `https://welpco.com`) | robots/sitemap/canonical | `app/robots.ts`, `app/sitemap.ts`, `app/layout.tsx` |
 | `NEXT_PUBLIC_ZOHO_SALESIQ_ENABLED` / `_WIDGET_CODE` / `_SCRIPT_SRC` | no | Zoho SalesIQ chat | `next.config.ts`, layout |
-| `NEXT_PUBLIC_PLATFORM_ACCESS_GATED` | no | Client mirror of BFF launch gate | gated UI |
 | `NEXT_PUBLIC_DEFAULT_COUNTRY_CODE` | no | Search default country | `app/(dashboard)/dashboard/search/page-client.tsx` |
 | `NEXT_PUBLIC_ENABLE_SW_IN_DEV` | no | Enable PWA service worker in dev | `components/providers/pwa-service-worker.tsx` |
 | `ENABLE_DEV_AUTH_FALLBACK` | no (dev only) | Auth fallback when BFF is down | documented in `.env.example` |

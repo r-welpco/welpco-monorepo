@@ -89,7 +89,7 @@ None of these are hard engineering problems. Most of the highest-leverage fixes 
 | E1 | One `@Cron` in the entire BFF (payment capture). No abandoned-signup, incomplete-setup, pending-booking, or dormant-user nudges | `payment-capture.scheduler.ts` (sole scheduler) |
 | E2 | Notification-preferences UI doesn't exist (`useNotificationPreferences` has zero consumers) despite backend support — users can't tune channels, increasing unsubscribe/ignore risk when emails do start | NOTIFICATIONS-002 🟡 |
 | E3 | First-run dashboard still shows zero-value stat tiles after setup completes; welper's own dashboard never shows their rating/response-time (DASHBOARD-001 P2, DASHBOARD-003 open) | `dashboard_features.md` validated |
-| E4 | `PLATFORM_ACCESS_GATED` is advisory-only — surfaced in DTOs, enforced nowhere. If you believe you're running a gated beta, you aren't; if you want one, it needs a guard | `common/platform-access.ts`, no enforcement found |
+| E4 | ~~`PLATFORM_ACCESS_GATED` is advisory-only — surfaced in DTOs, enforced nowhere. If you believe you're running a gated beta, you aren't; if you want one, it needs a guard~~ **Resolved 2026-07-10 (owner decision): flag and all propagation deleted from the codebase** | `common/platform-access.ts` (removed) |
 
 ---
 
@@ -125,7 +125,7 @@ None of these are hard engineering problems. Most of the highest-leverage fixes 
 ### Decide (product, not code)
 
 - **Background check positioning** (D2): *Option A* — required to go live (stronger safety story, more supply friction); *Option B* — optional badge, but market it hard ("look for the shield"). Current state is the worst of both: fee feels skippable to welpers, protection feels ambient-but-hollow to customers.
-- **`PLATFORM_ACCESS_GATED`** (E4): enforce it as a real waitlist/invite gate, or delete it.
+- ~~**`PLATFORM_ACCESS_GATED`** (E4): enforce it as a real waitlist/invite gate, or delete it.~~ **Resolved 2026-07-10 (owner decision): deleted.**
 
 ---
 

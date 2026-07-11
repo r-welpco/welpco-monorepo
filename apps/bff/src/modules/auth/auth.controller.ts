@@ -54,9 +54,16 @@ export class AuthController {
   ) {}
 
   @Post('login')
-  // Brute-force protection is handled by AccountLockoutService (failed attempts
-  // only). A request-count cap here also blocked legitimate signup, which calls
-  // POST /login once after every successful signup/begin (including idempotent resume).
+  @UseGuards(RateLimitGuard)
+  // Defense in depth alongside AccountLockoutService (5 failed attempts / 15min
+  // per account): cap total requests at 10 / 15min per email (falling back to
+  // IP when no email is supplied). The cap is deliberately wider than the
+  // lockout so legitimate users hit the friendlier lockout message first;
+  // the request cap catches credential-stuffing sweeps and bcrypt-exhaustion
+  // traffic that lockout (failed-attempts-only) never sees. Signup's single
+  // post-signup POST /login per email stays far under this limit, and the
+  // guard is bypassed under NODE_ENV=test / DISABLE_RATE_LIMIT=true.
+  @RateLimit({ ttl: 900, limit: 10, keyGenerator: (req) => `login:${(req.body?.email || '').toLowerCase().trim() || req.ip}` })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User login' })
   @ApiBody({ type: LoginDto })

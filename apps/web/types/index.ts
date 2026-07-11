@@ -165,6 +165,14 @@ export interface WelperProfile {
   photoUrl?: string | null;
   serviceArea: ServiceArea;
   profileVisibility: "Public" | "Private";
+  /**
+   * Wave 1 trust aggregates hydrated by GET /api/profiles/me (welper role).
+   * Optional: absent on older cached payloads — treat undefined as "unknown",
+   * not zero (bible §22.6).
+   */
+  averageRating?: number | null;
+  reviewCount?: number;
+  responseTimeMinutes?: number | null;
   profileCompletionStatus: {
     name: boolean;
     phone: boolean;

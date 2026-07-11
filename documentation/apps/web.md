@@ -34,7 +34,7 @@ Next.js app for customers and Welpers (marketplace, booking, dashboard, marketin
 | `api/` | `/api/auth/[...nextauth]`, `/api/contact`, `/api/health` | Route handlers; `/api/contact` verifies Turnstile server-side |
 | Root files | `layout.tsx`, `error.tsx`, `manifest.ts`, `robots.ts`, `sitemap.ts`, `globals.css` | |
 
-`apps/web/proxy.ts` (Next 16 middleware) composes NextAuth's `auth()` with `next-intl` middleware: geo/cookie locale resolution, French `/legal` redirects, platform-access gating (`lib/auth/platform-access.ts`), and safe `next=` redirect handling.
+`apps/web/proxy.ts` (Next 16 middleware) composes NextAuth's `auth()` with `next-intl` middleware: geo/cookie locale resolution, French `/legal` redirects, and safe `next=` redirect handling.
 
 ## Component organization (`apps/web/components/`)
 

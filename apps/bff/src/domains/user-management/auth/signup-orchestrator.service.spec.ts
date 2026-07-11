@@ -35,6 +35,7 @@ import { EmailVerificationService } from './email-verification.service';
 import { ReferralService } from '../referral/referral.service';
 import { BackgroundCheckService } from '../../safety-verification/background-check.service';
 import { GuardianConsentService } from '../../safety-verification/guardian-consent.service';
+import { EmailNotificationService } from '../../notification/email-notification.service';
 
 /**
  * Day 15 — Phase 1 of the signup ↔ onboarding merge.
@@ -249,6 +250,10 @@ describe('SignupOrchestratorService', () => {
         {
           provide: GEOCODE_SERVICE,
           useValue: { geocode: jest.fn() },
+        },
+        {
+          provide: EmailNotificationService,
+          useValue: { sendWelcomeEmail: jest.fn().mockResolvedValue(undefined) },
         },
         {
           provide: StripeConnectService,

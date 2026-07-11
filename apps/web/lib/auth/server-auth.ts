@@ -26,7 +26,6 @@ export interface AuthCheckResult {
     signupCompleted: boolean;
     /** Retained for legacy reads; mirrors `signupCompleted` until the BFF column drops. */
     onboardingCompleted: boolean;
-    platformAccessEnabled?: boolean;
     name?: string | null;
     image?: string | null;
   } | null;
@@ -53,7 +52,6 @@ const getServerSessionCached = cache(async (): Promise<AuthCheckResult> => {
     emailVerified?: boolean;
     signupCompleted?: boolean;
     onboardingCompleted?: boolean;
-    platformAccessEnabled?: boolean;
     name?: string | null;
     image?: string | null;
   };
@@ -61,7 +59,6 @@ const getServerSessionCached = cache(async (): Promise<AuthCheckResult> => {
   // fall back to the legacy `onboardingCompleted` for sessions issued
   // before Phase 1 BFF rolled.
   const signupCompleted = u.signupCompleted ?? u.onboardingCompleted ?? false;
-  const platformAccessEnabled = u.platformAccessEnabled;
   return {
     isAuthenticated: true,
     user: {
@@ -71,7 +68,6 @@ const getServerSessionCached = cache(async (): Promise<AuthCheckResult> => {
       emailVerified: u.emailVerified ?? false,
       signupCompleted,
       onboardingCompleted: signupCompleted,
-      platformAccessEnabled,
       name: u.name ?? null,
       image: u.image ?? null,
     },

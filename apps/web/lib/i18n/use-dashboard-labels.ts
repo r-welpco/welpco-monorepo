@@ -261,7 +261,13 @@ export type WelperHomeLabels = {
     activeJobs: string;
     totalEarnings: string;
     completedJobs: string;
+    rating: string;
+    reviews: string;
+    responseTime: string;
   };
+  statsResponseMinutes: (minutes: number) => string;
+  statsResponseHours: (hours: number) => string;
+  statsReviewsEmptyHint: string;
   statsFootnote: (count: number) => string;
   activityTitle: string;
   quickActions: {
@@ -364,7 +370,13 @@ export function useWelperHomeLabels(): WelperHomeLabels {
       activeJobs: t("stats.activeJobs"),
       totalEarnings: t("stats.totalEarnings"),
       completedJobs: t("stats.completedJobs"),
+      rating: t("stats.rating"),
+      reviews: t("stats.reviews"),
+      responseTime: t("stats.responseTime"),
     },
+    statsResponseMinutes: (minutes) => t("statsResponseMinutes", { minutes }),
+    statsResponseHours: (hours) => t("statsResponseHours", { hours }),
+    statsReviewsEmptyHint: t("statsReviewsEmptyHint"),
     statsFootnote: (count) => t("statsFootnote", { count }),
     activityTitle: t("activityTitle"),
     quickActions: {
@@ -463,12 +475,15 @@ export function useWelperBookingsLabels() {
     cancelBooking: t("cancelBooking"),
     viewDetails: t("viewDetails"),
     customerFallback: t("customerFallback"),
+    pendingWaitCustomer: t("pendingWaitCustomer"),
     pageOf: (page: number, total: number) => t("pageOf", { page, total }),
     prevPage: t("prevPage"),
     nextPage: t("nextPage"),
     acceptFailed: t("acceptFailed"),
     declineFailed: t("declineFailed"),
     cancelFailed: t("cancelFailed"),
+    payoutRequired: t("payoutRequired"),
+    payoutRequiredCta: t("payoutRequiredCta"),
     tabLabels,
     statusLabel,
     confirm: {
@@ -705,6 +720,7 @@ export function useBookingNewLabels() {
     profileSettings: t("profileSettings"),
     paymentSettings: t("paymentSettings"),
     paymentRequired: t("paymentRequired"),
+    noPaymentMethodCallout: t("noPaymentMethodCallout"),
     createFailed: t("createFailed"),
     mobileHoldLabel: t("mobileHoldLabel"),
   };
@@ -1036,6 +1052,8 @@ export function useCustomerBookingDetailLabels() {
     cancellationReason: t("cancellationReason"),
     declineReason: t("declineReason"),
     receiptAlreadyConfirmed: t("receiptAlreadyConfirmed"),
+    pendingWhatNext: (name: string) => t("pendingWhatNext", { name }),
+    yourWelper: t("yourWelper"),
     payment: {
       sectionTitle: p("sectionTitle"),
       cardOnFile: p("cardOnFile"),
@@ -1181,6 +1199,8 @@ export function useSearchLabels() {
       experienceYears: (years: number) => profileDialog("experienceYears", { years }),
       minorBadge: profileDialog("minorBadge"),
       minorBadgeTooltip: profileDialog("minorBadgeTooltip"),
+      respondsInMinutes: (minutes: number) => profileDialog("respondsInMinutes", { minutes }),
+      respondsInHours: (hours: number) => profileDialog("respondsInHours", { hours }),
     },
     serviceDialog: {
       loading: serviceDialog("loading"),

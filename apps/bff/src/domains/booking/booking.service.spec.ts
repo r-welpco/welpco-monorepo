@@ -17,6 +17,8 @@ import { WelperProfileService } from '../profile-management/welper-profile/welpe
 import { UsersService } from '../user-management/users/users.service';
 import { S3UrlPresignerService } from '../../clients/s3';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
+import { StripeConnectService } from '../payment/stripe-connect.service';
+import { PayoutMethodChoice } from '../profile-management/entities/payout-method-choice.enum';
 import { QuestionType } from '../content-management/entities/question.entity';
 import { JobPostingService } from '../job-posting/job-posting.service';
 
@@ -67,6 +69,7 @@ describe('BookingService', () => {
     onBookingServiceCompleted: jest.fn().mockResolvedValue(undefined),
     onBookingCanceled: jest.fn().mockResolvedValue(undefined),
     authorizeHoldBeforeWelperAccept: jest.fn().mockResolvedValue(undefined),
+    prepareAuthorizationForAcceptance: jest.fn().mockResolvedValue(undefined),
   };
 
   const mockApplicationSettingsService = {
@@ -115,6 +118,10 @@ describe('BookingService', () => {
     assertCanAcceptBookings: jest.fn().mockResolvedValue(undefined),
   };
 
+  const mockStripeConnectService = {
+    isOnboardingComplete: jest.fn().mockResolvedValue(false),
+  };
+
   const mockQueryRunner = {
     connect: jest.fn(),
     startTransaction: jest.fn(),
@@ -128,6 +135,9 @@ describe('BookingService', () => {
 
   const mockDataSource = {
     createQueryRunner: jest.fn(() => mockQueryRunner),
+    transaction: jest.fn(async (cb: (manager: unknown) => Promise<unknown>) =>
+      cb(mockQueryRunner.manager),
+    ),
   };
 
   /** Query builder returned inside transaction repo (conflict check + pessimistic lock reads). */
@@ -174,6 +184,7 @@ describe('BookingService', () => {
         { provide: WelperProfileService, useValue: mockWelperProfileService },
         { provide: UsersService, useValue: mockUsersService },
         { provide: BackgroundCheckService, useValue: mockBackgroundCheckService },
+        { provide: StripeConnectService, useValue: mockStripeConnectService },
         { provide: JobPostingService, useValue: {} },
         {
           provide: S3UrlPresignerService,
@@ -523,6 +534,81 @@ describe('BookingService', () => {
       expect(result.availableActions).toContain('cancel');
       expect(result.availableActions).not.toContain('accept');
       expect(result.availableActions).not.toContain('decline');
+    });
+  });
+
+  describe('accept', () => {
+    const makePendingBooking = () => ({
+      id: 'b1',
+      customerId: 'c1',
+      welperId: 'w1',
+      status: BookingRequestStatus.PENDING,
+      answers: {},
+      scheduledDate: null,
+      scheduledStartTime: null,
+      scheduledEndTime: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    it('rejects with PAYOUT_ACCOUNT_REQUIRED when the welper has no completed payout account', async () => {
+      mockWelperProfileService.findByWelperId.mockResolvedValue({
+        firstName: 'Test',
+        lastName: 'Welper',
+        payoutMethodChoice: null,
+      });
+      mockStripeConnectService.isOnboardingComplete.mockResolvedValue(false);
+
+      const err = await service.accept('b1', 'w1', 'welper').then(
+        () => {
+          throw new Error('accept() should have rejected');
+        },
+        (e: unknown) => e,
+      );
+      expect(err).toBeInstanceOf(BadRequestException);
+      expect((err as BadRequestException).getResponse()).toMatchObject({
+        code: 'PAYOUT_ACCOUNT_REQUIRED',
+        message: 'Connect your payout account to accept bookings.',
+      });
+
+      // Gate fires before any transition or payment hold.
+      expect(mockDataSource.transaction).not.toHaveBeenCalled();
+      expect(mockPaymentService.prepareAuthorizationForAcceptance).not.toHaveBeenCalled();
+    });
+
+    it('accepts when the persisted payout flag marks Stripe onboarding complete', async () => {
+      mockWelperProfileService.findByWelperId.mockResolvedValue({
+        firstName: 'Test',
+        lastName: 'Welper',
+        payoutMethodChoice: PayoutMethodChoice.STRIPE,
+      });
+      const booking = makePendingBooking();
+      txQueryBuilder.getOne.mockResolvedValue(booking);
+      txBookingRepo.save.mockImplementation(async (b: unknown) => b);
+
+      const result = await service.accept('b1', 'w1', 'welper');
+
+      expect(result.status).toBe(BookingRequestStatus.ACCEPTED);
+      expect(mockPaymentService.prepareAuthorizationForAcceptance).toHaveBeenCalledWith('b1');
+      // Persisted flag short-circuits; no live Stripe lookup needed.
+      expect(mockStripeConnectService.isOnboardingComplete).not.toHaveBeenCalled();
+    });
+
+    it('accepts when the live Stripe Connect check reports onboarding complete', async () => {
+      mockWelperProfileService.findByWelperId.mockResolvedValue({
+        firstName: 'Test',
+        lastName: 'Welper',
+        payoutMethodChoice: null,
+      });
+      mockStripeConnectService.isOnboardingComplete.mockResolvedValue(true);
+      const booking = makePendingBooking();
+      txQueryBuilder.getOne.mockResolvedValue(booking);
+      txBookingRepo.save.mockImplementation(async (b: unknown) => b);
+
+      const result = await service.accept('b1', 'w1', 'welper');
+
+      expect(result.status).toBe(BookingRequestStatus.ACCEPTED);
+      expect(mockStripeConnectService.isOnboardingComplete).toHaveBeenCalledWith('w1');
     });
   });
 

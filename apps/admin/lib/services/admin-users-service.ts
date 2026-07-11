@@ -18,7 +18,6 @@ export interface AdminUserRow {
   status: string;
   emailVerified: boolean;
   signupCompleted?: boolean;
-  platformAccessEnabled?: boolean;
   preferredLocale?: string | null;
   selectedRole?: string | null;
   createdAt?: string;

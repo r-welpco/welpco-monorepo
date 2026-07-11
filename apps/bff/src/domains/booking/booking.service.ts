@@ -35,6 +35,8 @@ import { WelperProfileService } from '../profile-management/welper-profile/welpe
 import { formatWelperDisplayNameForCustomer } from '../../common/display-name.util';
 import { UsersService } from '../user-management/users/users.service';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
+import { StripeConnectService } from '../payment/stripe-connect.service';
+import { PayoutMethodChoice } from '../profile-management/entities/payout-method-choice.enum';
 import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { BookingTaxService } from '../payment/booking-tax.service';
 import type { BookingTaxContext } from '../payment/booking-tax.types';
@@ -90,6 +92,7 @@ export class BookingService {
     private readonly usersService: UsersService,
     private readonly s3Presigner: S3UrlPresignerService,
     private readonly backgroundCheckService: BackgroundCheckService,
+    private readonly stripeConnectService: StripeConnectService,
     @Inject(forwardRef(() => JobPostingService))
     private readonly jobPostingService: JobPostingService,
   ) {}
@@ -667,6 +670,16 @@ export class BookingService {
       offering,
       'booking_created',
     );
+    // Customer confirmation: their request went out, no charge until the job is done.
+    const welperName = await this.resolvePersonDisplayName('welper', dto.welperId, 'your welper');
+    await this.notifyBookingEvent(
+      saved,
+      customerId,
+      'booking_request_sent',
+      { welperName },
+      offering,
+      'booking_request_sent',
+    );
     return this.toResponse(saved, customerId, 'customer');
   }
 
@@ -877,8 +890,36 @@ export class BookingService {
 
   // ─── Welper Actions ───────────────────────────────────────────────────
 
+  /**
+   * Adoption report item 13 / risk D3 — a welper must have somewhere for the
+   * money to go before they can accept a paid booking. Discovery stays open
+   * without a payout account; only the PENDING→ACCEPTED transition (which
+   * places the customer's payment hold) is gated.
+   *
+   * Mirrors the signup orchestrator's welperPayout completion check: the
+   * cheap DB flag (`payoutMethodChoice === STRIPE`, only ever persisted after
+   * verified Stripe Connect onboarding) short-circuits first, with the live
+   * StripeConnectService.isOnboardingComplete() lookup as the freshness
+   * fallback for welpers who just finished onboarding.
+   */
+  private async assertPayoutAccountReady(welperId: string): Promise<void> {
+    const profile = await this.welperProfileService
+      .findByWelperId(welperId)
+      .catch(() => null);
+    const payoutReady =
+      profile?.payoutMethodChoice === PayoutMethodChoice.STRIPE ||
+      (await this.stripeConnectService.isOnboardingComplete(welperId).catch(() => false));
+    if (!payoutReady) {
+      throw new BadRequestException({
+        code: 'PAYOUT_ACCOUNT_REQUIRED',
+        message: 'Connect your payout account to accept bookings.',
+      });
+    }
+  }
+
   async accept(bookingId: string, welperId: string, accountType: string): Promise<BookingResponseDto> {
     await this.backgroundCheckService.assertCanAcceptBookings(welperId);
+    await this.assertPayoutAccountReady(welperId);
 
     let idempotentAlreadyAccepted: BookingRequest | null = null;
 

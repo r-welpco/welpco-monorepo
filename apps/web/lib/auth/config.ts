@@ -83,7 +83,6 @@ function getRefreshPromiseMap(): Map<string, Promise<WelpcoRefreshPayload>> {
 type SignupSessionState = {
   emailVerified?: boolean;
   signupCompleted?: boolean;
-  platformAccessEnabled?: boolean;
 };
 
 async function validatedSignupSessionState(
@@ -156,9 +155,6 @@ export const authConfig: NextAuthConfig = {
         if ("signupCompleted" in user) {
           token.signupCompleted = user.signupCompleted as boolean;
         }
-        if ("platformAccessEnabled" in user) {
-          token.platformAccessEnabled = user.platformAccessEnabled as boolean;
-        }
 
         // Store JWT tokens from backend (NestJS Passport)
         // These are the actual JWT tokens from the backend
@@ -203,7 +199,6 @@ export const authConfig: NextAuthConfig = {
             token.emailVerified = Boolean(signupState.emailVerified);
             token.signupCompleted = Boolean(signupState.signupCompleted);
             token.onboardingCompleted = Boolean(signupState.signupCompleted);
-            token.platformAccessEnabled = signupState.platformAccessEnabled;
           }
         }
       }
@@ -291,7 +286,6 @@ export const authConfig: NextAuthConfig = {
         token.emailVerified = undefined;
         token.onboardingCompleted = undefined;
         token.signupCompleted = undefined;
-        token.platformAccessEnabled = undefined;
       } else if (result?.accessToken) {
         token.accessToken = result.accessToken;
         token.accessTokenExpires =
@@ -323,9 +317,6 @@ export const authConfig: NextAuthConfig = {
         session.user.emailVerified = Boolean(token.emailVerified) as unknown as typeof session.user.emailVerified;
         session.user.onboardingCompleted = token.onboardingCompleted as boolean;
         session.user.signupCompleted = token.signupCompleted as boolean | undefined;
-        session.user.platformAccessEnabled = token.platformAccessEnabled as
-          | boolean
-          | undefined;
         // Access tokens are needed by the browser API client. Refresh tokens
         // remain only in the encrypted HttpOnly NextAuth JWT cookie.
         session.accessToken = token.accessToken as string;
@@ -353,9 +344,6 @@ export const authConfig: NextAuthConfig = {
           }
           if (typeof token.signupCompleted !== "undefined") {
             session.user.signupCompleted = token.signupCompleted as boolean;
-          }
-          if (typeof token.platformAccessEnabled !== "undefined") {
-            session.user.platformAccessEnabled = token.platformAccessEnabled as boolean;
           }
         }
       }

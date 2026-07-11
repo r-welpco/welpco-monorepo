@@ -30,7 +30,7 @@
       "findHelp": "Find help"
     },
     "footer": {
-      "tagline": "A local-services marketplace. Provider profiles, secure escrow payments, and on-platform messaging.",
+      "tagline": "A local-services marketplace. Provider profiles, secure payments, and on-platform messaging.",
       "cols": {
         "welpco": "Welpco",
         "customers": "For customers",
@@ -179,7 +179,7 @@
           {
             "n": "02",
             "title": "Book & schedule",
-            "body": "Pick a Welper, set a time, and confirm. Pay securely — funds are held until the job is complete."
+            "body": "Pick a Welper, set a time, and confirm. You're not charged when you book — a one-hour hold is placed on your card once your Welper accepts."
           },
           {
             "n": "03",
@@ -205,6 +205,25 @@
           }
         ]
       },
+      "nearYou": {
+        "eyebrow": "Near you",
+        "titleLine1": "Welpers",
+        "titleLine2": "near you.",
+        "subtitle": "Real people, background-check badges, honest reviews — book in minutes.",
+        "postalLabel": "Your postal code",
+        "postalPlaceholder": "e.g. H2X 1Y4",
+        "postalSubmit": "Update",
+        "railLabel": "Welpers near you",
+        "prevAria": "Show previous Welpers",
+        "nextAria": "Show next Welpers",
+        "fromRate": "From ${rate}/hr",
+        "reviewCount": "({count})",
+        "ratingAria": "Rated {rating} out of 5 from {count} reviews",
+        "verified": "Background-checked",
+        "seeAll": "See all Welpers near you",
+        "emptyForPostal": "No Welpers there yet — try another postal code, or browse everyone on the platform.",
+        "browseAll": "Browse all Welpers"
+      },
       "minors": {
         "badge": "Coming soon",
         "titleLine1": "Service-provider accounts",
@@ -220,23 +239,23 @@
         "eyebrow": "— Trust & safety",
         "titleLine1": "Trust",
         "titleLine2": "& safety.",
-        "subtitle": "Secure payments held in escrow, in-platform messaging, and two-way reviews — built into every booking.",
+        "subtitle": "Secure payments charged only after the job is done, in-platform messaging, and two-way reviews — built into every booking.",
         "items": [
           {
-            "title": "Verified Welpers",
-            "body": "Background checks are available for adult Welpers to help build trust and earn a badge on their profile."
+            "title": "Background-checked — look for the badge",
+            "body": "Welpers can complete a real third-party background check. Pass it, and a badge appears on their profile — no badge means no check."
           },
           {
-            "title": "Funds held until done",
-            "body": "You pay upfront, but we hold the money until you confirm the job is complete."
+            "title": "Charged only when done",
+            "body": "You're not charged when you book. When your Welper accepts, we place a one-hour hold on your card — you're only charged after the job is done."
           },
           {
-            "title": "On-platform messaging",
-            "body": "All communication runs through Welpco — transparent, respectful, and on the record."
+            "title": "Report a problem on any booking",
+            "body": "Something off? Every booking has a report option. Flag the issue and we'll review it with both sides."
           },
           {
-            "title": "Two-way ratings",
-            "body": "Customers and Welpers rate each other after every job. The community keeps itself accountable."
+            "title": "Real support within 48 hours",
+            "body": "Write to support@welpco.com and a real person replies within 48 hours. Free cancellation up to 24 hours before the start."
           }
         ]
       },
@@ -246,9 +265,10 @@
         "titleLine2": "Set your hours.",
         "body": "A first job, a flexible side income, or a structured way to use free time in retirement — Welping fits around your life. You decide what you offer, when you work, and what you charge.",
         "points": [
-          "Pick the services that match your skills",
+          "Free to join — pick the services that match your skills",
           "Set your own rates and weekly availability",
-          "Get paid the following week on the Friday on a weekly basis",
+          "Optional background check ($19.99 CAD) earns the badge on your profile",
+          "Get paid weekly through Stripe — bank transfers at no cost",
           "Build a profile, ratings, and a regular client base"
         ],
         "ctaPrimary": "Become a Welper",
@@ -277,11 +297,11 @@
           },
           {
             "q": "When and how do I pay for a service?",
-            "a": "Payment is taken when your booking is confirmed and held until the job is complete. Once you confirm completion, funds are released to the Welper."
+            "a": "You're not charged when you book. When your Welper accepts, we place a one-hour hold on your card. You're only charged after the job is complete."
           },
           {
             "q": "Is it safe to have a Welper in my home?",
-            "a": "Safety is a top priority at Welpco. Adult Welpers can complete a background check to earn a badge on their profile. Welpers aged 14 to 17 use a guardian-supervised account, where a legal guardian is notified of all activities and bookings."
+            "a": "Safety is a top priority at Welpco. Every Welper is an adult (18+), and Welpers can complete a background check to earn a badge on their profile — look for it when you browse. You can also report a problem on any booking."
           }
         ]
       }
@@ -344,7 +364,7 @@
           {
             "n": "02",
             "t": "Trust by system",
-            "b": "Background checks, escrow payments, on-platform messaging, two-way ratings. Trust is engineered, not assumed."
+            "b": "Background checks, secure payment holds, on-platform messaging, two-way ratings. Trust is engineered, not assumed."
           },
           {
             "n": "03",
@@ -428,6 +448,14 @@
               ]
             ],
             [
+              "What does it cost to be a Welper?",
+              [
+                "Joining Welpco is free — no sign-up fee, no subscription.",
+                "The one optional cost is the background check: $19.99 CAD, paid once through our verification partner. Pass it and a badge appears on your profile.",
+                "You get paid weekly through Stripe, and transferring your payout to your bank account costs nothing."
+              ]
+            ],
+            [
               "How do I get paid?",
               [
                 "Once the job is completed, the Welper will confirm \"Job Done\" through the app or website. A receipt will automatically be sent to the customer, and the payment process will then be finalized.",
@@ -461,7 +489,7 @@
             ],
             [
               "Can a minor sign up as a Welper?",
-              "Minors over the age of 14 can become a Welper via our platform, however, their account must be created and managed by a legal guardian. Welpers who are minors will not be subjected to a background check."
+              "Not yet. For now, you must be 18 or older to sign up as a Welper or a customer. We're working on guardian-supervised accounts for younger Welpers — they aren't available yet."
             ],
             [
               "What happens if a customer refuses to pay for the service they received?",
@@ -480,7 +508,7 @@
             ],
             [
               "When and how do I pay for a service?",
-              "When a booking is confirmed between yourself and a Welper, you will complete the payment, but we will hold the money until the job is completed. Once the job is completed, you will confirm via the website or app that the job is completed and we will then release payment to the Welper for the service they provided."
+              "You're not charged when you book. When a Welper accepts your booking, we place a one-hour hold on your card. You're only charged after the job is completed — the Welper confirms via the website or app that the job is done and submits the final time, and your card is then charged for the service they provided."
             ],
             [
               "What happens if a Welper does an unsatisfactory job?",
@@ -488,7 +516,7 @@
             ],
             [
               "How do I know that allowing a Welper on my property, or in my home, is safe?",
-              "Welpco prioritizes safety. Adult Welpers can complete a background check to earn a badge on their profile. Welpers aged 14 to 17 operate under a guardian-supervised account and display a \"Minor\" badge."
+              "Welpco prioritizes safety. Every Welper is an adult (18+), and Welpers can complete a background check to earn a badge on their profile — look for it when you browse. All messaging and payments stay on the platform, and you can report a problem on any booking."
             ],
             [
               "What if there is a service I need that I don't see offered on the platform?",
@@ -1344,7 +1372,7 @@
       "statusGuardianPending": "Awaiting guardian approval",
       "optionalHints": {
         "welperBackgroundCheck": "Adds a verified badge to your profile for better visibility and customer confidence.",
-        "welperPayout": "Required to receive payouts for completed jobs.",
+        "welperPayout": "Required to accept bookings and receive payouts for completed jobs.",
         "welperGuardian": "Your parent or legal guardian must approve your account before you appear in search."
       },
       "open": "Open",
@@ -1360,7 +1388,7 @@
       "customerSections": {
         "account": {
           "title": "Your account — verify email and add your address",
-          "complete": "Your account is set up — add a payment method when you're ready to book.",
+          "complete": "Your account is set up. Next: add a payment method — it's required before your first booking (you're only charged after a job is done).",
           "compactProgress": "Account — {done} of {total} steps done"
         },
         "bookingPayment": {
@@ -1381,7 +1409,7 @@
         },
         "payout": {
           "title": "Weekly payout — connect Stripe",
-          "subtitle": "Required to receive payments for completed jobs.",
+          "subtitle": "Required to accept bookings and receive payments for completed jobs.",
           "complete": "Stripe is connected — you're set up to receive payouts."
         },
         "trust": {
@@ -1503,8 +1531,14 @@
       "stats": {
         "activeJobs": "Active jobs",
         "totalEarnings": "Total earnings",
-        "completedJobs": "Completed jobs"
+        "completedJobs": "Completed jobs",
+        "rating": "Your rating",
+        "reviews": "Reviews",
+        "responseTime": "Typical response"
       },
+      "statsResponseMinutes": "~{minutes} min",
+      "statsResponseHours": "~{hours}h",
+      "statsReviewsEmptyHint": "Reviews appear after your first completed booking.",
       "statsFootnote": "Counts use your {count} most recent bookings — open Bookings for the full list.",
       "activityTitle": "Job",
       "quickActions": {
@@ -1589,12 +1623,15 @@
       "cancelBooking": "Cancel booking",
       "viewDetails": "View details",
       "customerFallback": "Customer",
+      "pendingWaitCustomer": "Waiting for your welper to accept. You'll get a notification — and no hold is placed on your card until they do.",
       "pageOf": "Page {page} of {total}",
       "prevPage": "Previous page",
       "nextPage": "Next page",
       "acceptFailed": "Failed to accept booking.",
       "declineFailed": "Failed to decline booking.",
       "cancelFailed": "Failed to cancel booking.",
+      "payoutRequired": "Connect your payout account to accept bookings — it takes about 2 minutes.",
+      "payoutRequiredCta": "Set up payouts",
       "tabs": {
         "all": "All",
         "pending": "Pending",
@@ -2189,6 +2226,7 @@
       "profileSettings": "Profile settings",
       "paymentSettings": "Add payment method",
       "paymentRequired": "Add a saved payment method before booking.",
+      "noPaymentMethodCallout": "Add a payment method before booking — you won't be charged until after the job is done.",
       "createFailed": "Failed to create booking. Please try again.",
       "mobileHoldLabel": "Card hold (1 hr)",
       "durationMinutes": "{minutes}m",
@@ -2286,7 +2324,7 @@
         "descriptionLabel": "What happened",
         "descriptionPlaceholder": "Tell us what happened, when, and how it affected you. The more specific, the faster we can help.",
         "safetyBold": "If you're in immediate danger, call 911 first.",
-        "safetyRest": "We respond to safety reports within 4 hours and may contact you directly.",
+        "safetyRest": "Safety reports are prioritized — we review every report within 48 hours and may contact you directly.",
         "submit": "Send report",
         "submitting": "Sending…",
         "validation": {
@@ -2372,7 +2410,9 @@
           "saveChanges": "Save changes",
           "skip": "Skip for now"
         },
-        "receiptAlreadyConfirmed": "This booking already has a confirmed receipt."
+        "receiptAlreadyConfirmed": "This booking already has a confirmed receipt.",
+        "pendingWhatNext": "Waiting for {name} to accept. You'll get a notification — and no hold is placed on your card until they do.",
+        "yourWelper": "your welper"
       }
     },
     "search": {
@@ -2474,7 +2514,9 @@
         "loadFailed": "Could not load profile.",
         "experienceYears": "{years}+ yrs exp",
         "minorBadge": "Minor",
-        "minorBadgeTooltip": "Welper is under 18"
+        "minorBadgeTooltip": "Welper is under 18",
+        "respondsInMinutes": "Responds in ~{minutes} min",
+        "respondsInHours": "Responds in ~{hours}h"
       },
       "serviceDialog": {
         "loading": "Loading…",

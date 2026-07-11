@@ -50,6 +50,10 @@ export interface WelperProfileMeApi {
   profilePhotoUrl?: string | null;
   serviceArea?: WelperProfile["serviceArea"] | null;
   profileVisibility?: string;
+  /** Wave 1 trust aggregates from the hydrated /me payload. */
+  averageRating?: number | null;
+  reviewCount?: number;
+  responseTimeMinutes?: number | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -163,6 +167,13 @@ export function mapWelperProfileFromApi(
     profileVisibility: normalizeProfileVisibility(
       typeof r.profileVisibility === "string" ? r.profileVisibility : undefined,
     ),
+    // Trust aggregates — pass through only when present so `undefined`
+    // keeps meaning "unknown" (older payloads), not "zero".
+    ...(r.averageRating !== undefined && { averageRating: r.averageRating }),
+    ...(typeof r.reviewCount === "number" && { reviewCount: r.reviewCount }),
+    ...(r.responseTimeMinutes !== undefined && {
+      responseTimeMinutes: r.responseTimeMinutes,
+    }),
     profileCompletionStatus: {
       name: !!(r.firstName && r.lastName),
       phone: !!r.phoneNumber,

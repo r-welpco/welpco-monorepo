@@ -18,6 +18,7 @@ export interface BookingEmailVariables {
 
 export type BookingEmailType =
   | "booking_created"
+  | "booking_request_sent"
   | "booking_accepted"
   | "booking_declined"
   | "booking_cancelled"
@@ -53,6 +54,8 @@ export function getBookingEmailSubject(type: BookingEmailType, locale: EmailLoca
   switch (type) {
     case "booking_created":
       return fr ? "Nouvelle demande de réservation – Welpco" : "New booking request – Welpco";
+    case "booking_request_sent":
+      return fr ? "Demande de réservation envoyée – Welpco" : "Booking request sent – Welpco";
     case "booking_accepted":
       return fr ? "Votre réservation a été acceptée – Welpco" : "Your booking was accepted – Welpco";
     case "booking_declined":
@@ -93,6 +96,13 @@ export function getBookingNotificationCopy(
         body: fr
           ? `${customerName} a demandé une réservation pour ${serviceName}.`
           : `${customerName} has requested a booking for ${serviceName}.`,
+      };
+    case "booking_request_sent":
+      return {
+        title: fr ? "Demande de réservation envoyée" : "Booking request sent",
+        body: fr
+          ? `Demande de réservation envoyée à ${welperName} — vous serez avisé de sa réponse. Aucun frais avant la fin du service.`
+          : `Booking request sent to ${welperName} — you'll be notified when they respond. No charge until after the job is done.`,
       };
     case "booking_accepted":
       return {
@@ -230,6 +240,26 @@ export function getBookingEmailHtml(params: BookingEmailTemplateParams): string 
 <p style="${pStyle}">${intro}</p>
 ${date ? `<p style="${pStyle}"><strong>${fr ? "Date" : "Date"}:</strong> ${date}${time ? `, ${time}` : ""}</p>` : ""}
 ${address ? `<p style="${pStyle}"><strong>${fr ? "Adresse" : "Address"}:</strong> ${address}</p>` : ""}
+<p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">${viewBooking}</a></p>`;
+      break;
+    }
+    case "booking_request_sent": {
+      const serviceName = escapeHtml(v.serviceName || (fr ? "votre service" : "your service"));
+      const welperName = escapeHtml(v.welperName || (fr ? "votre Welper" : "your welper"));
+      const date = escapeHtml(v.scheduledDate || "");
+      const time = timeRange(v);
+      const heading = fr ? "Demande de réservation envoyée" : "Booking request sent";
+      const intro = fr
+        ? `Votre demande de réservation pour <strong>${serviceName}</strong> a été envoyée à ${welperName}. Vous serez avisé dès sa réponse.`
+        : `Your booking request for <strong>${serviceName}</strong> was sent to ${welperName}. You'll be notified when they respond.`;
+      const reassurance = fr
+        ? "Aucun frais avant la fin du service."
+        : "No charge until after the job is done.";
+      content = `
+<h1 style="${h1Style}">${heading}</h1>
+<p style="${pStyle}">${intro}</p>
+${date ? `<p style="${pStyle}"><strong>${fr ? "Quand" : "When"}:</strong> ${date}${time ? `, ${time}` : ""}</p>` : ""}
+<p style="${pStyle}">${reassurance}</p>
 <p style="margin-top: 20px;"><a href="${bookingUrl}" style="${btnStyle}">${viewBooking}</a></p>`;
       break;
     }

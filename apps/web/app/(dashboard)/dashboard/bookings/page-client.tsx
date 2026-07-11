@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ApiClientError } from "@/lib/api/client";
 import { Box } from "@welpco/ui/box";
 import { Container } from "@welpco/ui/container";
 import { Flex } from "@welpco/ui/flex";
@@ -123,6 +125,10 @@ export default function BookingsPageClient() {
   const cancelMutation = useCancelBooking();
 
   const [mutationError, setMutationError] = useState<string | null>(null);
+  // Adoption report item 13 / risk D3 — accepting requires a completed Stripe
+  // Connect payout account. Set when quick-accept fails with the BFF's stable
+  // `PAYOUT_ACCOUNT_REQUIRED` code.
+  const [payoutRequired, setPayoutRequired] = useState(false);
   const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
   const [previewCustomerId, setPreviewCustomerId] = useState<string | null>(null);
   const [previewCustomerFallback, setPreviewCustomerFallback] = useState<{
@@ -171,14 +177,22 @@ export default function BookingsPageClient() {
 
   const runAccept = useCallback(
     (bookingId: string) => {
+      setPayoutRequired(false);
       acceptMutation.mutate(bookingId, {
         onSuccess: () => setPendingConfirm(null),
         onError: (err) => {
-          setMutationError(
-            err instanceof Error
-              ? err.message
-              : welperLabels.acceptFailed,
-          );
+          if (
+            err instanceof ApiClientError &&
+            err.code === "PAYOUT_ACCOUNT_REQUIRED"
+          ) {
+            setPayoutRequired(true);
+          } else {
+            setMutationError(
+              err instanceof Error
+                ? err.message
+                : welperLabels.acceptFailed,
+            );
+          }
           setPendingConfirm(null);
         },
       });
@@ -262,6 +276,20 @@ export default function BookingsPageClient() {
           {isCustomer ? welperLabels.subtitleCustomer : welperLabels.subtitle}
         </Text>
       </Box>
+
+      {/* Payout account required to accept (adoption report item 13 / risk D3) */}
+      {payoutRequired && (
+        <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="alert">
+          <Flex direction="column" gap="2" align="start">
+            <Callout.Text>{welperLabels.payoutRequired}</Callout.Text>
+            <Button asChild size="2" color={SEMANTIC_COLOR.warning} variant="soft">
+              <Link href="/dashboard/profile?tab=payout">
+                {welperLabels.payoutRequiredCta}
+              </Link>
+            </Button>
+          </Flex>
+        </Callout.Root>
+      )}
 
       {/* Mutation Error */}
       {mutationError && (
@@ -517,6 +545,15 @@ export default function BookingsPageClient() {
                     </Flex>
                   )}
                 </Flex>
+
+                {/* B3 fix — customer-side "what happens next" for pending
+                    bookings. List items don't carry the welper's name, so
+                    the copy uses "your welper". */}
+                {isCustomer && booking.status === "pending" && (
+                  <Text size="1" color="gray">
+                    {welperLabels.pendingWaitCustomer}
+                  </Text>
+                )}
 
                 {booking.notes?.trim() && (
                   <Text

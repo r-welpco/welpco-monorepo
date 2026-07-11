@@ -7,6 +7,12 @@ import { ArrowDown } from "../shared/arrow-down";
  * CommunitySpotlight — featured Welpers grid.
  *
  * Faithful port of `.design-reference/project/components/sections.jsx` `CommunitySpotlight`.
+ *
+ * ⚠️ PLACEHOLDER CONTENT — DO NOT RENDER.
+ * The WELPERS below are fabricated design-bundle profiles with US locations
+ * (Brooklyn, Queens, Long Island City) — Welpco is Canada-only. This section
+ * is intentionally not mounted anywhere. It MUST NOT be added to any page
+ * until it's fed by real Welper profiles.
  */
 
 const WELPERS = [

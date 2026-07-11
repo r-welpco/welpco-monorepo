@@ -24,7 +24,6 @@ import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import { publicWelperDisplayName } from "@/lib/display-name";
 import { useWelperReviews } from "@/lib/hooks/use-booking-review";
 import { useIsAuthenticated } from "@/stores/authStore";
-import { useBookingReadinessGate } from "@/lib/hooks/use-booking-readiness-gate";
 import type { PublicWelperProfile } from "@/types";
 import { format } from "date-fns";
 
@@ -99,12 +98,22 @@ function ProfileError({ error }: { error: unknown }) {
       <Box mt="3">
         <Flex gap="2" wrap="wrap">
           <Button asChild color={SEMANTIC_COLOR.primary} size="2">
-            <Link href="/dashboard/search">Back to search</Link>
+            <Link href="/search">Back to search</Link>
           </Button>
         </Flex>
       </Box>
     </Callout.Root>
   );
+}
+
+/**
+ * C5 fix — the BFF has always populated `responseTimeMinutes` (null below
+ * 5 accepted bookings in 90 days), but it was never rendered. Hidden when
+ * null — never show a fabricated SLA (bible §22.6).
+ */
+function formatResponseTime(minutes: number): string {
+  if (minutes < 60) return `Responds in ~${minutes} min`;
+  return `Responds in ~${Math.max(1, Math.round(minutes / 60))}h`;
 }
 
 function RatingLine({
@@ -185,9 +194,10 @@ function PublicReviewsSection({ welperId }: { welperId: string }) {
       <ReviewList
         reviews={reviews.map((r) => ({
           // Reviewer identity is intentionally minimal — bible §22.6 + privacy:
-          // we don't expose reviewer profiles publicly, so render a short id-derived
-          // handle. When customer profiles surface a public display name, swap in.
-          reviewerName: `Customer #${r.reviewerId.slice(-6).toUpperCase()}`,
+          // we don't expose reviewer profiles publicly. A plain human label beats
+          // an id-derived hex handle, which reads as fabricated (adoption report
+          // C2). When customer profiles surface a public display name, swap in.
+          reviewerName: "Welpco customer",
           rating: r.rating,
           comment: r.comment ?? undefined,
           date: (() => {
@@ -214,6 +224,85 @@ function PublicReviewsSection({ welperId }: { welperId: string }) {
   );
 }
 
+/**
+ * Signed-out conversion strip — a quiet, honest explanation of the booking
+ * flow, shown between the hero and the services list. Every claim (the
+ * one-hour hold, charge-after-completion, 24h free cancellation) is verified
+ * policy — bible §22.6: never promise what the product doesn't do. The
+ * grass-2 tint matches the /search hero band treatment so the public funnel
+ * reads as one surface. Signed-in users already know the flow — hidden.
+ */
+const BOOKING_STEPS = [
+  {
+    title: "Request a time",
+    detail: "Pick a service and time that works.",
+  },
+  {
+    title: "Welper accepts",
+    detail: "A one-hour hold goes on your card — not a charge.",
+  },
+  {
+    title: "Pay when done",
+    detail: "You're only charged after the job is complete.",
+  },
+] as const;
+
+function HowBookingWorksStrip() {
+  return (
+    <Box
+      p={{ initial: "4", sm: "5" }}
+      style={{
+        backgroundColor: "var(--grass-2)",
+        borderRadius: "var(--radius-4)",
+      }}
+      role="note"
+      aria-label="How booking works"
+    >
+      <Heading as="h2" size="3" mb="3" trim="start">
+        How booking works
+      </Heading>
+      <Flex gap={{ initial: "3", sm: "5" }} wrap="wrap">
+        {BOOKING_STEPS.map((step, index) => (
+          <Flex
+            key={step.title}
+            gap="2"
+            align="start"
+            style={{ flex: "1 1 200px", minWidth: 0 }}
+          >
+            <Flex
+              align="center"
+              justify="center"
+              flexShrink="0"
+              style={{
+                width: "22px",
+                height: "22px",
+                borderRadius: "9999px",
+                backgroundColor: "var(--grass-4)",
+                color: "var(--grass-11)",
+              }}
+            >
+              <Text size="1" weight="bold">
+                {index + 1}
+              </Text>
+            </Flex>
+            <Box style={{ minWidth: 0 }}>
+              <Text as="p" size="2" weight="medium">
+                {step.title}
+              </Text>
+              <Text as="p" size="2" color="gray" highContrast>
+                {step.detail}
+              </Text>
+            </Box>
+          </Flex>
+        ))}
+      </Flex>
+      <Text as="p" size="2" color="gray" highContrast mt="3">
+        Free cancellation up to 24 hours before the start.
+      </Text>
+    </Box>
+  );
+}
+
 function ServicesEmptyState({ welperName }: { welperName: string }) {
   return (
     <Card size="3" variant="surface">
@@ -226,7 +315,7 @@ function ServicesEmptyState({ welperName }: { welperName: string }) {
           Check back soon, or browse other Welpers nearby.
         </Text>
         <Button asChild variant="soft" color="gray" size="2">
-          <Link href="/dashboard/search">Browse Welpers</Link>
+          <Link href="/search">Browse Welpers</Link>
         </Button>
       </Flex>
     </Card>
@@ -236,7 +325,6 @@ function ServicesEmptyState({ welperName }: { welperName: string }) {
 function PublicWelperProfileContent({ welperId }: { welperId: string }) {
   const router = useRouter();
   const isAuthenticated = useIsAuthenticated();
-  const bookingGate = useBookingReadinessGate({ enabled: isAuthenticated });
   const { data, isLoading, isError, error } = usePublicWelperProfile(welperId);
   const profile = data as PublicWelperProfileWithTrust | undefined;
 
@@ -277,22 +365,25 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
         `/dashboard/messages?welperId=${profile.welperId}`
       )}`;
 
+  /**
+   * This page sits OUTSIDE the i18n provider, so it must not run
+   * `useBookingReadinessGate` (its dialog labels use next-intl and crash the
+   * whole page). Navigate straight to the booking flow instead — that page
+   * lives in the dashboard shell and runs the readiness gate itself.
+   */
   const handleBookOffering = (offeringId: string) => {
+    const next = `/dashboard/booking/new?welperId=${encodeURIComponent(
+      profile.welperId,
+    )}&offeringId=${encodeURIComponent(offeringId)}`;
     if (isAuthenticated) {
-      bookingGate.requestBookingNavigation(
-        `/dashboard/booking/new?welperId=${encodeURIComponent(
-          profile.welperId,
-        )}&offeringId=${encodeURIComponent(offeringId)}`,
-      );
+      router.push(next);
     } else {
-      const next = `/dashboard/booking/new?welperId=${profile.welperId}&offeringId=${offeringId}`;
       router.push(`/login?next=${encodeURIComponent(next)}`);
     }
   };
 
   return (
     <Flex direction="column" gap="6">
-      {bookingGate.dialogs}
       {/* Hero — trust-critical above-the-fold block. Bible §20.1–20.3:
           identity → rating → verified → CTAs. */}
       <Card size="4" variant="surface">
@@ -324,6 +415,11 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
                 averageRating={profile.averageRating}
                 reviewCount={profile.reviewCount}
               />
+              {typeof profile.responseTimeMinutes === "number" && (
+                <Text as="p" size="2" color="gray" highContrast mt="1">
+                  {formatResponseTime(profile.responseTimeMinutes)}
+                </Text>
+              )}
             </Box>
 
             {profile.bio && (
@@ -345,6 +441,8 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
           </Box>
         </Flex>
       </Card>
+
+      {!isAuthenticated && <HowBookingWorksStrip />}
 
       {/* Services — bible §25.6 nested cards under a sub-heading. */}
       <Box id="services">
@@ -408,7 +506,7 @@ export default function WelperProfilePage({
           <Container size="3" px={{ initial: "4", sm: "6" }}>
             <Box mb="4">
               <Button asChild variant="ghost" color="gray" size="2">
-                <Link href="/dashboard/search">
+                <Link href="/search">
                   <ArrowLeft size={16} aria-hidden="true" />
                   Back to search
                 </Link>

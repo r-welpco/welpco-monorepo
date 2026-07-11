@@ -6,7 +6,6 @@ import {
   NotFoundException,
   Logger,
 } from '@nestjs/common';
-import { platformAccessEnabledForClients } from '../../../common/platform-access';
 import {
   resolvePreferredLocale,
   type UserPreferredLocale,
@@ -273,7 +272,6 @@ export class AuthService {
         status: user.status,
         emailVerified: user.emailVerified,
         signupCompleted: user.signupCompleted,
-        platformAccessEnabled: platformAccessEnabledForClients(),
         onboardingCompleted,
         profileCompletionStatus,
       },

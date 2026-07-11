@@ -5,6 +5,14 @@ import { SectionHeader } from "./section-header";
  * Testimonials — three-up reviews card grid.
  *
  * Faithful port of `.design-reference/project/components/sections.jsx` `Testimonials`.
+ *
+ * ⚠️ PLACEHOLDER CONTENT — DO NOT RENDER.
+ * Every quote below is fabricated design-bundle filler and contradicts the
+ * live product: "Eli, 16" is a minor (sign-up hard-rejects under-18 welpers),
+ * and Brooklyn / Queens / Long Island are US locations (Welpco is
+ * Canada-only). This component is intentionally not mounted anywhere.
+ * It MUST NOT be added to any page until these ITEMS are replaced with
+ * real, consented quotes from actual Canadian users.
  */
 
 const ITEMS = [

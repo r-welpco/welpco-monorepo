@@ -19,7 +19,6 @@ export async function completeSignupAndRedirect(options: {
   updateSession: (data: {
     user?: {
       signupCompleted: boolean;
-      platformAccessEnabled?: boolean;
     };
   }) => Promise<Session | null>;
   router: SignupRedirectRouter;
@@ -29,7 +28,6 @@ export async function completeSignupAndRedirect(options: {
   await options.updateSession({
     user: {
       signupCompleted: true,
-      platformAccessEnabled: finalState.platformAccessEnabled,
     },
   });
 

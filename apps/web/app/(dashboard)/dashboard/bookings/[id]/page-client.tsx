@@ -64,7 +64,7 @@ import { publicWelperDisplayName } from "@/lib/display-name";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
 import { CustomerPreviewDialog } from "@/components/features/dashboard/customer-preview-dialog";
-import { EmailVerificationRequiredError } from "@/lib/api/client";
+import { ApiClientError, EmailVerificationRequiredError } from "@/lib/api/client";
 import {
   ArrowLeft,
   Calendar,
@@ -323,6 +323,11 @@ export default function BookingDetailClient({
   );
 
   const [mutationError, setMutationError] = useState<string | null>(null);
+  // Adoption report item 13 / risk D3 — accepting requires a completed Stripe
+  // Connect payout account. Set when the accept mutation fails with the BFF's
+  // stable `PAYOUT_ACCOUNT_REQUIRED` code; renders a warning callout with a
+  // link to the payout setup surface instead of the generic error text.
+  const [payoutRequired, setPayoutRequired] = useState(false);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [reviewTarget, setReviewTarget] = useState<"customer" | "welper" | null>(null);
   const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
@@ -830,12 +835,20 @@ export default function BookingDetailClient({
       pending: acceptMutation.isPending,
       onConfirm: () => {
         setMutationError(null);
+        setPayoutRequired(false);
         acceptMutation.mutate(bookingId, {
           onSuccess: () => setConfirmKind(null),
           onError: (err) => {
-            setMutationError(
-              handleBookableError(err, welperBookings.acceptFailed),
-            );
+            if (
+              err instanceof ApiClientError &&
+              err.code === "PAYOUT_ACCOUNT_REQUIRED"
+            ) {
+              setPayoutRequired(true);
+            } else {
+              setMutationError(
+                handleBookableError(err, welperBookings.acceptFailed),
+              );
+            }
             setConfirmKind(null);
           },
         });
@@ -972,6 +985,16 @@ export default function BookingDetailClient({
               </Text>
             </Badge>
           </Box>
+          {/* B3 fix — "what happens next" for the customer's pending booking.
+              Honest and specific (bible §22.2/§22.6): who we're waiting on,
+              how they'll hear back, and that no hold exists yet. */}
+          {isCustomer && booking.status === "pending" && (
+            <Text as="p" size="2" color="gray">
+              {customerDetail.pendingWhatNext(
+                welperProfile?.firstName?.trim() || customerDetail.yourWelper,
+              )}
+            </Text>
+          )}
         </Flex>
 
         {isWelper && booking.status === "payment_released" && (
@@ -1740,6 +1763,20 @@ export default function BookingDetailClient({
               </Text>{" "}
               {booking.declineReason}
             </Callout.Text>
+          </Callout.Root>
+        )}
+
+        {/* Payout account required to accept (adoption report item 13 / risk D3) */}
+        {payoutRequired && (
+          <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface" role="alert">
+            <Flex direction="column" gap="2" align="start">
+              <Callout.Text>{welperBookings.payoutRequired}</Callout.Text>
+              <Button asChild size="2" color={SEMANTIC_COLOR.warning} variant="soft">
+                <Link href="/dashboard/profile?tab=payout">
+                  {welperBookings.payoutRequiredCta}
+                </Link>
+              </Button>
+            </Flex>
           </Callout.Root>
         )}
 

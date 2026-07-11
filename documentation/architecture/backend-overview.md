@@ -59,7 +59,7 @@ Per-domain docs: [domains/README.md](domains/README.md).
   - `decorators/` — `@CurrentUser()` (request user → `CurrentUserData`), `@Public()`, `@Roles()`.
 - **`guards/email-verified.guard.ts`** — gates "bookable actions" (booking creation, payment ops) on the user having verified their email; 403 with a structured body.
 - **`base-entity.ts`** — re-exports `BaseEntity` from `@welpco/database` (`packages/database/src/base-entity.ts`): UUID primary key + `created_at` / `updated_at` timestamp columns. Every domain entity extends it.
-- Also: `filters/` (HTTP exception filter), `interceptors/` (logging), `dto/`, `http/`, `human-verification/`, `discovery-categories-cache/`, `constants/`, `types/`, `platform-access.ts`, `preferred-locale.ts`, `signup-e2e-bypass.ts` (E2E Stripe bypass prefix), `display-name.util.ts`.
+- Also: `filters/` (HTTP exception filter), `interceptors/` (logging), `dto/`, `http/`, `human-verification/`, `discovery-categories-cache/`, `constants/`, `types/`, `preferred-locale.ts`, `signup-e2e-bypass.ts` (E2E Stripe bypass prefix), `display-name.util.ts`.
 
 ## Database
 

@@ -1,7 +1,10 @@
 import { HeroImmersive } from "@/components/features/marketing/hero/hero-immersive";
 import { CategoriesGrid } from "@/components/features/marketing/sections/categories-grid";
 import { HowItWorks } from "@/components/features/marketing/sections/how-it-works";
-import { MinorsBanner } from "@/components/features/marketing/sections/minors-banner";
+// MinorsBanner intentionally not rendered: signup currently hard-rejects
+// under-18 welpers (MINOR_SIGNUP_UNAVAILABLE) — re-add when the guardian
+// flow opens (adoption report C4).
+import { WelpersNearYou } from "@/components/features/marketing/sections/welpers-near-you";
 import { TrustSafety } from "@/components/features/marketing/sections/trust-safety";
 import { BecomeWelperCTA } from "@/components/features/marketing/sections/become-welper-cta";
 import { FAQTeaser } from "@/components/features/marketing/sections/faq-teaser";
@@ -17,7 +20,9 @@ export default function MarketingNewHomePage() {
       <HeroImmersive />
       <CategoriesGrid />
       <HowItWorks />
-      <MinorsBanner />
+      {/* Real social proof: live profiles from public search; renders nothing
+          below its honesty threshold (see welpers-near-you.tsx). */}
+      <WelpersNearYou />
       <TrustSafety />
       <BecomeWelperCTA />
       <FAQTeaser />

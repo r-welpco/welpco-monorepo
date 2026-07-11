@@ -3,9 +3,11 @@ import type { MetadataRoute } from "next";
 /**
  * `robots.txt` for the public site.
  *
- * Allows crawlers to index the marketing surface and the public blog/legal
- * pages. Disallows the dashboard, auth, welper onboarding, search, and API
- * — those are user-state surfaces that should never appear in search.
+ * Allows crawlers to index the marketing surface, the public blog/legal
+ * pages, and the public welper search (`/search`, adoption report item 10 —
+ * a privacy-safe, unauthenticated surface). Disallows the dashboard, auth,
+ * welper onboarding, and API — user-state surfaces that should never appear
+ * in search engines.
  *
  * Override the host via `NEXT_PUBLIC_SITE_URL` in production.
  */
@@ -17,8 +19,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/about", "/how-it-works", "/faq", "/contact", "/blog", "/legal"],
-        disallow: ["/dashboard", "/auth", "/welper", "/search", "/api"],
+        allow: ["/", "/about", "/how-it-works", "/faq", "/contact", "/blog", "/legal", "/search"],
+        disallow: ["/dashboard", "/auth", "/welper", "/api"],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

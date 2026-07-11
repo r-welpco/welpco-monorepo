@@ -27,6 +27,7 @@ import {
   computeWelperStatsFromBookings,
   countUpcomingBookings,
   countPendingForWelper,
+  type DashboardStatItem,
 } from "@/lib/dashboard/booking-dashboard";
 import {
   useCustomerHomeLabels,
@@ -168,6 +169,42 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
     }
     return null;
   }, [userRole, bookings, favoriteWelpersList?.total, welperHome.stats, customerHome.stats]);
+
+  // DASHBOARD-003 — trust stats the welper already earns but never saw.
+  // GET /api/profiles/me hydrates averageRating / reviewCount /
+  // responseTimeMinutes; render them as extra stat tiles. Rating shows only
+  // with ≥ 1 review; `undefined` (older cached payload) shows nothing —
+  // unknown ≠ zero (bible §22.6).
+  const welperTrustStats = useMemo<DashboardStatItem[]>(() => {
+    if (userRole !== "welper" || !welperProfile) return [];
+    const items: DashboardStatItem[] = [];
+    const reviewCount = welperProfile.reviewCount;
+    if (
+      typeof welperProfile.averageRating === "number" &&
+      typeof reviewCount === "number" &&
+      reviewCount >= 1
+    ) {
+      items.push({
+        title: welperHome.stats.rating,
+        value: `${welperProfile.averageRating.toFixed(1)} / 5`,
+      });
+      items.push({ title: welperHome.stats.reviews, value: reviewCount });
+    }
+    if (typeof welperProfile.responseTimeMinutes === "number") {
+      const minutes = welperProfile.responseTimeMinutes;
+      items.push({
+        title: welperHome.stats.responseTime,
+        value:
+          minutes < 60
+            ? welperHome.statsResponseMinutes(minutes)
+            : welperHome.statsResponseHours(Math.max(1, Math.round(minutes / 60))),
+      });
+    }
+    return items;
+  }, [userRole, welperProfile, welperHome]);
+
+  const showReviewsEmptyHint =
+    userRole === "welper" && welperProfile?.reviewCount === 0;
 
   const upcomingCount = useMemo(() => countUpcomingBookings(bookings), [bookings]);
   const pendingForWelper = useMemo(
@@ -320,15 +357,26 @@ export default function DashboardPageClient({ user: serverUser }: DashboardPageC
               customerLabels={userRole === "customer" ? customerHome.quickActions : undefined}
             />
 
-            <DashboardStats
-              role={userRole === "welper" ? "welper" : "customer"}
-              stats={dashboardStats ?? undefined}
-              loading={statsLoading}
-              footnote={statsFootnote}
-              welperSectionTitle={
-                userRole === "welper" ? welperHome.statsSectionTitle : customerHome.statsSectionTitle
-              }
-            />
+            <Box>
+              <DashboardStats
+                role={userRole === "welper" ? "welper" : "customer"}
+                stats={
+                  dashboardStats
+                    ? [...dashboardStats, ...welperTrustStats]
+                    : undefined
+                }
+                loading={statsLoading}
+                footnote={statsFootnote}
+                welperSectionTitle={
+                  userRole === "welper" ? welperHome.statsSectionTitle : customerHome.statsSectionTitle
+                }
+              />
+              {showReviewsEmptyHint && (
+                <Text as="p" size="1" color="gray" mt="2">
+                  {welperHome.statsReviewsEmptyHint}
+                </Text>
+              )}
+            </Box>
 
             <RecentNotifications />
           </>

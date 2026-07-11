@@ -29,6 +29,7 @@ import {
   RecurringPattern,
 } from '../../profile-management/entities';
 import { NotificationPreference } from '../../notification/entities/notification-preference.entity';
+import { EmailNotificationService } from '../../notification/email-notification.service';
 import { ProfileCreationService } from '../../profile-management/profile-creation/profile-creation.service';
 import { EmailVerificationService } from './email-verification.service';
 import { VerificationStatus } from '../entities/verification-status.entity';
@@ -46,7 +47,6 @@ import { OptionalProfileStepDto } from '../../../modules/auth/dto/optional-profi
 import { BackgroundCheckService } from '../../safety-verification/background-check.service';
 import { GuardianConsentService } from '../../safety-verification/guardian-consent.service';
 import { StripeConnectService } from '../../payment/stripe-connect.service';
-import { platformAccessEnabledForClients } from '../../../common/platform-access';
 import { resolvePreferredLocale } from '../../../common/preferred-locale';
 import { applyPreferredLocaleIfProvided } from './user-locale.helper';
 import { calculateAgeUtc, isAdultWelper } from '../../safety-verification/background-check-age.util';
@@ -225,7 +225,6 @@ export interface SignupState {
   userId: string;
   email: string;
   signupCompleted: boolean;
-  platformAccessEnabled: boolean;
   emailVerified: boolean;
   selectedRole: SelectedRole | null;
   completedSteps: SignupStepName[];
@@ -357,6 +356,7 @@ export class SignupOrchestratorService {
     private readonly backgroundCheckService: BackgroundCheckService,
     private readonly guardianConsentService: GuardianConsentService,
     private readonly stripeConnectService: StripeConnectService,
+    private readonly emailNotificationService: EmailNotificationService,
     @Inject(GEOCODE_SERVICE)
     private readonly geocodeService: IGeocodeService,
   ) {}
@@ -812,7 +812,6 @@ export class SignupOrchestratorService {
       userId: user.id,
       email: user.email,
       signupCompleted: user.signupCompleted,
-      platformAccessEnabled: platformAccessEnabledForClients(),
       emailVerified: user.emailVerified,
       selectedRole: user.selectedRole,
       completedSteps,
@@ -1303,6 +1302,19 @@ export class SignupOrchestratorService {
     });
 
     const finalState = await this.getState(userId);
+
+    // Fire-and-forget welcome email — sent once, after the completing
+    // transaction commits (the early-return above covers repeat calls).
+    // Mirrors the verification-email pattern: signup never blocks on email.
+    const firstName = finalState.filledData.identity?.firstName;
+    this.emailNotificationService
+      .sendWelcomeEmail(savedUser.email, firstName, savedUser.preferredLocale)
+      .catch((err: Error) => {
+        this.logger.warn(
+          `Welcome email dispatch failed for ${savedUser.id}: ${err.message}`,
+        );
+      });
+
     return { user: savedUser, signupState: finalState };
   }
 

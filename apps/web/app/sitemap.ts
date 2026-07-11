@@ -24,6 +24,8 @@ const CORE_MARKETING_ROUTES: RouteEntry[] = [
 ];
 
 const OTHER_ROUTES: RouteEntry[] = [
+  // Public welper search — top-of-funnel entry (English-only, like /welper/[id]).
+  { path: "/search", changeFrequency: "daily", priority: 0.9 },
   { path: "/blog", changeFrequency: "weekly", priority: 0.5 },
   { path: "/legal/terms", changeFrequency: "yearly", priority: 0.3 },
 ];

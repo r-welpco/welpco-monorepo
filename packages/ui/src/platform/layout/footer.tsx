@@ -3,7 +3,7 @@
 import { Flex, Box, Text, Separator, Container, Heading } from "@radix-ui/themes";
 import { Link } from "@welpco/ui/link";
 import { IconButton } from "@welpco/ui/icon-button";
-import { HandHeart, Facebook, Twitter, Instagram, Mail, Phone } from "lucide-react";
+import { HandHeart, Facebook, Linkedin, Instagram, Mail } from "lucide-react";
 
 export interface FooterProps {
   variant?: "default" | "minimal";
@@ -88,10 +88,10 @@ export function Footer({ variant = "default" }: FooterProps) {
                       Legal
                     </Heading>
                     <Flex direction="column" gap="2">
-                      <Link href="/terms" size="2" color="gray" underline="hover">
+                      <Link href="/legal/terms" size="2" color="gray" underline="hover">
                         Terms of service
                       </Link>
-                      <Link href="/privacy" size="2" color="gray" underline="hover">
+                      <Link href="/legal/privacy" size="2" color="gray" underline="hover">
                         Privacy policy
                       </Link>
                     </Flex>
@@ -110,15 +110,6 @@ export function Footer({ variant = "default" }: FooterProps) {
                       />
                       <Text size="2" color="gray">
                         support@welpco.com
-                      </Text>
-                    </Flex>
-                    <Flex align="center" gap="2">
-                      <Phone
-                        aria-hidden="true"
-                        style={{ width: "16px", height: "16px", color: "var(--gray-9)" }}
-                      />
-                      <Text size="2" color="gray">
-                        1-800-WELPCO
                       </Text>
                     </Flex>
                   </Flex>
@@ -140,23 +131,23 @@ export function Footer({ variant = "default" }: FooterProps) {
               </Text>
               <Flex gap="2" align="center">
                 <IconButton asChild variant="ghost" color="gray" aria-label="Facebook">
-                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
+                  <a href="https://www.facebook.com/profile.php?id=61558274900948" target="_blank" rel="noopener noreferrer">
                     <Facebook
                       aria-hidden="true"
                       style={{ width: "20px", height: "20px" }}
                     />
                   </a>
                 </IconButton>
-                <IconButton asChild variant="ghost" color="gray" aria-label="Twitter">
-                  <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
-                    <Twitter
+                <IconButton asChild variant="ghost" color="gray" aria-label="LinkedIn">
+                  <a href="https://www.linkedin.com/company/societewelpco/" target="_blank" rel="noopener noreferrer">
+                    <Linkedin
                       aria-hidden="true"
                       style={{ width: "20px", height: "20px" }}
                     />
                   </a>
                 </IconButton>
                 <IconButton asChild variant="ghost" color="gray" aria-label="Instagram">
-                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+                  <a href="https://www.instagram.com/welpco_/" target="_blank" rel="noopener noreferrer">
                     <Instagram
                       aria-hidden="true"
                       style={{ width: "20px", height: "20px" }}

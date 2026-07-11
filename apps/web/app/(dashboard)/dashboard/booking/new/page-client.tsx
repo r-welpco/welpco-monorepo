@@ -37,7 +37,9 @@ import {
 import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import { formatOfferingCategoryLabel } from "@/lib/utils/category-utils";
 import { useBookingHandoff } from "@/lib/hooks/use-job-posting";
+import { usePaymentMethods } from "@/lib/hooks/use-payments";
 import { useAuthStore } from "@/stores/authStore";
+import Link from "next/link";
 import { ApiClientError } from "@/lib/api/client";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
@@ -133,6 +135,17 @@ export default function NewBookingPageClient({
   const createBooking = useCreateBooking();
   const bookable = useBookableAction();
   const bookingGate = useBookingReadinessGate({ enabled: user?.role === "customer" });
+
+  // B1 fix — surface the payment-method requirement at the top of the wizard
+  // instead of only at submit. Same query key as the readiness gate /
+  // payment settings, so react-query dedupes the fetch. `undefined` means
+  // "still checking" (unknown ≠ missing — bible §17.4): no warning, no
+  // disabled submit until we actually know there is no card.
+  const isCustomer = user?.role === "customer";
+  const { data: paymentMethods } = usePaymentMethods(isCustomer);
+  const paymentMethodsKnown = paymentMethods !== undefined;
+  const missingPaymentMethod =
+    isCustomer && paymentMethodsKnown && paymentMethods.length === 0;
 
   // ── Derived values ───────────────────────────────────────────────────
   const displayName = useMemo(
@@ -602,6 +615,27 @@ export default function NewBookingPageClient({
           </Callout.Root>
         )}
 
+        {/* B1 fix — tell the customer about the payment-method requirement
+            up front, not at submit. Informs without blocking form filling;
+            the submit buttons below are what get disabled. */}
+        {missingPaymentMethod && (
+          <Callout.Root
+            id="booking-payment-hint"
+            color={SEMANTIC_COLOR.warning}
+            variant="surface"
+            role="status"
+          >
+            <Callout.Text>{bookingLabels.noPaymentMethodCallout}</Callout.Text>
+            <Box mt="2">
+              <Button asChild size="2" variant="soft" color={SEMANTIC_COLOR.warning}>
+                <Link href="/dashboard/settings?tab=payment">
+                  {bookingLabels.paymentSettings}
+                </Link>
+              </Button>
+            </Box>
+          </Callout.Root>
+        )}
+
         {/* Welper info card */}
         <Card size="3" variant="surface">
           <Flex direction="column" gap="3">
@@ -1002,7 +1036,9 @@ export default function NewBookingPageClient({
                   size="3"
                   color={SEMANTIC_COLOR.primary}
                   loading={createBooking.isPending}
-                  disabled={!canSubmit || createBooking.isPending}
+                  disabled={!canSubmit || createBooking.isPending || missingPaymentMethod}
+                  title={missingPaymentMethod ? bookingLabels.paymentRequired : undefined}
+                  aria-describedby={missingPaymentMethod ? "booking-payment-hint" : undefined}
                   onClick={handleSubmit}
                   style={{ width: "100%" }}
                 >
@@ -1059,7 +1095,9 @@ export default function NewBookingPageClient({
             size="3"
             color={SEMANTIC_COLOR.primary}
             loading={createBooking.isPending}
-            disabled={!canSubmit || createBooking.isPending}
+            disabled={!canSubmit || createBooking.isPending || missingPaymentMethod}
+            title={missingPaymentMethod ? bookingLabels.paymentRequired : undefined}
+            aria-describedby={missingPaymentMethod ? "booking-payment-hint" : undefined}
             onClick={handleSubmit}
             style={{ width: "100%" }}
           >
