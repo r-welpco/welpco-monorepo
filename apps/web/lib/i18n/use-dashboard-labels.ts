@@ -278,6 +278,9 @@ export type WelperHomeLabels = {
     setAvailabilityDescription: string;
     openMessages: string;
     openMessagesDescription: string;
+    /** SHARE-004 — share-hub tile (keys live under `dashboard.share.quickAction`). */
+    shareProfile: string;
+    shareProfileDescription: string;
   };
   recentActivity: {
     title: string;
@@ -356,6 +359,7 @@ export function useCustomerHomeLabels(): CustomerHomeLabels {
 
 export function useWelperHomeLabels(): WelperHomeLabels {
   const t = useTranslations("dashboard.home");
+  const tShare = useTranslations("dashboard.share");
   return {
     greeting: (name) => t("greeting", { name }),
     loading: t("loading"),
@@ -387,6 +391,8 @@ export function useWelperHomeLabels(): WelperHomeLabels {
       setAvailabilityDescription: t("quickActions.setAvailabilityDescription"),
       openMessages: t("quickActions.openMessages"),
       openMessagesDescription: t("quickActions.openMessagesDescription"),
+      shareProfile: tShare("quickAction.label"),
+      shareProfileDescription: tShare("quickAction.description"),
     },
     recentActivity: {
       title: t("recentActivity.title"),
@@ -805,6 +811,7 @@ export function useWelperProfileLabels() {
       overview: t("tabs.overview"),
       profile: t("tabs.profile"),
       offerings: t("tabs.offerings"),
+      portfolio: t("tabs.portfolio"),
       availability: t("tabs.availability"),
       serviceArea: t("tabs.serviceArea"),
       backgroundCheck: t("tabs.backgroundCheck"),

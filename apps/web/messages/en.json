@@ -1284,6 +1284,85 @@
     }
   },
   "dashboard": {
+    "share": {
+      "title": "Share your profile",
+      "subtitle": "Your link, QR code, and downloadable cards — everything you need to bring customers to your profile.",
+      "link": {
+        "title": "Your link",
+        "subtitle": "Send it anywhere — pasted links unfurl into a branded profile card.",
+        "copy": "Copy link",
+        "copied": "Copied",
+        "srcNote": "Copied links include a ?src=link tag so your view counts show where visits came from.",
+        "loadError": "We couldn't load your share info. Refresh the page to try again."
+      },
+      "handle": {
+        "intro": "Claim a short link. Choose carefully — your handle is set once and can't be changed.",
+        "label": "Your handle",
+        "placeholder": "your-name",
+        "helper": "3–30 characters: lowercase letters, numbers, and hyphens, starting with a letter or number. This can't be changed later.",
+        "submit": "Claim handle",
+        "claimedNote": "Your original link with the long ID keeps working too.",
+        "errors": {
+          "required": "Enter a handle to claim.",
+          "length": "Handles are 3 to 30 characters long.",
+          "format": "Use lowercase letters, numbers, and hyphens only, starting with a letter or number.",
+          "taken": "\"{handle}\" is already claimed. Try another one.",
+          "reserved": "\"{handle}\" is reserved and can't be claimed.",
+          "alreadySet": "Your handle is already set — refresh the page to see it.",
+          "generic": "We couldn't claim that handle right now. Try again in a moment."
+        },
+        "confirm": {
+          "title": "Claim \"{handle}\"?",
+          "description": "Your link becomes {host}/w/{handle}. Handles are set once — this can't be changed or released later.",
+          "cancel": "Cancel",
+          "claim": "Claim handle"
+        }
+      },
+      "qr": {
+        "title": "QR code",
+        "subtitle": "Scanning opens your profile. Print it on cards, posters, or receipts.",
+        "download": "Download PNG",
+        "downloading": "Preparing…",
+        "aria": "QR code linking to your Welpco profile"
+      },
+      "cards": {
+        "title": "Share cards",
+        "subtitle": "Ready-made images of your profile for stories, posts, and link previews — each card includes a scannable QR code that opens your profile.",
+        "formats": {
+          "story": "Story",
+          "square": "Square",
+          "landscape": "Landscape"
+        },
+        "downloadLang": {
+          "en": "English",
+          "fr": "Français",
+          "enAria": "Download the {format} card in English",
+          "frAria": "Download the {format} card in French"
+        }
+      },
+      "views": {
+        "title": "Profile views",
+        "empty": "Share your link to start counting.",
+        "last30Days": "Last 30 days: {count}",
+        "total": "All time: {count}",
+        "src": {
+          "link": "Link",
+          "qr": "QR",
+          "story": "Story",
+          "square": "Square",
+          "og": "Link preview",
+          "qr-story": "Story QR",
+          "qr-square": "Square QR",
+          "qr-landscape": "Landscape QR",
+          "direct": "Direct",
+          "unknown": "Other"
+        }
+      },
+      "quickAction": {
+        "label": "Share profile",
+        "description": "Link, QR code, and cards."
+      }
+    },
     "common": {
       "back": "← Back",
       "cancel": "Cancel",
@@ -1405,6 +1484,8 @@
         "goLive": {
           "title": "Go live — appear in search and receive jobs",
           "complete": "You're live — customers can find you and send job requests. Check the Marketplace tab for new opportunities.",
+          "sharePrompt": "Grab your share card and tell your network.",
+          "shareCta": "Open the Share hub",
           "compactProgress": "Go live — {done} of {total} steps done"
         },
         "payout": {
@@ -1955,11 +2036,55 @@
         "overview": "Overview",
         "profile": "Profile",
         "offerings": "Services",
+        "portfolio": "Portfolio",
         "availability": "Availability",
         "serviceArea": "Area",
         "backgroundCheck": "Background check",
         "guardian": "Guardian",
         "payout": "Payout setup"
+      },
+      "portfolio": {
+        "subtitle": "Add photos of your work to your public profile.",
+        "reviewNote": "Photos are reviewed before they appear on your public profile — usually within 48 hours.",
+        "loadError": "We couldn't load your portfolio. Try again in a moment.",
+        "addPhoto": "Add photo",
+        "photoCount": "{count, plural, one {# photo of {max}} other {# photos of {max}}}",
+        "acceptHint": "JPG, PNG, or WEBP, up to 10 MB. Location data is removed from your photos automatically before upload.",
+        "heicHint": "HEIC photos (iPhone default) can't be read by browsers — export or convert them to JPG first.",
+        "limitReached": "You've reached the {max}-photo limit. Delete a photo to add a new one.",
+        "offeringLabel": "Show under",
+        "offeringAny": "Any service",
+        "shownUnder": "Shown under: {title}",
+        "stageProcessing": "Preparing photo…",
+        "stageUploading": "Uploading…",
+        "stageSaving": "Saving…",
+        "statusPending": "Pending review",
+        "statusLive": "Live",
+        "statusRejected": "Not approved",
+        "rejectedReason": "Not approved: {reason}",
+        "rejectedNoReason": "This photo wasn't approved. Remove it and try a different one.",
+        "photoAlt": "Work photo",
+        "captionLabel": "Caption",
+        "captionPlaceholder": "Describe this job (optional)",
+        "captionSave": "Save",
+        "captionSaving": "Saving…",
+        "moveEarlierAria": "Move photo earlier",
+        "moveLaterAria": "Move photo later",
+        "deleteAria": "Delete photo",
+        "deleteTitle": "Delete this photo?",
+        "deleteDescription": "It will be removed from your portfolio and your public profile. This can't be undone.",
+        "deleteConfirm": "Delete",
+        "deleteCancel": "Cancel",
+        "emptyTitle": "No work photos yet",
+        "emptyDescription": "Photos of real jobs help customers trust your work. Add your first one above.",
+        "updateFailed": "We couldn't save that change. Try again.",
+        "deleteFailed": "We couldn't delete that photo. Try again.",
+        "errors": {
+          "decodeFailed": "We couldn't read that image. Use a JPG, PNG, or WEBP file.",
+          "tooLarge": "That photo is still over 10 MB after processing. Try a smaller image.",
+          "storageUnavailable": "Photo storage isn't available right now. Try again later.",
+          "uploadFailed": "Upload failed. Check your connection and try again."
+        }
       },
       "overview": {
         "quickStats": "Quick stats",

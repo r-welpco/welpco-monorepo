@@ -8,6 +8,7 @@ import { AvailabilityModule } from './availability/availability.module';
 import { FavoriteModule } from './favorite/favorite.module';
 import { EventsModule } from './events/events.module';
 import { ProfileCreationModule } from './profile-creation/profile-creation.module';
+import { SharingModule } from './sharing/sharing.module';
 
 /**
  * Profile management domain module. Does not include DatabaseModule or HealthModule - the BFF provides those at app level.
@@ -23,6 +24,7 @@ import { ProfileCreationModule } from './profile-creation/profile-creation.modul
     ServiceOfferingModule,
     AvailabilityModule,
     FavoriteModule,
+    SharingModule,
   ],
   exports: [
     ProfileCreationModule,
@@ -31,6 +33,7 @@ import { ProfileCreationModule } from './profile-creation/profile-creation.modul
     ServiceOfferingModule,
     AvailabilityModule,
     FavoriteModule,
+    SharingModule,
   ],
 })
 export class ProfileManagementDomainModule {}

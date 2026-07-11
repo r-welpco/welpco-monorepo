@@ -321,6 +321,10 @@
     "./platform/layout/footer": {
       "types": "./dist/platform/layout/footer.d.ts",
       "default": "./dist/platform/layout/footer.js"
+    },
+    "./platform/layout/welpco-logo": {
+      "types": "./dist/platform/layout/welpco-logo.d.ts",
+      "default": "./dist/platform/layout/welpco-logo.js"
     }
   },
   "scripts": {

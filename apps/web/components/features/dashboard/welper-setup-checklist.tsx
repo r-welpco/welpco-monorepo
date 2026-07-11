@@ -144,7 +144,21 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
     if (variant === "compact") return null;
     return (
       <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
-        <Callout.Text>{t("allCompleteDiscoverable")}</Callout.Text>
+        <Flex
+          align={{ initial: "stretch", sm: "center" }}
+          justify="between"
+          gap="4"
+          wrap="wrap"
+          direction={{ initial: "column", sm: "row" }}
+        >
+          <Callout.Text>
+            {t("allCompleteDiscoverable")} {t("welperSections.goLive.sharePrompt")}
+          </Callout.Text>
+          {/* SHARE-006 — the "you're live" moment offers the share hub. */}
+          <Button size="2" color={SEMANTIC_COLOR.success} variant="soft" asChild>
+            <Link href="/dashboard/share">{t("welperSections.goLive.shareCta")}</Link>
+          </Button>
+        </Flex>
       </Callout.Root>
     );
   }
@@ -199,7 +213,14 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
       <WelperSetupSectionCard
         section={grouped.goLive}
         title={t("welperSections.goLive.title")}
-        completeMessage={t("welperSections.goLive.complete")}
+        completeMessage={`${t("welperSections.goLive.complete")} ${t("welperSections.goLive.sharePrompt")}`}
+        completeAction={
+          /* SHARE-006 — go-live share prompt: static CTA in the completed
+             message (same lifetime as the message itself; no new persistence). */
+          <Button size="2" color={SEMANTIC_COLOR.success} variant="soft" asChild>
+            <Link href="/dashboard/share">{t("welperSections.goLive.shareCta")}</Link>
+          </Button>
+        }
         showTasks={!sectionAComplete}
         backgroundCheck={backgroundCheck}
         guardianConsent={guardianConsent}
@@ -255,6 +276,7 @@ function WelperSetupSectionCard({
   title,
   subtitle,
   completeMessage,
+  completeAction,
   showTasks,
   backgroundCheck,
   guardianConsent,
@@ -265,6 +287,8 @@ function WelperSetupSectionCard({
   title: string;
   subtitle?: string;
   completeMessage?: string;
+  /** SHARE-006 — optional CTA rendered inside the completed-state callout. */
+  completeAction?: React.ReactNode;
   showTasks: boolean;
   backgroundCheck: BackgroundCheckStatusResponse | undefined;
   guardianConsent: GuardianConsentStatusResponse | undefined;
@@ -293,7 +317,20 @@ function WelperSetupSectionCard({
 
         {section.complete && completeMessage ? (
           <Callout.Root color={SEMANTIC_COLOR.success} variant="surface" role="status">
-            <Callout.Text>{completeMessage}</Callout.Text>
+            {completeAction ? (
+              <Flex
+                align={{ initial: "stretch", sm: "center" }}
+                justify="between"
+                gap="4"
+                wrap="wrap"
+                direction={{ initial: "column", sm: "row" }}
+              >
+                <Callout.Text>{completeMessage}</Callout.Text>
+                {completeAction}
+              </Flex>
+            ) : (
+              <Callout.Text>{completeMessage}</Callout.Text>
+            )}
           </Callout.Root>
         ) : null}
 

@@ -1283,6 +1283,85 @@
     }
   },
   "dashboard": {
+    "share": {
+      "title": "Partagez votre profil",
+      "subtitle": "Votre lien, votre code QR et des cartes à télécharger — tout ce qu'il faut pour amener des clients vers votre profil.",
+      "link": {
+        "title": "Votre lien",
+        "subtitle": "Envoyez-le où vous voulez — les liens collés s'affichent en carte de profil.",
+        "copy": "Copier le lien",
+        "copied": "Copié",
+        "srcNote": "Les liens copiés incluent un paramètre ?src=link pour que vos compteurs de vues indiquent d'où viennent les visites.",
+        "loadError": "Impossible de charger vos infos de partage. Actualisez la page pour réessayer."
+      },
+      "handle": {
+        "intro": "Réclamez un lien court. Choisissez bien — votre pseudo est défini une seule fois et ne peut pas être modifié.",
+        "label": "Votre pseudo",
+        "placeholder": "votre-nom",
+        "helper": "3 à 30 caractères : lettres minuscules, chiffres et traits d'union, en commençant par une lettre ou un chiffre. Non modifiable ensuite.",
+        "submit": "Réclamer le pseudo",
+        "claimedNote": "Votre lien d'origine avec l'identifiant long fonctionne toujours.",
+        "errors": {
+          "required": "Saisissez un pseudo à réclamer.",
+          "length": "Un pseudo compte de 3 à 30 caractères.",
+          "format": "Utilisez uniquement des lettres minuscules, des chiffres et des traits d'union, en commençant par une lettre ou un chiffre.",
+          "taken": "« {handle} » est déjà pris. Essayez-en un autre.",
+          "reserved": "« {handle} » est réservé et ne peut pas être réclamé.",
+          "alreadySet": "Votre pseudo est déjà défini — actualisez la page pour le voir.",
+          "generic": "Impossible de réclamer ce pseudo pour le moment. Réessayez dans un instant."
+        },
+        "confirm": {
+          "title": "Réclamer « {handle} »?",
+          "description": "Votre lien devient {host}/w/{handle}. Le pseudo est défini une seule fois — impossible de le modifier ou de le libérer ensuite.",
+          "cancel": "Annuler",
+          "claim": "Réclamer le pseudo"
+        }
+      },
+      "qr": {
+        "title": "Code QR",
+        "subtitle": "Un scan ouvre votre profil. Imprimez-le sur vos cartes, affiches ou reçus.",
+        "download": "Télécharger le PNG",
+        "downloading": "Préparation…",
+        "aria": "Code QR menant à votre profil Welpco"
+      },
+      "cards": {
+        "title": "Cartes de partage",
+        "subtitle": "Des images prêtes à publier de votre profil pour les stories, les publications et les aperçus de lien — chaque carte inclut un code QR qui ouvre votre profil.",
+        "formats": {
+          "story": "Story",
+          "square": "Carré",
+          "landscape": "Paysage"
+        },
+        "downloadLang": {
+          "en": "English",
+          "fr": "Français",
+          "enAria": "Télécharger la carte {format} en anglais",
+          "frAria": "Télécharger la carte {format} en français"
+        }
+      },
+      "views": {
+        "title": "Vues du profil",
+        "empty": "Partagez votre lien pour commencer à compter.",
+        "last30Days": "30 derniers jours : {count}",
+        "total": "Depuis le début : {count}",
+        "src": {
+          "link": "Lien",
+          "qr": "QR",
+          "story": "Story",
+          "square": "Carré",
+          "og": "Aperçu de lien",
+          "qr-story": "QR story",
+          "qr-square": "QR carré",
+          "qr-landscape": "QR paysage",
+          "direct": "Direct",
+          "unknown": "Autre"
+        }
+      },
+      "quickAction": {
+        "label": "Partager mon profil",
+        "description": "Lien, code QR et cartes."
+      }
+    },
     "common": {
       "back": "← Retour",
       "cancel": "Annuler",
@@ -1404,6 +1483,8 @@
         "goLive": {
           "title": "Mise en ligne — apparaître dans la recherche et recevoir des mandats",
           "complete": "Vous êtes en ligne — les clients peuvent vous trouver et vous envoyer des demandes. Consultez l'onglet Marketplace pour découvrir de nouvelles opportunités.",
+          "sharePrompt": "Récupérez votre carte de partage et parlez-en autour de vous.",
+          "shareCta": "Ouvrir le hub de partage",
           "compactProgress": "Mise en ligne — {done} sur {total} étapes"
         },
         "payout": {
@@ -1954,11 +2035,55 @@
         "overview": "Aperçu",
         "profile": "Profil",
         "offerings": "Services",
+        "portfolio": "Portfolio",
         "availability": "Disponibilités",
         "serviceArea": "Zone",
         "backgroundCheck": "Vérification des antécédents",
         "guardian": "Tuteur",
         "payout": "Configuration des paiements"
+      },
+      "portfolio": {
+        "subtitle": "Ajoutez des photos de votre travail à votre profil public.",
+        "reviewNote": "Les photos sont vérifiées avant d'apparaître sur votre profil public — généralement sous 48 heures.",
+        "loadError": "Impossible de charger votre portfolio. Réessayez dans un instant.",
+        "addPhoto": "Ajouter une photo",
+        "photoCount": "{count, plural, one {# photo sur {max}} other {# photos sur {max}}}",
+        "acceptHint": "JPG, PNG ou WEBP, jusqu'à 10 Mo. Les données de localisation sont retirées automatiquement de vos photos avant le téléversement.",
+        "heicHint": "Les photos HEIC (format iPhone par défaut) ne sont pas lisibles par les navigateurs — exportez-les ou convertissez-les d'abord en JPG.",
+        "limitReached": "Vous avez atteint la limite de {max} photos. Supprimez une photo pour en ajouter une nouvelle.",
+        "offeringLabel": "Afficher sous",
+        "offeringAny": "Tous les services",
+        "shownUnder": "Affichée sous : {title}",
+        "stageProcessing": "Préparation de la photo…",
+        "stageUploading": "Téléversement…",
+        "stageSaving": "Enregistrement…",
+        "statusPending": "En attente de vérification",
+        "statusLive": "En ligne",
+        "statusRejected": "Non approuvée",
+        "rejectedReason": "Non approuvée : {reason}",
+        "rejectedNoReason": "Cette photo n'a pas été approuvée. Retirez-la et essayez-en une autre.",
+        "photoAlt": "Photo de travail",
+        "captionLabel": "Légende",
+        "captionPlaceholder": "Décrivez ce travail (facultatif)",
+        "captionSave": "Enregistrer",
+        "captionSaving": "Enregistrement…",
+        "moveEarlierAria": "Déplacer la photo plus tôt",
+        "moveLaterAria": "Déplacer la photo plus tard",
+        "deleteAria": "Supprimer la photo",
+        "deleteTitle": "Supprimer cette photo ?",
+        "deleteDescription": "Elle sera retirée de votre portfolio et de votre profil public. Cette action est irréversible.",
+        "deleteConfirm": "Supprimer",
+        "deleteCancel": "Annuler",
+        "emptyTitle": "Aucune photo de travail pour le moment",
+        "emptyDescription": "Les photos de vrais travaux aident les clients à vous faire confiance. Ajoutez la première ci-dessus.",
+        "updateFailed": "Impossible d'enregistrer ce changement. Réessayez.",
+        "deleteFailed": "Impossible de supprimer cette photo. Réessayez.",
+        "errors": {
+          "decodeFailed": "Impossible de lire cette image. Utilisez un fichier JPG, PNG ou WEBP.",
+          "tooLarge": "Cette photo dépasse encore 10 Mo après traitement. Essayez une image plus petite.",
+          "storageUnavailable": "Le stockage de photos est indisponible pour le moment. Réessayez plus tard.",
+          "uploadFailed": "Le téléversement a échoué. Vérifiez votre connexion et réessayez."
+        }
       },
       "overview": {
         "quickStats": "Statistiques rapides",

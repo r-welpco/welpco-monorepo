@@ -6,6 +6,7 @@ export const ADMIN_LAUNCH_NAV = [
   { href: "/bookings", label: "Bookings" },
   { href: "/jobs", label: "Jobs" },
   { href: "/disputes", label: "Disputes" },
+  { href: "/portfolio", label: "Portfolio" },
   { href: "/payouts", label: "Payouts" },
   { href: "/audit-logs", label: "Audit" },
 ] as const;

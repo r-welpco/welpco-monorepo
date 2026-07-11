@@ -20,7 +20,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: ["/", "/about", "/how-it-works", "/faq", "/contact", "/blog", "/legal", "/search"],
-        disallow: ["/dashboard", "/auth", "/welper", "/api"],
+        // `/w` (vanity handle, SHARE-002) mirrors the `/welper` privacy
+        // default — profile indexing stays opt-in until SHARE-012.
+        disallow: ["/dashboard", "/auth", "/welper", "/w", "/api"],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

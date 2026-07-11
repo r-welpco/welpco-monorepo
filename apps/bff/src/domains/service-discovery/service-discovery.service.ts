@@ -21,6 +21,8 @@ import { BackgroundCheckService } from '../safety-verification/background-check.
 import { AvailabilityService } from '../profile-management/availability/availability.service';
 import { emptyWeeklyAvailabilitySummary } from '../profile-management/availability/dto/weekly-availability-summary.dto';
 import type { WeeklyAvailabilitySummaryDto } from '../profile-management/availability/dto/weekly-availability-summary.dto';
+import { PortfolioService } from '../profile-management/sharing/portfolio.service';
+import { HandleService } from '../profile-management/sharing/handle.service';
 import { formatWelperDisplayNameForCustomer } from '../../common/display-name.util';
 import { customerHourlyChargeFromWelperRate } from '../booking/booking-pricing';
 import { isMinorWelper } from '../safety-verification/background-check-age.util';
@@ -68,6 +70,8 @@ export class ServiceDiscoveryService {
     @Inject(GEOCODE_SERVICE) private readonly geocodeService: IGeocodeService,
     private readonly backgroundCheckService: BackgroundCheckService,
     private readonly availabilityService: AvailabilityService,
+    private readonly portfolioService: PortfolioService,
+    private readonly handleService: HandleService,
   ) {}
 
   private async getCachedCategories(): Promise<ServiceCategory[]> {
@@ -423,6 +427,9 @@ export class ServiceDiscoveryService {
     const weeklyAvailability =
       weeklyAvailabilityMap.get(welperId) ?? emptyWeeklyAvailabilitySummary();
 
+    // SHARE-001: approved portfolio photos only (moderation gate).
+    const portfolioPhotos = await this.portfolioService.listApprovedPublic(welperId);
+
     return {
       id: profile.id,
       welperId: profile.welperId,
@@ -440,6 +447,22 @@ export class ServiceDiscoveryService {
       responseTimeMinutes: aggregates.responseTimeMinutes,
       serviceOfferings,
       weeklyAvailability,
+      handle: profile.handle,
+      portfolioPhotos,
     };
+  }
+
+  /**
+   * SHARE-002: resolve `welpco.com/w/{handle}` to the same public profile
+   * payload. 404 for unknown handles AND for known-but-not-visible profiles
+   * (getPublicWelperProfile applies the visibility/eligibility gates), so the
+   * handle namespace leaks nothing about hidden welpers.
+   */
+  async getPublicWelperProfileByHandle(handle: string): Promise<PublicWelperProfileDto> {
+    const welperId = await this.handleService.resolveHandleToWelperId(handle);
+    if (!welperId) {
+      throw new NotFoundException('Welper profile not found');
+    }
+    return this.getPublicWelperProfile(welperId);
   }
 }

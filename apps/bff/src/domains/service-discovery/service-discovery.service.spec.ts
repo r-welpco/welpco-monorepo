@@ -15,6 +15,8 @@ import { ProfileVisibility } from '../profile-management/entities/profile-visibi
 import { DiscoveryCategoriesCacheService } from '../../common/discovery-categories-cache/discovery-categories-cache.service';
 import { BackgroundCheckService } from '../safety-verification/background-check.service';
 import { AvailabilityService } from '../profile-management/availability/availability.service';
+import { PortfolioService } from '../profile-management/sharing/portfolio.service';
+import { HandleService } from '../profile-management/sharing/handle.service';
 import { emptyWeeklyAvailabilitySummary } from '../profile-management/availability/dto/weekly-availability-summary.dto';
 import { UserAccount, AccountType, AccountStatus } from '../user-management/entities/user-account.entity';
 
@@ -99,6 +101,15 @@ describe('ServiceDiscoveryService', () => {
     }),
   };
 
+  // SHARE-001/002: sharing-module collaborators for the public profile payload.
+  const mockPortfolioService = {
+    listApprovedPublic: jest.fn().mockResolvedValue([]),
+  };
+
+  const mockHandleService = {
+    resolveHandleToWelperId: jest.fn().mockResolvedValue(null),
+  };
+
   const mockQueryBuilder = {
     select: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
@@ -165,6 +176,14 @@ describe('ServiceDiscoveryService', () => {
         {
           provide: AvailabilityService,
           useValue: mockAvailabilityService,
+        },
+        {
+          provide: PortfolioService,
+          useValue: mockPortfolioService,
+        },
+        {
+          provide: HandleService,
+          useValue: mockHandleService,
         },
       ],
     }).compile();

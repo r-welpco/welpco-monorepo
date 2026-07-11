@@ -17,7 +17,7 @@ import {
 import { Badge } from "@welpco/ui/badge";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { Flex, Box, Text } from "@welpco/ui";
-import { Logo } from "./logo";
+import { WelpcoLogo } from "./welpco-logo";
 import {
   Bell,
   User,
@@ -84,10 +84,10 @@ function CustomerBrandMark({
   return (
     <Flex align="center" gap="2">
       <Box display={{ initial: "block", md: "none" }}>
-        <Logo type="imagotype" size={32} colorScheme={colorScheme} />
+        <WelpcoLogo height={32} variant={colorScheme === "dark" ? "cream" : "green"} />
       </Box>
       <Box display={{ initial: "none", md: "block" }}>
-        <Logo type="imagotype" size={36} colorScheme={colorScheme} />
+        <WelpcoLogo height={36} variant={colorScheme === "dark" ? "cream" : "green"} />
       </Box>
       <Badge color="blue" variant="soft" size="1" highContrast>
         {roleBadge ?? "Customer"}
@@ -301,17 +301,22 @@ export function CustomerHeader({
             >
               <Flex align="center" gap="2" flexShrink="0">
                 <Box asChild>
-                  <a href="/" aria-label="Welpco home">
-                    <Flex align="center" gap="2">
+                  <a href="/" aria-label="Welpco home" style={{ display: "inline-flex" }}>
+                    <Flex align="center">
                       <Box display={{ initial: "block", md: "none" }}>
-                        <Logo variant="primary" type="isotype" size={28} />
+                        <WelpcoLogo
+                          height={28}
+                          variant={colorScheme === "dark" ? "cream" : "green"}
+                          decorative
+                        />
                       </Box>
                       <Box display={{ initial: "none", md: "block" }}>
-                        <Logo variant="primary" type="isotype" size={32} />
+                        <WelpcoLogo
+                          height={32}
+                          variant={colorScheme === "dark" ? "cream" : "green"}
+                          decorative
+                        />
                       </Box>
-                      <Text size="3" weight="bold">
-                        Welpco
-                      </Text>
                     </Flex>
                   </a>
                 </Box>

@@ -59,6 +59,7 @@ import {
   WelperProfileGuardianPanel,
   WelperProfilePayoutPanel,
 } from "./welper-setup-tab-panels";
+import { WelperProfilePortfolioPanel } from "./welper-portfolio-panel";
 import type {
   CustomerProfileValues,
   WelperProfileValues,
@@ -105,6 +106,7 @@ interface ProfilePageClientProps {
 const WELPER_PROFILE_TABS = new Set([
   "profile",
   "offerings",
+  "portfolio",
   "availability",
   "serviceArea",
   "backgroundCheck",
@@ -705,6 +707,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
           <TabsList>
             <TabsTrigger value="profile">{welperProfileLabels.tabs.profile}</TabsTrigger>
             <TabsTrigger value="offerings">{welperProfileLabels.tabs.offerings}</TabsTrigger>
+            <TabsTrigger value="portfolio">{welperProfileLabels.tabs.portfolio}</TabsTrigger>
             <TabsTrigger value="availability">{welperProfileLabels.tabs.availability}</TabsTrigger>
             <TabsTrigger value="serviceArea">{welperProfileLabels.tabs.serviceArea}</TabsTrigger>
             {isMinorWelper ? (
@@ -807,6 +810,20 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 onEdit={handleEditServiceOffering}
                 onDelete={handleDeleteServiceOffering}
                 onToggleActive={handleToggleServiceOfferingActive}
+              />
+            </Box>
+          </TabsContent>
+
+          <TabsContent value="portfolio">
+            <Box pt="5">
+              {/* SHARE-001: work-photo portfolio manager. Offerings are already
+                  loaded for the Services tab — reuse them for the optional
+                  "Show under" association. */}
+              <WelperProfilePortfolioPanel
+                offerings={serviceOfferings.map((o) => ({
+                  id: o.id,
+                  title: o.title,
+                }))}
               />
             </Box>
           </TabsContent>

@@ -71,6 +71,14 @@ export class WelperProfile extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   bio!: string | null;
 
+  /**
+   * SHARE-002: vanity handle for `welpco.com/w/{handle}`. Lowercase,
+   * `^[a-z0-9][a-z0-9-]{2,29}$`, unique, claimable once (set-once — rename
+   * policy is an open product decision, see the shareable-profile plan §7).
+   */
+  @Column({ type: 'varchar', length: 30, nullable: true, unique: true })
+  handle!: string | null;
+
   @Column({ name: 'profile_photo_url', type: 'varchar', nullable: true })
   profilePhotoUrl!: string | null;
 

@@ -16,6 +16,8 @@
 >
 > **Key corrections found during validation** (details in each file): **NOTIFICATIONS-002** was marked shipped but is 🟡 PARTIAL — the FE notification-preferences UI does not exist (`useNotificationPreferences` has no consumers). **LOGIN-003** is more urgent than labeled — the per-email login rate limit was since removed entirely. **BOOKING-006**'s premise is stale — late-cancellation fees ARE now charged (one-hour-hold capture). Shipped without a ticket update: WELPER-PAYOUTS-001, DISPUTES-003, DASHBOARD-005/007/011, ONBOARDING-011, REVIEWS-006 (mostly). Obsolete (target deleted/unmounted code): ONBOARDING-001/006/007/009/012, DASHBOARD-002, DISPUTES-008, LOGIN-002/006. Tables and counts in the *original text below* predate this validation — trust the per-ticket tags, not the old totals.
 
+> **New feature track (2026-07-10):** [`shareable_profile_features.md`](./shareable_profile_features.md) — SHARE-001…016, the welper shareable-profile program (plan: [../welper-shareable-profile-plan.md](../welper-shareable-profile-plan.md)). MVP in progress.
+
 Tickets-ready record of every functional gap, bug, and improvement surfaced during the Days 9–14 audit sweep. Nine files, **125 tickets**, **0 P0 launch-blockers** (down from 5 — 2 closed by the 2026-05-06 signup-merge, 2 by the 2026-05-06 disputes pass, 1 by the 2026-05-06 notifications pass), **~13 cross-feature P1s**. **The merge-state launch gate is closed.**
 
 ## Recent architectural changes

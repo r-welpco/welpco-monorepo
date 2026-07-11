@@ -13,6 +13,7 @@ import {
   MessageSquare,
   ListChecks,
   CalendarClock,
+  Share2,
   type LucideIcon,
 } from "lucide-react";
 import styles from "./quick-actions.module.css";
@@ -25,6 +26,9 @@ type WelperQuickActionLabels = {
   setAvailabilityDescription: string;
   openMessages: string;
   openMessagesDescription: string;
+  /** SHARE-004 — share hub entry (sourced from `dashboard.share.quickAction`). */
+  shareProfile: string;
+  shareProfileDescription: string;
 };
 
 type CustomerQuickActionLabels = {
@@ -51,15 +55,17 @@ interface ActionTile {
 }
 
 /**
- * Per WEB-APP-PLAN.md Tier 4 + bible §15: top 3 actions only. The avatar menu
+ * Per WEB-APP-PLAN.md Tier 4 + bible §15: top actions only. The avatar menu
  * already canonicalises Profile + Settings; surfacing them again here is noise.
  *
  * Customer top-3: Find a Welper · View bookings · Open messages.
- * Welper top-3:   View jobs · Set availability · Open messages.
+ * Welper top-4:   View jobs · Set availability · Open messages · Share profile
+ * (SHARE-004 — the share hub's only always-visible nav entry, so it earns the
+ * fourth tile rather than a header-tab change).
  *
  * No "primary" colour highlight — the leftmost tile carries primacy by
- * position, which is enough. Equal weight reinforces "these are your three
- * doors", not "here's a CTA + two also-rans".
+ * position, which is enough. Equal weight reinforces "these are your
+ * doors", not "here's a CTA + also-rans".
  */
 export function QuickActions({ role, welperLabels, customerLabels }: QuickActionsProps) {
   const actions: ActionTile[] =
@@ -104,6 +110,12 @@ export function QuickActions({ role, welperLabels, customerLabels }: QuickAction
             description: welperLabels?.openMessagesDescription ?? "Talk to your customers.",
             icon: MessageSquare,
           },
+          {
+            href: "/dashboard/share",
+            label: welperLabels?.shareProfile ?? "Share profile",
+            description: welperLabels?.shareProfileDescription ?? "Link, QR code, and cards.",
+            icon: Share2,
+          },
         ];
 
   const sectionTitle =
@@ -116,7 +128,14 @@ export function QuickActions({ role, welperLabels, customerLabels }: QuickAction
       <Heading as="h2" size="5" mb="3" trim="start">
         {sectionTitle}
       </Heading>
-      <Grid columns={{ initial: "1", sm: "3" }} gap="3">
+      <Grid
+        columns={
+          actions.length === 4
+            ? { initial: "1", sm: "2", md: "4" }
+            : { initial: "1", sm: "3" }
+        }
+        gap="3"
+      >
         {actions.map((action) => {
           const Icon = action.icon;
           return (

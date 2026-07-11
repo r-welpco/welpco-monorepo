@@ -20,6 +20,8 @@ import {
   AvailabilityCalendar,
   AvailabilityException,
   FavoriteWelper,
+  WelperPortfolioPhoto,
+  WelperProfileViewCount,
 } from '../domains/profile-management/entities';
 import { Holiday } from '../domains/content-management/entities';
 import {
@@ -65,6 +67,8 @@ export const allEntities = [
   AvailabilityCalendar,
   AvailabilityException,
   FavoriteWelper,
+  WelperPortfolioPhoto,
+  WelperProfileViewCount,
   Holiday,
   ServiceCategory,
   Question,

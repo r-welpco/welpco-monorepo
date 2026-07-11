@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ServiceAreaInfo } from '../../../common/types';
 import { WeeklyAvailabilitySummaryDto } from '../../profile-management/availability/dto/weekly-availability-summary.dto';
+import { PublicPortfolioPhotoDto } from '../../profile-management/sharing/dto';
 
 export class PublicServiceOfferingDto {
   @ApiProperty()
@@ -113,4 +114,19 @@ export class PublicWelperProfileDto {
 
   @ApiProperty({ type: WeeklyAvailabilitySummaryDto })
   weeklyAvailability!: WeeklyAvailabilitySummaryDto;
+
+  @ApiPropertyOptional({
+    description:
+      'SHARE-002: vanity handle (`welpco.com/w/{handle}`). Null until the welper claims one.',
+    nullable: true,
+    example: 'marie-m',
+  })
+  handle!: string | null;
+
+  @ApiProperty({
+    type: [PublicPortfolioPhotoDto],
+    description:
+      'SHARE-001: approved portfolio photos only, ordered by the welper’s sortOrder, capped at 24. Empty when none are approved yet.',
+  })
+  portfolioPhotos!: PublicPortfolioPhotoDto[];
 }

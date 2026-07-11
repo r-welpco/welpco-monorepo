@@ -360,9 +360,22 @@ export interface PublicServiceAreaInfo {
   postalCodes: string[];
 }
 
+/**
+ * SHARE-001: approved-only public portfolio photo (no moderation fields).
+ * `url` is null when photo storage is unconfigured server-side.
+ */
+export interface PublicPortfolioPhoto {
+  id: string;
+  url: string | null;
+  caption: string | null;
+  offeringId: string | null;
+}
+
 export interface PublicWelperProfile {
   id: string;
   welperId: string;
+  /** SHARE-002 vanity handle (`welpco.com/w/{handle}`); null until claimed. */
+  handle?: string | null;
   /** Privacy-safe name for customer-facing UI (first name + last initial). */
   displayName?: string;
   firstName: string | null;
@@ -387,6 +400,12 @@ export interface PublicWelperProfile {
   responseTimeMinutes: number | null;
   serviceOfferings: PublicServiceOffering[];
   weeklyAvailability: WeeklyAvailabilitySummary;
+  /**
+   * SHARE-001: approved work photos, ordered, capped at 24. Optional so
+   * cached/older payloads still in flight don't break the page — treat
+   * missing as empty.
+   */
+  portfolioPhotos?: PublicPortfolioPhoto[];
 }
 
 export interface SearchServicesParams {
