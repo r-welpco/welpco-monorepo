@@ -51,6 +51,10 @@ export class BookingRequest extends BaseEntity {
   @Column({ name: 'timezone_offset_minutes', type: 'int', nullable: true })
   timezoneOffsetMinutes!: number | null;
 
+  /** IANA timezone for the service location, for example America/Toronto. */
+  @Column({ name: 'timezone_name', type: 'varchar', length: 64, nullable: true })
+  timezoneName!: string | null;
+
   // Pricing
   @Column({ name: 'hourly_rate', type: 'decimal', precision: 10, scale: 2, nullable: true })
   hourlyRate!: number | null;
@@ -74,6 +78,12 @@ export class BookingRequest extends BaseEntity {
 
   @Column({ name: 'cancelled_at', type: 'timestamptz', nullable: true })
   cancelledAt!: Date | null;
+
+  @Column({ name: 'cancellation_source', type: 'varchar', length: 48, nullable: true })
+  cancellationSource!: string | null;
+
+  @Column({ name: 'cancellation_fee_cents', type: 'int', default: 0 })
+  cancellationFeeCents!: number;
 
   // Decline
   @Column({ name: 'decline_reason', type: 'text', nullable: true })
@@ -114,6 +124,12 @@ export class BookingRequest extends BaseEntity {
 
   @Column({ name: 'payment_authorization_deadline_at', type: 'timestamptz', nullable: true })
   paymentAuthorizationDeadlineAt!: Date | null;
+
+  @Column({ name: 'payment_authorization_expires_at', type: 'timestamptz', nullable: true })
+  paymentAuthorizationExpiresAt!: Date | null;
+
+  @Column({ name: 'payment_authorization_risk_code', type: 'varchar', length: 128, nullable: true })
+  paymentAuthorizationRiskCode!: string | null;
 
   @Column({ name: 'payment_authorization_last_attempt_at', type: 'timestamptz', nullable: true })
   paymentAuthorizationLastAttemptAt!: Date | null;

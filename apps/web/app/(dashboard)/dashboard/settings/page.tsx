@@ -30,6 +30,7 @@ import { PasswordChangeForm } from "@welpco/ui/platform/user-management/password
 import { AccountDeletionForm } from "@welpco/ui/platform/user-management/account-deletion-form";
 import { Trash2 } from "lucide-react";
 import { CustomerPaymentSettings } from "@/components/features/payments/customer-payment-settings";
+import { SmsNotificationSettings } from "@/components/features/settings/sms-notification-settings";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
 import { EmailVerificationRequiredError } from "@/lib/api/client";
@@ -47,11 +48,11 @@ const PersonalizationSettings = dynamic(
   { ssr: false }
 );
 
-const ALL_SETTINGS_TABS = ["appearance", "account", "payment"] as const;
+const ALL_SETTINGS_TABS = ["appearance", "account", "payment", "notifications"] as const;
 type SettingsTab = (typeof ALL_SETTINGS_TABS)[number];
 
 function visibleSettingsTabs(isCustomer: boolean): SettingsTab[] {
-  const tabs: SettingsTab[] = ["account", "appearance"];
+  const tabs: SettingsTab[] = ["account", "notifications", "appearance"];
   if (isCustomer) {
     tabs.push("payment");
   }
@@ -228,6 +229,9 @@ function SettingsPageContent() {
         >
           <TabsList>
             <TabsTrigger value="account">{settingsLabels.tabs.account}</TabsTrigger>
+            <TabsTrigger value="notifications">
+              {settingsLabels.tabs.notifications}
+            </TabsTrigger>
             <TabsTrigger value="appearance">{settingsLabels.tabs.appearance}</TabsTrigger>
             {isCustomer ? (
               <TabsTrigger value="payment">{settingsLabels.tabs.payment}</TabsTrigger>
@@ -299,6 +303,12 @@ function SettingsPageContent() {
                   </Flex>
                 </Card>
               </Flex>
+            </Box>
+          </TabsContent>
+
+          <TabsContent value="notifications">
+            <Box pt="5">
+              <SmsNotificationSettings />
             </Box>
           </TabsContent>
 

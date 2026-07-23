@@ -112,6 +112,10 @@ export default function DashboardLayoutClient({
     router.push("/dashboard/settings");
   }, [router]);
 
+  const handleGuidesClick = useCallback(() => {
+    router.push("/dashboard/guides");
+  }, [router]);
+
   const handleLogout = useCallback(async () => {
     await performClientSignOut({ callbackUrl: "/", queryClient });
   }, [queryClient]);
@@ -198,6 +202,7 @@ export default function DashboardLayoutClient({
     onLocaleChange: setLocale,
     onProfileClick: handleProfileClick,
     onSettingsClick: handleSettingsClick,
+    onGuidesClick: handleGuidesClick,
     onLogout: handleLogout,
     bannerSlot: headerBannerSlot,
   };

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../app.module';
 import { StripeOperationsService } from '../domains/payment/stripe-operations.service';
+import { PaymentService } from '../domains/payment/payment.service';
 
 type IdRow = { id: string };
 
@@ -19,6 +20,7 @@ async function main(): Promise<void> {
   try {
     const dataSource = app.get(DataSource);
     const operations = app.get(StripeOperationsService);
+    const payments = app.get(PaymentService);
     const bookingRows = (await dataSource.query(
       `SELECT DISTINCT booking_id AS id
        FROM booking_payments
@@ -35,16 +37,56 @@ async function main(): Promise<void> {
        LIMIT $1`,
       [limit],
     )) as IdRow[];
+    const authorizationRows = (await dataSource.query(
+      `SELECT id
+       FROM booking_requests
+       WHERE status = 'accepted'
+         AND payment_authorization_status IN ('scheduled', 'authorized', 'failed', 'requires_action', 'canceled')
+       ORDER BY scheduled_date, scheduled_start_time
+       LIMIT $1`,
+      [limit],
+    )) as IdRow[];
 
     const summary = {
       mode: apply ? 'apply' : 'dry-run',
       capturedBookings: bookingRows.length,
       transfers: transferRows.length,
+      authorizations: authorizationRows.length,
       reconciledBookings: 0,
       reconciledTransfers: 0,
+      reconciledAuthorizations: 0,
+      scheduledDueChanges: [] as Array<{ bookingId: string; previousDueAt: string | null; revisedDueAt: string | null }>,
+      riskyAuthorizations: [] as Array<{ bookingId: string; expiresAt: string | null; riskCode: string }>,
       tax: null as Awaited<ReturnType<StripeOperationsService['retryPendingTaxTransactions']>> | null,
       exceptions: [] as Array<{ scope: string; id: string; message: string }>,
     };
+
+    for (const row of authorizationRows) {
+      try {
+        const result = await payments.reconcileAuthorizationForRollout(row.id, apply);
+        summary.reconciledAuthorizations += apply ? 1 : 0;
+        if (result.status === 'scheduled' && result.previousDueAt !== result.revisedDueAt) {
+          summary.scheduledDueChanges.push({
+            bookingId: row.id,
+            previousDueAt: result.previousDueAt,
+            revisedDueAt: result.revisedDueAt,
+          });
+        }
+        if (result.riskCode) {
+          summary.riskyAuthorizations.push({
+            bookingId: row.id,
+            expiresAt: result.expiresAt,
+            riskCode: result.riskCode,
+          });
+        }
+      } catch (err) {
+        summary.exceptions.push({
+          scope: 'authorization',
+          id: row.id,
+          message: (err as Error).message,
+        });
+      }
+    }
 
     if (apply) {
       for (const row of bookingRows) {

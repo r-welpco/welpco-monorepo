@@ -16,6 +16,7 @@ import { PayoutMethodChoice } from '../profile-management/entities/payout-method
 import * as payoutEligibility from './payout-eligibility';
 import { buildTransferIdempotencyKey } from './payout-idempotency.util';
 import { StripeOperationsService } from './stripe-operations.service';
+import { NotificationService } from '../notification/notification.service';
 
 describe('PayoutBatchService', () => {
   let service: PayoutBatchService;
@@ -179,6 +180,13 @@ describe('PayoutBatchService', () => {
         { provide: WelperPayoutLedgerService, useValue: mockLedgerService },
         { provide: StripeConnectService, useValue: mockStripeConnect },
         { provide: StripeOperationsService, useValue: mockStripeOperations },
+        {
+          provide: NotificationService,
+          useValue: {
+            resolveLocaleForUser: jest.fn().mockResolvedValue('en'),
+            emitForUser: jest.fn().mockResolvedValue(null),
+          },
+        },
       ],
     }).compile();
 

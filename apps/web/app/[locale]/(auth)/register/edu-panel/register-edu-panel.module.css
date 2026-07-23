@@ -1,0 +1,288 @@
+/*
+ * Register educational panel — brand-locked evergreen surface.
+ * Colors come from the official guide covers / marketing identity and are
+ * intentionally NOT theme tokens (the panel looks identical in light/dark).
+ */
+
+.panel {
+  --edu-evergreen: #00492f;
+  --edu-cream: #faf1e5;
+  --edu-spring: #79c000;
+
+  position: relative;
+  overflow: hidden;
+  background-color: var(--edu-evergreen);
+  color: var(--edu-cream);
+}
+
+/* ── Decorative waves (full variant) ─────────────────────────────────── */
+
+.wave {
+  position: absolute;
+  pointer-events: none;
+  color: var(--edu-cream);
+}
+
+.waveTop {
+  top: 0;
+  right: 0;
+  width: 70%;
+  height: 26%;
+  opacity: 0.08;
+}
+
+.waveBottom {
+  bottom: 0;
+  left: 0;
+  width: 110%;
+  height: 34%;
+  opacity: 0.12;
+}
+
+/* ── Full variant (desktop split column) ─────────────────────────────── */
+
+.full {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 40px 48px;
+}
+
+.logoLink {
+  position: relative;
+  display: inline-flex;
+  width: fit-content;
+  align-self: flex-start;
+  border-radius: 8px;
+}
+
+.logoLink:focus-visible {
+  outline: 2px solid var(--edu-spring);
+  outline-offset: 4px;
+}
+
+.full .carousel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Stacked slides: every slide occupies the same grid cell so the block
+ * height is the tallest slide — dots never jump between slides. */
+.slides {
+  display: grid;
+}
+
+.slide {
+  grid-area: 1 / 1;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.slideActive {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .slide {
+    transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+.iconChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background-color: rgba(121, 192, 0, 0.18);
+  margin-bottom: 20px;
+}
+
+.icon {
+  color: #afd966;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: clamp(24px, 1.2vw + 16px, 28px);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--edu-cream);
+}
+
+.body {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: rgba(250, 241, 229, 0.82);
+  /* Reserve three lines so the controls row never jumps (FR runs longer). */
+  min-height: calc(3 * 1.6em);
+}
+
+.controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.navButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(250, 241, 229, 0.22);
+  background: transparent;
+  color: var(--edu-cream);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.navButton:hover {
+  border-color: rgba(250, 241, 229, 0.5);
+  background-color: rgba(250, 241, 229, 0.08);
+}
+
+.navButton:focus-visible {
+  outline: 2px solid var(--edu-spring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .navButton {
+    transition:
+      border-color 200ms ease,
+      background-color 200ms ease;
+  }
+}
+
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* 24px hit area around the visual 8px dot. */
+.dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dot::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(250, 241, 229, 0.35);
+}
+
+.dot:hover::before {
+  background-color: rgba(250, 241, 229, 0.6);
+}
+
+.dotActive::before {
+  background-color: var(--edu-spring);
+}
+
+.dot:focus-visible {
+  outline: 2px solid var(--edu-spring);
+  outline-offset: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .dot::before {
+    transition: background-color 200ms ease;
+  }
+}
+
+/* ── Compact variant (mobile card above the wizard chrome) ───────────── */
+
+.compact {
+  width: 100%;
+  min-height: 96px;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.compactCarousel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.compactChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background-color: rgba(121, 192, 0, 0.18);
+  flex-shrink: 0;
+}
+
+.compactMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.compactTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--edu-cream);
+}
+
+.compactBody {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(250, 241, 229, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compactNav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Slightly tighter buttons in the slim card; still 44px targets. */
+.compact .navButton {
+  width: 44px;
+  height: 44px;
+}
+
+@media (max-width: 380px) {
+  .compact .navButton {
+    width: 40px;
+    height: 40px;
+  }
+}

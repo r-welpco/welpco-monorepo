@@ -44,7 +44,9 @@
         "categories": "Catégories",
         "howItWorks": "Comment ça fonctionne",
         "trustSafety": "Confiance et sécurité",
-        "welperHandbook": "Guide du Welper",
+        "customerGuide": "Guide du Client",
+        "welperGuide": "Guide du Welper",
+        "welperHandbook": "Manuel du Welper",
         "weeklyPayouts": "Paiements hebdomadaires (vendredi)",
         "community": "Communauté",
         "faq": "FAQ",
@@ -179,7 +181,7 @@
           {
             "n": "02",
             "title": "Réserver et planifier",
-            "body": "Choisissez un Welper, fixez un horaire et confirmez. Vous n'êtes pas débité à la réservation — une retenue d'une heure est placée sur votre carte quand votre Welper accepte."
+            "body": "Choisissez un Welper, fixez un horaire et confirmez. Vous n'êtes pas débité à la réservation — une retenue d'une heure est placée trois jours avant le service après l'acceptation du Welper."
           },
           {
             "n": "03",
@@ -247,7 +249,7 @@
           },
           {
             "title": "Débité seulement à la fin",
-            "body": "Vous n'êtes pas débité à la réservation. Quand votre Welper accepte, nous plaçons une retenue d'une heure sur votre carte — vous n'êtes débité qu'une fois le travail terminé."
+            "body": "Vous n'êtes pas débité à la réservation. Après l'acceptation du Welper, nous plaçons une retenue d'une heure trois jours avant le service — vous n'êtes débité qu'une fois le travail terminé."
           },
           {
             "title": "Signalez un problème sur toute réservation",
@@ -297,7 +299,7 @@
           },
           {
             "q": "Quand et comment payer un service?",
-            "a": "Vous n'êtes pas débité à la réservation. Quand votre Welper accepte, nous plaçons une retenue d'une heure sur votre carte. Vous n'êtes débité qu'une fois le travail terminé."
+            "a": "Vous n'êtes pas débité à la réservation. Après l'acceptation du Welper, nous plaçons une retenue d'une heure trois jours avant le service. Vous n'êtes débité qu'une fois le travail terminé."
           },
           {
             "q": "Est-ce sécuritaire d'avoir un Welper chez moi?",
@@ -507,7 +509,7 @@
             ],
             [
               "Quand et comment dois-je payer?",
-              "Vous n'êtes pas débité à la réservation. Lorsqu'un Welper accepte votre réservation, nous plaçons une retenue d'une heure sur votre carte. Vous n'êtes débité qu'une fois le travail terminé — le Welper confirme la fin du travail via le site ou l'application et soumet l'heure finale, puis votre carte est débitée pour le service rendu."
+              "Vous n'êtes pas débité à la réservation. Après l'acceptation du Welper, nous plaçons une retenue d'une heure trois jours avant le service. Vous n'êtes débité qu'une fois le travail terminé — le Welper confirme la fin du travail via le site ou l'application et soumet l'heure finale, puis votre carte est débitée pour le service rendu."
             ],
             [
               "Que se passe-t-il si un Welper fait un travail insatisfaisant?",
@@ -531,7 +533,9 @@
       "cta": {
         "title": "Encore des questions?",
         "sub": "Nous répondons sous 48 heures.",
-        "button": "Nous joindre →"
+        "button": "Nous joindre →",
+        "customerGuideLink": "Consultez le guide complet du Client",
+        "welperGuideLink": "Consultez le guide complet du Welper"
       }
     },
     "contactPage": {
@@ -807,6 +811,96 @@
         "saveAndContinueLaterAria": "Enregistrer et continuer plus tard",
         "progressSavedHint": "Votre progression est enregistrée. Reconnectez-vous pour reprendre ici.",
         "signupProgressAria": "Progression de l'inscription : {percent} %"
+      },
+      "eduPanel": {
+        "ariaLabel": "Comment Welpco fonctionne",
+        "prev": "Diapositive précédente",
+        "next": "Diapositive suivante",
+        "goToSlide": "Aller à la diapositive {index}",
+        "slideOf": "Diapositive {current} sur {total}",
+        "sets": {
+          "generic": [
+            {
+              "icon": "shield",
+              "title": "De l'aide locale de confiance",
+              "body": "Welpco vous met en relation avec de vrais voisins sur qui compter pour les services du quotidien dans votre communauté."
+            },
+            {
+              "icon": "credit-card",
+              "title": "Aucun débit à la réservation",
+              "body": "Une préautorisation d'une heure est effectuée trois jours avant le service après l'acceptation du Welper. Vous n'êtes débité qu'une fois le travail terminé."
+            },
+            {
+              "icon": "messages",
+              "title": "Messagerie sur la plateforme",
+              "body": "Échangez avec votre Welper directement sur Welpco — précisez les détails et gardez tout au même endroit."
+            },
+            {
+              "icon": "star",
+              "title": "Des évaluations dans les deux sens",
+              "body": "Clients et Welpers s'évaluent mutuellement après chaque service, ce qui maintient la qualité dans la communauté."
+            },
+            {
+              "icon": "life-buoy",
+              "title": "Un vrai soutien, rapidement",
+              "body": "Une question ou un problème? Écrivez à support@welpco.com — notre équipe vous répond dans un délai de 48 heures."
+            }
+          ],
+          "customer": [
+            {
+              "icon": "search",
+              "title": "Trouvez le bon Welper",
+              "body": "Comparez les services, les tarifs, les évaluations et les disponibilités pour choisir le Welper qui vous convient."
+            },
+            {
+              "icon": "store",
+              "title": "Pas de résultat? Publiez votre demande",
+              "body": "Publiez votre demande sur le Marketplace et recevez des propositions de Welpers disponibles près de chez vous."
+            },
+            {
+              "icon": "calendar-check",
+              "title": "Réservez en quelques étapes",
+              "body": "Choisissez une date et une heure, ajoutez les détails, puis confirmez — votre Welper accepte la réservation."
+            },
+            {
+              "icon": "receipt",
+              "title": "Payez uniquement le temps travaillé",
+              "body": "Une préautorisation d'une heure trois jours avant le service; le prix final reflète le temps réellement travaillé, avec une facture après le service."
+            },
+            {
+              "icon": "star",
+              "title": "Le jour J, et après",
+              "body": "Préparez les lieux pour que votre Welper puisse commencer sans attendre, puis laissez une évaluation une fois le service terminé."
+            }
+          ],
+          "welper": [
+            {
+              "icon": "wallet",
+              "title": "Configurez vos versements Stripe",
+              "body": "Un compte de versement Stripe complété est requis pour accepter des réservations — configurez-le d'abord pour commencer."
+            },
+            {
+              "icon": "badge-check",
+              "title": "Obtenez le badge de confiance",
+              "body": "La vérification d'antécédents est facultative mais recommandée — la compléter vous vaut un badge de confiance apprécié des clients."
+            },
+            {
+              "icon": "store",
+              "title": "Trouvez du travail sur le Marketplace",
+              "body": "Parcourez les demandes des clients sur le Marketplace et postulez à celles qui correspondent à vos services."
+            },
+            {
+              "icon": "calendar-check",
+              "title": "Lorsque vous êtes sélectionné",
+              "body": "Confirmez rapidement, communiquez avec votre client et arrivez à l'heure — la fiabilité bâtit votre réputation."
+            },
+            {
+              "icon": "receipt",
+              "title": "Soyez payé, soyez évalué",
+              "body": "Soumettez vos heures de début et de fin après le service — votre facture est générée et les évaluations vont dans les deux sens."
+            }
+          ]
+        }
       },
       "categoryNames": {
         "Care": "Soins",
@@ -1462,6 +1556,7 @@
       "resendFailed": "Impossible de renvoyer le courriel. Réessayez dans un instant.",
       "turnstileRequiredHint": "Complétez la vérification ci-dessous, puis appuyez sur Renvoyer le courriel.",
       "addCard": "Ajouter une carte",
+      "readGuide": "Consulter le guide",
       "allCompleteDiscoverable": "Configuration terminée — vous êtes visible dans la recherche.",
       "customerSections": {
         "account": {
@@ -1471,7 +1566,7 @@
         },
         "bookingPayment": {
           "title": "Mode de paiement — requis pour réserver",
-          "subtitle": "Ajoutez une carte pour autoriser le paiement après l'acceptation du Welper.",
+          "subtitle": "Ajoutez une carte pour l'autorisation trois jours avant une réservation acceptée.",
           "complete": "Mode de paiement enregistré — vous pouvez réserver."
         },
         "beyondA": {
@@ -1573,7 +1668,8 @@
       "userMenu": {
         "profile": "Profil",
         "accountSettings": "Paramètres du compte",
-        "signOut": "Se déconnecter"
+        "signOut": "Se déconnecter",
+        "guides": "Guides"
       },
       "themeMenu": "Thème",
       "theme": {
@@ -2010,7 +2106,7 @@
       "deleteDescription": "Nous désactiverons votre compte et vous déconnecterons. Les réservations et avis actifs restent liés à ces dossiers. Si quelque chose ne va pas, dites-le-nous avant de partir.",
       "deleteButton": "Supprimer mon compte…",
       "paymentTitle": "Modes de paiement",
-      "paymentDescription": "Ajoutez une carte par défaut pour compléter votre profil et autoriser le paiement après qu'un Welper accepte votre réservation.",
+      "paymentDescription": "Ajoutez une carte par défaut pour compléter votre profil et autoriser le paiement trois jours avant une réservation acceptée.",
       "paymentMethods": {
         "stripeNotConfigured": "Les paiements par carte ne sont pas configurés (NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY manquant). Contactez le support si le problème persiste.",
         "saveCard": "Enregistrer la carte",
@@ -2026,6 +2122,18 @@
         "preparing": "Préparation…",
         "couldNotStartSetup": "Impossible de démarrer l'ajout de carte"
       }
+    },
+    "guides": {
+      "title": "Guides",
+      "subtitle": "Tout ce qu’il faut pour tirer le meilleur de Welpco — consultez le guide de votre rôle, ou celui de l’autre.",
+      "audienceAria": "Choisir le guide à consulter",
+      "audience": {
+        "customer": "Pour les clients",
+        "welper": "Pour les Welpers"
+      },
+      "onThisPage": "Sur cette page",
+      "contents": "Sommaire",
+      "backToTop": "Haut de page"
     },
     "profile": {
       "title": "Profil",
@@ -2318,13 +2426,13 @@
       "summaryRate": "Tarif",
       "summaryHoldLabel": "Retenue (1 heure)",
       "summaryHoldAmount": "Retenue de {amount}",
-      "summaryTaxNote": "Il s'agit d'une autorisation temporaire — vous n'êtes pas débité maintenant. Les taxes sont incluses lors de la retenue après acceptation par le Welper.",
+      "summaryTaxNote": "Il s'agit d'une autorisation temporaire — vous n'êtes pas débité maintenant. Les taxes sont incluses lors de la retenue trois jours avant le service.",
       "summaryEstimatedJob": "Estimation du mandat ({duration})",
       "summaryEstimatedBeforeTax": "{amount} avant taxes",
       "summaryFinalChargeNote": "Le montant final est basé sur le temps réel après le service, dans la plage choisie.",
       "summaryPickService": "Choisissez un service pour voir le montant de la retenue.",
       "beforeConfirmTitle": "Avant de confirmer",
-      "beforeConfirmPolicy": "Chaque réservation couvre au moins une heure de service. Quand le Welper accepte, nous plaçons une retenue d'une heure sur votre carte — ce n'est pas un débit. Vous n'êtes débité qu'après la fin du mandat. Annulez plus de 24 h avant le début : la retenue est libérée sans frais. Annulez dans les 24 h précédant le début : la retenue d'une heure peut être facturée comme frais d'annulation.",
+      "beforeConfirmPolicy": "Chaque réservation couvre au moins une heure de service. Après l'acceptation du Welper, nous plaçons une retenue d'une heure sur votre carte trois jours avant le service — ce n'est pas un débit. Vous n'êtes débité qu'après la fin du mandat. Annulez plus de 24 h avant le début : la retenue est libérée sans frais. Annulez dans les 24 h précédant le début : la retenue d'une heure peut être facturée comme frais d'annulation.",
       "detailsTitle": "Détails de la réservation",
       "serviceLabel": "Service",
       "selectService": "Choisir un service…",
@@ -2510,9 +2618,16 @@
           "sectionTitle": "Paiement et autorisation",
           "cardOnFile": "Carte enregistrée",
           "authorizeHint": "Autorisez le paiement sur votre carte enregistrée (retenue d'une heure — pas de débit tant que le service n'est pas terminé). Si cela s'affiche après l'acceptation du Welper, la retenue automatique a peut-être échoué ; réessayez ou mettez à jour votre carte dans Paramètres.",
+          "scheduledHint": "Une retenue d'autorisation d'une heure sera placée sur votre carte enregistrée trois jours avant le service,",
+          "deadlineHint": " Corrigez tout problème de paiement avant le {date}, sinon la réservation sera annulée sans frais.",
+          "failedHint": "L'autorisation automatique de la carte a échoué. Réessayez avec votre carte enregistrée ou mettez-la à jour dans Paramètres.",
+          "authenticationHint": "Votre carte nécessite une authentification supplémentaire. Autorisez-la maintenant pour maintenir la réservation.",
+          "canceledHint": "L'autorisation précédente a été annulée. Autorisez de nouveau votre carte enregistrée.",
+          "expiredHint": "L'autorisation précédente a expiré. Autorisez de nouveau votre carte enregistrée ou mettez-la à jour dans Paramètres.",
+          "deadlineCanceledHint": "Cette réservation a été annulée sans frais, car l'autorisation de paiement n'a pas été complétée avant la date limite.",
           "authorizing": "Autorisation…",
           "authorize": "Autoriser le paiement",
-          "holdActive": "Une retenue d'une heure est active sur votre carte (placée à l'acceptation par le Welper). Vous n'êtes pas débité tant que le service n'est pas terminé.",
+          "holdActive": "Une retenue d'une heure est active sur votre carte. Vous n'êtes pas débité tant que le service n'est pas terminé.",
           "captureScheduled": " Le débit est prévu après le {date} (en attente de fin de service et délai de litige).",
           "captured": "Le paiement a été capturé.",
           "failed": "Le paiement n'a pas pu être effectué. Contactez le support si vous avez besoin d'aide.",
@@ -2741,7 +2856,7 @@
     },
     "addPaymentMethod": {
       "title": "Ajouter un moyen de paiement",
-      "description": "Ajoutez une carte pour autoriser le paiement après l'acceptation du Welper.",
+      "description": "Ajoutez une carte pour l'autorisation trois jours avant une réservation acceptée.",
       "saveCard": "Enregistrer la carte",
       "savingCard": "Enregistrement…",
       "cancel": "Annuler",

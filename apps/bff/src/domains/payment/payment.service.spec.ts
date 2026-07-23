@@ -178,7 +178,7 @@ describe('PaymentService', () => {
   });
 
   describe('deferred authorization', () => {
-    it('schedules authorization five days before a later booking', async () => {
+    it('schedules authorization 72 hours before a later booking', async () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date('2026-06-14T12:00:00.000Z'));
       const booking = {
@@ -194,18 +194,18 @@ describe('PaymentService', () => {
       await expect(service.prepareAuthorizationForAcceptance(booking.id)).resolves.toBe('scheduled');
 
       expect(booking.paymentAuthorizationStatus).toBe('scheduled');
-      expect(booking.paymentAuthorizationDueAt?.toISOString()).toBe('2026-06-16T12:00:00.000Z');
+      expect(booking.paymentAuthorizationDueAt?.toISOString()).toBe('2026-06-18T12:00:00.000Z');
       expect(booking.paymentAuthorizationDeadlineAt?.toISOString()).toBe('2026-06-20T12:00:00.000Z');
       jest.useRealTimers();
     });
 
-    it('authorizes immediately when service starts within five days', async () => {
+    it('authorizes immediately when service starts within 72 hours', async () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date('2026-06-14T12:00:00.000Z'));
       const booking = {
         id: 'near-booking',
         status: BookingRequestStatus.PENDING,
-        scheduledDate: '2026-06-18',
+        scheduledDate: '2026-06-17',
         scheduledStartTime: '12:00',
         timezoneOffsetMinutes: 0,
       } as BookingRequest;
@@ -276,6 +276,170 @@ describe('PaymentService', () => {
           paymentAuthorizationStatus: 'canceled',
           paymentAuthorizationLeaseUntil: null,
         }),
+      );
+    });
+
+    it('reschedules one replacement when Stripe automatically expires the latest hold without capture_before', async () => {
+      const row = {
+        id: 'payment-1',
+        bookingId: 'booking-1',
+        stripePaymentIntentId: 'pi_expired',
+        paymentKind: BookingPaymentKind.HOLD,
+        status: BookingPaymentRecordStatus.AUTHORIZED,
+        authorizationExpiresAt: null,
+      } as BookingPayment;
+      const booking = {
+        id: 'booking-1',
+        customerId: 'customer-1',
+        welperId: 'welper-1',
+        status: BookingRequestStatus.ACCEPTED,
+        scheduledDate: '2026-06-21',
+        scheduledStartTime: '12:00',
+        scheduledEndTime: '14:00',
+        timezoneOffsetMinutes: 0,
+        paymentAuthorizationAttemptCount: 1,
+        paymentAuthorizationDeadlineAt: new Date(Date.now() + 60 * 60 * 1000),
+      } as BookingRequest;
+      mockBookingPaymentRepo.findOne.mockResolvedValue(row);
+      mockBookingPaymentRepo.save.mockImplementation(async (value) => value);
+      mockBookingRepo.findOne.mockResolvedValue(booking);
+      mockBookingRepo.save.mockImplementation(async (value) => value);
+
+      await service.syncPaymentIntentFromWebhook({
+        id: 'pi_expired',
+        status: 'canceled',
+        cancellation_reason: 'automatic',
+        latest_charge: {
+          id: 'ch_expired',
+          payment_method_details: {
+            card: { brand: 'visa' },
+          },
+        },
+      } as unknown as Stripe.PaymentIntent);
+
+      expect(booking.paymentAuthorizationStatus).toBe('scheduled');
+      expect(booking.paymentAuthorizationFailureCode).toBe('authorization_expired');
+      expect(booking.paymentAuthorizationDueAt).toBeInstanceOf(Date);
+      expect(mockNotificationService.emitForUser).toHaveBeenCalledWith(
+        booking.customerId,
+        expect.objectContaining({
+          metadata: expect.objectContaining({ kind: 'deferred_authorization_failed' }),
+        }),
+      );
+    });
+
+    it('never captures a fee for a payment-deadline cancellation', async () => {
+      const booking = {
+        id: 'booking-deadline',
+        cancellationSource: 'payment_authorization_deadline',
+        cancellationFeeCents: 0,
+      } as BookingRequest;
+      const row = {
+        bookingId: booking.id,
+        stripePaymentIntentId: 'pi_hold',
+        paymentKind: BookingPaymentKind.HOLD,
+        status: BookingPaymentRecordStatus.AUTHORIZED,
+        capturedAt: null,
+      } as BookingPayment;
+      mockBookingRepo.findOne.mockResolvedValue(booking);
+      mockBookingRepo.save.mockImplementation(async (value) => value);
+      mockBookingPaymentRepo.find.mockResolvedValue([row]);
+      mockBookingPaymentRepo.save.mockImplementation(async (value) => value);
+      const capture = jest.fn();
+      const retrieve = jest.fn();
+      const cancel = jest.fn().mockResolvedValue({});
+      (service as unknown as { stripe: unknown }).stripe = {
+        paymentIntents: { capture, retrieve, cancel },
+      };
+
+      await service.onBookingCanceled(booking.id, { chargeLateCancellationFee: false });
+
+      expect(capture).not.toHaveBeenCalled();
+      expect(retrieve).not.toHaveBeenCalled();
+      expect(cancel).toHaveBeenCalledWith('pi_hold');
+      expect(booking.cancellationFeeCents).toBe(0);
+    });
+
+    it('records a late-cancellation fee only after Stripe captures a live hold', async () => {
+      const booking = {
+        id: 'booking-customer-cancel',
+        cancellationSource: 'customer',
+        cancellationFeeCents: 0,
+        hourlyRate: 50,
+      } as BookingRequest;
+      const row = {
+        bookingId: booking.id,
+        stripePaymentIntentId: 'pi_live_hold',
+        paymentKind: BookingPaymentKind.HOLD,
+        status: BookingPaymentRecordStatus.AUTHORIZED,
+        amountCents: 5650,
+        capturedAt: null,
+        authorizationExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      } as BookingPayment;
+      mockBookingRepo.findOne.mockResolvedValue(booking);
+      mockBookingRepo.save.mockImplementation(async (value) => value);
+      mockBookingPaymentRepo.find.mockResolvedValue([row]);
+      mockBookingPaymentRepo.save.mockImplementation(async (value) => value);
+      const capture = jest.fn().mockResolvedValue({ status: 'succeeded' });
+      const retrieve = jest.fn().mockResolvedValue({ status: 'requires_capture' });
+      (service as unknown as { stripe: unknown }).stripe = {
+        paymentIntents: { capture, retrieve, cancel: jest.fn() },
+      };
+
+      await service.onBookingCanceled(booking.id, { chargeLateCancellationFee: true });
+
+      expect(capture).toHaveBeenCalledWith('pi_live_hold', { amount_to_capture: 5650 });
+      expect(row.captureReason).toBe('late_cancellation');
+      expect(booking.cancellationFeeCents).toBe(5650);
+    });
+
+    it('preserves a separate payment row for every authorization attempt', async () => {
+      const booking = {
+        id: 'booking-history',
+        customerId: 'customer-1',
+        welperId: 'welper-1',
+        scheduledDate: '2026-08-01',
+        scheduledStartTime: '12:00',
+        scheduledEndTime: '14:00',
+        timezoneOffsetMinutes: 0,
+      } as BookingRequest;
+      mockBookingPaymentRepo.findOne.mockResolvedValue(null);
+      mockBookingPaymentRepo.create.mockImplementation((value) => value as BookingPayment);
+      mockBookingPaymentRepo.save.mockImplementation(async (value) => value);
+      mockBookingRepo.save.mockImplementation(async (value) => value);
+      const persist = service as unknown as {
+        upsertBookingPaymentRow: (
+          targetBooking: BookingRequest,
+          paymentIntent: Stripe.PaymentIntent,
+          amountCents: number,
+        ) => Promise<BookingPayment>;
+      };
+      const makePi = (id: string, chargeId: string) =>
+        ({
+          id,
+          status: 'requires_capture',
+          latest_charge: {
+            id: chargeId,
+            payment_method_details: {
+              card: {
+                brand: 'visa',
+                capture_before: Math.floor(Date.parse('2026-08-03T12:00:00Z') / 1000),
+              },
+            },
+          },
+        }) as unknown as Stripe.PaymentIntent;
+
+      await persist.upsertBookingPaymentRow(booking, makePi('pi_1', 'ch_1'), 5650);
+      await persist.upsertBookingPaymentRow(booking, makePi('pi_2', 'ch_2'), 5650);
+
+      expect(mockBookingPaymentRepo.create).toHaveBeenCalledTimes(2);
+      expect(mockBookingPaymentRepo.create).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ stripePaymentIntentId: 'pi_1' }),
+      );
+      expect(mockBookingPaymentRepo.create).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ stripePaymentIntentId: 'pi_2' }),
       );
     });
   });

@@ -41,6 +41,14 @@ export class NotificationPreferenceItemDto {
   @IsOptional()
   @IsBoolean()
   inAppEnabled?: boolean;
+
+  @ApiProperty({
+    description: 'SMS channel toggle. Defaults to true (opt-out).',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  smsEnabled?: boolean;
 }
 
 export class NotificationPrefsStepDto {

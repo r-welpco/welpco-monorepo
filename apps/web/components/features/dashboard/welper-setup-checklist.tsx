@@ -13,8 +13,9 @@ import { Flex } from "@welpco/ui/flex";
 import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { CheckCircle2, Circle, CircleDashed } from "lucide-react";
+import { BookOpen, CheckCircle2, Circle, CircleDashed } from "lucide-react";
 import type { WelperSetupTaskDto } from "@welpco/types";
+import { localizedPath } from "@/i18n/locale-routes";
 import { normalizeWelperSetupChecklist } from "@/lib/dashboard/normalize-welper-setup-checklist";
 import {
   buildWelperSetupGroupedView,
@@ -255,6 +256,15 @@ export function WelperSetupChecklist({ variant = "full" }: WelperSetupChecklistP
           sessionEmail={session?.user?.email ?? undefined}
         />
       ) : null}
+
+      <Flex justify="start">
+        <Button size="1" variant="ghost" color="gray" asChild>
+          <Link href={localizedPath("/guides/welper", locale)}>
+            <BookOpen size={14} aria-hidden />
+            {t("readGuide")}
+          </Link>
+        </Button>
+      </Flex>
     </Flex>
   );
 }

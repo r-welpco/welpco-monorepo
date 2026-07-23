@@ -16,6 +16,7 @@ import { UsersModule } from '../user-management/users/users.module';
 import { EmailVerifiedGuardModule } from '../../common/guards/email-verified.guard.module';
 import { SafetyVerificationModule } from '../safety-verification/safety-verification.module';
 import { JobPostingModule } from '../job-posting/job-posting.module';
+import { RateLimitGuard } from '../user-management/auth/guards/rate-limit.guard';
 
 @Module({
   imports: [
@@ -34,7 +35,7 @@ import { JobPostingModule } from '../job-posting/job-posting.module';
     forwardRef(() => JobPostingModule),
   ],
   controllers: [BookingController],
-  providers: [BookingService],
+  providers: [BookingService, RateLimitGuard],
   exports: [BookingService],
 })
 export class BookingModule {}

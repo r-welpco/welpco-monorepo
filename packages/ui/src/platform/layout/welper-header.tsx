@@ -108,6 +108,8 @@ export interface WelperHeaderLabels {
   userMenu: {
     profile: string;
     accountSettings: string;
+    /** Optional — when omitted the Guides item falls back to "Guides". */
+    guides?: string;
     signOut: string;
   };
   themeMenu: string;
@@ -161,6 +163,8 @@ export interface WelperHeaderProps {
   onLocaleChange?: (locale: DashboardLocale) => void;
   onProfileClick?: () => void;
   onSettingsClick?: () => void;
+  /** When provided, a "Guides" item is rendered in the user menu (in-platform guides page). */
+  onGuidesClick?: () => void;
   onLogout?: () => void;
   /** Host-provided tint for the desktop tab strip (e.g. from Appearance background). */
   tabStripStyle?: CSSProperties;
@@ -195,6 +199,7 @@ export function WelperHeader({
   onLocaleChange,
   onProfileClick,
   onSettingsClick,
+  onGuidesClick,
   onLogout,
   tabStripStyle,
   bannerSlot,
@@ -472,6 +477,14 @@ export function WelperHeader({
                         <Text size="2">{labels?.userMenu.accountSettings ?? "Account settings"}</Text>
                       </Flex>
                     </DropdownMenuItem>
+                    {onGuidesClick ? (
+                      <DropdownMenuItem onClick={onGuidesClick}>
+                        <Flex align="center" gap="2">
+                          <BookOpen size={16} aria-hidden="true" />
+                          <Text size="2">{labels?.userMenu.guides ?? "Guides"}</Text>
+                        </Flex>
+                      </DropdownMenuItem>
+                    ) : null}
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel>{labels?.themeMenu ?? "Theme"}</DropdownMenuLabel>
                     {themeOptions.map(({ value, label, Icon }) => (

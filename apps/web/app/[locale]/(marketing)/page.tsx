@@ -18,11 +18,11 @@ export default function MarketingNewHomePage() {
   return (
     <>
       <HeroImmersive />
-      <CategoriesGrid />
-      <HowItWorks />
       {/* Real social proof: live profiles from public search; renders nothing
           below its honesty threshold (see welpers-near-you.tsx). */}
       <WelpersNearYou />
+      <CategoriesGrid />
+      <HowItWorks />
       <TrustSafety />
       <BecomeWelperCTA />
       <FAQTeaser />

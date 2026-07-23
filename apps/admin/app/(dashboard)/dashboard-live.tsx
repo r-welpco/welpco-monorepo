@@ -436,7 +436,7 @@ export function DashboardLive() {
           <SectionTitle>Payment operations</SectionTitle>
           <Grid columns={{ initial: "1", sm: "2", md: "4" }} gap="3">
             <QueueCard
-              href="/bookings?status=accepted"
+              href="/bookings?paymentIssue=true"
               label="Authorization failures"
               value={snap.paymentOperations.authorizationFailures}
               hint="Customer action or operator follow-up required"

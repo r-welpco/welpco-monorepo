@@ -8,6 +8,7 @@ const MARKETING_SLUGS = [
   "faq",
   "contact",
   "legal",
+  "guides",
 ] as const;
 
 /** Auth paths (locale-stripped). */

@@ -22,7 +22,7 @@ Next.js 16.2.3 app for Welpco operations staff. Runs on **port 8082** (`next dev
 | `/payouts`, `/payouts/[batchId]` | Payout batch review/approval (`app/(dashboard)/payouts/page.tsx`, `payout-batch-actions.tsx`, backed by `lib/services/admin-payouts-service.ts`) |
 | `/questions`, `/questions/new`, `/questions/[id]` | Service-selection questions |
 | `/referrals` | Referral program stats |
-| `/reports`, `/reports/welper-distribution` | Reports (leaflet map) |
+| `/reports`, `/reports/web-analytics`, `/reports/emails`, `/reports/emails/[id]`, `/reports/welper-distribution` | Reports (web analytics, Resend sent emails + preview, leaflet map) |
 | `/reviews`, `/reviews/[id]` | Review moderation |
 | `/settings` | Platform settings |
 | `/support-tickets`, `/support-tickets/[id]` | Support tickets |
@@ -53,7 +53,7 @@ NextAuth v5 (beta.25), JWT session strategy, config in `apps/admin/auth.ts` + `l
 | `admin-payouts-service.ts` *(modified in working tree)* | `/api/admin/payouts/upcoming`, `/batches`, `/batches/:id`, `/batches/build`, `/batches/:id/approve`, `/recoveries`, `/recoveries/:transferId/refresh`, `/tax-failures`, `/refresh-pending-fees`, `/retry-tax` |
 | `admin-questions-service.ts` | `/api/questions`, `/api/service-questions`, `/api/service-questions/service/:id`, `/api/content/categories` |
 | `admin-referrals-service.ts` | `/api/admin/referrals`, `/api/admin/referrals/stats` |
-| `admin-reports-service.ts` | `/api/admin/reports/welper-distribution` |
+| `admin-reports-service.ts` | `/api/admin/reports/web-analytics`, `/api/admin/reports/emails`, `/api/admin/reports/emails/:id`, `/api/admin/reports/welper-distribution` |
 | `admin-reviews-service.ts` | `/api/admin/reviews`, `/api/admin/reviews/:id` |
 | `admin-settings-service.ts` | `/api/admin/settings/payment_capture_delay_minutes` |
 | `admin-support-tickets-service.ts` | `/api/admin/support-tickets`, `/api/admin/support-tickets/:id` |

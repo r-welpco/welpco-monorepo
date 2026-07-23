@@ -72,6 +72,7 @@ describe('ReviewService', () => {
   // existing happy-path specs that don't care about the emit still pass.
   const mockNotificationService = {
     emitForUser: jest.fn().mockResolvedValue(null),
+    resolveLocaleForUser: jest.fn().mockResolvedValue('en'),
   };
 
   beforeEach(async () => {

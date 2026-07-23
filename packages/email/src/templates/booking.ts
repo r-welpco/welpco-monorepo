@@ -181,6 +181,7 @@ export function getWelcomeEmailHtml(
   dashboardUrl: string,
   locale: EmailLocale = "en",
   publicAppUrl?: string,
+  guideUrl?: string,
 ): string {
   const isFrLocale = locale === "fr";
   const safeName = firstName?.trim() ? escapeHtml(firstName.trim()) : null;
@@ -198,6 +199,15 @@ export function getWelcomeEmailHtml(
     ? "Si vous n\u2019avez pas créé de compte, veuillez ignorer ce courriel."
     : "If you didn't create an account, please ignore this email.";
   const heading = isFrLocale ? "Bienvenue sur Welpco\u00a0!" : "Welcome to Welpco!";
+  const guideLabel = isFrLocale
+    ? "Consultez le guide de d\u00e9marrage"
+    : "Read the getting-started guide";
+  const guideLink = guideUrl
+    ? `
+<p style="margin-top: 12px; font-size: 14px;">
+  <a href="${guideUrl}" style="color: #00492F; text-decoration: underline;">${guideLabel}</a>
+</p>`
+    : "";
 
   const content = `
 <h1 style="${h1Style}">${heading}</h1>
@@ -205,7 +215,7 @@ export function getWelcomeEmailHtml(
 <p style="${pStyle}">${intro}</p>
 <p style="margin-top: 24px;">
   <a href="${dashboardUrl}" style="${btnStyle}">${cta}</a>
-</p>
+</p>${guideLink}
 <p style="margin-top: 1.5em; font-size: 13px; color: #666666;">${footer}</p>`;
 
   return wrapEmail({ content, locale, documentTitle: title, publicAppUrl });

@@ -317,7 +317,7 @@ export default function BookingDetailClient({
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-  const { data: booking, isLoading, isError, error } = useBookingById(bookingId);
+  const { data: booking, isLoading, isError, error, refetch: refetchBooking } = useBookingById(bookingId);
   const { data: welperProfile } = usePublicWelperProfile(
     booking?.welperId ?? null,
   );
@@ -496,6 +496,7 @@ export default function BookingDetailClient({
     (paymentPhase === "none" ||
       paymentPhase === "pending" ||
       paymentPhase === "requires_action" ||
+      paymentPhase === "canceled" ||
       paymentPhase === "failed");
 
   const showReceiptBalancePayment =
@@ -527,6 +528,8 @@ export default function BookingDetailClient({
         }
         const { error } = await stripe.confirmCardPayment(res.clientSecret);
         if (error) throw new Error(error.message ?? customerDetail.payment.authenticationFailed);
+        await bookingPayIntentMutation.mutateAsync();
+        await refetchBooking();
       }
     } catch (e) {
       // Day 15 Dispatch C — payment-intent creation is `EmailVerifiedGuard`-gated
@@ -539,7 +542,7 @@ export default function BookingDetailClient({
         e instanceof Error ? e.message : customerDetail.payment.authorizeFailed,
       );
     }
-  }, [bookingId, bookingPayIntentMutation, bookable, customerDetail.payment]);
+  }, [bookingId, bookingPayIntentMutation, bookable, customerDetail.payment, refetchBooking]);
 
   const handleCompleteReceiptBalance = useCallback(async () => {
     if (!bookingId || !booking?.paymentClientSecret) return;
@@ -1609,7 +1612,15 @@ export default function BookingDetailClient({
                   {showAuthorizePayment ? (
                     <Flex direction="column" gap="2" align="start">
                       <Text size="2" color="gray">
-                        {customerDetail.payment.authorizeHint}
+                        {paymentPhase === "canceled"
+                          ? booking.paymentAuthorizationFailureCode === "authorization_expired"
+                            ? customerDetail.payment.expiredHint
+                            : customerDetail.payment.canceledHint
+                          : paymentPhase === "failed"
+                            ? customerDetail.payment.failedHint
+                            : paymentPhase === "requires_action"
+                              ? customerDetail.payment.authenticationHint
+                              : customerDetail.payment.authorizeHint}
                       </Text>
                       {paymentActionError ? (
                         <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
@@ -1630,6 +1641,18 @@ export default function BookingDetailClient({
                         </Button>
                       </Flex>
                     </Flex>
+                  ) : paymentPhase === "scheduled" ? (
+                    <Text size="2" color="gray">
+                      {customerDetail.payment.scheduledHint}
+                      {booking.paymentAuthorizationDueAt
+                        ? ` ${formatDateTime(booking.paymentAuthorizationDueAt)}.`
+                        : null}
+                      {booking.paymentAuthorizationDeadlineAt
+                        ? customerDetail.payment.deadlineHint(
+                            formatDateTime(booking.paymentAuthorizationDeadlineAt),
+                          )
+                        : null}
+                    </Text>
                   ) : paymentPhase === "authorized" ? (
                     <Text size="2" color="gray">
                       {customerDetail.payment.holdActive}
@@ -1749,7 +1772,9 @@ export default function BookingDetailClient({
               <Text as="span" weight="bold">
                 {customerDetail.cancellationReason}
               </Text>{" "}
-              {booking.cancellationReason}
+              {booking.cancellationSource === "payment_authorization_deadline"
+                ? customerDetail.payment.deadlineCanceledHint
+                : booking.cancellationReason}
             </Callout.Text>
           </Callout.Root>
         )}

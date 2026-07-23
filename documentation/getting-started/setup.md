@@ -14,12 +14,14 @@ Optional: Stripe CLI (for `pnpm --filter @welpco/bff stripe:listen`), Zellij or 
 
 ## Docker services
 
-`docker-compose.yml` defines two services on the `welpco-network` bridge network:
+`docker-compose.yml` defines these services on the `welpco-network` bridge network:
 
 | Service | Image | Ports | Credentials / notes |
 |---|---|---|---|
 | `postgres` (container `welpco-postgres`) | `postgres:16.6-alpine` | 5432:5432 | user `welpco`, password `welpco_dev`, db `welpco_dev`. Healthcheck: `pg_isready -U welpco -d welpco_dev` every 10s. Data persisted in the `postgres_data` volume. `scripts/init-db.sh` is mounted as an init script and creates the `uuid-ossp` and `pg_trgm` extensions. |
-| `mailhog` (container `welpco-mailhog`) | `mailhog/mailhog:latest` | 1025:1025 (SMTP), 8025:8025 (web UI) | Local email capture. Healthcheck: `wget --spider http://localhost:8025`. |
+| `mailpit` (container `welpco-mailpit`) | `axllent/mailpit:latest` | 1025:1025 (SMTP), 8025:8025 (web UI) | Local email capture (replaced MailHog, unmaintained since 2020). Web UI: http://localhost:8025. Healthcheck: `wget --spider http://localhost:8025/livez`. |
+| `minio` (container `welpco-minio`) | `minio/minio:latest` | 9000:9000 (S3 API), 9001:9001 (console) | S3-compatible object storage — keeps dev off real AWS. Root creds `welpco_minio` / `welpco_minio_dev`. Data in the `minio_data` volume. Console: http://localhost:9001. |
+| `minio-init` (container `welpco-minio-init`) | `minio/mc:latest` | — | One-shot: creates bucket `welpco-dev` and grants anonymous read on `profiles/` + `portfolio/` (mirrors the production bucket policy so local display URLs resolve). Exits 0 when done. |
 
 There is no Redis, Kafka, or OpenSearch — the BFF uses an in-memory cache locally (`.env.example` and `infrastructure/lib/infrastructure-stack.ts` both state this constraint).
 
@@ -35,7 +37,7 @@ pnpm dev:logs        # docker-compose logs -f
 Verified step by step from `scripts/setup-dev.sh`:
 
 1. Fails fast if Docker is not running (`docker info`).
-2. `docker-compose up -d` from the repo root (PostgreSQL + MailHog).
+2. `docker-compose up -d` from the repo root (PostgreSQL + Mailpit + MinIO + bucket init).
 3. Polls `docker exec welpco-postgres pg_isready` until PostgreSQL is ready.
 4. `pnpm install`.
 5. Creates `apps/bff/.env.local` if missing — copied from `apps/bff/.env.example` when present, otherwise written inline with DB credentials, JWT dev secrets, `PORT=3000`, `FRONTEND_URL=http://localhost:8081`, and `GOOGLE_MAPS_API_KEY=local-dev-placeholder`.
@@ -66,7 +68,7 @@ pnpm dev:pretty      # same two apps via concurrently with colored prefixes
 pnpm dev:admin       # admin (8082) + bff (3000)
 ```
 
-Verify: Swagger at http://localhost:3000/api/docs (`apps/bff/src/main.ts` sets global prefix `api` and mounts Swagger at `api/docs`), web at http://localhost:8081, MailHog UI at http://localhost:8025.
+Verify: Swagger at http://localhost:3000/api/docs (`apps/bff/src/main.ts` sets global prefix `api` and mounts Swagger at `api/docs`), web at http://localhost:8081, Mailpit UI at http://localhost:8025, MinIO console at http://localhost:9001.
 
 ## Ports
 
@@ -77,8 +79,10 @@ Verify: Swagger at http://localhost:3000/api/docs (`apps/bff/src/main.ts` sets g
 | 3000 | BFF (NestJS, global prefix `/api`, Swagger `/api/docs`) | `apps/bff/src/main.ts` (`PORT` env, default 3000) |
 | 6006 | Storybook (design system) | `apps/design-system/package.json` (`storybook dev -p 6006`) |
 | 5432 | PostgreSQL | `docker-compose.yml` |
-| 1025 | MailHog SMTP | `docker-compose.yml` |
-| 8025 | MailHog web UI | `docker-compose.yml` |
+| 1025 | Mailpit SMTP | `docker-compose.yml` |
+| 8025 | Mailpit web UI | `docker-compose.yml` |
+| 9000 | MinIO S3 API endpoint | `docker-compose.yml` |
+| 9001 | MinIO web console | `docker-compose.yml` |
 
 ## Warning: broken/fragile launcher scripts
 

@@ -4,7 +4,39 @@ import { Button, Card, Flex, Text, TextArea } from "@welpco/ui";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AdminErrorCallout, AdminSuccessCallout } from "@/components/admin-callout";
-import { adminCancelBooking } from "@/lib/services/admin-booking-service";
+import {
+  adminCancelBooking,
+  refreshAdminBookingPayment,
+} from "@/lib/services/admin-booking-service";
+
+export function PaymentRefreshAction({ bookingId }: { bookingId: string }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function refresh() {
+    setLoading(true);
+    setMessage(null);
+    try {
+      await refreshAdminBookingPayment(bookingId);
+      setMessage("Payment status refreshed from Stripe.");
+      router.refresh();
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Failed to refresh payment status");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Flex direction="column" gap="1" align="start">
+      <Button type="button" size="1" variant="soft" disabled={loading} onClick={() => void refresh()}>
+        {loading ? "Refreshing…" : "Refresh from Stripe"}
+      </Button>
+      {message ? <Text size="1" color="gray">{message}</Text> : null}
+    </Flex>
+  );
+}
 
 export function BookingActions({ bookingId, status }: { bookingId: string; status: string }) {
   const router = useRouter();

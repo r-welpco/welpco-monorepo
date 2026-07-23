@@ -358,6 +358,7 @@ export default function NewBookingPageClient({
             durationMinutes: durationMinutes ?? undefined,
             notes: notes.trim() || undefined,
             timezoneOffsetMinutes: -(new Date().getTimezoneOffset()),
+            timezoneName: Intl.DateTimeFormat().resolvedOptions().timeZone,
             ...(jobId && applicationId
               ? { jobPostingId: jobId, jobApplicationId: applicationId }
               : {}),

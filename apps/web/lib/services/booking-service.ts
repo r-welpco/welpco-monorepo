@@ -80,6 +80,7 @@ export interface BookingItem {
   scheduledStartTime: string | null;
   scheduledEndTime: string | null;
   durationMinutes: number | null;
+  timezoneName?: string | null;
 
   hourlyRate: number | null;
   totalPrice: number | null;
@@ -89,6 +90,8 @@ export interface BookingItem {
   notes: string | null;
 
   cancellationReason: string | null;
+  cancellationSource?: "customer" | "welper" | "admin" | "payment_authorization_deadline" | null;
+  cancellationFeeCents?: number;
   declineReason: string | null;
 
   acceptedAt: string | null;
@@ -113,6 +116,13 @@ export interface BookingItem {
     | "canceled"
     | "failed";
   captureEligibleAt?: string | null;
+  paymentAuthorizationStatus?: string | null;
+  paymentAuthorizationDueAt?: string | null;
+  paymentAuthorizationDeadlineAt?: string | null;
+  paymentAuthorizationExpiresAt?: string | null;
+  paymentAuthorizationRiskCode?: string | null;
+  paymentAuthorizationFailureCode?: string | null;
+  paymentAuthorizationFailureMessage?: string | null;
   paymentClientSecret?: string | null;
   serviceReceipt?: ServiceReceipt | null;
   customerFirstName?: string | null;
@@ -151,6 +161,8 @@ export interface CreateBookingParams {
   notes?: string;
   /** Timezone offset in minutes (e.g. -300 for EST) for cancellation policy */
   timezoneOffsetMinutes?: number;
+  /** IANA timezone for the service location, for example America/Toronto. */
+  timezoneName?: string;
   jobPostingId?: string;
   jobApplicationId?: string;
 }

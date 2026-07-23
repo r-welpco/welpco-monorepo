@@ -13,8 +13,9 @@ import { Flex } from "@welpco/ui/flex";
 import { Progress } from "@welpco/ui/progress";
 import { Text } from "@welpco/ui/text";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { CheckCircle2, Circle, CircleDashed } from "lucide-react";
+import { BookOpen, CheckCircle2, Circle, CircleDashed } from "lucide-react";
 import type { CustomerSetupTaskDto } from "@welpco/types";
+import { localizedPath } from "@/i18n/locale-routes";
 import { normalizeCustomerSetupChecklist } from "@/lib/dashboard/normalize-customer-setup-checklist";
 import {
   buildCustomerSetupGroupedView,
@@ -202,6 +203,15 @@ export function CustomerSetupChecklist({ variant = "full" }: CustomerSetupCheckl
             onAddPayment={() => setPaymentDialogOpen(true)}
           />
         ) : null}
+
+        <Flex justify="start">
+          <Button size="1" variant="ghost" color="gray" asChild>
+            <Link href={localizedPath("/guides/customer", locale)}>
+              <BookOpen size={14} aria-hidden />
+              {t("readGuide")}
+            </Link>
+          </Button>
+        </Flex>
       </Flex>
       <AddPaymentMethodDialog
         open={paymentDialogOpen}

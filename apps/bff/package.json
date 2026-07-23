@@ -9,7 +9,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "prebuild": "pnpm --filter @welpco/email --filter @welpco/database run build",
+    "prebuild": "pnpm --filter @welpco/email --filter @welpco/sms --filter @welpco/database run build",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -40,6 +40,7 @@
   "dependencies": {
     "@welpco/database": "workspace:*",
     "@welpco/email": "workspace:*",
+    "@welpco/sms": "workspace:*",
     "@aws-sdk/client-s3": "^3.1009.0",
     "@aws-sdk/s3-request-presigner": "^3.1009.0",
     "@nestjs/axios": "^3.1.1",
@@ -71,6 +72,7 @@
     "resend": "^6.12.4",
     "rxjs": "^7.8.1",
     "stripe": "^17.4.0",
+    "twilio": "^5.10.4",
     "typeorm": "^0.3.28"
   },
   "devDependencies": {

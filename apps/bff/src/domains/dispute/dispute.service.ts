@@ -44,6 +44,7 @@ import {
   type DisputeEmailType,
   type DisputeEmailVariables,
 } from '@welpco/email';
+import { getSmsBody } from '@welpco/sms';
 import { buildBookingActionUrl, getFrontendBaseUrl } from '../notification/notification-locale.helper';
 import { Message } from '../communication/entities';
 
@@ -108,16 +109,23 @@ export class DisputeService {
       status: string;
       kind?: string;
     },
+    options?: { smsWelperId?: string },
   ): Promise<void> {
     const seen = new Set<string>();
     for (const id of recipientIds) {
       if (!id || seen.has(id)) continue;
       seen.add(id);
       try {
+        const locale = await this.notificationService.resolveLocaleForUser(id);
+        const smsBody =
+          emailType === 'dispute_filed' && options?.smsWelperId === id
+            ? getSmsBody('welper_dispute_opened', locale === 'fr' ? 'fr' : 'en')
+            : undefined;
         await this.notificationService.emitForUser(id, {
           category: NotificationCategory.DISPUTE,
           disputeEmailType: emailType,
           disputeEmailVariables: variables,
+          smsBody,
           metadata: {
             ...metadata,
             kind: metadata.kind ?? emailType,
@@ -136,6 +144,7 @@ export class DisputeService {
     resolutionType: string,
     refundStatus: string,
     metadata: { disputeId: string; bookingId: string; status: string },
+    options?: { smsWelperId?: string },
   ): Promise<void> {
     const seen = new Set<string>();
     for (const id of recipientIds) {
@@ -149,6 +158,10 @@ export class DisputeService {
           disputeEmailVariables: {
             resolutionSummary: getDisputeResolutionSummary(locale, resolutionType, refundStatus),
           },
+          smsBody:
+            options?.smsWelperId === id
+              ? getSmsBody('welper_dispute_resolved', locale === 'fr' ? 'fr' : 'en')
+              : undefined,
           metadata: { ...metadata, kind: 'dispute_resolved' },
         });
       } catch (err) {
@@ -461,6 +474,7 @@ export class DisputeService {
           bookingId: savedDispute.bookingId,
           status: 'open',
         },
+        { smsWelperId: booking.welperId },
       );
 
       return await this.toDto(savedDispute);
@@ -816,6 +830,7 @@ export class DisputeService {
           dto.resolutionType,
           stripeRefund.status,
           { disputeId, bookingId: booking.id, status: 'resolved' },
+          { smsWelperId: booking.welperId },
         );
         await this.emitBookingLifecycleNotifications(booking, 'booking_cancelled', 'dispute_cancelled');
 
@@ -866,6 +881,7 @@ export class DisputeService {
         dto.resolutionType,
         stripeRefund.status,
         { disputeId, bookingId: booking.id, status: 'resolved' },
+        { smsWelperId: booking.welperId },
       );
       if (nextStatus === BookingRequestStatus.COMPLETED) {
         await this.emitBookingLifecycleNotifications(booking, 'booking_completed', 'dispute_completed');

@@ -1,0 +1,668 @@
+/* Guide pages — documentation shell: compact cream hero band, then a centred
+   two-column body (sticky "On this page" nav + a ~70ch content column).
+
+   Ink: the marketing `--fg-muted` (evergreen at 62% alpha) renders as a washed
+   sage on cream — ~4.3:1, too low for body copy. These pages set their own
+   reading inks instead, both cleared for AAA (≥7:1) on white AND on cream:
+     --guide-ink       #12291F  → 15.4:1 on #fff, 13.8:1 on #FAF1E5   (body)
+     --guide-ink-soft  #3A544A  →  8.2:1 on #fff,  7.4:1 on #FAF1E5   (secondary)
+   Headings stay Evergreen #00492F (10.5:1 / 9.4:1).
+
+   Doubled selectors override the `.welpco` marketing hero heading scale. */
+
+.guidePage {
+  --guide-ink: #12291f;
+  --guide-ink-soft: #3a544a;
+  --guide-rule: rgba(0, 73, 47, 0.12);
+  --guide-header-offset: 100px;
+
+  background: #fff;
+}
+
+/* ---------- Hero band (compact) ---------- */
+
+.hero {
+  position: relative;
+  background: var(--cream, #faf1e5);
+}
+
+.heroInner {
+  max-width: 68.75rem; /* 1100px — same measure as the body shell */
+  margin: 0 auto;
+  padding: 64px 24px 104px;
+}
+
+.heroEyebrow {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--guide-ink-soft);
+}
+
+.guidePage.guidePage .heroTitle {
+  font-family: var(--font-display, serif);
+  font-weight: 400;
+  font-size: clamp(32px, 4.4vw, 50px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--evergreen, #00492f);
+  margin-top: 14px;
+}
+
+.heroSubtitle {
+  margin-top: 14px;
+  max-width: 44rem;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--guide-ink-soft);
+}
+
+/* Full-bleed: spans the hero band's entire bottom edge, so it reads as the
+   cream band curving into the white body rather than a clipped corner blob. */
+.heroWave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  display: block;
+  width: 100%;
+  height: clamp(48px, 6vw, 76px);
+  pointer-events: none;
+}
+
+/* ---------- Two-column documentation shell ---------- */
+
+.shell {
+  max-width: 68.75rem; /* 1100px */
+  margin: 0 auto;
+  padding: 0 24px 96px;
+}
+
+@media (min-width: 1024px) {
+  .shell {
+    display: grid;
+    grid-template-columns: 252px minmax(0, 1fr);
+    gap: 0 56px;
+    align-items: start;
+  }
+}
+
+.content {
+  min-width: 0;
+  max-width: 45rem; /* 720px — ~70ch measure */
+  padding-top: 8px;
+}
+
+@media (min-width: 1024px) {
+  .content {
+    padding-top: 40px;
+  }
+}
+
+/* ---------- Sticky section nav (desktop) ---------- */
+
+.sideNav {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sideNav {
+    display: block;
+    position: sticky;
+    top: var(--guide-header-offset);
+    align-self: start;
+    max-height: calc(100vh - var(--guide-header-offset) - 32px);
+    overflow-y: auto;
+    padding: 44px 0 8px;
+  }
+}
+
+.sideNavLabel {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--guide-ink-soft);
+  padding-left: 14px;
+}
+
+.sideNavList {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  border-left: 1px solid var(--guide-rule);
+}
+
+.sideNavLink,
+.sideNavLinkActive {
+  display: flex;
+  gap: 10px;
+  padding: 8px 8px 8px 13px;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  font-size: 14px;
+  line-height: 1.45;
+  text-decoration: none;
+  color: var(--guide-ink-soft);
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.sideNavLink:hover {
+  color: var(--evergreen, #00492f);
+  border-left-color: var(--guide-rule);
+}
+
+.sideNavLinkActive {
+  color: var(--evergreen, #00492f);
+  font-weight: 600;
+  border-left-color: var(--spring, #79c000);
+}
+
+.sideNavLink:focus-visible,
+.sideNavLinkActive:focus-visible {
+  outline: 2px solid var(--evergreen, #00492f);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.sideNavNumeral {
+  flex: none;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--spring, #79c000);
+}
+
+.sideNavLink .sideNavNumeral {
+  color: var(--guide-ink-soft);
+}
+
+.sideNavText {
+  min-width: 0;
+}
+
+/* ---------- Contents disclosure (mobile) ---------- */
+
+.mobileNav {
+  margin: 24px 0 8px;
+  border: 1px solid var(--guide-rule);
+  border-radius: 14px;
+  background: var(--cream-soft, #fdf9f5);
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .mobileNav {
+    display: none;
+  }
+}
+
+.mobileNavSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--evergreen, #00492f);
+}
+
+.mobileNavSummary::-webkit-details-marker {
+  display: none;
+}
+
+.mobileNavSummary:focus-visible {
+  outline: 2px solid var(--evergreen, #00492f);
+  outline-offset: -2px;
+}
+
+.mobileNavChevron {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--evergreen, #00492f);
+  border-bottom: 2px solid var(--evergreen, #00492f);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 140ms ease;
+}
+
+.mobileNav[open] .mobileNavChevron {
+  transform: rotate(225deg) translate(-2px, -2px);
+}
+
+.mobileNavList {
+  list-style: none;
+  margin: 0;
+  padding: 0 10px 10px;
+}
+
+.mobileNavLink {
+  display: flex;
+  gap: 10px;
+  padding: 10px 8px;
+  border-top: 1px solid var(--guide-rule);
+  font-size: 15px;
+  line-height: 1.45;
+  text-decoration: none;
+  color: var(--guide-ink);
+}
+
+.mobileNavLink:focus-visible {
+  outline: 2px solid var(--evergreen, #00492f);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+/* ---------- Overview (intro + linked table of contents) ---------- */
+
+.overview {
+  padding-top: 32px;
+}
+
+.overviewIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.overviewIntro p {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--guide-ink);
+}
+
+.overviewLead {
+  margin-top: 26px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--evergreen, #00492f);
+}
+
+.overviewList {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  border: 1px solid var(--guide-rule);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--cream-soft, #fdf9f5);
+}
+
+.overviewList li + li .overviewLink {
+  border-top: 1px solid var(--guide-rule);
+}
+
+.overviewLink {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  text-decoration: none;
+  color: var(--guide-ink);
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.overviewLink:hover {
+  background: var(--cream, #faf1e5);
+  color: var(--evergreen, #00492f);
+}
+
+.overviewLink:focus-visible {
+  outline: 2px solid var(--evergreen, #00492f);
+  outline-offset: -2px;
+}
+
+.overviewNumeral {
+  flex: none;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+  color: var(--spring, #79c000);
+}
+
+.overviewLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.overviewArrow {
+  flex: none;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--guide-ink-soft);
+  transition: transform 140ms ease;
+}
+
+.overviewLink:hover .overviewArrow {
+  transform: translateX(3px);
+  color: var(--evergreen, #00492f);
+}
+
+/* ---------- Sections ---------- */
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+}
+
+.section {
+  padding-top: 44px;
+  scroll-margin-top: 108px; /* sticky marketing header (76px) + breathing room */
+}
+
+.section:focus {
+  outline: none;
+}
+
+.section + .section {
+  margin-top: 44px;
+  border-top: 1px solid var(--guide-rule);
+}
+
+.sectionNumeral {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--spring, #79c000);
+  font-variant-numeric: tabular-nums;
+}
+
+.guidePage.guidePage .sectionTitle {
+  font-family: var(--font-display, serif);
+  font-weight: 500;
+  font-size: clamp(23px, 2.4vw, 28px);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--evergreen, #00492f);
+  margin-top: 8px;
+}
+
+.sectionBody {
+  margin-top: 16px;
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--guide-ink);
+}
+
+/* Doubled class for specificity: the marketing shell resets `.welpco p { margin: 0 }`
+   (0,1,1), which outranks a plain `.sectionBody > * + *` (0,1,0) and collapsed every
+   block gap to zero. Same trick already used for `.heroTitle`. */
+.sectionBody.sectionBody > * + * {
+  margin-top: 20px;
+}
+
+/* A paragraph that trails a list is a conclusion, not a new block — give it more air
+   than the list's own item spacing so it doesn't read as another bullet. */
+.sectionBody.sectionBody > :is(ul, ol) + p {
+  margin-top: 24px;
+}
+
+.blockList {
+  margin: 0;
+  padding-left: 1.35rem;
+}
+
+.blockList li {
+  margin-top: 8px;
+  padding-left: 4px;
+}
+
+.blockList li::marker {
+  color: var(--spring, #79c000);
+  font-weight: 600;
+}
+
+.blockList li:first-child {
+  margin-top: 0;
+}
+
+/* ---------- Callouts ---------- */
+
+.calloutTip {
+  background: var(--cream, #faf1e5);
+  border-left: 4px solid var(--spring, #79c000);
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: var(--guide-ink);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+.calloutImportant {
+  background: var(--evergreen, #00492f);
+  border-radius: 14px;
+  padding: 18px 22px;
+  color: var(--cream, #faf1e5);
+  font-size: 16px;
+  line-height: 1.65;
+  font-weight: 500;
+}
+
+/* ---------- CTA pill ---------- */
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  background: var(--evergreen, #00492f);
+  color: var(--cream, #faf1e5);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.cta:hover {
+  transform: translateY(-1px);
+}
+
+.cta:focus-visible {
+  outline: 2px solid var(--spring, #79c000);
+  outline-offset: 3px;
+}
+
+.ctaArrow {
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* ---------- Support card (closes the content column) ---------- */
+
+.supportCard {
+  position: relative;
+  margin-top: 56px;
+  background: var(--evergreen, #00492f);
+  border-radius: 22px;
+  padding: 36px 32px 44px;
+  overflow: hidden;
+}
+
+.guidePage.guidePage .supportTitle {
+  font-family: var(--font-display, serif);
+  font-weight: 400;
+  font-size: clamp(24px, 2.6vw, 30px);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--cream, #faf1e5);
+}
+
+.supportText {
+  margin-top: 12px;
+  max-width: 36rem;
+  font-size: 16px;
+  line-height: 1.65;
+  color: rgba(250, 241, 229, 0.9);
+}
+
+.supportEmail {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cream, #faf1e5);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  border-radius: 4px;
+}
+
+.supportEmail:hover {
+  color: #fff;
+}
+
+.supportEmail:focus-visible {
+  outline: 2px solid var(--spring, #79c000);
+  outline-offset: 3px;
+}
+
+.supportClosing {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.supportClosing p {
+  font-size: 16px;
+  line-height: 1.65;
+  color: rgba(250, 241, 229, 0.9);
+}
+
+.supportSignature {
+  margin-top: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cream, #faf1e5);
+}
+
+.supportWave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  display: block;
+  width: 100%;
+  height: 56px;
+  pointer-events: none;
+}
+
+/* ---------- Guides index ---------- */
+
+.indexCards {
+  max-width: 68.75rem;
+  margin: 0 auto;
+  padding: 48px 24px 96px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 720px) {
+  .indexCards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.roleCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--cream, #faf1e5);
+  border-radius: 22px;
+  padding: 32px 28px 40px;
+  text-decoration: none;
+  overflow: hidden;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.roleCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(0, 73, 47, 0.12);
+}
+
+.roleCard:focus-visible {
+  outline: 2px solid var(--evergreen, #00492f);
+  outline-offset: 3px;
+}
+
+.roleCardEyebrow {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--guide-ink-soft);
+}
+
+.guidePage.guidePage .roleCardTitle {
+  font-family: var(--font-display, serif);
+  font-weight: 500;
+  font-size: clamp(24px, 2.6vw, 30px);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--evergreen, #00492f);
+}
+
+.roleCardText {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--guide-ink);
+  max-width: 26rem;
+}
+
+.roleCardLink {
+  position: relative;
+  margin-top: auto;
+  padding-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--evergreen, #00492f);
+}
+
+.roleCardWave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  display: block;
+  width: 100%;
+  height: 44px;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta,
+  .roleCard,
+  .overviewArrow,
+  .mobileNavChevron,
+  .sideNavLink,
+  .sideNavLinkActive,
+  .overviewLink {
+    transition: none;
+  }
+
+  .cta:hover,
+  .roleCard:hover,
+  .overviewLink:hover .overviewArrow {
+    transform: none;
+  }
+}

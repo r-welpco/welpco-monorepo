@@ -1,8 +1,13 @@
 const nodeExternals = require('webpack-node-externals');
 
-/** Keep native/SDK deps external when @welpco/email is bundled into the serverless artifact. */
+/** Keep native/SDK deps external when @welpco packages are bundled into the serverless artifact. */
 function externalizeSdkRequest({ request }, callback) {
-  if (request === 'resend' || (typeof request === 'string' && request.startsWith('resend/'))) {
+  if (
+    request === 'resend' ||
+    (typeof request === 'string' && request.startsWith('resend/')) ||
+    request === 'twilio' ||
+    (typeof request === 'string' && request.startsWith('twilio/'))
+  ) {
     return callback(null, `commonjs ${request}`);
   }
   callback();

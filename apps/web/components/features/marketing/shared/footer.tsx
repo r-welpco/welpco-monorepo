@@ -27,7 +27,7 @@ export function Footer() {
   const t = useTranslations("marketing.footer");
   const tA11y = useTranslations("marketing.a11y");
 
-  const cols: { titleKey: "welpco" | "customers" | "support"; links: { labelKey: string; href?: string }[] }[] = [
+  const cols: { titleKey: "welpco" | "customers" | "welpers" | "support"; links: { labelKey: string; href?: string }[] }[] = [
     {
       titleKey: "welpco",
       links: [
@@ -41,7 +41,16 @@ export function Footer() {
         { labelKey: "findWelper", href: "/search" },
         { labelKey: "categories", href: "/#categories" },
         { labelKey: "howItWorks", href: "/how-it-works" },
+        { labelKey: "customerGuide", href: "/guides/customer" },
         { labelKey: "trustSafety", href: "/#trust" },
+      ],
+    },
+    {
+      titleKey: "welpers",
+      links: [
+        { labelKey: "welperGuide", href: "/guides/welper" },
+        { labelKey: "weeklyPayouts", href: "/how-it-works" },
+        { labelKey: "community" },
       ],
     },
     {
@@ -99,7 +108,7 @@ export function Footer() {
           data-grid="footer-cols"
           style={{
             display: "grid",
-            gridTemplateColumns: "1.4fr repeat(3, 1fr)",
+            gridTemplateColumns: "1.4fr repeat(4, 1fr)",
             gap: 48,
             paddingBottom: 64,
             borderBottom: "1px solid rgba(250,241,229,0.18)",

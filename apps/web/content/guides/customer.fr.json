@@ -1,0 +1,206 @@
+{
+  "meta": {
+    "title": "Welpco — Guide du client",
+    "description": "Comment trouver un Welper, publier une demande dans la Marketplace, réserver un service, payer de façon sécurisée et gérer vos réservations sur Welpco."
+  },
+  "hero": {
+    "eyebrow": "Guide du client",
+    "title": "Bienvenue dans votre guide Welpco",
+    "subtitle": "Bien démarrer sur la plateforme — réservations, paiements, messagerie et avis."
+  },
+  "overview": {
+    "intro": [
+      "Merci de faire partie de la communauté Welpco !",
+      "Ce guide a été créé pour vous accompagner dans vos premières étapes sur la plateforme et vous aider à tirer le meilleur parti de votre compte."
+    ],
+    "tocLead": "Vous y trouverez les informations essentielles pour :",
+    "items": [
+      { "label": "trouver un Welper", "sectionId": "find-a-welper" },
+      { "label": "publier une demande dans la Marketplace", "sectionId": "marketplace" },
+      { "label": "réserver un service", "sectionId": "booking" },
+      { "label": "communiquer avec votre Welper", "sectionId": "messaging" },
+      { "label": "gérer vos réservations", "sectionId": "manage-bookings" },
+      { "label": "laisser un avis après un service", "sectionId": "reviews" }
+    ]
+  },
+  "sections": [
+    {
+      "numeral": "01",
+      "id": "find-a-welper",
+      "title": "Trouvez le bon Welper",
+      "blocks": [
+        { "type": "paragraph", "text": "Parcourez les profils disponibles dans votre région." },
+        { "type": "paragraph", "text": "Vous pouvez consulter :" },
+        {
+          "type": "list",
+          "items": [
+            "les services offerts;",
+            "les tarifs;",
+            "les avis;",
+            "les disponibilités;",
+            "les informations du profil."
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "tip",
+          "text": "Prenez le temps de comparer les profils afin de trouver le Welper qui répond le mieux à vos besoins."
+        },
+        { "type": "cta", "label": "Trouver un Welper", "href": "/search" }
+      ]
+    },
+    {
+      "numeral": "02",
+      "id": "marketplace",
+      "title": "Vous ne trouvez pas le bon Welper ?",
+      "blocks": [
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Si aucun profil ne correspond à votre besoin, vous pouvez publier votre demande dans l’onglet Marketplace.",
+            "Votre offre sera visible par les Welpers disponibles, qui pourront consulter les détails et postuler directement.",
+            "C’est un excellent moyen de recevoir plusieurs propositions pour votre projet."
+          ]
+        }
+      ]
+    },
+    {
+      "numeral": "03",
+      "id": "booking",
+      "title": "Réserver un service",
+      "blocks": [
+        { "type": "paragraph", "text": "Lorsque vous avez trouvé le bon Welper :" },
+        {
+          "type": "list",
+          "items": [
+            "choisissez une date et une heure;",
+            "ajoutez les détails importants;",
+            "confirmez votre réservation."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Le Welper recevra une notification et pourra accepter votre demande."
+        }
+      ]
+    },
+    {
+      "numeral": "04",
+      "id": "secure-payment",
+      "title": "Paiement sécurisé",
+      "blocks": [
+        { "type": "paragraph", "text": "Les paiements sont traités de façon sécurisée par Welpco." },
+        {
+          "type": "paragraph",
+          "text": "Lorsque vous réservez un service, un montant équivalent à une heure de service est préautorisé et mis en attente."
+        },
+        {
+          "type": "paragraph",
+          "text": "Une fois le service terminé, le Welper soumet son heure de début et son heure de fin dans la plateforme. Le montant final est ensuite calculé en fonction du temps réellement travaillé."
+        },
+        {
+          "type": "paragraph",
+          "text": "Votre facture finale peut être supérieure ou inférieure au montant préautorisé initial, selon le nombre total d’heures nécessaires pour compléter le service."
+        },
+        {
+          "type": "paragraph",
+          "text": "Le paiement est uniquement traité une fois le service terminé, et vous recevrez une facture indiquant les heures travaillées ainsi que le montant final facturé."
+        },
+        {
+          "type": "paragraph",
+          "text": "Vous recevrez également une copie de la facture pour vos dossiers."
+        }
+      ]
+    },
+    {
+      "numeral": "05",
+      "id": "messaging",
+      "title": "Communiquez avec votre Welper",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Une fois la réservation effectuée, vous pourrez communiquer directement avec votre Welper via la messagerie de la plateforme."
+        },
+        { "type": "paragraph", "text": "Utilisez cette fonctionnalité pour :" },
+        {
+          "type": "list",
+          "items": [
+            "poser vos questions;",
+            "partager des informations importantes;",
+            "confirmer les détails du rendez-vous."
+          ]
+        }
+      ]
+    },
+    {
+      "numeral": "06",
+      "id": "day-of",
+      "title": "Le jour du service",
+      "blocks": [
+        { "type": "paragraph", "text": "Assurez-vous que :" },
+        {
+          "type": "list",
+          "items": [
+            "le lieu est accessible;",
+            "les instructions ont été communiquées;",
+            "le Welper dispose de toutes les informations nécessaires."
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "tip",
+          "text": "Une bonne communication aide à assurer une expérience positive pour tous."
+        }
+      ]
+    },
+    {
+      "numeral": "07",
+      "id": "reviews",
+      "title": "Après le service",
+      "blocks": [
+        { "type": "paragraph", "text": "Une fois le service terminé :" },
+        {
+          "type": "list",
+          "items": [
+            "laissez un avis sur votre expérience;",
+            "attribuez une note au Welper."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Vos avis aident les autres clients à faire un choix éclairé et contribuent à maintenir une communauté de confiance."
+        }
+      ]
+    },
+    {
+      "numeral": "08",
+      "id": "manage-bookings",
+      "title": "Gérez vos réservations",
+      "blocks": [
+        { "type": "paragraph", "text": "Depuis votre tableau de bord, vous pouvez :" },
+        {
+          "type": "list",
+          "items": [
+            "consulter vos réservations;",
+            "suivre leur statut;",
+            "communiquer avec vos Welpers;",
+            "accéder à vos factures;",
+            "consulter vos demandes publiées dans la Marketplace."
+          ]
+        },
+        { "type": "cta", "label": "Voir mes réservations", "href": "/dashboard/bookings" }
+      ]
+    }
+  ],
+  "support": {
+    "title": "Besoin d’aide ?",
+    "text": "Si vous avez des questions concernant une réservation, un paiement, la Marketplace ou votre compte, n’hésitez pas à nous contacter.",
+    "email": "support@welpco.com",
+    "closing": [
+      "Nous sommes là pour vous accompagner.",
+      "Merci de faire partie de la communauté Welpco !"
+    ],
+    "signature": "L’équipe Welpco"
+  }
+}

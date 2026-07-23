@@ -34,6 +34,7 @@ export type WelperNavLabels = {
   userMenu: {
     profile: string;
     accountSettings: string;
+    guides: string;
     signOut: string;
   };
   themeMenu: string;
@@ -64,6 +65,7 @@ export type CustomerNavLabels = {
   userMenu: {
     profile: string;
     accountSettings: string;
+    guides: string;
     signOut: string;
   };
   themeMenu: string;
@@ -97,6 +99,7 @@ export function useCustomerNavLabels(): CustomerNavLabels {
     userMenu: {
       profile: t("userMenu.profile"),
       accountSettings: t("userMenu.accountSettings"),
+      guides: t("userMenu.guides"),
       signOut: t("userMenu.signOut"),
     },
     themeMenu: t("themeMenu"),
@@ -140,6 +143,7 @@ export function useWelperNavLabels(): WelperNavLabels {
     userMenu: {
       profile: t("userMenu.profile"),
       accountSettings: t("userMenu.accountSettings"),
+      guides: t("userMenu.guides"),
       signOut: t("userMenu.signOut"),
     },
     themeMenu: t("themeMenu"),
@@ -231,6 +235,7 @@ export function useDashboardUserMenuLabels(): Pick<
     userMenu: {
       profile: t("userMenu.profile"),
       accountSettings: t("userMenu.accountSettings"),
+      guides: t("userMenu.guides"),
       signOut: t("userMenu.signOut"),
     },
     themeMenu: t("themeMenu"),
@@ -1065,6 +1070,13 @@ export function useCustomerBookingDetailLabels() {
       sectionTitle: p("sectionTitle"),
       cardOnFile: p("cardOnFile"),
       authorizeHint: p("authorizeHint"),
+      scheduledHint: p("scheduledHint"),
+      deadlineHint: (date: string) => p("deadlineHint", { date }),
+      failedHint: p("failedHint"),
+      authenticationHint: p("authenticationHint"),
+      canceledHint: p("canceledHint"),
+      expiredHint: p("expiredHint"),
+      deadlineCanceledHint: p("deadlineCanceledHint"),
       authorizing: p("authorizing"),
       authorize: p("authorize"),
       holdActive: p("holdActive"),

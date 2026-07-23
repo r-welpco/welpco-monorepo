@@ -51,7 +51,7 @@ Note: no code path currently sets `no_show`; the status exists in the enum/state
 
 ## Payment hold / capture / release points
 
-1. **Hold** — at accept time (`prepareAuthorizationForAcceptance`): a manual-capture Stripe PaymentIntent for **one hour of service + tax** (`BOOKING_HOLD_DURATION_HOURS = 1` in `booking-pricing.ts`). If the scheduled start is > 5 days away the authorization is deferred (`scheduled`) and executed by the payment cron; the deadline is 24 h before the start, after which the booking is auto-cancelled.
+1. **Hold** — after acceptance (`prepareAuthorizationForAcceptance`): a manual-capture Stripe PaymentIntent for **one hour of service + tax** (`BOOKING_HOLD_DURATION_HOURS = 1` in `booking-pricing.ts`). If the scheduled start is more than 72 hours away the authorization is deferred (`scheduled`) and executed by the payment cron; the deadline is 24 h before the start, after which an unresolved booking is auto-cancelled without a fee. Stripe's `capture_before` must cover scheduled end plus the safety buffer.
 2. **Capture** — at receipt submission: hold captured up to the receipt total; any excess is charged as a `delta_receipt` PaymentIntent.
 3. **Release** — automatic (`completed → payment_released`) once every payment row is settled; feeds the payout ledger. See [payment.md](payment.md).
 

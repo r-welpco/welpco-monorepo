@@ -1,0 +1,246 @@
+{
+  "meta": {
+    "title": "Welpco — Guide du Welper",
+    "description": "Comment configurer vos paiements Stripe, recevoir des réservations, utiliser la Marketplace, garder votre profil à jour et bâtir votre réputation sur Welpco."
+  },
+  "hero": {
+    "eyebrow": "Guide du Welper",
+    "title": "Bienvenue dans votre guide Welpco",
+    "subtitle": "Bien démarrer sur la plateforme — profil, paiements, réservations et Marketplace."
+  },
+  "overview": {
+    "intro": [
+      "Merci de faire partie de la communauté Welpco !",
+      "Ce guide a été créé pour vous accompagner dans vos premières étapes sur la plateforme et vous aider à bien comprendre comment utiliser votre compte."
+    ],
+    "tocLead": "Vous y trouverez les informations essentielles pour :",
+    "items": [
+      {
+        "label": "compléter les dernières étapes de votre profil",
+        "sectionId": "keep-profile-updated"
+      },
+      {
+        "label": "comprendre comment recevoir des demandes",
+        "sectionId": "receiving-a-booking"
+      },
+      {
+        "label": "utiliser la Marketplace",
+        "sectionId": "marketplace"
+      },
+      {
+        "label": "configurer vos paiements",
+        "sectionId": "stripe-setup"
+      },
+      {
+        "label": "gérer vos réservations",
+        "sectionId": "after-a-service"
+      },
+      {
+        "label": "offrir une expérience professionnelle aux clients",
+        "sectionId": "when-selected"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "numeral": "01",
+      "id": "stripe-setup",
+      "title": "Complétez Stripe pour recevoir vos paiements",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Welpco utilise Stripe pour traiter les paiements de façon sécurisée."
+        },
+        {
+          "type": "paragraph",
+          "text": "Si ce n’est pas déjà fait, vous devrez compléter la configuration de votre compte Stripe afin de recevoir vos paiements directement dans votre compte bancaire."
+        },
+        {
+          "type": "callout",
+          "variant": "important",
+          "text": "Depuis le 11 juillet 2026, un compte de paiement Stripe complété est requis pour accepter des réservations — pas seulement pour recevoir vos paiements. Complétez votre configuration Stripe dès maintenant afin de pouvoir accepter les réservations dès leur arrivée."
+        },
+        {
+          "type": "paragraph",
+          "text": "Lors de la création de votre profil Welper, une étape vous permettra de créer votre compte Stripe. Une fois votre identifiant créé, suivez simplement les instructions ci-dessous :"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Type d’entreprise : sélectionnez « Particulier ou entreprise individuelle ».",
+            "Données personnelles : pour le champ « Intitulé de poste », vous pouvez inscrire « Travailleur autonome » ou plus précisément « Promeneur de chiens », « Femme/Homme de ménage », « Cuisinier », etc.",
+            "Informations sur l’entreprise : pour le secteur d’activité, sélectionnez « Services personnels – Autres services à la personne »; pour votre site web, inscrivez www.welpco.com; pour la description du produit/service, fournissez une brève description des services que vous offrez.",
+            "Informations bancaires : entrez les informations de votre compte bancaire personnel afin de recevoir votre paiement hebdomadaire."
+          ]
+        },
+        {
+          "type": "cta",
+          "label": "Configurer mes paiements",
+          "href": "/dashboard/profile?tab=payout"
+        }
+      ]
+    },
+    {
+      "numeral": "02",
+      "id": "background-check",
+      "title": "Vérification d’antécédents : optionnelle, mais recommandée",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "La vérification d’antécédents n’est pas obligatoire pour être visible sur Welpco."
+        },
+        {
+          "type": "paragraph",
+          "text": "Cependant, elle peut vous aider à vous démarquer auprès des clients et à augmenter leur niveau de confiance envers votre profil."
+        },
+        {
+          "type": "paragraph",
+          "text": "Les Welpers ayant complété une vérification d’antécédents peuvent être perçus comme plus rassurants par certains clients, surtout pour des services à domicile, de gardiennage, d’aide familiale ou de soins aux animaux."
+        }
+      ]
+    },
+    {
+      "numeral": "03",
+      "id": "marketplace",
+      "title": "Consultez les offres disponibles dans la Marketplace",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "En plus d’être visible pour les clients, vous pouvez aussi consulter les offres publiées dans l’onglet Marketplace."
+        },
+        {
+          "type": "paragraph",
+          "text": "Dans cette section, vous verrez les demandes de clients qui recherchent activement un Welper."
+        },
+        {
+          "type": "paragraph",
+          "text": "Vous pouvez consulter les détails des offres et postuler à celles qui correspondent à vos services, vos disponibilités et votre secteur."
+        }
+      ]
+    },
+    {
+      "numeral": "04",
+      "id": "receiving-a-booking",
+      "title": "Recevoir une réservation d’un client",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Lorsqu’un client réserve vos services, vous recevrez une notification."
+        },
+        {
+          "type": "paragraph",
+          "text": "Vous pourrez alors consulter les détails de la réservation, notamment :"
+        },
+        {
+          "type": "list",
+          "items": [
+            "le type de service demandé;",
+            "la date et l’heure;",
+            "le lieu du service;",
+            "les informations importantes fournies par le client."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Prenez toujours le temps de lire attentivement la demande avant de confirmer."
+        }
+      ]
+    },
+    {
+      "numeral": "05",
+      "id": "when-selected",
+      "title": "Lorsqu’un client vous choisit pour un service (lorsque vous postulez)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Si un client vous choisit pour un service, vous serez informé directement par la plateforme."
+        },
+        {
+          "type": "paragraph",
+          "text": "Assurez-vous de :"
+        },
+        {
+          "type": "list",
+          "items": [
+            "confirmer la réservation rapidement;",
+            "communiquer avec le client si vous avez des questions;",
+            "vérifier l’adresse, l’heure et les attentes;",
+            "vous présenter à l’heure prévue;",
+            "effectuer le service avec professionnalisme."
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "tip",
+          "text": "Une bonne communication aide à créer une expérience positive et augmente vos chances d’obtenir de bons avis."
+        }
+      ]
+    },
+    {
+      "numeral": "06",
+      "id": "keep-profile-updated",
+      "title": "Gardez votre profil à jour",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Pour recevoir plus de demandes, assurez-vous que votre profil reste complet et à jour :"
+        },
+        {
+          "type": "list",
+          "items": [
+            "vos services;",
+            "vos tarifs;",
+            "vos disponibilités;",
+            "votre secteur;",
+            "votre photo de profil;",
+            "votre description."
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "tip",
+          "text": "Plus votre profil est clair, plus les clients auront confiance en vous."
+        }
+      ]
+    },
+    {
+      "numeral": "07",
+      "id": "after-a-service",
+      "title": "Après un service",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Une fois le service terminé, assurez-vous de suivre les étapes requises dans la plateforme."
+        },
+        {
+          "type": "paragraph",
+          "text": "Vous devrez soumettre votre heure de début et votre heure de fin afin que Welpco puisse traiter correctement la réservation et générer la facture du client, lorsque applicable."
+        },
+        {
+          "type": "paragraph",
+          "text": "Les clients auront ensuite l’occasion de laisser un avis sur votre profil, ce qui peut vous aider à obtenir davantage de réservations à l’avenir."
+        },
+        {
+          "type": "paragraph",
+          "text": "Vous pourrez également évaluer et laisser un avis sur le client en fonction de votre expérience."
+        },
+        {
+          "type": "callout",
+          "variant": "tip",
+          "text": "Offrir un excellent service, communiquer clairement et être ponctuel sont parmi les meilleures façons de bâtir une solide réputation sur Welpco."
+        }
+      ]
+    }
+  ],
+  "support": {
+    "title": "Besoin d’aide ?",
+    "text": "Si vous avez des questions ou besoin d’aide avec votre profil, Stripe, une réservation ou la Marketplace, n’hésitez pas à nous contacter.",
+    "email": "support@welpco.com",
+    "closing": [
+      "Nous sommes là pour vous accompagner.",
+      "Merci de faire partie de la communauté Welpco !"
+    ],
+    "signature": "L’équipe Welpco"
+  }
+}

@@ -45,31 +45,45 @@ Every variable below was verified against actual code reads (`ConfigService.get(
 | `STRIPE_SECRET_KEY` | for any payments | All Stripe calls (payments, Connect, transfers, Tax); services no-op or 400 without it; `sk_live_` prefix flips dashboard URLs to live | `payment/*` services, `safety-verification/background-check-payment.service.ts` |
 | `STRIPE_WEBHOOK_SECRET` | for webhooks | Webhook signature verification | `payment/stripe-webhook.controller.ts` |
 | `STRIPE_BOOKING_TAX_CODE` | no | Tax code override for bookings | `payment/booking-tax.service.ts` |
+| `PAYMENT_AUTHORIZATION_LEAD_HOURS` | no (default `72`) | Hours before service when an accepted booking receives its card hold | `payment/payment.service.ts` |
+| `PAYMENT_AUTHORIZATION_DEADLINE_HOURS` | no (default `24`) | Fee-free auto-cancel cutoff for unresolved authorization | `payment/payment.service.ts` |
+| `PAYMENT_AUTHORIZATION_CAPTURE_BUFFER_HOURS` | no (default `6`) | Required validity after scheduled service end | `payment/payment.service.ts` |
+| `PAYMENT_AUTHORIZATION_MAX_AUTOMATIC_ATTEMPTS` | no (default `2`) | Maximum initial plus automatic expiry-replacement attempts | `payment/payment.service.ts` |
 
 ### Email
 
 | Variable | Required | Purpose | Where used |
 |---|---|---|---|
-| `RESEND_API_KEY` | prod: this or SMTP | Resend HTTP email (primary) | `email.service.ts` |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` (or `SMTP_PASSWORD`) | fallback | SMTP transport (MailHog in dev: 1025) | `email.service.ts` |
+| `RESEND_API_KEY` | prod: this or SMTP | Resend HTTP email (primary); also powers admin sent-emails report | `email.service.ts`, `clients/resend/resend-emails.client.ts` |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` (or `SMTP_PASSWORD`) | fallback | SMTP transport (Mailpit in dev: localhost:1025, UI :8025) | `email.service.ts` |
 | `SMTP_FROM` | no (default `noreply@welpco.com`) | Sender address | `email.service.ts` |
 
-### AWS S3 (uploads) — **not in any .env.example; app throws without them**
+### Object storage (S3 / MinIO) — now in `.env.example` (dev points at MinIO)
+
+Dev uses MinIO via docker-compose; production uses real AWS S3. Config resolution is shared in `src/clients/s3/s3-config.util.ts`.
 
 | Variable | Required | Purpose | Where used |
 |---|---|---|---|
-| `AWS_S3_REGION`, `AWS_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | **yes** (`getOrThrow`) | Uploads + presigned URLs | `src/modules/uploads/uploads.service.ts`, `s3-url-presigner.service.ts` |
-| `S3_BUCKET_EVIDENCE`, `S3_REGION`, `S3_PRESIGN_TTL_SECONDS` | no | Legacy fallbacks / presign TTL | `s3-url-presigner.service.ts` |
+| `AWS_S3_REGION`, `AWS_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | **yes** for uploads (`uploads.service.ts` uses `getOrThrow`) | Bucket/region + creds. Dev = MinIO (`welpco-dev`, `welpco_minio`/`welpco_minio_dev`); prod = real bucket + IAM (omit key/secret on IRSA/instance roles) | `uploads.service.ts`, `s3-url-presigner.service.ts`, `portfolio.service.ts` |
+| `S3_ENDPOINT` | dev: yes (MinIO) / prod: **unset** | Custom S3 host; enables path-style. `http://localhost:9000` for MinIO. Leave unset in prod for AWS virtual-hosted URLs | `s3-config.util.ts` |
+| `S3_FORCE_PATH_STYLE` | dev: `true` | Force path-style addressing (MinIO requires it) | `s3-config.util.ts` |
+| `S3_PUBLIC_URL` | dev: yes (MinIO) | Browser-reachable host for unsigned display URLs (`{host}/{bucket}/{key}`). Falls back to `S3_ENDPOINT`, then AWS virtual-hosted form | `s3-config.util.ts` |
+| `S3_BUCKET_EVIDENCE`, `S3_REGION`, `S3_PRESIGN_TTL_SECONDS` | no | Legacy bucket/region fallbacks / presign TTL (default 900s) | `s3-url-presigner.service.ts` |
 
 ### Third-party services
 
 | Variable | Required | Purpose | Where used |
 |---|---|---|---|
 | `GOOGLE_MAPS_API_KEY` | yes at startup (placeholder ok in dev) | Geocoding | `src/geocode/google-maps-geocode.service.ts` |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | for live SMS | Twilio Programmable Messaging | `domains/user-management/sms/sms.service.ts`, `@welpco/sms` |
+| `SMS_PROVIDER` | no (`stub` when Twilio creds missing) | `twilio` \| `stub` | same |
 | `TURNSTILE_SECRET_KEY` | prod: yes | Cloudflare Turnstile server verification | `src/common/human-verification/human-verification.service.ts` |
 | `CERTN_API_ENABLED` | no (default false = manual flow) | Toggle Certn background-check API | `safety-verification/background-check.service.ts` |
 | `CERTN_API_KEY`, `CERTN_API_BASE_URL`, `CERTN_WEBHOOK_SECRET`, `CERTN_IDENTITY_CHECK_MODE` | if Certn enabled | Certn API client + webhook | `safety-verification/certn-api.client.ts`, `certn-webhook.controller.ts` |
 | `BACKGROUND_CHECK_APPLICANT_URL` (+ `_FR`) | if Certn disabled | Manual screening links (EN/FR) | `background-check.service.ts` |
+| `VERCEL_TOKEN` | for web-analytics report | Bearer token for Vercel Web Analytics API | `clients/vercel/vercel-web-analytics.client.ts` |
+| `VERCEL_WEB_PROJECT_ID` | for web-analytics report | Project id (or name) for `apps/web` | same |
+| `VERCEL_TEAM_ID` or `VERCEL_TEAM_SLUG` | for web-analytics report | Team scope for Vercel API calls (one required) | same |
 
 ### Feature flags
 

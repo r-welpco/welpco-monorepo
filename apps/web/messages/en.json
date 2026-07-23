@@ -44,6 +44,8 @@
         "categories": "Categories",
         "howItWorks": "How it works",
         "trustSafety": "Trust & safety",
+        "customerGuide": "Customer guide",
+        "welperGuide": "Welper guide",
         "welperHandbook": "Welper handbook",
         "weeklyPayouts": "Weekly payouts (Friday)",
         "community": "Community",
@@ -179,7 +181,7 @@
           {
             "n": "02",
             "title": "Book & schedule",
-            "body": "Pick a Welper, set a time, and confirm. You're not charged when you book — a one-hour hold is placed on your card once your Welper accepts."
+            "body": "Pick a Welper, set a time, and confirm. You're not charged when you book — a one-hour hold is placed three days before service after your Welper accepts."
           },
           {
             "n": "03",
@@ -247,7 +249,7 @@
           },
           {
             "title": "Charged only when done",
-            "body": "You're not charged when you book. When your Welper accepts, we place a one-hour hold on your card — you're only charged after the job is done."
+            "body": "You're not charged when you book. After your Welper accepts, we place a one-hour hold three days before service — you're only charged after the job is done."
           },
           {
             "title": "Report a problem on any booking",
@@ -297,7 +299,7 @@
           },
           {
             "q": "When and how do I pay for a service?",
-            "a": "You're not charged when you book. When your Welper accepts, we place a one-hour hold on your card. You're only charged after the job is complete."
+            "a": "You're not charged when you book. After your Welper accepts, we place a one-hour hold three days before service. You're only charged after the job is complete."
           },
           {
             "q": "Is it safe to have a Welper in my home?",
@@ -508,7 +510,7 @@
             ],
             [
               "When and how do I pay for a service?",
-              "You're not charged when you book. When a Welper accepts your booking, we place a one-hour hold on your card. You're only charged after the job is completed — the Welper confirms via the website or app that the job is done and submits the final time, and your card is then charged for the service they provided."
+              "You're not charged when you book. After a Welper accepts your booking, we place a one-hour hold on your card three days before service. You're only charged after the job is completed — the Welper confirms via the website or app that the job is done and submits the final time, and your card is then charged for the service they provided."
             ],
             [
               "What happens if a Welper does an unsatisfactory job?",
@@ -532,7 +534,9 @@
       "cta": {
         "title": "Still have questions?",
         "sub": "We respond within 48 hours.",
-        "button": "Contact us →"
+        "button": "Contact us →",
+        "customerGuideLink": "Read the full Customer guide",
+        "welperGuideLink": "Read the full Welper guide"
       }
     },
     "contactPage": {
@@ -808,6 +812,96 @@
         "saveAndContinueLaterAria": "Save and continue later",
         "progressSavedHint": "Your progress is saved. Sign back in to pick up here.",
         "signupProgressAria": "Signup progress: {percent}%"
+      },
+      "eduPanel": {
+        "ariaLabel": "How Welpco works",
+        "prev": "Previous slide",
+        "next": "Next slide",
+        "goToSlide": "Go to slide {index}",
+        "slideOf": "Slide {current} of {total}",
+        "sets": {
+          "generic": [
+            {
+              "icon": "shield",
+              "title": "Trusted local help",
+              "body": "Welpco connects you with real neighbours you can count on for everyday services in your community."
+            },
+            {
+              "icon": "credit-card",
+              "title": "No charge when you book",
+              "body": "A one-hour hold is placed three days before service after your Welper accepts. You're only charged after the job is done."
+            },
+            {
+              "icon": "messages",
+              "title": "Message on the platform",
+              "body": "Chat with your Welper right on Welpco — plan the details and keep everything in one place."
+            },
+            {
+              "icon": "star",
+              "title": "Reviews go both ways",
+              "body": "Customers and Welpers review each other after every job, keeping quality high across the community."
+            },
+            {
+              "icon": "life-buoy",
+              "title": "Real support, fast",
+              "body": "Questions or issues? Write to support@welpco.com and our team gets back to you within 48 hours."
+            }
+          ],
+          "customer": [
+            {
+              "icon": "search",
+              "title": "Find the right Welper",
+              "body": "Compare services, rates, reviews and availability to choose the Welper who fits your needs."
+            },
+            {
+              "icon": "store",
+              "title": "No match? Post your request",
+              "body": "Post your request to the Marketplace and receive proposals from available Welpers near you."
+            },
+            {
+              "icon": "calendar-check",
+              "title": "Book in a few steps",
+              "body": "Pick a date and time, add the details, then confirm — your Welper accepts the booking."
+            },
+            {
+              "icon": "receipt",
+              "title": "Pay only for time worked",
+              "body": "A one-hour hold three days before service; the final price reflects actual time worked, with an invoice after completion."
+            },
+            {
+              "icon": "star",
+              "title": "On the day, and after",
+              "body": "Prepare the location so your Welper can start right away, then leave a review once the job is done."
+            }
+          ],
+          "welper": [
+            {
+              "icon": "wallet",
+              "title": "Set up Stripe payouts",
+              "body": "A completed Stripe payout account is required to accept bookings — set it up first to start earning."
+            },
+            {
+              "icon": "badge-check",
+              "title": "Earn the trust badge",
+              "body": "The background check is optional but recommended — completing it earns you a badge clients look for."
+            },
+            {
+              "icon": "store",
+              "title": "Find work in the Marketplace",
+              "body": "Browse client requests in the Marketplace and apply to the ones that match your services."
+            },
+            {
+              "icon": "calendar-check",
+              "title": "When you're selected",
+              "body": "Confirm promptly, communicate with your client and arrive on time — reliability builds your reputation."
+            },
+            {
+              "icon": "receipt",
+              "title": "Get paid, get reviewed",
+              "body": "Submit your start and end times after the job — your invoice is generated and reviews go both ways."
+            }
+          ]
+        }
       },
       "categoryNames": {
         "Care": "Care",
@@ -1463,6 +1557,7 @@
       "resendFailed": "We couldn't resend the email. Try again in a moment.",
       "turnstileRequiredHint": "Complete the check below, then tap Resend email.",
       "addCard": "Add card",
+      "readGuide": "Read the guide",
       "allCompleteDiscoverable": "Setup complete — you're visible in customer search.",
       "customerSections": {
         "account": {
@@ -1472,7 +1567,7 @@
         },
         "bookingPayment": {
           "title": "Payment method — required to book",
-          "subtitle": "Add a card to authorize payment after a Welper accepts your booking.",
+          "subtitle": "Add a card for authorization three days before an accepted booking.",
           "complete": "Payment method saved — you're ready to book."
         },
         "beyondA": {
@@ -1574,7 +1669,8 @@
       "userMenu": {
         "profile": "Profile",
         "accountSettings": "Account settings",
-        "signOut": "Sign out"
+        "signOut": "Sign out",
+        "guides": "Guides"
       },
       "themeMenu": "Theme",
       "theme": {
@@ -2011,7 +2107,7 @@
       "deleteDescription": "We'll deactivate your account and sign you out. Active bookings and reviews stay attached to those records. If something's wrong, we'd rather hear it — let us know before you go.",
       "deleteButton": "Delete my account…",
       "paymentTitle": "Payment methods",
-      "paymentDescription": "Add a default card to complete your profile and authorize payment after a welper accepts your booking.",
+      "paymentDescription": "Add a default card to complete your profile and authorize payment three days before an accepted booking.",
       "paymentMethods": {
         "stripeNotConfigured": "Card payments are not configured (missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY). Contact support if this persists.",
         "saveCard": "Save card",
@@ -2027,6 +2123,18 @@
         "preparing": "Preparing…",
         "couldNotStartSetup": "Could not start card setup"
       }
+    },
+    "guides": {
+      "title": "Guides",
+      "subtitle": "Everything you need to get the most out of Welpco — read the guide for your role, or peek at the other one.",
+      "audienceAria": "Choose which guide to read",
+      "audience": {
+        "customer": "For customers",
+        "welper": "For Welpers"
+      },
+      "onThisPage": "On this page",
+      "contents": "Contents",
+      "backToTop": "Back to top"
     },
     "profile": {
       "title": "Profile",
@@ -2319,13 +2427,13 @@
       "summaryRate": "Rate",
       "summaryHoldLabel": "Hold (1 hour)",
       "summaryHoldAmount": "{amount} hold",
-      "summaryTaxNote": "This is a temporary authorization — you are not charged now. Tax is included when the hold is placed after the welper accepts.",
+      "summaryTaxNote": "This is a temporary authorization — you are not charged now. Tax is included when the hold is placed three days before service.",
       "summaryEstimatedJob": "Estimated job ({duration})",
       "summaryEstimatedBeforeTax": "{amount} before tax",
       "summaryFinalChargeNote": "Final charge is based on actual time after the service, up to your selected window.",
       "summaryPickService": "Pick a service to see the hold amount.",
       "beforeConfirmTitle": "Before you confirm",
-      "beforeConfirmPolicy": "Each booking is for at least one hour of service. When the welper accepts, we place a hold for one hour on your card — not a charge. You are only charged after the job is completed. Cancel more than 24 hours before the start time and the hold is released with no fee. Cancel within 24 hours of the start time and the one-hour hold may be charged as a cancellation fee.",
+      "beforeConfirmPolicy": "Each booking is for at least one hour of service. After the welper accepts, we place a one-hour hold on your card three days before service — not a charge. You are only charged after the job is completed. Cancel more than 24 hours before the start time and the hold is released with no fee. Cancel within 24 hours of the start time and the one-hour hold may be charged as a cancellation fee.",
       "detailsTitle": "Booking details",
       "serviceLabel": "Service",
       "selectService": "Select a service…",
@@ -2511,9 +2619,16 @@
           "sectionTitle": "Payment & authorization",
           "cardOnFile": "Card on file",
           "authorizeHint": "Complete payment authorization on your saved card (one-hour hold — not a charge until the service is completed). If you see this after the welper accepted, the automatic hold may have failed; try again or update your card in Settings.",
+          "scheduledHint": "Your saved card will receive a one-hour authorization hold three days before service,",
+          "deadlineHint": " Fix any payment issue before {date} or the booking will be cancelled without a fee.",
+          "failedHint": "The automatic card authorization failed. Try again using your saved card, or update your card in Settings.",
+          "authenticationHint": "Your card needs additional authentication. Authorize it now to keep the booking active.",
+          "canceledHint": "The previous card authorization was cancelled. Authorize it again using your saved card.",
+          "expiredHint": "The previous card authorization expired. Authorize it again using your saved card, or update your card in Settings.",
+          "deadlineCanceledHint": "This booking was cancelled without a fee because payment authorization was not completed before the deadline.",
           "authorizing": "Authorizing…",
           "authorize": "Authorize payment",
-          "holdActive": "A one-hour hold is active on your card (placed when the welper accepted). You are not charged until the service is completed.",
+          "holdActive": "A one-hour hold is active on your card. You are not charged until the service is completed.",
           "captureScheduled": " Capture is scheduled after {date} (pending service completion and dispute window).",
           "captured": "Payment has been captured.",
           "failed": "Payment could not be completed. Contact support if you need help.",
@@ -2742,7 +2857,7 @@
     },
     "addPaymentMethod": {
       "title": "Add payment method",
-      "description": "Add a card to authorize payment after a Welper accepts your booking.",
+      "description": "Add a card for authorization three days before an accepted booking.",
       "saveCard": "Save card",
       "savingCard": "Saving…",
       "cancel": "Cancel",

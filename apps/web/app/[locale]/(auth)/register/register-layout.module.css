@@ -1,0 +1,52 @@
+/*
+ * Split-screen register shell.
+ *
+ * DOM order is form-first (keyboard priority); the grid-template-areas put
+ * the educational panel visually on the LEFT at ≥1024px. Below 1024px the
+ * shell is a plain block: the panel column disappears and the compact edu
+ * card (rendered inside the form column) takes over. On /register/complete
+ * neither is rendered, so the shell collapses to today's single column.
+ */
+
+.shell {
+  display: block;
+  min-height: 100vh;
+}
+
+.formColumn {
+  min-width: 0;
+}
+
+.panelColumn {
+  display: none;
+}
+
+.compactSlot {
+  display: block;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .shell.withPanel {
+    display: grid;
+    grid-template-columns: minmax(380px, 42%) minmax(0, 1fr);
+    grid-template-areas: "panel form";
+  }
+
+  .withPanel .formColumn {
+    grid-area: form;
+  }
+
+  .withPanel .panelColumn {
+    display: block;
+    grid-area: panel;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    align-self: start;
+  }
+
+  .compactSlot {
+    display: none;
+  }
+}

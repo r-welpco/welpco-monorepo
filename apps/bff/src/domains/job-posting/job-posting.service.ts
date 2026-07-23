@@ -49,6 +49,7 @@ import { ServiceOfferingService } from '../profile-management/service-offering/s
 import { WelperProfileService } from '../profile-management/welper-profile/welper-profile.service';
 import { CategoriesService } from '../content-management/categories/categories.service';
 import { NotificationService } from '../notification/notification.service';
+import { getSmsBody } from '@welpco/sms';
 import { NotificationCategory } from '../notification/entities';
 import { GEOCODE_SERVICE } from '../geocode/geocode.interface';
 import type { IGeocodeService } from '../geocode/geocode.interface';
@@ -56,7 +57,59 @@ import { formatWelperDisplayNameForCustomer } from '../../common/display-name.ut
 import type { Address } from '../../common/types';
 import { BookingRequest } from '../booking/entities/booking-request.entity';
 import { UsersService } from '../user-management/users/users.service';
-import { getFrontendBaseUrl } from '../notification/notification-locale.helper';
+import { buildDashboardActionUrl, getFrontendBaseUrl } from '../notification/notification-locale.helper';
+
+type JobNotifyKind =
+  | 'new_application'
+  | 'job_cancelled'
+  | 'booking_request_sent'
+  | 'new_booking_from_job'
+  | 'application_not_selected';
+
+function jobNotificationCopy(
+  kind: JobNotifyKind,
+  locale: 'en' | 'fr',
+  jobTitle: string,
+): { title: string; body: string } {
+  const fr = locale === 'fr';
+  switch (kind) {
+    case 'new_application':
+      return {
+        title: fr ? 'Nouvelle candidature' : 'New job application',
+        body: fr
+          ? `Un Welper a postulé à votre demande « ${jobTitle} ».`
+          : `A welper applied to your job "${jobTitle}".`,
+      };
+    case 'job_cancelled':
+      return {
+        title: fr ? 'Demande annulée' : 'Job cancelled',
+        body: fr
+          ? `La demande « ${jobTitle} » a été annulée par le client.`
+          : `The job "${jobTitle}" was cancelled by the customer.`,
+      };
+    case 'booking_request_sent':
+      return {
+        title: fr ? 'Demande de réservation envoyée' : 'Booking request sent',
+        body: fr
+          ? `Votre demande de réservation pour « ${jobTitle} » a été envoyée au Welper.`
+          : `Your booking request for "${jobTitle}" was sent to the welper.`,
+      };
+    case 'new_booking_from_job':
+      return {
+        title: fr ? 'Nouvelle demande de réservation' : 'New booking request',
+        body: fr
+          ? `Vous avez reçu une demande de réservation pour une offre à laquelle vous avez postulé : « ${jobTitle} ».`
+          : `You received a booking request from a job you applied to: "${jobTitle}".`,
+      };
+    case 'application_not_selected':
+      return {
+        title: fr ? 'Candidature non retenue' : 'Application not selected',
+        body: fr
+          ? `Un autre Welper a été sélectionné pour « ${jobTitle} ».`
+          : `Another welper was selected for "${jobTitle}".`,
+      };
+  }
+}
 
 @Injectable()
 export class JobPostingService {
@@ -310,7 +363,7 @@ export class JobPostingService {
         { status: JobApplicationStatus.REJECTED },
       );
       for (const app of pendingApps) {
-        await this.notifyWelper(app.welperId, 'Job cancelled', `The job "${saved.title}" was cancelled by the customer.`, saved.id);
+        await this.notifyWelper(app.welperId, 'job_cancelled', saved.title, saved.id);
       }
     }
 
@@ -473,12 +526,7 @@ export class JobPostingService {
       return { savedApp, job: lockedJob };
     });
 
-    await this.notifyCustomer(
-      job.customerId,
-      'New job application',
-      `A welper applied to your job "${job.title}".`,
-      job.id,
-    );
+    await this.notifyCustomer(job.customerId, 'new_application', job.title, job.id);
 
     return this.toApplicationResponse(savedApp);
   }
@@ -615,15 +663,15 @@ export class JobPostingService {
 
     await this.notifyCustomer(
       params.customerId,
-      'Booking request sent',
-      `Your booking request for "${job.title}" was sent to the welper.`,
+      'booking_request_sent',
+      job.title,
       params.bookingId,
       '/dashboard/bookings',
     );
     await this.notifyWelper(
       params.welperId,
-      'New booking request',
-      `You received a booking request from a job you applied to: "${job.title}".`,
+      'new_booking_from_job',
+      job.title,
       params.bookingId,
       '/dashboard/bookings',
     );
@@ -632,8 +680,8 @@ export class JobPostingService {
       if (app.id === params.jobApplicationId) continue;
       await this.notifyWelper(
         app.welperId,
-        'Application not selected',
-        `Another welper was selected for "${job.title}".`,
+        'application_not_selected',
+        job.title,
         params.jobPostingId,
       );
     }
@@ -932,35 +980,47 @@ export class JobPostingService {
 
   private async notifyCustomer(
     customerId: string,
-    title: string,
-    body: string,
+    kind: JobNotifyKind,
+    jobTitle: string,
     entityId: string,
     path = '/dashboard/marketplace',
   ): Promise<void> {
-    const baseUrl = getFrontendBaseUrl();
+    const locale =
+      (await this.notificationService.resolveLocaleForUser(customerId)) === 'fr'
+        ? 'fr'
+        : 'en';
+    const copy = jobNotificationCopy(kind, locale, jobTitle);
     await this.notificationService.emitForUser(customerId, {
       category: NotificationCategory.JOB,
-      title,
-      body,
-      link: `${baseUrl}${path}/${entityId}`,
-      metadata: { jobPostingId: entityId },
+      title: copy.title,
+      body: copy.body,
+      link: buildDashboardActionUrl(getFrontendBaseUrl(), `${path}/${entityId}`, locale),
+      smsBody:
+        kind === 'new_application'
+          ? getSmsBody('customer_job_application', locale)
+          : undefined,
+      metadata: { jobPostingId: entityId, kind },
     });
   }
 
   private async notifyWelper(
     welperId: string,
-    title: string,
-    body: string,
+    kind: JobNotifyKind,
+    jobTitle: string,
     entityId: string,
     path = '/dashboard/marketplace',
   ): Promise<void> {
-    const baseUrl = getFrontendBaseUrl();
+    const locale =
+      (await this.notificationService.resolveLocaleForUser(welperId)) === 'fr'
+        ? 'fr'
+        : 'en';
+    const copy = jobNotificationCopy(kind, locale, jobTitle);
     await this.notificationService.emitForUser(welperId, {
       category: NotificationCategory.JOB,
-      title,
-      body,
-      link: `${baseUrl}${path}/${entityId}`,
-      metadata: { jobPostingId: entityId },
+      title: copy.title,
+      body: copy.body,
+      link: buildDashboardActionUrl(getFrontendBaseUrl(), `${path}/${entityId}`, locale),
+      metadata: { jobPostingId: entityId, kind },
     });
   }
 

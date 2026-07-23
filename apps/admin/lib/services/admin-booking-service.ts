@@ -31,11 +31,15 @@ export interface AdminBookingDetail {
   scheduledStartTime: string | null;
   scheduledEndTime: string | null;
   durationMinutes: number | null;
+  timezoneName?: string | null;
   hourlyRate: number | null;
   totalPrice: number | null;
   address: Record<string, string> | null;
   notes: string | null;
   cancellationReason: string | null;
+  cancelledBy?: string | null;
+  cancellationSource?: string | null;
+  cancellationFeeCents?: number;
   declineReason: string | null;
   acceptedAt: string | null;
   declinedAt: string | null;
@@ -50,10 +54,17 @@ export interface AdminBookingDetail {
   paymentAuthorizationStatus?: string | null;
   paymentAuthorizationDueAt?: string | null;
   paymentAuthorizationDeadlineAt?: string | null;
+  paymentAuthorizationExpiresAt?: string | null;
+  paymentAuthorizationRiskCode?: string | null;
   paymentAuthorizationLastAttemptAt?: string | null;
   paymentAuthorizationAttemptCount?: number;
   paymentAuthorizationFailureCode?: string | null;
   paymentAuthorizationFailureMessage?: string | null;
+  stripePaymentIntentId?: string | null;
+  stripeDashboardUrl?: string | null;
+  stripeChargeId?: string | null;
+  paymentCardBrand?: string | null;
+  paymentCaptureReason?: string | null;
   disputeReportDeadlineAt?: string | null;
   serviceReceipt?: ServiceReceiptSummary | null;
   customerFirstName?: string | null;
@@ -82,6 +93,7 @@ export async function searchAdminBookings(params: {
   status?: string;
   dateFrom?: string;
   dateTo?: string;
+  paymentIssue?: boolean;
 }): Promise<AdminBookingsListResponse> {
   return apiClient.get<AdminBookingsListResponse>("/api/admin/bookings", {
     params: {
@@ -92,6 +104,7 @@ export async function searchAdminBookings(params: {
       status: params.status?.trim() || undefined,
       dateFrom: params.dateFrom?.trim() || undefined,
       dateTo: params.dateTo?.trim() || undefined,
+      paymentIssue: params.paymentIssue || undefined,
     },
   });
 }
@@ -103,5 +116,13 @@ export async function adminCancelBooking(
   return apiClient.post<AdminBookingDetail>(
     `/api/admin/bookings/${encodeURIComponent(bookingId)}/cancel`,
     { reason },
+  );
+}
+
+export async function refreshAdminBookingPayment(
+  bookingId: string,
+): Promise<AdminBookingDetail> {
+  return apiClient.post<AdminBookingDetail>(
+    `/api/admin/bookings/${encodeURIComponent(bookingId)}/payment/refresh`,
   );
 }

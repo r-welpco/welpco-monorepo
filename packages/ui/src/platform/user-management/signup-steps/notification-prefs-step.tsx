@@ -17,9 +17,9 @@ import { SIGNUP_STEP_CARD_STYLE, signupStepNavButtonStyle, type SignupStateLite 
  * Day 15 — Phase 2 Dispatch B. Both-roles step 8.
  *
  * Notification preferences. The platform `<NotificationPreferences>` primitive
- * renders email × in-app columns per category, but expects already-flattened
+ * renders email × in-app × SMS columns per category, but expects already-flattened
  * preference rows. The wizard step ships a focused matrix per category with
- * sane defaults pre-checked (per Wave 3, SMS is hidden until SMS ships).
+ * sane defaults pre-checked (SMS included; default on / opt-out).
  *
  * Server defaults are already opt-in for everything; an empty submission keeps
  * those defaults. We submit the full set anyway so users have full control on
@@ -63,6 +63,7 @@ export interface NotificationPrefsItem {
   category: string;
   emailEnabled: boolean;
   inAppEnabled: boolean;
+  smsEnabled: boolean;
 }
 
 export interface NotificationPrefsStepValues {
@@ -97,6 +98,7 @@ export function NotificationPrefsStep({
       category: c.id,
       emailEnabled: filledByCat.get(c.id)?.emailEnabled ?? true,
       inAppEnabled: filledByCat.get(c.id)?.inAppEnabled ?? true,
+      smsEnabled: filledByCat.get(c.id)?.smsEnabled ?? true,
     }));
   })();
 
@@ -104,7 +106,7 @@ export function NotificationPrefsStep({
 
   const togglePref = (
     category: string,
-    channel: "emailEnabled" | "inAppEnabled",
+    channel: "emailEnabled" | "inAppEnabled" | "smsEnabled",
     value: boolean,
   ) => {
     setPrefs((prev) =>
@@ -150,6 +152,7 @@ export function NotificationPrefsStep({
                   category: cat.id,
                   emailEnabled: true,
                   inAppEnabled: true,
+                  smsEnabled: true,
                 };
               return (
                 <Box key={cat.id}>
@@ -189,6 +192,21 @@ export function NotificationPrefsStep({
                           checked={pref.inAppEnabled}
                           onCheckedChange={(c) =>
                             togglePref(cat.id, "inAppEnabled", Boolean(c))
+                          }
+                          disabled={loading}
+                          size="2"
+                        />
+                      </Flex>
+                      <Flex align="center" gap="2">
+                        <Text size="1" color="gray">
+                          SMS
+                        </Text>
+                        <Switch
+                          aria-labelledby={`pref-${cat.id}-label`}
+                          aria-label={`${cat.label} SMS`}
+                          checked={pref.smsEnabled}
+                          onCheckedChange={(c) =>
+                            togglePref(cat.id, "smsEnabled", Boolean(c))
                           }
                           disabled={loading}
                           size="2"

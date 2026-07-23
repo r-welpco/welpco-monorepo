@@ -11,13 +11,14 @@ In-app notification store plus email fan-out, with per-user, per-category channe
 
 | Entity | Table | Key fields | Enums |
 |---|---|---|---|
-| `Notification` | `notifications` | userId, category, channel, title, body, isRead, readAt, metadata (jsonb) | `NotificationCategory`: booking, payment, review, message, dispute, job, security, system · `NotificationChannel`: email, in_app |
-| `NotificationPreference` | `notification_preferences` | userId, category, emailEnabled, inAppEnabled | — |
+| `Notification` | `notifications` | userId, category, channel, title, body, isRead, readAt, metadata (jsonb) | `NotificationCategory`: booking, payment, review, message, dispute, job, security, system · `NotificationChannel`: email, in_app, sms |
+| `NotificationPreference` | `notification_preferences` | userId, category, emailEnabled, inAppEnabled, smsEnabled (default **true**, opt-out) | — |
 
 ## Services
 
-- `NotificationService` (`notification.service.ts`) — `emitForUser`/`send` (preference-aware, deduplicating via `isDuplicate`), list with filters, unread count, mark read / mark all / clear all, get/update preferences, `deleteForUser`. Resolves user locale via `notification-locale.helper.ts`.
+- `NotificationService` (`notification.service.ts`) — `emitForUser`/`send` (preference-aware, deduplicating via `isDuplicate`), list with filters, unread count, mark read / mark all / clear all, get/update preferences, `deleteForUser`. Resolves user locale via `notification-locale.helper.ts`. Optional `smsBody` on send when `smsEnabled`.
 - `EmailNotificationService` (`email-notification.service.ts`, bound to token `EMAIL_NOTIFICATION_SERVICE`) — typed email senders (`sendBookingEmailForUser`, `sendPaymentEmailForUser`, `sendDisputeEmailForUser`, `sendWelcomeEmail`, generic) and guardian-copy emails for minor welpers (reads `MinorGuardianConsent`).
+- `SmsNotificationService` (`sms-notification.service.ts`, bound to `SMS_NOTIFICATION_SERVICE`) — resolves profile phone → E.164 → `SmsService` / `@welpco/sms` (Twilio or stub).
 
 ## API endpoints (prefix `api`)
 
@@ -37,12 +38,13 @@ No controller in the domain folder. Routes are exposed by the facade `apps/bff/s
 None.
 
 ## External integrations
-Email delivery via user-management's `EmailModule` → `@welpco/email` (Resend API, SMTP fallback). No push/SMS provider (no Twilio).
+Email delivery via user-management's `EmailModule` → `@welpco/email` (Resend API, SMTP fallback). SMS via `SmsModule` → `@welpco/sms` (Twilio when `TWILIO_*` set, otherwise stub). Preferences: `sms_enabled` defaults to **true** (users can opt out in Settings → Notifications).
 
 ## Cross-domain dependencies
-Imports `UserAccount` (user-management) and `MinorGuardianConsent` (safety-verification) entities, and user-management `EmailModule`. Consumed by booking, payment, dispute, review, job-posting and communication for event notifications.
+Imports `UserAccount` (user-management), `CustomerProfile` / `WelperProfile` (profile-management) for phone, and `MinorGuardianConsent` (safety-verification) entities, plus user-management `EmailModule` and `SmsModule`. Consumed by booking, payment, dispute, review, job-posting and communication for event notifications.
 
 ## Key files
-- `notification.module.ts`, `notification.service.ts`, `email-notification.service.ts`
+- `notification.module.ts`, `notification.service.ts`, `email-notification.service.ts`, `sms-notification.service.ts`
 - `entities/notification.entity.ts`, `entities/notification-preference.entity.ts`
 - Facade: `apps/bff/src/modules/notifications/`
+- SMS package: `packages/sms/`

@@ -37,10 +37,7 @@ export function NotificationPreferences({
   onPreferenceChange,
   onSave,
 }: NotificationPreferencesProps) {
-  // SMS is intentionally hidden per product call (Day 9 Wave 3). If/when SMS
-  // ships, drop this filter and the BFF will start emitting `category: "sms"`
-  // rows that render through the same Switch row machinery.
-  const categories = ["email", "push"] as const;
+  const categories = ["email", "push", "sms"] as const;
 
   return (
     <Card size="4" variant="surface" style={{ width: "100%", maxWidth: "100%" }}>
@@ -51,6 +48,7 @@ export function NotificationPreferences({
           </Heading>
           <Text size="2" color="gray">
             Choose how you want to receive notifications about bookings, payments, and messages.
+            SMS is on by default; turn it off anytime.
           </Text>
         </Box>
         <Separator />
@@ -118,4 +116,3 @@ export function NotificationPreferences({
     </Card>
   );
 }
-

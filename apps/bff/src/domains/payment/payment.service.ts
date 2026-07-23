@@ -12,11 +12,17 @@ import { CustomerProfileService } from '../profile-management/customer-profile/c
 import { ApplicationSettingsService } from './application-settings.service';
 import { BookingTaxService } from './booking-tax.service';
 import type { BookingTaxQuote } from './booking-tax.types';
-import { BookingPayment, BookingPaymentKind, BookingPaymentRecordStatus } from './entities/booking-payment.entity';
+import {
+  BookingPayment,
+  BookingPaymentCaptureReason,
+  BookingPaymentKind,
+  BookingPaymentRecordStatus,
+} from './entities/booking-payment.entity';
 import { ProcessedWebhookEvent } from './entities/processed-webhook-event.entity';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
 import { getBookingNotificationCopy } from '@welpco/email';
+import { getSmsBody } from '@welpco/sms';
 import { buildBookingActionUrl, getFrontendBaseUrl } from '../notification/notification-locale.helper';
 import { WelperPayoutLedgerService } from './welper-payout-ledger.service';
 import { isStripeFeeSynced, syncStripeFeeForPaymentIntent } from './stripe-fee.util';
@@ -33,7 +39,8 @@ export const PAYMENT_REQUIRES_ACTION_CODE = 'payment_requires_action';
 
 const BOOKING_PI_AUTH_IDEMPOTENCY_KEY = (bookingId: string, attempt: number) =>
   `booking-${bookingId}-authorize-v2-${attempt}`;
-const BOOKING_PI_AUTH_SCA_IDEMPOTENCY_KEY = (bookingId: string) => `booking-${bookingId}-authorize-sca-v1`;
+const BOOKING_PI_AUTH_SCA_IDEMPOTENCY_KEY = (bookingId: string, attempt: number) =>
+  `booking-${bookingId}-authorize-sca-v2-${attempt}`;
 const BOOKING_PI_RECEIPT_DELTA_KEY = (bookingId: string, receiptId: string) =>
   `booking-${bookingId}-receipt-delta-${receiptId}`;
 const BOOKING_PI_RECEIPT_DELTA_SCA_KEY = (bookingId: string, receiptId: string) =>
@@ -43,6 +50,10 @@ const BOOKING_PI_RECEIPT_DELTA_SCA_KEY = (bookingId: string, receiptId: string) 
 export class PaymentService {
   private readonly logger = new Logger(PaymentService.name);
   private readonly stripe: Stripe | null;
+  private readonly authorizationLeadHours: number;
+  private readonly authorizationDeadlineHours: number;
+  private readonly authorizationCaptureBufferHours: number;
+  private readonly maxAutomaticAuthorizationAttempts: number;
 
   constructor(
     private readonly config: ConfigService,
@@ -64,6 +75,28 @@ export class PaymentService {
   ) {
     const key = this.config.get<string>('STRIPE_SECRET_KEY');
     this.stripe = key ? createStripeClient(key) : null;
+    this.authorizationLeadHours = this.positiveIntegerSetting('PAYMENT_AUTHORIZATION_LEAD_HOURS', 72);
+    this.authorizationDeadlineHours = this.positiveIntegerSetting('PAYMENT_AUTHORIZATION_DEADLINE_HOURS', 24);
+    this.authorizationCaptureBufferHours = this.positiveIntegerSetting(
+      'PAYMENT_AUTHORIZATION_CAPTURE_BUFFER_HOURS',
+      6,
+    );
+    this.maxAutomaticAuthorizationAttempts = this.positiveIntegerSetting(
+      'PAYMENT_AUTHORIZATION_MAX_AUTOMATIC_ATTEMPTS',
+      2,
+    );
+    if (this.authorizationLeadHours <= this.authorizationDeadlineHours) {
+      throw new Error('PAYMENT_AUTHORIZATION_LEAD_HOURS must be greater than PAYMENT_AUTHORIZATION_DEADLINE_HOURS');
+    }
+  }
+
+  private positiveIntegerSetting(name: string, fallback: number): number {
+    const raw = this.config.get<string>(name);
+    const parsed = Number(raw ?? fallback);
+    if (!Number.isInteger(parsed) || parsed <= 0) {
+      throw new Error(`${name} must be a positive integer`);
+    }
+    return parsed;
   }
 
   private requireStripe(): Stripe {
@@ -71,6 +104,11 @@ export class PaymentService {
       throw new BadRequestException('Stripe is not configured');
     }
     return this.stripe;
+  }
+
+  private paymentDashboardUrl(paymentIntentId: string): string {
+    const liveMode = this.config.get<string>('STRIPE_SECRET_KEY')?.startsWith('sk_live_') === true;
+    return `https://dashboard.stripe.com/${liveMode ? '' : 'test/'}payments/${paymentIntentId}`;
   }
 
   private async authorizationHoldQuote(booking: BookingRequest): Promise<BookingTaxQuote> {
@@ -89,6 +127,60 @@ export class PaymentService {
     });
   }
 
+  private bookingScheduleUtcMs(booking: BookingRequest, end = false): number {
+    const date = booking.scheduledDate;
+    const time = end ? booking.scheduledEndTime : booking.scheduledStartTime;
+    if (!date || !time) return Date.now();
+    return scheduledTimeToUtcMs(
+      date,
+      time,
+      booking.timezoneOffsetMinutes ?? null,
+      booking.timezoneName ?? null,
+    );
+  }
+
+  private async authorizationMetadata(
+    stripe: Stripe,
+    paymentIntent: Stripe.PaymentIntent,
+  ): Promise<{ chargeId: string | null; cardBrand: string | null; expiresAt: Date | null }> {
+    let charge =
+      paymentIntent.latest_charge && typeof paymentIntent.latest_charge !== 'string'
+        ? paymentIntent.latest_charge
+        : null;
+    if (!charge && typeof paymentIntent.latest_charge === 'string') {
+      charge = await stripe.charges.retrieve(paymentIntent.latest_charge);
+    }
+    const card = charge?.payment_method_details?.card;
+    return {
+      chargeId: charge?.id ?? null,
+      cardBrand: card?.brand ?? null,
+      expiresAt: card?.capture_before ? new Date(card.capture_before * 1000) : null,
+    };
+  }
+
+  private authorizationRiskCode(booking: BookingRequest, expiresAt: Date | null): string | null {
+    if (!expiresAt) return 'capture_before_missing';
+    const safeThrough =
+      this.bookingScheduleUtcMs(booking, true) + this.authorizationCaptureBufferHours * 60 * 60 * 1000;
+    return expiresAt.getTime() >= safeThrough ? null : 'expires_before_service_buffer';
+  }
+
+  private async rejectUnsafeAuthorization(
+    booking: BookingRequest,
+    row: BookingPayment,
+  ): Promise<void> {
+    if (booking.paymentAuthorizationRiskCode !== 'expires_before_service_buffer') return;
+    await this.tryCancelPaymentIntent(row.stripePaymentIntentId);
+    row.status = BookingPaymentRecordStatus.CANCELED;
+    await this.bookingPaymentRepo.save(row);
+    booking.paymentAuthorizationStatus = 'failed';
+    booking.paymentAuthorizationFailureCode = 'authorization_window_too_short';
+    booking.paymentAuthorizationFailureMessage =
+      'The card authorization does not remain valid through the service window.';
+    await this.bookingRepo.save(booking);
+    throw new BadRequestException(booking.paymentAuthorizationFailureMessage);
+  }
+
   async prepareAuthorizationForAcceptance(bookingId: string): Promise<'authorized' | 'scheduled'> {
     const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
     if (!booking) throw new NotFoundException('Booking not found');
@@ -96,21 +188,16 @@ export class PaymentService {
       throw new BadRequestException('Payment can only be prepared while the booking is pending');
     }
 
-    const scheduledStartMs =
-      booking.scheduledDate && booking.scheduledStartTime
-        ? scheduledTimeToUtcMs(
-            booking.scheduledDate,
-            booking.scheduledStartTime,
-            booking.timezoneOffsetMinutes ?? null,
-          )
-        : Date.now();
-    const dueAt = new Date(scheduledStartMs - 5 * 24 * 60 * 60 * 1000);
-    const deadlineAt = new Date(scheduledStartMs - 24 * 60 * 60 * 1000);
+    const scheduledStartMs = this.bookingScheduleUtcMs(booking);
+    const dueAt = new Date(scheduledStartMs - this.authorizationLeadHours * 60 * 60 * 1000);
+    const deadlineAt = new Date(scheduledStartMs - this.authorizationDeadlineHours * 60 * 60 * 1000);
 
     booking.paymentAuthorizationDueAt = dueAt;
     booking.paymentAuthorizationDeadlineAt = deadlineAt;
     booking.paymentAuthorizationFailureCode = null;
     booking.paymentAuthorizationFailureMessage = null;
+    booking.paymentAuthorizationExpiresAt = null;
+    booking.paymentAuthorizationRiskCode = null;
 
     if (dueAt.getTime() > Date.now()) {
       booking.paymentAuthorizationStatus = 'scheduled';
@@ -125,6 +212,56 @@ export class PaymentService {
     return 'authorized';
   }
 
+  async reconcileAuthorizationForRollout(
+    bookingId: string,
+    apply: boolean,
+  ): Promise<{
+    status: string | null;
+    previousDueAt: string | null;
+    revisedDueAt: string | null;
+    expiresAt: string | null;
+    riskCode: string | null;
+  }> {
+    const booking = await this.bookingRepo.findOne({ where: { id: bookingId } });
+    if (!booking) throw new NotFoundException('Booking not found');
+    const previousDueAt = booking.paymentAuthorizationDueAt?.toISOString() ?? null;
+    const revisedDueAt = new Date(
+      this.bookingScheduleUtcMs(booking) - this.authorizationLeadHours * 60 * 60 * 1000,
+    );
+    let expiresAt = booking.paymentAuthorizationExpiresAt;
+    let riskCode = booking.paymentAuthorizationRiskCode;
+    const hold = await this.findHoldPayment(bookingId);
+    if (hold && this.stripe) {
+      const paymentIntent = await this.stripe.paymentIntents.retrieve(hold.stripePaymentIntentId, {
+        expand: ['latest_charge'],
+      });
+      const metadata = await this.authorizationMetadata(this.stripe, paymentIntent);
+      expiresAt = metadata.expiresAt;
+      riskCode = this.authorizationRiskCode(booking, expiresAt);
+      if (apply) {
+        hold.authorizationExpiresAt = metadata.expiresAt;
+        hold.stripeChargeId = metadata.chargeId;
+        hold.cardBrand = metadata.cardBrand;
+        await this.bookingPaymentRepo.save(hold);
+      }
+    }
+    if (apply) {
+      if (booking.status === BookingRequestStatus.ACCEPTED && booking.paymentAuthorizationStatus === 'scheduled') {
+        booking.paymentAuthorizationDueAt = revisedDueAt;
+      }
+      booking.paymentAuthorizationExpiresAt = expiresAt;
+      booking.paymentAuthorizationRiskCode = riskCode;
+      await this.bookingRepo.save(booking);
+    }
+    return {
+      status: booking.paymentAuthorizationStatus,
+      previousDueAt,
+      revisedDueAt: revisedDueAt.toISOString(),
+      expiresAt: expiresAt?.toISOString() ?? null,
+      riskCode,
+    };
+  }
+
   /** Authorized hold amount in cents, if the primary hold is still in requires_capture state */
   async getAuthorizedHoldCents(bookingId: string): Promise<number | null> {
     const hold = await this.findHoldPayment(bookingId);
@@ -132,6 +269,35 @@ export class PaymentService {
       return null;
     }
     return hold.amountCents;
+  }
+
+  async getAdminAuthorizationEvidence(bookingId: string): Promise<{
+    stripePaymentIntentId: string | null;
+    stripeDashboardUrl: string | null;
+    stripeChargeId: string | null;
+    cardBrand: string | null;
+    captureReason: string | null;
+  }> {
+    const row = await this.findHoldPayment(bookingId);
+    return {
+      stripePaymentIntentId: row?.stripePaymentIntentId ?? null,
+      stripeDashboardUrl: row?.stripePaymentIntentId
+        ? this.paymentDashboardUrl(row.stripePaymentIntentId)
+        : null,
+      stripeChargeId: row?.stripeChargeId ?? null,
+      cardBrand: row?.cardBrand ?? null,
+      captureReason: row?.captureReason ?? null,
+    };
+  }
+
+  async refreshBookingAuthorizationFromStripe(bookingId: string): Promise<void> {
+    const row = await this.findHoldPayment(bookingId);
+    if (!row) throw new NotFoundException('No payment authorization exists for this booking');
+    const stripe = this.requireStripe();
+    const paymentIntent = await stripe.paymentIntents.retrieve(row.stripePaymentIntentId, {
+      expand: ['latest_charge'],
+    });
+    await this.syncPaymentIntentFromWebhook(paymentIntent);
   }
 
   /** Customer completes SCA for a receipt balance charge (delta PaymentIntent). */
@@ -355,8 +521,12 @@ export class PaymentService {
     let row = await this.findHoldPayment(bookingId);
 
     if (row && row.status !== BookingPaymentRecordStatus.CANCELED && row.status !== BookingPaymentRecordStatus.FAILED) {
-      const existing = await stripe.paymentIntents.retrieve(row.stripePaymentIntentId);
+      const existing = await stripe.paymentIntents.retrieve(row.stripePaymentIntentId, {
+        expand: ['latest_charge'],
+      });
       if (existing.status === 'requires_capture') {
+        row = await this.upsertBookingPaymentRow(booking, existing, row.amountCents);
+        await this.rejectUnsafeAuthorization(booking, row);
         booking.paymentAuthorizationStatus = 'authorized';
         booking.paymentAuthorizationFailureCode = null;
         booking.paymentAuthorizationFailureMessage = null;
@@ -388,6 +558,7 @@ export class PaymentService {
             customerId: booking.customerId,
             welperId: booking.welperId,
           },
+          expand: ['latest_charge'],
         },
         {
           idempotencyKey: BOOKING_PI_AUTH_IDEMPOTENCY_KEY(
@@ -396,8 +567,9 @@ export class PaymentService {
           ),
         },
       );
-      await this.upsertBookingPaymentRow(booking, pi.id, amountCents, pi.status);
+      const paymentRow = await this.upsertBookingPaymentRow(booking, pi, amountCents);
       if (pi.status === 'requires_capture') {
+        await this.rejectUnsafeAuthorization(booking, paymentRow);
         booking.paymentAuthorizationStatus = 'authorized';
         booking.paymentAuthorizationFailureCode = null;
         booking.paymentAuthorizationFailureMessage = null;
@@ -524,14 +696,21 @@ export class PaymentService {
           .where('booking.status = :status', { status: BookingRequestStatus.ACCEPTED })
           .andWhere('booking.payment_authorization_deadline_at <= :now', { now: new Date() })
           .andWhere(
-            '(booking.payment_authorization_status IS NULL OR booking.payment_authorization_status != :authorized)',
-            { authorized: 'authorized' },
+            `(
+              booking.payment_authorization_status IS NULL
+              OR booking.payment_authorization_status != :authorized
+              OR booking.payment_authorization_risk_code = :unsafeExpiry
+            )`,
+            { authorized: 'authorized', unsafeExpiry: 'expires_before_service_buffer' },
           )
           .orderBy('booking.payment_authorization_deadline_at', 'ASC')
           .getOne();
         if (!row) return null;
         row.status = BookingRequestStatus.CANCELLED;
         row.cancelledAt = new Date();
+        row.cancelledBy = null;
+        row.cancellationSource = 'payment_authorization_deadline';
+        row.cancellationFeeCents = 0;
         row.cancellationReason = 'Payment authorization was not completed before the service deadline';
         row.paymentAuthorizationStatus = 'canceled';
         row.paymentAuthorizationLeaseUntil = null;
@@ -540,7 +719,7 @@ export class PaymentService {
 
       if (!booking) break;
       canceled += 1;
-      await this.onBookingCanceled(booking.id);
+      await this.onBookingCanceled(booking.id, { chargeLateCancellationFee: false });
       await this.emitAuthorizationDeadlineCancellation(booking);
     }
     return { canceled };
@@ -566,10 +745,30 @@ export class PaymentService {
   private async emitAuthorizationDeadlineCancellation(booking: BookingRequest): Promise<void> {
     for (const userId of [booking.customerId, booking.welperId]) {
       try {
-        await this.notificationService.emitForUser(userId, {
+        const locale =
+          (await this.notificationService.resolveLocaleForUser(userId)) === 'fr'
+            ? 'fr'
+            : 'en';
+        const copy = getBookingNotificationCopy('booking_cancelled', locale, {});
+        const body =
+          locale === 'fr'
+            ? "La réservation a été annulée car l'autorisation de paiement n'a pas été complétée avant la date limite."
+            : 'The booking was cancelled because payment authorization was not completed before the deadline.';
+        const smsType =
+          userId === booking.welperId
+            ? ('welper_booking_cancelled' as const)
+            : ('customer_booking_cancelled' as const);
+        await this.notificationService.send({
+          userId,
           category: NotificationCategory.BOOKING,
-          title: 'Booking cancelled',
-          body: 'The booking was cancelled because payment authorization was not completed before the deadline.',
+          title: copy.title,
+          body,
+          bookingEmailType: 'booking_cancelled',
+          bookingEmailVariables: {
+            serviceName: 'Service',
+            cancellationReason: body,
+          },
+          smsBody: getSmsBody(smsType, locale),
           metadata: {
             bookingId: booking.id,
             kind: 'authorization_deadline_cancelled',
@@ -606,6 +805,12 @@ export class PaymentService {
     if (booking.status !== BookingRequestStatus.ACCEPTED) {
       throw new BadRequestException('Booking must be accepted before payment authorization');
     }
+    if (
+      booking.paymentAuthorizationDeadlineAt &&
+      booking.paymentAuthorizationDeadlineAt.getTime() <= Date.now()
+    ) {
+      throw new BadRequestException('The payment authorization deadline has passed');
+    }
     const amountCents = await this.authorizationHoldAmountCents(booking);
     if (amountCents <= 0) {
       throw new BadRequestException('This booking has no chargeable amount');
@@ -625,13 +830,17 @@ export class PaymentService {
     let row = await this.findHoldPayment(bookingId);
 
     if (row && row.status !== BookingPaymentRecordStatus.CANCELED && row.status !== BookingPaymentRecordStatus.FAILED) {
-      const existing = await stripe.paymentIntents.retrieve(row.stripePaymentIntentId);
+      const existing = await stripe.paymentIntents.retrieve(row.stripePaymentIntentId, {
+        expand: ['latest_charge'],
+      });
       if (
         existing.status === 'requires_capture' ||
         existing.status === 'requires_confirmation' ||
         existing.status === 'requires_action'
       ) {
         if (existing.status === 'requires_capture') {
+          row = await this.upsertBookingPaymentRow(booking, existing, row.amountCents);
+          await this.rejectUnsafeAuthorization(booking, row);
           booking.paymentAuthorizationStatus = 'authorized';
           booking.paymentAuthorizationFailureCode = null;
           booking.paymentAuthorizationFailureMessage = null;
@@ -676,6 +885,7 @@ export class PaymentService {
             customerId: booking.customerId,
             welperId: booking.welperId,
           },
+          expand: ['latest_charge'],
         },
         {
           idempotencyKey: BOOKING_PI_AUTH_IDEMPOTENCY_KEY(
@@ -684,7 +894,10 @@ export class PaymentService {
           ),
         },
       );
-      row = await this.upsertBookingPaymentRow(booking, pi.id, amountCents, pi.status);
+      row = await this.upsertBookingPaymentRow(booking, pi, amountCents);
+      if (pi.status === 'requires_capture') {
+        await this.rejectUnsafeAuthorization(booking, row);
+      }
       booking.paymentAuthorizationStatus =
         pi.status === 'requires_capture'
           ? 'authorized'
@@ -719,10 +932,20 @@ export class PaymentService {
               customerId: booking.customerId,
               welperId: booking.welperId,
             },
+            expand: ['latest_charge'],
           },
-          { idempotencyKey: BOOKING_PI_AUTH_SCA_IDEMPOTENCY_KEY(bookingId) },
+          {
+            idempotencyKey: BOOKING_PI_AUTH_SCA_IDEMPOTENCY_KEY(
+              bookingId,
+              booking.paymentAuthorizationAttemptCount,
+            ),
+          },
         );
-        await this.upsertBookingPaymentRow(booking, pi.id, amountCents, pi.status);
+        await this.upsertBookingPaymentRow(booking, pi, amountCents);
+        booking.paymentAuthorizationStatus = 'requires_action';
+        booking.paymentAuthorizationFailureCode = PAYMENT_REQUIRES_ACTION_CODE;
+        booking.paymentAuthorizationFailureMessage = 'The customer must authenticate the saved card.';
+        await this.bookingRepo.save(booking);
         return {
           clientSecret: pi.client_secret,
           paymentIntentId: pi.id,
@@ -737,29 +960,36 @@ export class PaymentService {
 
   private async upsertBookingPaymentRow(
     booking: BookingRequest,
-    piId: string,
+    paymentIntent: Stripe.PaymentIntent,
     amountCents: number,
-    stripeStatus: string,
   ): Promise<BookingPayment> {
-    let row = await this.findHoldPayment(booking.id);
-    const status = this.mapStripePiStatusToRecord(stripeStatus);
+    let row = await this.bookingPaymentRepo.findOne({
+      where: { stripePaymentIntentId: paymentIntent.id },
+    });
+    const status = this.mapStripePiStatusToRecord(paymentIntent.status);
     if (!row) {
       row = this.bookingPaymentRepo.create({
         bookingId: booking.id,
         customerId: booking.customerId,
         welperId: booking.welperId,
-        stripePaymentIntentId: piId,
+        stripePaymentIntentId: paymentIntent.id,
         amountCents,
         currency: 'cad',
         status,
         paymentKind: BookingPaymentKind.HOLD,
       });
     } else {
-      row.stripePaymentIntentId = piId;
       row.amountCents = amountCents;
       row.status = status;
       row.paymentKind = BookingPaymentKind.HOLD;
     }
+    const metadata = await this.authorizationMetadata(this.requireStripe(), paymentIntent);
+    row.stripeChargeId = metadata.chargeId;
+    row.cardBrand = metadata.cardBrand;
+    row.authorizationExpiresAt = metadata.expiresAt;
+    booking.paymentAuthorizationExpiresAt = metadata.expiresAt;
+    booking.paymentAuthorizationRiskCode = this.authorizationRiskCode(booking, metadata.expiresAt);
+    await this.bookingRepo.save(booking);
     return this.bookingPaymentRepo.save(row);
   }
 
@@ -921,6 +1151,16 @@ export class PaymentService {
     if (pi.last_payment_error && pi.status === 'requires_payment_method') {
       row.status = BookingPaymentRecordStatus.FAILED;
     }
+    if (row.paymentKind === BookingPaymentKind.HOLD && this.stripe) {
+      try {
+        const metadata = await this.authorizationMetadata(this.stripe, pi);
+        row.stripeChargeId = metadata.chargeId ?? row.stripeChargeId;
+        row.cardBrand = metadata.cardBrand ?? row.cardBrand;
+        row.authorizationExpiresAt = metadata.expiresAt ?? row.authorizationExpiresAt;
+      } catch (err) {
+        this.logger.warn(`Could not read authorization expiry for ${pi.id}: ${(err as Error).message}`);
+      }
+    }
     if (pi.status === 'succeeded') {
       row.capturedAt = new Date();
       if (row.capturedAmountCents == null && typeof pi.amount_received === 'number') {
@@ -939,16 +1179,42 @@ export class PaymentService {
       }
     }
     await this.bookingPaymentRepo.save(row);
+    const latestHold =
+      row.paymentKind === BookingPaymentKind.HOLD ? await this.findHoldPayment(row.bookingId) : null;
     const booking = await this.bookingRepo.findOne({ where: { id: row.bookingId } });
-    if (booking) {
+    let authorizationExpired = false;
+    if (booking && (!latestHold || latestHold.stripePaymentIntentId === pi.id)) {
       if (pi.status === 'requires_capture') {
         booking.paymentAuthorizationStatus = 'authorized';
         booking.paymentAuthorizationFailureCode = null;
         booking.paymentAuthorizationFailureMessage = null;
+        booking.paymentAuthorizationExpiresAt = row.authorizationExpiresAt;
+        booking.paymentAuthorizationRiskCode = this.authorizationRiskCode(
+          booking,
+          row.authorizationExpiresAt,
+        );
       } else if (pi.status === 'requires_action' || pi.status === 'requires_confirmation') {
         booking.paymentAuthorizationStatus = 'requires_action';
       } else if (pi.status === 'canceled') {
+        const automaticallyExpired = pi.cancellation_reason === 'automatic';
+        authorizationExpired = automaticallyExpired;
         booking.paymentAuthorizationStatus = 'canceled';
+        booking.paymentAuthorizationFailureCode = automaticallyExpired
+          ? 'authorization_expired'
+          : (pi.cancellation_reason ?? 'payment_intent_canceled');
+        booking.paymentAuthorizationFailureMessage = automaticallyExpired
+          ? 'The card authorization expired before capture.'
+          : 'The card authorization was canceled in Stripe.';
+        if (
+          automaticallyExpired &&
+          booking.status === BookingRequestStatus.ACCEPTED &&
+          booking.paymentAuthorizationDeadlineAt &&
+          booking.paymentAuthorizationDeadlineAt.getTime() > Date.now() &&
+          booking.paymentAuthorizationAttemptCount < this.maxAutomaticAuthorizationAttempts
+        ) {
+          booking.paymentAuthorizationStatus = 'scheduled';
+          booking.paymentAuthorizationDueAt = new Date();
+        }
       } else if (pi.status === 'requires_payment_method') {
         booking.paymentAuthorizationStatus = 'failed';
         booking.paymentAuthorizationFailureCode = pi.last_payment_error?.code ?? 'requires_payment_method';
@@ -956,6 +1222,12 @@ export class PaymentService {
       }
       booking.paymentAuthorizationLeaseUntil = null;
       await this.bookingRepo.save(booking);
+    }
+    if (booking && authorizationExpired) {
+      await this.emitDeferredAuthorizationFailure(
+        booking,
+        'The saved card authorization expired. Reauthorize the booking before the payment deadline.',
+      );
     }
     if (pi.status === 'succeeded' && row.status === BookingPaymentRecordStatus.CAPTURED) {
       // NOTIFICATIONS-001 (Day 16 dispatch 2): emit only on the AUTHORIZED →
@@ -1024,10 +1296,15 @@ export class PaymentService {
       this.logger.warn(`Failed to emit captured notification (customer): ${(err as Error).message}`);
     }
     try {
+      const welperLocale =
+        (await this.notificationService.resolveLocaleForUser(row.welperId)) === 'fr'
+          ? 'fr'
+          : 'en';
       await this.notificationService.emitForUser(row.welperId, {
         category: NotificationCategory.PAYMENT,
         paymentEmailType: 'payment_captured_welper',
         paymentEmailVariables: { amount, currency },
+        smsBody: getSmsBody('welper_payment_processing', welperLocale),
         metadata: {
           bookingId: row.bookingId,
           paymentIntentId: row.stripePaymentIntentId,
@@ -1092,8 +1369,14 @@ export class PaymentService {
     const booking = await this.bookingRepo.findOne({
       where: { id: bookingId },
     });
-    const rows = await this.bookingPaymentRepo.find({ where: { bookingId } });
-    const chargeLateFee = options?.chargeLateCancellationFee === true && booking;
+    const rows = await this.bookingPaymentRepo.find({
+      where: { bookingId },
+      order: { createdAt: 'DESC' },
+    });
+    const chargeLateFee =
+      options?.chargeLateCancellationFee === true &&
+      booking?.cancellationSource === 'customer';
+    let lateFeeCaptured = false;
 
     if (booking) {
       booking.paymentAuthorizationStatus = 'canceled';
@@ -1114,18 +1397,32 @@ export class PaymentService {
         row.status === BookingPaymentRecordStatus.AUTHORIZED &&
         !!row.stripePaymentIntentId;
 
-      if (chargeLateFee && isAuthorizedHold && stripe && booking) {
+      if (chargeLateFee && !lateFeeCaptured && isAuthorizedHold && stripe && booking) {
         const feeCents = await this.authorizationHoldAmountCents(booking);
         const captureCents = Math.min(feeCents, row.amountCents);
         if (captureCents > 0) {
           try {
+            const current = await stripe.paymentIntents.retrieve(row.stripePaymentIntentId);
+            if (current.status !== 'requires_capture') {
+              throw new Error(`PaymentIntent is ${current.status}, not capturable`);
+            }
+            if (
+              row.authorizationExpiresAt &&
+              row.authorizationExpiresAt.getTime() <= Date.now()
+            ) {
+              throw new Error('Card authorization has expired');
+            }
             await stripe.paymentIntents.capture(row.stripePaymentIntentId, {
               amount_to_capture: captureCents,
             });
             row.status = BookingPaymentRecordStatus.CAPTURED;
             row.capturedAt = new Date();
             row.capturedAmountCents = captureCents;
+            row.captureReason = BookingPaymentCaptureReason.LATE_CANCELLATION;
             await this.bookingPaymentRepo.save(row);
+            booking.cancellationFeeCents = captureCents;
+            await this.bookingRepo.save(booking);
+            lateFeeCaptured = true;
             this.logger.log(`Late cancellation fee captured ${captureCents} cents for booking ${bookingId}`);
             continue;
           } catch (e) {
@@ -1249,6 +1546,7 @@ export class PaymentService {
 
     hold.status = BookingPaymentRecordStatus.CAPTURED;
     hold.capturedAt = new Date();
+    hold.captureReason = BookingPaymentCaptureReason.SERVICE_RECEIPT;
     hold.capturedAmountCents =
       typeof capturedPi.amount_received === 'number' && capturedPi.amount_received > 0
         ? capturedPi.amount_received
@@ -1401,6 +1699,7 @@ export class PaymentService {
         row.capturedAt = new Date();
         row.status = BookingPaymentRecordStatus.CAPTURED;
         row.capturedAmountCents = row.amountCents;
+        row.captureReason = BookingPaymentCaptureReason.SERVICE_RECEIPT;
         await paymentRepo.save(row);
 
         return {

@@ -71,14 +71,16 @@ export class NotificationsService {
       category: p.category,
       emailEnabled: p.emailEnabled,
       inAppEnabled: p.inAppEnabled,
+      smsEnabled: p.smsEnabled,
     }));
   }
 
-  async updatePreferences(userId: string, body: { preferences: Array<{ category: NotificationCategory; emailEnabled?: boolean; inAppEnabled?: boolean }> }) {
+  async updatePreferences(userId: string, body: { preferences: Array<{ category: NotificationCategory; emailEnabled?: boolean; inAppEnabled?: boolean; smsEnabled?: boolean }> }) {
     const updates: PreferenceUpdate[] = body.preferences.map((p) => ({
       category: p.category,
       emailEnabled: p.emailEnabled,
       inAppEnabled: p.inAppEnabled,
+      smsEnabled: p.smsEnabled,
     }));
     const list = await this.notificationService.updatePreferences(userId, updates);
     return list.map((p) => ({
@@ -86,6 +88,7 @@ export class NotificationsService {
       category: p.category,
       emailEnabled: p.emailEnabled,
       inAppEnabled: p.inAppEnabled,
+      smsEnabled: p.smsEnabled,
     }));
   }
 }

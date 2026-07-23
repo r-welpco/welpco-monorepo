@@ -38,12 +38,14 @@ export interface NotificationPreferenceItem {
   category: string;
   emailEnabled: boolean;
   inAppEnabled: boolean;
+  smsEnabled: boolean;
 }
 
 export interface UpdatePreferenceItem {
   category: string;
   emailEnabled?: boolean;
   inAppEnabled?: boolean;
+  smsEnabled?: boolean;
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────

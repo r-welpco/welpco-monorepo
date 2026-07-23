@@ -38,12 +38,13 @@ const BOOKING_STATUSES = [
 ] as const;
 
 const QUICK_PRESETS: { label: string; query: Record<string, string | undefined> }[] = [
-  { label: "Pending", query: { status: "pending" } },
-  { label: "In progress", query: { status: "in_progress" } },
-  { label: "Disputed", query: { status: "disputed" } },
-  { label: "Payment released", query: { status: "payment_released" } },
-  { label: "No show", query: { status: "no_show" } },
-  { label: "Cancelled", query: { status: "cancelled" } },
+  { label: "Pending", query: { status: "pending", paymentIssue: undefined } },
+  { label: "In progress", query: { status: "in_progress", paymentIssue: undefined } },
+  { label: "Disputed", query: { status: "disputed", paymentIssue: undefined } },
+  { label: "Payment released", query: { status: "payment_released", paymentIssue: undefined } },
+  { label: "No show", query: { status: "no_show", paymentIssue: undefined } },
+  { label: "Cancelled", query: { status: "cancelled", paymentIssue: undefined } },
+  { label: "Payment issues", query: { status: undefined, paymentIssue: "true" } },
 ];
 
 function bookingStatusColor(status: string): "green" | "amber" | "red" | "blue" | "gray" {
@@ -64,6 +65,7 @@ export default async function BookingsSearchPage({
     status?: string;
     dateFrom?: string;
     dateTo?: string;
+    paymentIssue?: string;
   }>;
 }) {
   const sp = await searchParams;
@@ -77,6 +79,7 @@ export default async function BookingsSearchPage({
       : undefined;
   const dateFrom = sp.dateFrom?.trim() || undefined;
   const dateTo = sp.dateTo?.trim() || undefined;
+  const paymentIssue = sp.paymentIssue === "true";
 
   let list;
   let err: string | null = null;
@@ -89,6 +92,7 @@ export default async function BookingsSearchPage({
       status,
       dateFrom,
       dateTo,
+      paymentIssue,
     });
   } catch (e) {
     err = e instanceof Error ? e.message : "Failed to load bookings";
@@ -102,6 +106,7 @@ export default async function BookingsSearchPage({
       status,
       dateFrom,
       dateTo,
+      paymentIssue: paymentIssue ? "true" : undefined,
       ...overrides,
     };
     const q = new URLSearchParams();
@@ -111,6 +116,7 @@ export default async function BookingsSearchPage({
     if (merged.status) q.set("status", merged.status);
     if (merged.dateFrom) q.set("dateFrom", merged.dateFrom);
     if (merged.dateTo) q.set("dateTo", merged.dateTo);
+    if (merged.paymentIssue) q.set("paymentIssue", merged.paymentIssue);
     const qs = q.toString();
     return qs ? `/bookings?${qs}` : "/bookings";
   };
@@ -130,6 +136,7 @@ export default async function BookingsSearchPage({
       <Card size="2">
         <Flex direction="column" gap="4">
           <form method="get">
+            {paymentIssue ? <input type="hidden" name="paymentIssue" value="true" /> : null}
             <Flex gap="4" wrap="wrap" align="end">
               <NativeFormField label="Customer ID">
                 <input name="customerId" defaultValue={customerId ?? ""} {...nativeInputProps()} />

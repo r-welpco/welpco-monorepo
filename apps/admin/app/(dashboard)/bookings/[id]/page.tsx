@@ -23,7 +23,7 @@ import { buildBookingAnswerRows } from "@/lib/booking-answers-utils";
 import { buildBookingTimeline, formatScheduleWindow } from "@/lib/booking-detail-utils";
 import { listQuestions } from "@/lib/services/admin-questions-service";
 import { getAdminBooking } from "@/lib/services/admin-booking-service";
-import { BookingActions } from "./booking-actions";
+import { BookingActions, PaymentRefreshAction } from "./booking-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -97,6 +97,7 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
         <Card size="2" title="Schedule & pricing">
           <DetailTable>
             <DetailRow label="Scheduled">{formatScheduleWindow(booking)}</DetailRow>
+            <DetailRow label="Timezone">{booking.timezoneName ?? "Legacy UTC offset"}</DetailRow>
             <DetailRow label="Duration">
               {booking.durationMinutes != null ? `${booking.durationMinutes} min` : "—"}
             </DetailRow>
@@ -178,6 +179,14 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
             <DetailRow label="Auto-cancel cutoff">
               {formatAdminDateTime(booking.paymentAuthorizationDeadlineAt)}
             </DetailRow>
+            <DetailRow label="Stripe authorization expires">
+              {formatAdminDateTime(booking.paymentAuthorizationExpiresAt)}
+            </DetailRow>
+            <DetailRow label="Authorization risk">
+              {booking.paymentAuthorizationRiskCode
+                ? formatAdminStatusLabel(booking.paymentAuthorizationRiskCode)
+                : "None"}
+            </DetailRow>
             <DetailRow label="Last authorization attempt">
               {formatAdminDateTime(booking.paymentAuthorizationLastAttemptAt)}
             </DetailRow>
@@ -191,6 +200,27 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
                 </Text>
               </DetailRow>
             ) : null}
+            <DetailRow label="Card brand">
+              {booking.paymentCardBrand ? formatAdminStatusLabel(booking.paymentCardBrand) : "—"}
+            </DetailRow>
+            <DetailRow label="Stripe payment">
+              {booking.stripeDashboardUrl ? (
+                <Link href={booking.stripeDashboardUrl} target="_blank" rel="noopener noreferrer">
+                  {booking.stripePaymentIntentId ?? "Open in Stripe"}
+                </Link>
+              ) : "—"}
+            </DetailRow>
+            <DetailRow label="Stripe charge">
+              {booking.stripeChargeId ?? "—"}
+            </DetailRow>
+            <DetailRow label="Capture reason">
+              {booking.paymentCaptureReason
+                ? formatAdminStatusLabel(booking.paymentCaptureReason)
+                : "—"}
+            </DetailRow>
+            <DetailRow label="Refresh">
+              <PaymentRefreshAction bookingId={booking.id} />
+            </DetailRow>
             <DetailRow label="Dispute report deadline">
               {formatAdminDateTime(booking.disputeReportDeadlineAt)}
             </DetailRow>
@@ -207,6 +237,19 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
                   {booking.cancellationReason}
                 </Text>
               </DetailRow>
+            ) : null}
+            {booking.cancellationReason ? (
+              <>
+                <DetailRow label="Cancellation source">
+                  {booking.cancellationSource
+                    ? formatAdminStatusLabel(booking.cancellationSource)
+                    : "Legacy / unknown"}
+                </DetailRow>
+                <DetailRow label="Cancelled by">{booking.cancelledBy ?? "System / unknown"}</DetailRow>
+                <DetailRow label="Cancellation fee">
+                  {formatAdminMoneyCents(booking.cancellationFeeCents ?? 0, receiptCurrency)}
+                </DetailRow>
+              </>
             ) : null}
             {booking.declineReason ? (
               <DetailRow label="Decline reason">

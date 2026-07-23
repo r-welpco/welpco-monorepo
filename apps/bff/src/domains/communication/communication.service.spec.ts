@@ -87,6 +87,7 @@ describe('CommunicationService', () => {
   // now emits a MESSAGE notification to the OTHER party in the thread.
   const mockNotificationService = {
     emitForUser: jest.fn().mockResolvedValue(null),
+    resolveLocaleForUser: jest.fn().mockResolvedValue('en'),
   };
 
   beforeEach(async () => {

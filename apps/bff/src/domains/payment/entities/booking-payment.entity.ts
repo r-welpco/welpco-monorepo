@@ -17,6 +17,11 @@ export enum BookingPaymentKind {
   DELTA_RECEIPT = 'delta_receipt',
 }
 
+export enum BookingPaymentCaptureReason {
+  SERVICE_RECEIPT = 'service_receipt',
+  LATE_CANCELLATION = 'late_cancellation',
+}
+
 @Entity('booking_payments')
 @Index(['bookingId'])
 @Index(['welperId'])
@@ -58,6 +63,18 @@ export class BookingPayment extends BaseEntity {
 
   @Column({ name: 'captured_at', type: 'timestamptz', nullable: true })
   capturedAt!: Date | null;
+
+  @Column({ name: 'capture_reason', type: 'varchar', length: 32, nullable: true })
+  captureReason!: BookingPaymentCaptureReason | null;
+
+  @Column({ name: 'authorization_expires_at', type: 'timestamptz', nullable: true })
+  authorizationExpiresAt!: Date | null;
+
+  @Column({ name: 'stripe_charge_id', type: 'varchar', length: 255, nullable: true })
+  stripeChargeId!: string | null;
+
+  @Column({ name: 'card_brand', type: 'varchar', length: 32, nullable: true })
+  cardBrand!: string | null;
 
   /** Cumulative amount refunded on Stripe for this PaymentIntent’s charge (cents); updated from webhooks. */
   @Column({ name: 'refunded_amount_cents', type: 'int', nullable: true })

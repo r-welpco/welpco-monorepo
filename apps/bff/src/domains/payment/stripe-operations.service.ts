@@ -18,6 +18,7 @@ import { computeWelperRefundShareCents } from '../booking/booking-pricing';
 import { WelperPayoutLedgerService } from './welper-payout-ledger.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
+import { getDisputeResolutionSummary } from '@welpco/email';
 
 export type RefundAllocation = {
   paymentIntentId: string;
@@ -342,8 +343,11 @@ export class StripeOperationsService {
         try {
           await this.notificationService.emitForUser(payment.customerId, {
             category: NotificationCategory.PAYMENT,
-            title: 'Refund issued',
-            body: `A refund of CAD ${(refundDelta / 100).toFixed(2)} was issued in Stripe.`,
+            paymentEmailType: 'payment_refund',
+            paymentEmailVariables: {
+              amount: (refundDelta / 100).toFixed(2),
+              currency: 'CAD',
+            },
             metadata: {
               bookingId: payment.bookingId,
               stripeRefundId: refund.id,
@@ -663,10 +667,20 @@ export class StripeOperationsService {
     }
     for (const userId of [booking.customerId, booking.welperId]) {
       try {
+        const locale =
+          (await this.notificationService.resolveLocaleForUser(userId)) === 'fr'
+            ? 'fr'
+            : 'en';
         await this.notificationService.emitForUser(userId, {
           category: NotificationCategory.DISPUTE,
-          title: 'Dispute resolved',
-          body: 'The refund and any required payout recovery have been confirmed.',
+          disputeEmailType: 'dispute_resolved',
+          disputeEmailVariables: {
+            resolutionSummary: getDisputeResolutionSummary(
+              locale,
+              resolution.resolutionType ?? 'refund',
+              'succeeded',
+            ),
+          },
           metadata: {
             bookingId: booking.id,
             disputeId: dispute.id,

@@ -203,9 +203,13 @@ export class AdminDashboardService {
       this.bookingRepository
         .createQueryBuilder('booking')
         .where('booking.status = :accepted', { accepted: BookingRequestStatus.ACCEPTED })
-        .andWhere('booking.payment_authorization_status IN (:...statuses)', {
-          statuses: ['failed', 'requires_action'],
-        })
+        .andWhere(
+          `(
+            booking.payment_authorization_status IN (:...statuses)
+            OR booking.payment_authorization_risk_code IS NOT NULL
+          )`,
+          { statuses: ['failed', 'requires_action', 'canceled'] },
+        )
         .getCount(),
       this.disputeRepository.count({ where: { status: 'awaiting_refund' } }),
       this.recoveryTaskRepository.count({ where: { status: In(['open', 'partial']) } }),

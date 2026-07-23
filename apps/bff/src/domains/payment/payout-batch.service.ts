@@ -23,6 +23,9 @@ import { E2E_STRIPE_CONNECT_ACCOUNT_PREFIX } from '../../common/signup-e2e-bypas
 import { buildTransferIdempotencyKey } from './payout-idempotency.util';
 import { computeTotalsFromLines } from './payout-batch-totals.util';
 import { StripeOperationsService } from './stripe-operations.service';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationCategory } from '../notification/entities';
+import { getSmsBody } from '@welpco/sms';
 
 export type PayoutBatchLineDto = {
   ledgerId: string;
@@ -117,6 +120,7 @@ export class PayoutBatchService {
     private readonly ledgerService: WelperPayoutLedgerService,
     private readonly stripeConnect: StripeConnectService,
     private readonly stripeOperationsService: StripeOperationsService,
+    private readonly notificationService: NotificationService,
   ) {
     const key = this.config.get<string>('STRIPE_SECRET_KEY');
     this.stripe = key ? createStripeClient(key) : null;
@@ -564,6 +568,7 @@ export class PayoutBatchService {
           amountCents: transfer.amountCents,
           transferId: transfer.transferId,
         });
+        await this.notifyWelperPayoutSent(welperId);
       } catch (err) {
         this.logger.error(`Transfer failed welper=${welperId} batch=${batchId}: ${(err as Error).message}`);
         transferResults.push({
@@ -718,6 +723,29 @@ export class PayoutBatchService {
       },
       { status: WelperPayoutLedgerStatus.FAILED },
     );
+  }
+
+  private async notifyWelperPayoutSent(welperId: string): Promise<void> {
+    try {
+      const locale =
+        (await this.notificationService.resolveLocaleForUser(welperId)) === 'fr'
+          ? 'fr'
+          : 'en';
+      await this.notificationService.emitForUser(welperId, {
+        category: NotificationCategory.PAYMENT,
+        title: locale === 'fr' ? 'Paiement envoyé' : 'Payment sent',
+        body:
+          locale === 'fr'
+            ? 'Votre paiement a été envoyé à votre compte Stripe.'
+            : 'Your payment has been sent to your Stripe account.',
+        smsBody: getSmsBody('welper_payment_sent', locale),
+        metadata: { kind: 'payout_transferred' },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Failed to emit payout-sent SMS/notification for welper ${welperId}: ${(err as Error).message}`,
+      );
+    }
   }
 
   async exportBatchCsv(batchId: string): Promise<string> {

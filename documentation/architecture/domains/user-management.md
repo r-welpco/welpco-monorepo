@@ -51,7 +51,7 @@ Note: the HTTP facade `apps/bff/src/modules/auth/auth.controller.ts` also regist
 
 ### Admin subdomain (`admin/admin.controller.ts`)
 All routes under `/api/admin`, class-level `JwtAuthGuard + RolesGuard`, `@Roles(AccountType.ADMIN)`:
-users list/detail/signup-state, `PUT users/:id/status`, `PUT users/:id/background-check`, `POST users/:id/unlock`, `GET users/:id/profile|offerings`, `PUT users/:id/profile-flags`, reviews list/delete, notifications, referrals (+stats), `POST bookings/:id/cancel`, `POST users` (create admin), stats, dashboard, bookings list/detail, jobs list/detail, support-tickets list/detail/patch, audit-logs, `GET reports/welper-distribution`, and settings `GET/PUT settings/payment_capture_delay_minutes`.
+users list/detail/signup-state, `PUT users/:id/status`, `PUT users/:id/background-check`, `POST users/:id/unlock`, `GET users/:id/profile|offerings`, `PUT users/:id/profile-flags`, reviews list/delete, notifications, referrals (+stats), `POST bookings/:id/cancel`, `POST users` (create admin), stats, dashboard, bookings list/detail, jobs list/detail, support-tickets list/detail/patch, audit-logs, `GET reports/web-analytics`, `GET reports/emails`, `GET reports/emails/:id`, `GET reports/welper-distribution`, and settings `GET/PUT settings/payment_capture_delay_minutes`.
 
 Payout endpoints (`GET payouts/upcoming|recoveries|tax-failures|batches|batches/:id|batches/:id/export`, `POST payouts/batches/build|batches/:id/approve|recoveries/:transferId/refresh|refresh-pending-fees|retry-tax`) delegate to `PayoutBatchService`/`StripeOperationsService` in the payment domain — see [payment.md](./payment.md).
 

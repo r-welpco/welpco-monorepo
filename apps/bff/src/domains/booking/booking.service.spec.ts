@@ -644,6 +644,40 @@ describe('BookingService', () => {
       expect(result.status).toBe(BookingRequestStatus.CANCELLED);
     });
 
+    it('cancels a pending duplicate booking without requesting a cancellation fee', async () => {
+      const booking = {
+        id: 'duplicate-booking',
+        customerId: 'c1',
+        welperId: 'w1',
+        status: BookingRequestStatus.PENDING,
+        scheduledDate: '2026-12-01',
+        scheduledStartTime: '14:00',
+        scheduledEndTime: '16:00',
+        timezoneOffsetMinutes: -300,
+        answers: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      txQueryBuilder.getOne.mockResolvedValue(booking);
+      txBookingRepo.save.mockImplementation((value) => Promise.resolve({ ...value }));
+
+      const result = await service.cancel(
+        booking.id,
+        booking.customerId,
+        'customer',
+        'Duplicate booking',
+        -300,
+      );
+
+      expect(result.status).toBe(BookingRequestStatus.CANCELLED);
+      expect(txBookingRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ cancellationFeeCents: 0, cancellationSource: 'customer' }),
+      );
+      expect(mockPaymentService.onBookingCanceled).toHaveBeenCalledWith(booking.id, {
+        chargeLateCancellationFee: false,
+      });
+    });
+
     it('should reject welper cancel on a pending request', async () => {
       const booking = {
         id: 'b1',

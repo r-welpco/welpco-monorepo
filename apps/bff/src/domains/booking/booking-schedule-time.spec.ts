@@ -12,4 +12,16 @@ describe('scheduledTimeToUtcMs', () => {
       Date.parse('2026-06-20T08:30:00.000Z'),
     );
   });
+
+  it('uses an IANA timezone across the spring DST transition', () => {
+    expect(scheduledTimeToUtcMs('2026-03-08', '09:30', -300, 'America/Toronto')).toBe(
+      Date.parse('2026-03-08T13:30:00.000Z'),
+    );
+  });
+
+  it('uses an IANA timezone across the fall DST transition', () => {
+    expect(scheduledTimeToUtcMs('2026-11-01', '09:30', -240, 'America/Toronto')).toBe(
+      Date.parse('2026-11-01T14:30:00.000Z'),
+    );
+  });
 });

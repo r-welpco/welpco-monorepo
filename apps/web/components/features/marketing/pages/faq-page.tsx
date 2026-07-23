@@ -252,6 +252,37 @@ export function FAQPage() {
             <div>
               <h3 style={{ color: "var(--cream)", fontSize: 32 }}>{t("cta.title")}</h3>
               <p style={{ color: "rgba(250,241,229,0.78)", marginTop: 8 }}>{t("cta.sub")}</p>
+              <div
+                style={{
+                  marginTop: 16,
+                  display: "flex",
+                  gap: 24,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Link
+                  href="/guides/customer"
+                  style={{
+                    color: "rgba(250,241,229,0.92)",
+                    fontSize: 15,
+                    textDecoration: "underline",
+                    textUnderlineOffset: 4,
+                  }}
+                >
+                  {t("cta.customerGuideLink")}
+                </Link>
+                <Link
+                  href="/guides/welper"
+                  style={{
+                    color: "rgba(250,241,229,0.92)",
+                    fontSize: 15,
+                    textDecoration: "underline",
+                    textUnderlineOffset: 4,
+                  }}
+                >
+                  {t("cta.welperGuideLink")}
+                </Link>
+              </div>
             </div>
             <Link href="/contact" className="btn btn-accent">
               {t("cta.button")}

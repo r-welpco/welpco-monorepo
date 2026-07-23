@@ -47,6 +47,7 @@ import {
   stepSlugToName,
 } from "../../step-name-utils";
 import { WelperRegisterEscape } from "../../welper-register-escape";
+import { useRegisterEdu } from "../../register-edu-context";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 import { getPresignedUrl, uploadFileToS3 } from "@/lib/services/upload-service";
 import type { SelectedRole, SignupStepName } from "@welpco/types";
@@ -75,6 +76,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
   const optionalProfileLabels = useOptionalProfileStepLabels();
 
   const queryClient = useQueryClient();
+  const edu = useRegisterEdu();
   const { data: state, isPending, isError: signupStateError, error: signupStateErr, refetch: refetchSignupState } = useSignupState();
   const stepName = stepSlugToName(slug);
 
@@ -227,6 +229,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
         customerRegistrationEnabled={true}
         loading={completeSelectRole.isPending}
         error={submitError ?? completeSelectRole.error?.message ?? null}
+        onSelectionChange={edu?.setPreviewRole}
         onSubmit={(values: { role: SelectedRole }) =>
           guard(async () => {
             const next = await completeSelectRole.mutateAsync(values);

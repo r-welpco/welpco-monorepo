@@ -34,6 +34,7 @@ const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 
 export const EMAIL_NOTIFICATION_SERVICE = 'EMAIL_NOTIFICATION_SERVICE';
+export const SMS_NOTIFICATION_SERVICE = 'SMS_NOTIFICATION_SERVICE';
 
 export interface SendNotificationParams {
   userId: string;
@@ -49,6 +50,8 @@ export interface SendNotificationParams {
   paymentEmailVariables?: PaymentEmailVariables;
   disputeEmailType?: DisputeEmailType;
   disputeEmailVariables?: DisputeEmailVariables;
+  /** Plain SMS body. When set (and smsEnabled), sends via Twilio/stub. */
+  smsBody?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -69,6 +72,7 @@ export interface PreferenceUpdate {
   category: NotificationCategory;
   emailEnabled?: boolean;
   inAppEnabled?: boolean;
+  smsEnabled?: boolean;
 }
 
 export interface EmitForUserParams {
@@ -78,6 +82,8 @@ export interface EmitForUserParams {
   /** Legacy plain copy — prefer paymentEmailType / disputeEmailType. */
   title?: string;
   body?: string;
+  /** Plain SMS body. When set (and smsEnabled), sends via Twilio/stub. */
+  smsBody?: string;
   paymentEmailType?: PaymentEmailType;
   paymentEmailVariables?: PaymentEmailVariables;
   disputeEmailType?: DisputeEmailType;
@@ -102,6 +108,10 @@ export interface IEmailNotificationService {
   resolveLocaleForUser?(userId: string): Promise<EmailLocale>;
 }
 
+export interface ISmsNotificationService {
+  sendNotificationSms(userId: string, body: string): Promise<void>;
+}
+
 @Injectable()
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
@@ -116,6 +126,9 @@ export class NotificationService {
     @Optional()
     @Inject(EMAIL_NOTIFICATION_SERVICE)
     private readonly emailNotificationService?: IEmailNotificationService,
+    @Optional()
+    @Inject(SMS_NOTIFICATION_SERVICE)
+    private readonly smsNotificationService?: ISmsNotificationService,
   ) {}
 
   async resolveLocaleForUser(userId: string): Promise<UserPreferredLocale> {
@@ -130,6 +143,7 @@ export class NotificationService {
       paymentEmailVariables,
       disputeEmailType,
       disputeEmailVariables,
+      smsBody,
     } = params;
 
     const locale = await resolveUserLocale(this.userRepo, userId);
@@ -177,6 +191,7 @@ export class NotificationService {
         paymentEmailVariables: paymentVars,
         disputeEmailType,
         disputeEmailVariables: disputeVars,
+        smsBody,
         metadata: mergedMeta,
       });
     } catch (err) {
@@ -201,6 +216,7 @@ export class NotificationService {
       paymentEmailVariables,
       disputeEmailType,
       disputeEmailVariables,
+      smsBody,
       metadata,
     } = params;
 
@@ -213,8 +229,8 @@ export class NotificationService {
       return null;
     }
 
-    const inApp = await this.preferenceRepo.findOne({ where: { userId, category } });
-    const inAppEnabled = inApp?.inAppEnabled ?? true;
+    const prefs = await this.preferenceRepo.findOne({ where: { userId, category } });
+    const inAppEnabled = prefs?.inAppEnabled ?? true;
 
     let notification: Notification | null = null;
     if (inAppEnabled) {
@@ -229,7 +245,7 @@ export class NotificationService {
       notification = await this.notificationRepo.save(notification);
     }
 
-    const emailEnabled = inApp?.emailEnabled ?? true;
+    const emailEnabled = prefs?.emailEnabled ?? true;
     if (emailEnabled && this.emailNotificationService) {
       try {
         if (bookingEmailType && bookingEmailVariables && this.emailNotificationService.sendBookingEmailForUser) {
@@ -257,6 +273,18 @@ export class NotificationService {
         }
       } catch (err) {
         this.logger.warn(`Failed to send notification email to user ${userId}: ${(err as Error).message}`);
+      }
+    }
+
+    const smsEnabled = prefs?.smsEnabled ?? true;
+    const resolvedSmsBody = smsBody?.trim();
+    if (smsEnabled && resolvedSmsBody && this.smsNotificationService) {
+      try {
+        await this.smsNotificationService.sendNotificationSms(userId, resolvedSmsBody);
+      } catch (err) {
+        this.logger.warn(
+          `Failed to send notification SMS to user ${userId}: ${(err as Error).message}`,
+        );
       }
     }
 
@@ -339,17 +367,21 @@ export class NotificationService {
 
   async getPreferences(userId: string): Promise<NotificationPreference[]> {
     const categories = Object.values(NotificationCategory);
+    const existing = await this.preferenceRepo.find({ where: { userId } });
+    const existingCats = new Set(existing.map((row) => row.category));
+    const missing = categories.filter((category) => !existingCats.has(category));
 
-    const toUpsert = categories.map((category) => ({
-      userId,
-      category,
-      emailEnabled: true,
-      inAppEnabled: true,
-    }));
-
-    await this.preferenceRepo.upsert(toUpsert, {
-      conflictPaths: ['userId', 'category'],
-    });
+    if (missing.length > 0) {
+      await this.preferenceRepo.insert(
+        missing.map((category) => ({
+          userId,
+          category,
+          emailEnabled: true,
+          inAppEnabled: true,
+          smsEnabled: true,
+        })),
+      );
+    }
 
     return this.preferenceRepo.find({
       where: { userId },
@@ -362,12 +394,14 @@ export class NotificationService {
       const existing = await this.preferenceRepo.findOne({ where: { userId, category: u.category } });
       const emailEnabled = u.emailEnabled !== undefined ? u.emailEnabled : (existing?.emailEnabled ?? true);
       const inAppEnabled = u.inAppEnabled !== undefined ? u.inAppEnabled : (existing?.inAppEnabled ?? true);
+      const smsEnabled = u.smsEnabled !== undefined ? u.smsEnabled : (existing?.smsEnabled ?? true);
       await this.preferenceRepo.upsert(
         {
           userId,
           category: u.category,
           emailEnabled,
           inAppEnabled,
+          smsEnabled,
         },
         { conflictPaths: ['userId', 'category'] },
       );

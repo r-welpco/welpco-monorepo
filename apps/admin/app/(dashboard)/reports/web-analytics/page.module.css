@@ -1,0 +1,19 @@
+.trendBar {
+  display: block;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--accent-9);
+  min-width: 2px;
+}
+
+.metricGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.summaryGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}

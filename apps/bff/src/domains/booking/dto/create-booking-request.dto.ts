@@ -114,6 +114,12 @@ export class CreateBookingRequestDto {
   @IsNumber()
   timezoneOffsetMinutes?: number;
 
+  @ApiPropertyOptional({ description: 'IANA timezone for the service location', example: 'America/Toronto' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  timezoneName?: string;
+
   @ApiPropertyOptional({ description: 'Marketplace job posting ID when booking originates from a job' })
   @IsOptional()
   @IsUUID()

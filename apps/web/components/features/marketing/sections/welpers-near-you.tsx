@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -75,6 +75,8 @@ export function WelpersNearYou() {
   const items: SearchResultItem[] = useMemo(() => data?.items ?? [], [data?.items]);
 
   // --- Rail scrolling (desktop arrows) ---
+  // Initial position: scrolled to the end so the "See all" card sits on the
+  // right, flush with the page container. Visitors browse welpers by scrolling left.
   const railRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -85,6 +87,17 @@ export function WelpersNearYou() {
     setCanPrev(el.scrollLeft > 4);
     setCanNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
   }, []);
+
+  const scrollRailToEnd = useCallback(() => {
+    const el = railRef.current;
+    if (!el) return;
+    el.scrollLeft = el.scrollWidth - el.clientWidth;
+    updateArrows();
+  }, [updateArrows]);
+
+  useLayoutEffect(() => {
+    scrollRailToEnd();
+  }, [scrollRailToEnd, items.length, postalCode]);
 
   useEffect(() => {
     const el = railRef.current;
@@ -309,6 +322,10 @@ function WelperRailCard({
           </div>
         </div>
       </div>
+
+      {item.bioSnippet?.trim() ? (
+        <p className={styles.bioPreview}>{item.bioSnippet.trim()}</p>
+      ) : null}
 
       {/* Honest empty: the rating line is simply omitted below 1 review. */}
       {hasRating ? (

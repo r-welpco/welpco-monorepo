@@ -227,11 +227,20 @@ export class EmailNotificationService implements IEmailNotificationService {
     email: string,
     firstName?: string,
     localeInput?: EmailLocale,
+    accountType?: AccountType,
   ): Promise<void> {
     const locale = localeInput ?? 'en';
     const prefix = localePathPrefix(locale);
     const dashboardUrl = `${this.frontendUrl}${prefix}/dashboard`;
-    const html = getWelcomeEmailHtml(firstName, dashboardUrl, locale, this.publicAppUrl);
+    const guideSlug = accountType === AccountType.WELPER ? 'welper' : 'customer';
+    const guideUrl = `${this.frontendUrl}${prefix}/guides/${guideSlug}`;
+    const html = getWelcomeEmailHtml(
+      firstName,
+      dashboardUrl,
+      locale,
+      this.publicAppUrl,
+      guideUrl,
+    );
 
     await this.emailService.sendEmail({
       to: email,

@@ -26,6 +26,8 @@ import {
   customerWelperRoleForAuthUser,
 } from '../../common/auth';
 import { EmailVerifiedGuard } from '../../common/guards/email-verified.guard';
+import { RateLimit } from '../user-management/auth/decorators/rate-limit.decorator';
+import { RateLimitGuard } from '../user-management/auth/guards/rate-limit.guard';
 import { BookingService } from './booking.service';
 import { CreateBookingRequestDto } from './dto/create-booking-request.dto';
 import { BookingListQueryDto } from './dto/booking-list-query.dto';
@@ -134,7 +136,15 @@ export class BookingController {
   }
 
   @Post(':id/payment-intent')
-  @UseGuards(RolesGuard, EmailVerifiedGuard)
+  @UseGuards(RolesGuard, EmailVerifiedGuard, RateLimitGuard)
+  @RateLimit({
+    ttl: 3600,
+    limit: 5,
+    keyGenerator: (req) => {
+      const authenticated = req as typeof req & { user?: { userId?: string } };
+      return `booking-authorization:${authenticated.user?.userId ?? req.ip}:${req.params.id}`;
+    },
+  })
   @Roles('customer')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

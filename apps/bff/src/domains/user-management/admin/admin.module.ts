@@ -23,6 +23,8 @@ import { DisputeModule } from '../../dispute/dispute.module';
 import { BookingModule } from '../../booking/booking.module';
 import { AdminAuditModule } from './admin-audit.module';
 import { AdminDashboardService } from './admin-dashboard.service';
+import { AdminWebAnalyticsReportService } from './admin-web-analytics-report.service';
+import { AdminResendEmailsReportService } from './admin-resend-emails-report.service';
 import { BackgroundCheckOrder } from '../../safety-verification/entities/background-check-order.entity';
 import { SafetyVerificationModule } from '../../safety-verification/safety-verification.module';
 import { JobPostingModule } from '../../job-posting/job-posting.module';
@@ -30,6 +32,8 @@ import { PaymentRecoveryTask } from '../../payment/entities/payment-recovery-tas
 import { BookingServiceReceipt } from '../../booking/entities/booking-service-receipt.entity';
 import { WelperPayoutLedger } from '../../payment/entities/welper-payout-ledger.entity';
 import { BookingRefund } from '../../payment/entities/booking-refund.entity';
+import { VercelModule } from '../../../clients/vercel/vercel.module';
+import { ResendModule } from '../../../clients/resend/resend.module';
 
 @Module({
   imports: [
@@ -63,9 +67,21 @@ import { BookingRefund } from '../../payment/entities/booking-refund.entity';
     AdminAuditModule,
     SafetyVerificationModule,
     JobPostingModule,
+    VercelModule,
+    ResendModule,
   ],
   controllers: [AdminController],
-  providers: [AdminService, AdminDashboardService],
-  exports: [AdminService, AdminDashboardService],
+  providers: [
+    AdminService,
+    AdminDashboardService,
+    AdminWebAnalyticsReportService,
+    AdminResendEmailsReportService,
+  ],
+  exports: [
+    AdminService,
+    AdminDashboardService,
+    AdminWebAnalyticsReportService,
+    AdminResendEmailsReportService,
+  ],
 })
 export class AdminModule {}

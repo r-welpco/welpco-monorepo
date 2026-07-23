@@ -43,7 +43,10 @@ describe('StripeOperationsService', () => {
     createLedgerForPaymentReleased: jest.fn(),
     restoreAfterDisputeResolved: jest.fn(),
   };
-  const notificationService = { emitForUser: jest.fn() };
+  const notificationService = {
+    emitForUser: jest.fn(),
+    resolveLocaleForUser: jest.fn().mockResolvedValue('en'),
+  };
   let service: StripeOperationsService;
 
   beforeEach(() => {

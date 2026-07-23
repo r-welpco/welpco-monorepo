@@ -15,6 +15,40 @@ export default function AdminReportsPage() {
       <Card size="3">
         <Flex direction="column" gap="3">
           <Text size="5" weight="bold">
+            Web Analytics
+          </Text>
+          <Text color="gray">
+            Marketing traffic from Vercel Web Analytics: visitors, pageviews,
+            daily trend, top pages, referrers, countries, and devices.
+          </Text>
+          <Flex>
+            <Button asChild>
+              <Link href="/reports/web-analytics">Open report</Link>
+            </Button>
+          </Flex>
+        </Flex>
+      </Card>
+
+      <Card size="3">
+        <Flex direction="column" gap="3">
+          <Text size="5" weight="bold">
+            Sent emails (Resend)
+          </Text>
+          <Text color="gray">
+            Review transactional emails sent through Resend, delivery event
+            stats, and HTML previews for support and marketing checks.
+          </Text>
+          <Flex>
+            <Button asChild>
+              <Link href="/reports/emails">Open report</Link>
+            </Button>
+          </Flex>
+        </Flex>
+      </Card>
+
+      <Card size="3">
+        <Flex direction="column" gap="3">
+          <Text size="5" weight="bold">
             Welper Distribution
           </Text>
           <Text color="gray">

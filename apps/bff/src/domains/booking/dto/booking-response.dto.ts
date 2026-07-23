@@ -13,6 +13,7 @@ export class BookingResponseDto {
   @ApiPropertyOptional() scheduledStartTime!: string | null;
   @ApiPropertyOptional() scheduledEndTime!: string | null;
   @ApiPropertyOptional() durationMinutes!: number | null;
+  @ApiPropertyOptional() timezoneName?: string | null;
 
   @ApiPropertyOptional() hourlyRate!: number | null;
   @ApiPropertyOptional() totalPrice!: number | null;
@@ -26,6 +27,9 @@ export class BookingResponseDto {
   @ApiPropertyOptional() notes!: string | null;
 
   @ApiPropertyOptional() cancellationReason!: string | null;
+  @ApiPropertyOptional() cancelledBy?: string | null;
+  @ApiPropertyOptional() cancellationSource?: string | null;
+  @ApiPropertyOptional() cancellationFeeCents?: number;
   @ApiPropertyOptional() declineReason!: string | null;
 
   @ApiPropertyOptional() acceptedAt!: Date | null;
@@ -66,6 +70,12 @@ export class BookingResponseDto {
   paymentAuthorizationDeadlineAt?: string | null;
 
   @ApiPropertyOptional()
+  paymentAuthorizationExpiresAt?: string | null;
+
+  @ApiPropertyOptional()
+  paymentAuthorizationRiskCode?: string | null;
+
+  @ApiPropertyOptional()
   paymentAuthorizationLastAttemptAt?: string | null;
 
   @ApiPropertyOptional()
@@ -76,6 +86,21 @@ export class BookingResponseDto {
 
   @ApiPropertyOptional()
   paymentAuthorizationFailureMessage?: string | null;
+
+  @ApiPropertyOptional({ description: 'Admin-only Stripe PaymentIntent id' })
+  stripePaymentIntentId?: string | null;
+
+  @ApiPropertyOptional({ description: 'Admin-only Stripe Dashboard payment link' })
+  stripeDashboardUrl?: string | null;
+
+  @ApiPropertyOptional({ description: 'Admin-only Stripe Charge id' })
+  stripeChargeId?: string | null;
+
+  @ApiPropertyOptional({ description: 'Admin-only card brand for the active hold' })
+  paymentCardBrand?: string | null;
+
+  @ApiPropertyOptional({ description: 'Admin-only payment capture reason' })
+  paymentCaptureReason?: string | null;
 
   @ApiPropertyOptional({ description: 'Present when SCA / confirm is required' })
   paymentClientSecret?: string | null;

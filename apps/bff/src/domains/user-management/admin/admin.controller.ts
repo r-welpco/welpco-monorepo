@@ -23,6 +23,16 @@ import {
   type AdminWelperDistributionScope,
 } from './admin.service';
 import { AdminDashboardService } from './admin-dashboard.service';
+import {
+  AdminWebAnalyticsReportService,
+  WEB_ANALYTICS_ENVIRONMENTS,
+  type WebAnalyticsEnvironmentFilter,
+} from './admin-web-analytics-report.service';
+import {
+  AdminResendEmailsReportService,
+  RESEND_EMAIL_LAST_EVENTS,
+  type ResendEmailLastEvent,
+} from './admin-resend-emails-report.service';
 import { UpdateBackgroundCheckDto, UpdateUserAccountStatusDto } from './dto';
 import { JwtAuthGuard, RolesGuard, Roles } from '../../../common/auth';
 import { AccountType, AccountStatus, UserAccount } from '../entities/user-account.entity';
@@ -60,6 +70,8 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly adminDashboardService: AdminDashboardService,
+    private readonly adminWebAnalyticsReportService: AdminWebAnalyticsReportService,
+    private readonly adminResendEmailsReportService: AdminResendEmailsReportService,
     private readonly accountLockoutService: AccountLockoutService,
     private readonly applicationSettingsService: ApplicationSettingsService,
     private readonly bookingService: BookingService,
@@ -69,6 +81,127 @@ export class AdminController {
     private readonly payoutBatchService: PayoutBatchService,
     private readonly stripeOperationsService: StripeOperationsService,
   ) {}
+
+  @Get('reports/emails')
+  @ApiOperation({
+    summary: 'List recent transactional emails from Resend with delivery stats',
+  })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({
+    name: 'after',
+    required: false,
+    description: 'Cursor id for next page (Resend pagination)',
+  })
+  @ApiQuery({
+    name: 'before',
+    required: false,
+    description: 'Cursor id for previous page (Resend pagination)',
+  })
+  @ApiQuery({
+    name: 'to',
+    required: false,
+    description: 'Filter current page by recipient substring (case-insensitive)',
+  })
+  @ApiQuery({
+    name: 'lastEvent',
+    required: false,
+    enum: RESEND_EMAIL_LAST_EVENTS,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Paginated sent emails plus stats from the latest 100 sends',
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'RESEND_API_KEY missing or Resend unreachable',
+  })
+  async getResendEmailsReport(
+    @Query('limit') limitRaw?: string,
+    @Query('after') after?: string,
+    @Query('before') before?: string,
+    @Query('to') to?: string,
+    @Query('lastEvent') lastEvent?: string,
+  ) {
+    const parsedLimit =
+      limitRaw != null && limitRaw.trim() !== ''
+        ? Number.parseInt(limitRaw, 10)
+        : undefined;
+    const resolvedLastEvent = RESEND_EMAIL_LAST_EVENTS.includes(
+      lastEvent as ResendEmailLastEvent,
+    )
+      ? (lastEvent as ResendEmailLastEvent)
+      : undefined;
+
+    return this.adminResendEmailsReportService.getEmailsReport({
+      limit: parsedLimit,
+      after: after?.trim() || undefined,
+      before: before?.trim() || undefined,
+      to: to?.trim() || undefined,
+      lastEvent: resolvedLastEvent,
+    });
+  }
+
+  @Get('reports/emails/:id')
+  @ApiOperation({
+    summary: 'Retrieve a sent Resend email including HTML for preview',
+  })
+  @ApiParam({ name: 'id', description: 'Resend email id' })
+  @ApiResponse({ status: 200, description: 'Email detail with html/text body' })
+  @ApiResponse({ status: 404, description: 'Email not found in Resend' })
+  @ApiResponse({
+    status: 503,
+    description: 'RESEND_API_KEY missing or Resend unreachable',
+  })
+  async getResendEmailDetail(@Param('id') id: string) {
+    return this.adminResendEmailsReportService.getEmailDetail(id);
+  }
+
+  @Get('reports/web-analytics')
+  @ApiOperation({
+    summary: 'Marketing web analytics report from Vercel Web Analytics',
+  })
+  @ApiQuery({
+    name: 'since',
+    required: false,
+    description: 'Start date (YYYY-MM-DD). Defaults to 6 days before until.',
+  })
+  @ApiQuery({
+    name: 'until',
+    required: false,
+    description: 'End date (YYYY-MM-DD). Defaults to today (UTC).',
+  })
+  @ApiQuery({
+    name: 'environment',
+    required: false,
+    enum: WEB_ANALYTICS_ENVIRONMENTS,
+    description: 'Deployment environment filter. Defaults to production.',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Visitors/pageviews summary, daily trend, and top pages/referrers/countries/devices',
+  })
+  @ApiResponse({
+    status: 503,
+    description: 'Vercel Web Analytics is not configured or unreachable',
+  })
+  async getWebAnalyticsReport(
+    @Query('since') since?: string,
+    @Query('until') until?: string,
+    @Query('environment') environment?: string,
+  ) {
+    const resolvedEnvironment = WEB_ANALYTICS_ENVIRONMENTS.includes(
+      environment as WebAnalyticsEnvironmentFilter,
+    )
+      ? (environment as WebAnalyticsEnvironmentFilter)
+      : undefined;
+
+    return this.adminWebAnalyticsReportService.getWebAnalyticsReport({
+      since: since?.trim() || undefined,
+      until: until?.trim() || undefined,
+      environment: resolvedEnvironment,
+    });
+  }
 
   @Get('reports/welper-distribution')
   @ApiOperation({ summary: 'Aggregate welper distribution by service area' })
@@ -463,6 +596,23 @@ export class AdminController {
     return result;
   }
 
+  @Post('bookings/:id/payment/refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh booking authorization from Stripe without moving money' })
+  @ApiParam({ name: 'id', description: 'Booking ID' })
+  async refreshBookingPayment(
+    @CurrentUser() actor: CurrentUserData,
+    @Param('id') id: string,
+  ) {
+    const result = await this.bookingService.refreshPaymentForAdmin(id);
+    await this.adminAuditService.record(actor.userId, 'admin.booking.payment.refresh', {
+      bookingId: id,
+      paymentAuthorizationStatus: result.paymentAuthorizationStatus,
+      paymentAuthorizationRiskCode: result.paymentAuthorizationRiskCode,
+    });
+    return result;
+  }
+
   @Post('users')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create admin user account' })
@@ -511,6 +661,7 @@ export class AdminController {
     required: false,
     description: 'YYYY-MM-DD scheduled_date',
   })
+  @ApiQuery({ name: 'paymentIssue', required: false, type: Boolean })
   async listBookings(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
@@ -519,6 +670,7 @@ export class AdminController {
     @Query('status') status?: BookingRequestStatus,
     @Query('dateFrom') dateFrom?: string,
     @Query('dateTo') dateTo?: string,
+    @Query('paymentIssue') paymentIssue?: string,
   ) {
     return this.bookingService.findAllForAdmin({
       page,
@@ -528,6 +680,7 @@ export class AdminController {
       status,
       dateFrom,
       dateTo,
+      paymentIssue: paymentIssue === 'true',
     });
   }
 

@@ -12,9 +12,9 @@
 
 /*
  * The rail lives inside `.container` but bleeds to the viewport edges so a
- * partial card peeks at the right edge — that peek is the scroll affordance.
- * `scroll-padding-inline` keeps snap positions aligned with the container
- * content edge.
+ * partial card peeks at the left edge (initial scroll is pinned to the end —
+ * "See all" flush with the container’s right edge). `scroll-padding-inline`
+ * keeps snap positions aligned with the container content edge.
  */
 .rail {
   --peek-bleed: calc((100vw - 100%) / 2);
@@ -72,8 +72,22 @@
   outline-offset: 3px;
 }
 
-/* End card — "See all Welpers near you" */
+/* Welper bio — three-line preview from public search `bioSnippet`. */
+.bioPreview {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--fg-muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+/* End card — "See all Welpers near you" (snaps to container right edge) */
 .endCard {
+  scroll-snap-align: end;
   justify-content: center;
   align-items: flex-start;
   gap: 18px;

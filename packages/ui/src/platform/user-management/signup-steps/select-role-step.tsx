@@ -36,6 +36,12 @@ export interface SelectRoleStepProps {
   labels?: SelectRoleStepLabels;
   onSubmit: (values: { role: SelectedRole }) => void | Promise<void>;
   onBack?: () => void;
+  /**
+   * Fires on every (uncommitted) role pick — click or keyboard — so hosts
+   * can preview the choice (e.g. the register education panel) before the
+   * user submits. Optional and side-effect-free for existing consumers.
+   */
+  onSelectionChange?: (role: SelectedRole) => void;
 }
 
 interface RoleOption {
@@ -52,6 +58,7 @@ export function SelectRoleStep({
   labels: labelsProp,
   onSubmit,
   onBack,
+  onSelectionChange,
 }: SelectRoleStepProps) {
   const labels = labelsProp ?? DEFAULT_SELECT_ROLE_LABELS;
 
@@ -85,6 +92,7 @@ export function SelectRoleStep({
   const selectRole = (value: SelectedRole) => {
     if (!customerRegistrationEnabled && value === "customer") return;
     setSelected(value);
+    onSelectionChange?.(value);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>, value: SelectedRole) => {

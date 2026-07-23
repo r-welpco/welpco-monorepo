@@ -61,6 +61,24 @@ const ZOHO_SALESIQ_FRAME_SOURCES = cspSources(
   "https://salesiq.zohocloud.ca",
 );
 
+/**
+ * Object-storage origins for direct browser↔S3 traffic (presigned PUT uploads +
+ * public photo display). Production uses AWS (covered by `https://*.amazonaws.com`
+ * below). Local dev points at MinIO, which isn't an amazonaws host, so it must be
+ * added to `img-src` + `connect-src` explicitly.
+ *
+ * We do NOT rely on `NEXT_PUBLIC_S3_PUBLIC_URL` here: `.env.local` isn't reliably
+ * loaded into `process.env` before `next.config.ts` evaluates, so the dev origin
+ * is keyed off `NODE_ENV` (which Next sets to "development" for `next dev`) and
+ * hardcoded to the docker-compose MinIO port. The env var is still honored when
+ * present (custom port / remote MinIO / staging).
+ */
+const IS_DEV = process.env.NODE_ENV !== "production";
+const S3_PUBLIC_SOURCES = cspSources(
+  cspOriginFromUrl(process.env.NEXT_PUBLIC_S3_PUBLIC_URL),
+  IS_DEV ? "http://localhost:9000" : undefined,
+);
+
 const nextConfig: NextConfig = {
   turbopack: {
     // Monorepo root so Next.js uses pnpm-lock.yaml and avoids multiple-lockfile warning
@@ -109,13 +127,14 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com ${TURNSTILE_ORIGIN} ${VERCEL_ANALYTICS_SCRIPT_ORIGIN} ${ZOHO_SALESIQ_SCRIPT_SOURCES}`,
               `style-src 'self' 'unsafe-inline' ${ZOHO_SALESIQ_STYLE_SOURCES}`,
-              `img-src 'self' data: blob: https://*.amazonaws.com ${ZOHO_SALESIQ_IMAGE_SOURCES}`,
+              `img-src 'self' data: blob: https://*.amazonaws.com ${cspSources(S3_PUBLIC_SOURCES, ZOHO_SALESIQ_IMAGE_SOURCES)}`,
               `font-src 'self' ${ZOHO_SALESIQ_FONT_SOURCES}`,
               "manifest-src 'self'",
               "worker-src 'self'",
               "connect-src 'self' https://api.stripe.com https://*.amazonaws.com " +
                 `${TURNSTILE_ORIGIN} ${VERCEL_ANALYTICS_CONNECT_ORIGIN} ` +
                 `${ZOHO_SALESIQ_CONNECT_SOURCES} ` +
+                `${S3_PUBLIC_SOURCES} ` +
                 (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"),
               `frame-src 'self' https://js.stripe.com https://hooks.stripe.com ${TURNSTILE_ORIGIN} ${ZOHO_SALESIQ_FRAME_SOURCES}`,
               "object-src 'none'",

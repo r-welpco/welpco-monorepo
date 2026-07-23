@@ -1,0 +1,246 @@
+{
+  "meta": {
+    "title": "Welpco — Welper Guide",
+    "description": "How to set up your Stripe payouts, receive bookings, use the Marketplace, keep your profile up to date, and build your reputation on Welpco."
+  },
+  "hero": {
+    "eyebrow": "Welper guide",
+    "title": "Welcome to your Welpco guide",
+    "subtitle": "Getting set up on the platform — profile, payouts, bookings, and the Marketplace."
+  },
+  "overview": {
+    "intro": [
+      "Thank you for being part of the Welpco community!",
+      "This guide was created to help you get started on the platform and better understand how to use your account."
+    ],
+    "tocLead": "Inside, you’ll find essential information on how to:",
+    "items": [
+      {
+        "label": "complete the final steps of your profile",
+        "sectionId": "keep-profile-updated"
+      },
+      {
+        "label": "understand how to receive service requests",
+        "sectionId": "receiving-a-booking"
+      },
+      {
+        "label": "use the Marketplace",
+        "sectionId": "marketplace"
+      },
+      {
+        "label": "set up your payments",
+        "sectionId": "stripe-setup"
+      },
+      {
+        "label": "manage your bookings",
+        "sectionId": "after-a-service"
+      },
+      {
+        "label": "provide a professional experience to your clients",
+        "sectionId": "when-selected"
+      }
+    ]
+  },
+  "sections": [
+    {
+      "numeral": "01",
+      "id": "stripe-setup",
+      "title": "Complete Your Stripe Setup to Receive Payments",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Welpco uses Stripe to process payments securely."
+        },
+        {
+          "type": "paragraph",
+          "text": "If you have not already done so, you will need to complete your Stripe account setup in order to receive payments directly into your bank account."
+        },
+        {
+          "type": "callout",
+          "variant": "important",
+          "text": "Since July 11, 2026, a completed Stripe payout account is required to accept bookings — not just to receive payments. Complete your Stripe setup now so you can accept bookings as soon as they come in."
+        },
+        {
+          "type": "paragraph",
+          "text": "During the creation of your Welper profile, you will be prompted to set up your Stripe account. Once your account has been created, simply follow the instructions below:"
+        },
+        {
+          "type": "list",
+          "ordered": true,
+          "items": [
+            "Business Type: select “Individual / Sole Proprietorship.”",
+            "Personal Details: for the Job Title field, you may enter “Self-Employed” or a more specific title such as “Dog Walker,” “House Cleaner,” “Cook,” etc.",
+            "Business Information: for Industry, select “Personal Services – Other Personal Services”; for Website, enter www.welpco.com; for Product/Service Description, provide a brief description of the services you offer.",
+            "Banking Information: enter your personal bank account details to receive your weekly payouts directly into your account."
+          ]
+        },
+        {
+          "type": "cta",
+          "label": "Set up my payouts",
+          "href": "/dashboard/profile?tab=payout"
+        }
+      ]
+    },
+    {
+      "numeral": "02",
+      "id": "background-check",
+      "title": "Background Check: Optional, but Recommended",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "A background check is not required to be visible on Welpco."
+        },
+        {
+          "type": "paragraph",
+          "text": "However, completing one can help you stand out to clients and increase their confidence in your profile."
+        },
+        {
+          "type": "paragraph",
+          "text": "Welpers who have completed a background check may be viewed as more trustworthy by some clients, particularly for in-home services, babysitting, family assistance, or pet care services."
+        }
+      ]
+    },
+    {
+      "numeral": "03",
+      "id": "marketplace",
+      "title": "Browse Available Opportunities in the Marketplace",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "In addition to being visible to clients, you can also browse opportunities posted in the Marketplace tab."
+        },
+        {
+          "type": "paragraph",
+          "text": "In this section, you will find requests from clients who are actively looking for a Welper."
+        },
+        {
+          "type": "paragraph",
+          "text": "You can review the details of each opportunity and apply to the ones that match your services, availability, and service area."
+        }
+      ]
+    },
+    {
+      "numeral": "04",
+      "id": "receiving-a-booking",
+      "title": "Receiving a Booking from a Client",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "When a client books your services, you will receive a notification."
+        },
+        {
+          "type": "paragraph",
+          "text": "You will then be able to review the booking details, including:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "the type of service requested;",
+            "the date and time;",
+            "the service location;",
+            "any important information provided by the client."
+          ]
+        },
+        {
+          "type": "paragraph",
+          "text": "Always take the time to carefully review the request before confirming."
+        }
+      ]
+    },
+    {
+      "numeral": "05",
+      "id": "when-selected",
+      "title": "When a Client Selects You for a Service (when you apply for a job)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "If a client selects you for a service, you will be notified through the platform."
+        },
+        {
+          "type": "paragraph",
+          "text": "Make sure to:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "confirm the booking promptly;",
+            "communicate with the client if you have any questions;",
+            "review the address, date, time, and service details;",
+            "arrive on time;",
+            "complete the service professionally and respectfully."
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "tip",
+          "text": "Good communication and reliability help create a positive experience and increase your chances of receiving great reviews and future bookings."
+        }
+      ]
+    },
+    {
+      "numeral": "06",
+      "id": "keep-profile-updated",
+      "title": "Keep Your Profile Up to Date",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "To increase your chances of receiving bookings, make sure your profile remains complete and up to date:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "your services;",
+            "your rates;",
+            "your availability;",
+            "your service area;",
+            "your profile photo;",
+            "your profile description."
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "tip",
+          "text": "The more complete and accurate your profile is, the more confidence clients will have when choosing your services."
+        }
+      ]
+    },
+    {
+      "numeral": "07",
+      "id": "after-a-service",
+      "title": "After Completing a Service",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Once the service has been completed, make sure to follow the required steps within the platform."
+        },
+        {
+          "type": "paragraph",
+          "text": "You will be asked to submit your start and end times so that Welpco can accurately process the booking and generate the customer invoice when applicable."
+        },
+        {
+          "type": "paragraph",
+          "text": "Clients will have the opportunity to leave a review on your profile, which can help you receive more bookings in the future."
+        },
+        {
+          "type": "paragraph",
+          "text": "You will also be able to rate and review the customer based on your experience."
+        },
+        {
+          "type": "callout",
+          "variant": "tip",
+          "text": "Providing excellent service, communicating clearly, and being punctual are some of the best ways to build a strong reputation on Welpco."
+        }
+      ]
+    }
+  ],
+  "support": {
+    "title": "Need Help?",
+    "text": "If you have any questions or need assistance with your profile, Stripe setup, bookings, or the Marketplace, don’t hesitate to contact us.",
+    "email": "support@welpco.com",
+    "closing": [
+      "We’re here to help and support you every step of the way.",
+      "Thank you for being part of the Welpco community!"
+    ],
+    "signature": "The Welpco Team"
+  }
+}

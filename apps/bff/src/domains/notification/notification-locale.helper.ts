@@ -32,6 +32,17 @@ export function buildDisputeActionUrl(
   return `${frontendUrl}${prefix}/dashboard/disputes/${disputeId}`;
 }
 
+/** Locale-aware dashboard deep link (`path` starts with `/dashboard/...`). */
+export function buildDashboardActionUrl(
+  frontendUrl: string,
+  path: string,
+  locale: UserPreferredLocale,
+): string {
+  const prefix = localePathPrefix(locale);
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return `${frontendUrl}${prefix}${normalized}`;
+}
+
 export function getFrontendBaseUrl(): string {
   return process.env.FRONTEND_URL || 'http://localhost:8080';
 }

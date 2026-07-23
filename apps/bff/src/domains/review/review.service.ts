@@ -17,6 +17,10 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { ReviewResponseDto } from './dto/review-response.dto';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
+import {
+  buildBookingActionUrl,
+  getFrontendBaseUrl,
+} from '../notification/notification-locale.helper';
 
 @Injectable()
 export class ReviewService {
@@ -119,10 +123,22 @@ export class ReviewService {
     // TODO (REVIEWS-002 ship): also emit a `REVIEW` notification to the
     // ORIGINAL REVIEWER when the welper posts a public response. Wire that
     // into the welper-response create-path when REVIEWS-002 lands.
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-    const link = `${baseUrl}/dashboard/bookings/${booking.id}`;
-    const title = isCustomer ? 'New review from your customer' : 'New review from your welper';
-    const body = `You received a ${dto.rating}-star review for a recent booking. Open the booking to read it.`;
+    const locale =
+      (await this.notificationService.resolveLocaleForUser(revieweeId)) === 'fr'
+        ? 'fr'
+        : 'en';
+    const link = buildBookingActionUrl(getFrontendBaseUrl(), booking.id, locale);
+    const title = isCustomer
+      ? locale === 'fr'
+        ? 'Nouvel avis de votre client'
+        : 'New review from your customer'
+      : locale === 'fr'
+        ? 'Nouvel avis de votre Welper'
+        : 'New review from your welper';
+    const body =
+      locale === 'fr'
+        ? `Vous avez reçu un avis ${dto.rating} étoiles pour une réservation récente. Ouvrez la réservation pour le lire.`
+        : `You received a ${dto.rating}-star review for a recent booking. Open the booking to read it.`;
     try {
       await this.notificationService.emitForUser(revieweeId, {
         category: NotificationCategory.REVIEW,

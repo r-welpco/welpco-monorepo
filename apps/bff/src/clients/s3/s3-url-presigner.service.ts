@@ -2,6 +2,11 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import {
+  resolveS3Bucket,
+  resolveS3ClientConfig,
+  resolveS3Region,
+} from './s3-config.util';
 
 /**
  * Wave 2 (BFF): centralised on-demand presigner for evidence files (booking
@@ -36,14 +41,8 @@ export class S3UrlPresignerService implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   onModuleInit(): void {
-    const bucket =
-      this.configService.get<string>('S3_BUCKET_EVIDENCE') ??
-      this.configService.get<string>('AWS_S3_BUCKET') ??
-      null;
-    const region =
-      this.configService.get<string>('S3_REGION') ??
-      this.configService.get<string>('AWS_S3_REGION') ??
-      null;
+    const bucket = resolveS3Bucket(this.configService);
+    const region = resolveS3Region(this.configService);
     const ttlRaw = this.configService.get<string>('S3_PRESIGN_TTL_SECONDS');
     const parsedTtl = ttlRaw ? Number.parseInt(ttlRaw, 10) : NaN;
     if (Number.isFinite(parsedTtl) && parsedTtl > 0) {
@@ -60,18 +59,11 @@ export class S3UrlPresignerService implements OnModuleInit {
     this.bucket = bucket;
     this.region = region;
 
-    const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
-    const secretAccessKey = this.configService.get<string>(
-      'AWS_SECRET_ACCESS_KEY',
+    // Client config (creds + optional MinIO/local endpoint + path-style) is
+    // shared with the uploads service + public-URL builder via s3-config.util.
+    this.client = new S3Client(
+      resolveS3ClientConfig(this.configService, region),
     );
-    this.client = new S3Client({
-      region,
-      // Only set explicit creds when both are supplied; otherwise let the SDK
-      // resolve creds from the standard chain (IRSA, EC2 metadata, ~/.aws).
-      ...(accessKeyId && secretAccessKey
-        ? { credentials: { accessKeyId, secretAccessKey } }
-        : {}),
-    });
   }
 
   /** TTL applied to presigned GET URLs, in seconds. Exposed for tests + telemetry. */

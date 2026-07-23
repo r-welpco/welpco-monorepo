@@ -22,6 +22,10 @@ import { MessagesQueryDto, getMessagesQueryParams } from './dto/messages-query.d
 import { ChatInboxItemDto } from './dto/chat-inbox-item.dto';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
+import {
+  buildDashboardActionUrl,
+  getFrontendBaseUrl,
+} from '../notification/notification-locale.helper';
 import { ApplicationSettingsService } from '../payment/application-settings.service';
 import { isBookingParticipantMessagingOpen } from '../booking/dispute-report-window';
 
@@ -410,15 +414,22 @@ export class CommunicationService {
     {
       const recipientId =
         booking.customerId === userId ? booking.welperId : booking.customerId;
-      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-      const link = `${baseUrl}/dashboard/messages/${bookingId}`;
+      const locale =
+        (await this.notificationService.resolveLocaleForUser(recipientId)) === 'fr'
+          ? 'fr'
+          : 'en';
+      const link = buildDashboardActionUrl(
+        getFrontendBaseUrl(),
+        `/dashboard/messages/${bookingId}`,
+        locale,
+      );
       // Honest body: keep a short preview so the recipient can triage from
       // the bell, but don't leak long content into email subject lines.
       const preview = saved.content.length > 80 ? `${saved.content.slice(0, 80)}…` : saved.content;
       try {
         await this.notificationService.emitForUser(recipientId, {
           category: NotificationCategory.MESSAGE,
-          title: 'New message',
+          title: locale === 'fr' ? 'Nouveau message' : 'New message',
           body: preview,
           link,
           metadata: { bookingId, messageId: saved.id, threadId: thread.id },

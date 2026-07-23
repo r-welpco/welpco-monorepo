@@ -20,7 +20,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { useQueryClient } from "@tanstack/react-query";
 import { performClientSignOut } from "@/lib/auth/client-sign-out";
 import { useAuthStore } from "@/stores/authStore";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, BookOpen } from "lucide-react";
 
 const tabs = [
   { value: "dashboard", label: "Dashboard", href: "/dashboard" },
@@ -114,6 +114,14 @@ export function DashboardHeader() {
                   <Flex align="center" gap="2">
                     <Settings style={{ width: "16px", height: "16px" }} />
                     <Text size="2">Settings</Text>
+                  </Flex>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/guides" style={{ textDecoration: "none" }}>
+                  <Flex align="center" gap="2">
+                    <BookOpen style={{ width: "16px", height: "16px" }} />
+                    <Text size="2">Guides</Text>
                   </Flex>
                 </Link>
               </DropdownMenuItem>

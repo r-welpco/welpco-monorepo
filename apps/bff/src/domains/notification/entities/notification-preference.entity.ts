@@ -16,4 +16,7 @@ export class NotificationPreference extends BaseEntity {
 
   @Column({ name: 'in_app_enabled', type: 'boolean', default: true })
   inAppEnabled!: boolean;
+
+  @Column({ name: 'sms_enabled', type: 'boolean', default: true })
+  smsEnabled!: boolean;
 }

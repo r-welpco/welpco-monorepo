@@ -63,7 +63,8 @@
     grid-template-columns: 1fr !important;
   }
   .welpco [data-grid="footer-cols"] {
-    grid-template-columns: 1fr 1fr 1fr !important;
+    /* 4 nav columns fold to a balanced 2×2 (brand block spans full width below). */
+    grid-template-columns: 1fr 1fr !important;
     gap: 32px !important;
   }
   .welpco [data-grid="footer-cols"] > :first-child {

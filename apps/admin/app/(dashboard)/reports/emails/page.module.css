@@ -1,0 +1,23 @@
+.summaryGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.previewFrame {
+  width: 100%;
+  min-height: 32rem;
+  border: 1px solid var(--gray-a6);
+  border-radius: var(--radius-3);
+  background: white;
+}
+
+.metaList {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.mono {
+  font-family: var(--code-font-family, ui-monospace, monospace);
+  word-break: break-all;
+}

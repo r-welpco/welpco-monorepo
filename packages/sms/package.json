@@ -1,0 +1,29 @@
+{
+  "name": "@welpco/sms",
+  "version": "0.0.1",
+  "description": "Welpco SMS transport (Twilio + local stub)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "test": "node --import tsx --test src/e164.test.ts src/templates.test.ts"
+  },
+  "dependencies": {
+    "twilio": "^5.10.4"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.0"
+  }
+}

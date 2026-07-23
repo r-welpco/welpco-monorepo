@@ -11,6 +11,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { S3UrlPresignerService } from '../../../clients/s3';
+import {
+  buildPublicObjectUrl,
+  resolveS3Bucket,
+  resolveS3Region,
+} from '../../../clients/s3/s3-config.util';
 import { NotificationService } from '../../notification/notification.service';
 import { NotificationCategory } from '../../notification/entities';
 import { WelperPortfolioPhoto } from '../entities/welper-portfolio-photo.entity';
@@ -365,14 +370,10 @@ export class PortfolioService {
    * PUT wrote to.
    */
   private publicUrlFor(key: string): string | null {
-    const bucket =
-      this.configService.get<string>('S3_BUCKET_EVIDENCE') ??
-      this.configService.get<string>('AWS_S3_BUCKET');
-    const region =
-      this.configService.get<string>('S3_REGION') ??
-      this.configService.get<string>('AWS_S3_REGION');
+    const bucket = resolveS3Bucket(this.configService);
+    const region = resolveS3Region(this.configService);
     if (!bucket || !region) return null;
-    return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+    return buildPublicObjectUrl(this.configService, bucket, region, key);
   }
 
   private extensionFor(contentType: string): string {

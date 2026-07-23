@@ -3,6 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'crypto';
+import {
+  buildPublicObjectUrl,
+  resolveS3ClientConfig,
+} from '../../clients/s3/s3-config.util';
 
 @Injectable()
 export class UploadsService {
@@ -14,13 +18,11 @@ export class UploadsService {
     this.region = this.configService.getOrThrow<string>('AWS_S3_REGION');
     this.bucket = this.configService.getOrThrow<string>('AWS_S3_BUCKET');
 
-    this.s3Client = new S3Client({
-      region: this.region,
-      credentials: {
-        accessKeyId: this.configService.getOrThrow<string>('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: this.configService.getOrThrow<string>('AWS_SECRET_ACCESS_KEY'),
-      },
-    });
+    // Endpoint/path-style (MinIO in dev) + creds resolved via the shared util
+    // so signed + public URLs point at the same host.
+    this.s3Client = new S3Client(
+      resolveS3ClientConfig(this.configService, this.region),
+    );
   }
 
   async generatePresignedUrl(
@@ -38,7 +40,12 @@ export class UploadsService {
     });
 
     const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn: 300 });
-    const publicUrl = `https://${this.bucket}.s3.${this.region}.amazonaws.com/${fileKey}`;
+    const publicUrl = buildPublicObjectUrl(
+      this.configService,
+      this.bucket,
+      this.region,
+      fileKey,
+    );
 
     return { uploadUrl, fileKey, publicUrl };
   }

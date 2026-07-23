@@ -151,6 +151,7 @@ export interface SignupFilledData {
       category: string;
       emailEnabled?: boolean;
       inAppEnabled?: boolean;
+      smsEnabled?: boolean;
     }>;
   };
   optionalProfile?: {
@@ -1142,7 +1143,7 @@ export class SignupOrchestratorService {
       const repo = manager.getRepository(NotificationPreference);
       const items = dto.preferences.length
         ? dto.preferences
-        : [{ category: 'booking', emailEnabled: true, inAppEnabled: true }];
+        : [{ category: 'booking', emailEnabled: true, inAppEnabled: true, smsEnabled: true }];
       for (const item of items) {
         const existing = await repo.findOne({
           where: { userId, category: item.category as never },
@@ -1152,6 +1153,8 @@ export class SignupOrchestratorService {
             existing.emailEnabled = item.emailEnabled;
           if (item.inAppEnabled !== undefined)
             existing.inAppEnabled = item.inAppEnabled;
+          if (item.smsEnabled !== undefined)
+            existing.smsEnabled = item.smsEnabled;
           await repo.save(existing);
         } else {
           const row = repo.create({
@@ -1159,6 +1162,7 @@ export class SignupOrchestratorService {
             category: item.category as never,
             emailEnabled: item.emailEnabled ?? true,
             inAppEnabled: item.inAppEnabled ?? true,
+            smsEnabled: item.smsEnabled ?? true,
           });
           await repo.save(row);
         }
@@ -1308,7 +1312,12 @@ export class SignupOrchestratorService {
     // Mirrors the verification-email pattern: signup never blocks on email.
     const firstName = finalState.filledData.identity?.firstName;
     this.emailNotificationService
-      .sendWelcomeEmail(savedUser.email, firstName, savedUser.preferredLocale)
+      .sendWelcomeEmail(
+        savedUser.email,
+        firstName,
+        savedUser.preferredLocale,
+        savedUser.accountType,
+      )
       .catch((err: Error) => {
         this.logger.warn(
           `Welcome email dispatch failed for ${savedUser.id}: ${err.message}`,

@@ -61,6 +61,19 @@ NODE_ENV=development
 PORT=3000
 API_VERSION=v1
 FRONTEND_URL=http://localhost:8081
+
+# Email — Mailpit (docker-compose). Web UI: http://localhost:8025
+SMTP_HOST=localhost
+SMTP_PORT=1025
+
+# Object storage — MinIO (docker-compose). Console: http://localhost:9001
+AWS_S3_REGION=us-east-1
+AWS_S3_BUCKET=welpco-dev
+AWS_ACCESS_KEY_ID=welpco_minio
+AWS_SECRET_ACCESS_KEY=welpco_minio_dev
+S3_ENDPOINT=http://localhost:9000
+S3_FORCE_PATH_STYLE=true
+S3_PUBLIC_URL=http://localhost:9000
 EOF
     fi
     echo -e "${GREEN}✅ Created apps/bff/.env.local${NC}"
