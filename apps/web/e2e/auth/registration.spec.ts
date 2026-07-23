@@ -2,6 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 import {
   generateTestEmail,
   generateTestPassword,
+  loginAndNavigateToDashboard,
   waitForFormReady,
 } from '../helpers/test-helpers';
 
@@ -21,7 +22,7 @@ async function fillEmailPasswordStep(page: Page, email: string, password: string
     .getByLabel(/password/i, { exact: false })
     .first()
     .fill(password);
-  await page.getByRole('button', { name: /continue|next/i }).click();
+  await page.getByRole('button', { name: /^continue$/i }).click();
 }
 
 async function selectRole(page: Page, role: 'customer' | 'welper') {
@@ -134,14 +135,7 @@ test.describe('@auth Post-signup routing', () => {
   test('signed-in + signupCompleted + /register/complete → /dashboard', async ({
     page,
   }) => {
-    const email = generateTestEmail('gated');
-    const password = generateTestPassword();
-    await page.goto(WIZARD_URL);
-    await waitForFormReady(page);
-    await fillEmailPasswordStep(page, email, password);
-    await selectRole(page, 'customer');
-    await fillIdentityStep(page, { first: 'Gated', last: 'User' });
-    await page.waitForURL(/\/dashboard/, { timeout: 30_000 });
+    await loginAndNavigateToDashboard(page);
 
     await page.goto('/register/complete');
     await page.waitForURL(/\/dashboard/, { timeout: 10_000 });

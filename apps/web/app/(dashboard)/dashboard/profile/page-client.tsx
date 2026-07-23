@@ -339,8 +339,14 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
     });
   }, [user, updateCustomerProfileMutation]);
 
-  // Derived state - use the appropriate profile based on role
-  const isLoading = sessionStatus === "loading" || (isCustomer ? isLoadingCustomer : isLoadingWelper);
+  // Background session refreshes must not replace an already-rendered profile
+  // with the initial skeleton. Mobile browsers emit focus/visibility changes
+  // frequently, which can briefly put NextAuth back into "loading".
+  const activeProfile = isCustomer ? customerProfile : welperProfile;
+  const activeProfileLoading = isCustomer ? isLoadingCustomer : isLoadingWelper;
+  const isLoading =
+    activeProfile == null &&
+    (sessionStatus === "loading" || activeProfileLoading);
   const error = isCustomer ? customerError : welperError;
 
   // Welper handlers - must be called unconditionally (Rules of Hooks)
@@ -551,7 +557,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
     );
   }
 
-  if (sessionStatus === "loading") {
+  if (isLoading) {
     return (
       <Container size="3" px={{ initial: "4", sm: "6" }}>
         <Flex direction="column" gap="4" aria-busy="true" aria-live="polite">
