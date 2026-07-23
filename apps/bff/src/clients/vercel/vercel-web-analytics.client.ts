@@ -5,6 +5,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { fetchJson } from '../../common/http/fetch-json';
 
 const VERCEL_API_BASE = 'https://api.vercel.com/v1/query/web-analytics';
 
@@ -159,9 +160,9 @@ export class VercelWebAnalyticsClient implements OnModuleInit {
       }
     }
 
-    let response: Response;
+    let response: Awaited<ReturnType<typeof fetchJson>>;
     try {
-      response = await fetch(url, {
+      response = await fetchJson(url.toString(), {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${this.token}`,
@@ -198,7 +199,7 @@ export class VercelWebAnalyticsClient implements OnModuleInit {
       );
     }
 
-    return (await response.json()) as T;
+    return await response.json<T>();
   }
 
   private trimOrNull(value?: string | null): string | null {
