@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchServices } from "@/lib/hooks/use-service-discovery";
+import { useSearchDestination } from "@/lib/hooks/use-search-destination";
 import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
 import { maskCustomerWelperName } from "@/lib/display-name";
@@ -130,7 +131,9 @@ export function WelpersNearYou() {
     [postalInput],
   );
 
-  const searchHref = `/search?postalCode=${encodeURIComponent(postalCode)}`;
+  const searchHref = useSearchDestination(
+    `/search?postalCode=${encodeURIComponent(postalCode)}`,
+  );
   const usingDefault = activePostal === null;
 
   // HONESTY THRESHOLD — default region: render nothing rather than a sparse,

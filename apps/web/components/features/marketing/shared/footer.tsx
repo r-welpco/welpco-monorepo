@@ -4,6 +4,7 @@ import { Facebook, Instagram, Linkedin } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { Link as LocaleLink } from "@/i18n/navigation";
+import { useSearchDestination } from "@/lib/hooks/use-search-destination";
 import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
 import { MarketingLogo } from "./marketing-logo";
 
@@ -29,6 +30,7 @@ export function Footer() {
   const t = useTranslations("marketing.footer");
   const tA11y = useTranslations("marketing.a11y");
   const locale = useLocale();
+  const searchHref = useSearchDestination();
 
   const cols: { titleKey: "welpco" | "customers" | "welpers" | "support"; links: { labelKey: string; href?: string }[] }[] = [
     {
@@ -187,7 +189,7 @@ export function Footer() {
                     {l.href ? (
                       l.href === "/search" || l.href.startsWith("/search?") ? (
                         <Link
-                          href={l.href}
+                          href={searchHref}
                           onClick={() => syncPublicRouteLocale(locale)}
                           style={{
                             color: "rgba(250,241,229,0.92)",

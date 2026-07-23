@@ -15,6 +15,7 @@ import {
   IMMERSIVE_SHELL_WIDTH,
 } from "./immersive-shell";
 import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
+import { useSearchDestination } from "@/lib/hooks/use-search-destination";
 import { Link as LocaleLink } from "@/i18n/navigation";
 
 const HERO_TYPO = {
@@ -26,6 +27,7 @@ const HERO_TYPO = {
 export function HeroImmersive() {
   const t = useTranslations("marketing.home.hero");
   const locale = useLocale();
+  const searchHref = useSearchDestination();
   const headlineFamily = IMMERSIVE_HEADLINE_FONT_CSS[HERO_TYPO.headlineFont];
   const accentLineFont = immersiveHeadlineItalicFont(HERO_TYPO.headlineFont);
 
@@ -141,7 +143,7 @@ export function HeroImmersive() {
           }}
         >
           <Link
-            href="/search"
+            href={searchHref}
             className="btn btn-accent"
             style={{ justifyContent: "center", padding: "14px 22px" }}
             onClick={() => syncPublicRouteLocale(locale)}

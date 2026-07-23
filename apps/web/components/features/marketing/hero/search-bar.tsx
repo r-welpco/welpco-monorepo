@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { useSearchDestination } from "@/lib/hooks/use-search-destination";
 import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
 
 /**
@@ -10,8 +11,8 @@ import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
  *
  * Faithful port of `.design-reference/project/components/hero.jsx` `SearchBar`.
  *
- * Submitting navigates to public `/search?q=&postalCode=` (outside `[locale]`).
- * Locale is synced onto `NEXT_LOCALE` so FR marketing stays French on that page.
+ * Signed-in customers search inside their dashboard; everyone else uses the
+ * public `/search` route. Locale is synced so French marketing stays French.
  */
 
 interface SearchBarProps {
@@ -22,6 +23,7 @@ export function SearchBar({ tone = "light" }: SearchBarProps) {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("marketing.home.hero");
+  const searchHref = useSearchDestination();
   const [q, setQ] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const dark = tone === "dark";
@@ -33,7 +35,7 @@ export function SearchBar({ tone = "light" }: SearchBarProps) {
     if (q.trim()) params.set("q", q.trim());
     if (postalCode.trim()) params.set("postalCode", postalCode.trim());
     const qs = params.toString();
-    router.push(qs ? `/search?${qs}` : "/search");
+    router.push(qs ? `${searchHref}?${qs}` : searchHref);
   }
 
   return (

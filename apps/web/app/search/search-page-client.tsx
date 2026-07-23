@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
@@ -40,6 +41,10 @@ import {
   useWelperAvailabilityDisplayLabels,
 } from "@/lib/i18n/use-dashboard-labels";
 import { localizedPath } from "@/i18n/locale-routes";
+import {
+  getSearchDestination,
+  isCustomerRole,
+} from "@/lib/search/search-destination";
 import type { Locale } from "@/i18n/routing";
 import type { SearchResultItem } from "@/types";
 
@@ -323,11 +328,6 @@ function SearchPageContent() {
     (showResultCards || showResultLoading || total > 0);
   const showLocationPrompt = !hasSearchCenter;
 
-  const dashboardSearchHref = useMemo(() => {
-    const qs = searchParams.toString();
-    return qs ? `/dashboard/search?${qs}` : "/dashboard/search";
-  }, [searchParams]);
-
   const openProfile = useCallback(
     (welperId: string) => {
       router.push(`/welper/${encodeURIComponent(welperId)}`);
@@ -359,13 +359,6 @@ function SearchPageContent() {
                     {t("pageSubtitle")}
                   </Text>
                 </Box>
-                {isAuthenticated && (
-                  <Button asChild variant="soft" color="gray" size="2">
-                    <Link href={dashboardSearchHref}>
-                      {t("dashboardSearchCta")}
-                    </Link>
-                  </Button>
-                )}
               </Flex>
             </Box>
 
@@ -568,12 +561,30 @@ function SearchPageContent() {
 
 export default function PublicSearchPageClient() {
   const t = useTranslations("publicSearch");
-  const isAuthenticated = useIsAuthenticated();
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated";
   const returnTo = useMemo(() => {
     const qs = searchParams.toString();
     return qs ? `/search?${qs}` : "/search";
   }, [searchParams]);
+  const dashboardSearchHref = getSearchDestination(
+    returnTo,
+    session?.user?.role,
+  );
+  const shouldRedirect =
+    isAuthenticated && isCustomerRole(session?.user?.role);
+
+  useEffect(() => {
+    if (shouldRedirect) {
+      router.replace(dashboardSearchHref);
+    }
+  }, [dashboardSearchHref, router, shouldRedirect]);
+
+  if (status === "loading" || shouldRedirect) {
+    return <Flex minHeight="100vh" aria-busy="true" />;
+  }
 
   return (
     <Flex direction="column" minHeight="100vh">

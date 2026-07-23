@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import NextLink from "next/link";
 import { Link, usePathname } from "@/i18n/navigation";
 import { isMarketingNavActive } from "@/i18n/path-utils";
+import { useSearchDestination } from "@/lib/hooks/use-search-destination";
 import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
 import { MarketingLogo } from "../shared/marketing-logo";
 import {
@@ -21,6 +22,7 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
   const [drawerOpen, setDrawerOpen] = useState(false);
   const t = useTranslations("marketing");
   const tNav = useTranslations("marketing.nav");
+  const searchHref = useSearchDestination();
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -122,7 +124,7 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
             {tNav("signIn")}
           </Link>
           <NextLink
-            href="/search"
+            href={searchHref}
             data-immersive-header-cta
             className="btn btn-primary"
             style={{ padding: "8px 16px", fontSize: 13, fontWeight: 700, fontFamily: headlineFontCss }}
@@ -235,7 +237,7 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
                 {tNav("signIn")}
               </Link>
               <NextLink
-                href="/search"
+                href={searchHref}
                 className="btn btn-primary"
                 style={{ justifyContent: "center", fontSize: 14, fontWeight: 700, fontFamily: headlineFontCss }}
                 onClick={() => {

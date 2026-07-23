@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import NextLink from "next/link";
 import { Link, usePathname } from "@/i18n/navigation";
 import { isMarketingNavActive } from "@/i18n/path-utils";
+import { useSearchDestination } from "@/lib/hooks/use-search-destination";
 import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
 import { MarketingLogo } from "./marketing-logo";
 import {
@@ -20,6 +21,7 @@ export function TopNav() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const t = useTranslations("marketing");
   const tNav = useTranslations("marketing.nav");
+  const searchHref = useSearchDestination();
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -107,7 +109,7 @@ export function TopNav() {
             {tNav("signIn")}
           </Link>
           <NextLink
-            href="/search"
+            href={searchHref}
             className="btn btn-primary"
             style={{ padding: "10px 18px", fontSize: 14 }}
             onClick={() => syncPublicRouteLocale(locale)}
@@ -183,7 +185,7 @@ export function TopNav() {
                 {tNav("signIn")}
               </Link>
               <NextLink
-                href="/search"
+                href={searchHref}
                 className="btn btn-primary"
                 style={{ justifyContent: "center", fontSize: 14, padding: "12px 16px" }}
                 onClick={() => {
