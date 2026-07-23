@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Theme } from "@radix-ui/themes";
+import { useLocale, useTranslations } from "next-intl";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Grid } from "@welpco/ui/grid";
@@ -24,7 +24,6 @@ import {
   SearchResultsList,
   SearchEmptyState,
   WelperProfileCardCompact,
-  type WeeklyAvailabilityDisplayLabels,
 } from "@welpco/ui/platform";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import {
@@ -35,19 +34,23 @@ import { reverseGeocode } from "@/lib/services/geocode.service";
 import { ApiClientError } from "@/lib/api/client";
 import { useIsAuthenticated } from "@/stores/authStore";
 import { maskCustomerWelperName } from "@/lib/display-name";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
+import {
+  useSearchLabels,
+  useWelperAvailabilityDisplayLabels,
+} from "@/lib/i18n/use-dashboard-labels";
+import { localizedPath } from "@/i18n/locale-routes";
+import type { Locale } from "@/i18n/routing";
 import type { SearchResultItem } from "@/types";
 
 /**
- * Public welper search — the top-of-funnel page (adoption report item 10).
+ * Public welper search — top-of-funnel page (adoption report item 10).
  *
- * This route family (`/search`, `/welper/[id]`) sits OUTSIDE the next-intl
- * provider, so all copy is hardcoded English — mirroring
- * `app/welper/[id]/page.tsx`. Do not add next-intl hooks here.
+ * Locale comes from `app/search/layout.tsx` (`NEXT_LOCALE` cookie / geo).
+ * Marketing CTAs sync the cookie before navigating here.
  *
- * All data comes from the unauthenticated BFF endpoints
- * (`GET /api/search/services`, `/api/search/categories`, `/api/geocode/*` —
- * verified guard-free) via the same hooks the dashboard search uses; the
- * services already pass `skipAuth: true`.
+ * Data: unauthenticated BFF endpoints via the same hooks as dashboard search
+ * (`skipAuth: true`).
  */
 
 const DEFAULT_PAGE = 1;
@@ -59,30 +62,14 @@ const DEFAULT_SEARCH_COUNTRY_CODE =
     ? process.env.NEXT_PUBLIC_DEFAULT_COUNTRY_CODE.trim()
     : "CA";
 
-/** Hardcoded EN — matches `dashboard.welperAvailabilityDisplay` in messages/en.json. */
-const AVAILABILITY_LABELS: WeeklyAvailabilityDisplayLabels = {
-  label: "Availability",
-  adHocOnly: "By request",
-  unavailable: "—",
-  noSlots: "No hours listed",
-  dayColumn: "Day",
-  hoursColumn: "Hours",
-  viewTimesAria: (day: string) => `View available hours for ${day}`,
-  dayLetters: ["M", "T", "W", "T", "F", "S", "S"],
-  dayNames: [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ],
-};
-
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const locale = useLocale() as Locale;
+  const t = useTranslations("publicSearch");
+  const searchLabels = useSearchLabels();
+  const availabilityLabels = useWelperAvailabilityDisplayLabels();
+  const categoryDisplayName = useCategoryDisplayName();
   const isAuthenticated = useIsAuthenticated();
 
   const q = searchParams.get("q") ?? undefined;
@@ -228,7 +215,7 @@ function SearchPageContent() {
 
   const handleUseMyLocation = useCallback(() => {
     if (!navigator?.geolocation) {
-      setLocationError("Your browser doesn't support location detection.");
+      setLocationError(searchLabels.geolocationUnsupported);
       return;
     }
     setLocationError(null);
@@ -248,13 +235,9 @@ function SearchPageContent() {
           });
         } catch (err) {
           if (err instanceof ApiClientError && err.code === "GEOCODING_API_DISABLED") {
-            setLocationError(
-              "Address lookup is temporarily unavailable — searching by your coordinates instead.",
-            );
+            setLocationError(searchLabels.geocodingUnavailable);
           } else {
-            setLocationError(
-              "We couldn't look up your address — searching by your coordinates instead.",
-            );
+            setLocationError(searchLabels.addressLookupFailed);
           }
           updateParams({ latitude: lat, longitude: lng, page: undefined });
         } finally {
@@ -262,36 +245,37 @@ function SearchPageContent() {
         }
       },
       () => {
-        setLocationError(
-          "Location access was denied. Enter your postal code instead.",
-        );
+        setLocationError(searchLabels.locationDenied);
         setLocationLoading(false);
       },
       { timeout: 15000, maximumAge: 300000, enableHighAccuracy: false },
     );
-  }, [updateParams]);
+  }, [updateParams, searchLabels]);
 
   const heroCategories = useMemo(() => {
     if (!categoriesData || !Array.isArray(categoriesData)) return [];
     return categoriesData
       .filter((c: { parentId?: string | null }) => !c.parentId)
       .slice(0, 10)
-      .map((c: { id: string; name: string }) => ({ id: c.id, label: c.name }));
-  }, [categoriesData]);
+      .map((c: { id: string; name: string }) => ({
+        id: c.id,
+        label: categoryDisplayName(c.name),
+      }));
+  }, [categoriesData, categoryDisplayName]);
 
   const selectedCategoryName = useMemo(() => {
     if (!categoryId || !Array.isArray(categoriesData)) return null;
-    return (
-      categoriesData.find((c: { id: string }) => c.id === categoryId)?.name ?? null
-    );
-  }, [categoryId, categoriesData]);
+    const raw =
+      categoriesData.find((c: { id: string }) => c.id === categoryId)?.name ?? null;
+    return raw ? categoryDisplayName(raw) : null;
+  }, [categoryId, categoriesData, categoryDisplayName]);
 
   const cardItems = useMemo(() => {
     if (!data?.items) return [];
     return data.items.map((item: SearchResultItem) => ({
       welperId: item.welperId,
       name: maskCustomerWelperName(item.name),
-      title: item.title,
+      title: categoryDisplayName(item.title),
       location: item.location,
       hourlyRate: item.hourlyRate,
       rating: item.rating ?? 0,
@@ -301,7 +285,7 @@ function SearchPageContent() {
       isMinor: item.isMinor === true,
       weeklyAvailability: item.weeklyAvailability,
     }));
-  }, [data?.items]);
+  }, [data?.items, categoryDisplayName]);
 
   const total = data?.total ?? 0;
   const pageSize = data?.limit ?? DEFAULT_LIMIT;
@@ -369,17 +353,16 @@ function SearchPageContent() {
               <Flex justify="between" align="start" gap="3" wrap="wrap">
                 <Box>
                   <Heading as="h1" size="7" mb="2">
-                    Find local Welpers
+                    {t("pageTitle")}
                   </Heading>
                   <Text as="p" size="2" color="gray" highContrast>
-                    Browse vetted neighbours offering everyday services near
-                    you — no account needed.
+                    {t("pageSubtitle")}
                   </Text>
                 </Box>
                 {isAuthenticated && (
                   <Button asChild variant="soft" color="gray" size="2">
                     <Link href={dashboardSearchHref}>
-                      Go to your dashboard search
+                      {t("dashboardSearchCta")}
                     </Link>
                   </Button>
                 )}
@@ -399,11 +382,12 @@ function SearchPageContent() {
                   wrap="wrap"
                 >
                   <Callout.Text>
-                    Create a free account to book — you&apos;re only charged
-                    after the job is done.
+                    {t("createAccountCallout")}
                   </Callout.Text>
                   <Button asChild size="2" color={SEMANTIC_COLOR.primary}>
-                    <Link href="/register">Create a free account</Link>
+                    <Link href={localizedPath("/register", locale)}>
+                      {t("createAccountCta")}
+                    </Link>
                   </Button>
                 </Flex>
               </Callout.Root>
@@ -417,18 +401,19 @@ function SearchPageContent() {
                 onChange={setLocalPostalCode}
                 onSearch={handlePostalSubmit}
                 onCategorySelect={(id) => handleCategorySelect(id)}
-                title="Find your Welper"
+                title={searchLabels.heroTitle}
                 categories={heroCategories}
                 loading={isLoading}
                 onUseMyLocation={handleUseMyLocation}
                 locationError={
                   postalError
                     ? isGeocodingUnavailable
-                      ? "Postal code lookup is temporarily unavailable. Try again in a moment."
-                      : "We couldn't find that postal code. Check it and try again."
+                      ? searchLabels.geocodingUnavailableRetry
+                      : searchLabels.postalNotFound
                     : locationError
                 }
                 locationLoading={locationLoading}
+                labels={searchLabels.hero}
               />
 
               {selectedCategoryName && (
@@ -441,7 +426,9 @@ function SearchPageContent() {
                     color="gray"
                     size="1"
                     onClick={() => handleCategorySelect(undefined)}
-                    aria-label={`Clear category filter ${selectedCategoryName}`}
+                    aria-label={t("clearCategoryAria", {
+                      category: selectedCategoryName,
+                    })}
                   >
                     <X size={14} aria-hidden="true" />
                   </IconButton>
@@ -464,8 +451,7 @@ function SearchPageContent() {
               >
                 <Flex direction="column" gap="3" align="center">
                   <Text as="p" size="2" color="gray" highContrast align="center">
-                    Enter your postal code or use your location to see Welpers near
-                    you.
+                    {searchLabels.locationPrompt}
                   </Text>
                 </Flex>
               </Card>
@@ -474,14 +460,14 @@ function SearchPageContent() {
             {isError && !postalError && !showResultsRegion && (
               <Callout.Root color={SEMANTIC_COLOR.danger} role="alert">
                 <Callout.Text>
-                  We couldn&apos;t load search results.{" "}
+                  {searchLabels.loadError}{" "}
                   {error instanceof Error && error.message
                     ? error.message
-                    : "Something went wrong."}
+                    : searchLabels.genericError}
                 </Callout.Text>
                 <Box mt="3">
                   <Button onClick={() => refetch()} color={SEMANTIC_COLOR.primary} size="2">
-                    Try again
+                    {searchLabels.tryAgain}
                   </Button>
                 </Box>
               </Callout.Root>
@@ -498,6 +484,7 @@ function SearchPageContent() {
                   showSortDistance={hasSearchCenter}
                   showViewToggle={false}
                   loading={isLoading || isPageTransition}
+                  labels={searchLabels.toolbar}
                 />
 
                 {showResultCards ? (
@@ -515,10 +502,16 @@ function SearchPageContent() {
                         verified={item.verified}
                         isMinor={item.isMinor}
                         weeklyAvailability={item.weeklyAvailability}
-                        availabilityLabels={AVAILABILITY_LABELS}
-                        availabilityLocale="en"
+                        availabilityLabels={availabilityLabels}
+                        availabilityLocale={locale}
                         onView={() => openProfile(item.welperId)}
                         onBook={() => openProfile(item.welperId)}
+                        labels={{
+                          noReviewsYet: searchLabels.card.noReviewsYet,
+                          ratedAria: searchLabels.card.ratedAria,
+                          view: searchLabels.card.view,
+                          book: searchLabels.card.book,
+                        }}
                       />
                     ))}
                   </Grid>
@@ -534,12 +527,12 @@ function SearchPageContent() {
                       size="2"
                       disabled={!hasPrev || isPageTransition}
                       onClick={() => updateParams({ page: page - 1 })}
-                      aria-label="Previous page"
+                      aria-label={searchLabels.prevPage}
                     >
                       <ChevronLeft size={18} aria-hidden="true" />
                     </IconButton>
                     <Text size="2" color="gray" highContrast>
-                      Page {page} of {totalPages}
+                      {searchLabels.pageOf(page, totalPages)}
                     </Text>
                     <IconButton
                       variant="soft"
@@ -547,7 +540,7 @@ function SearchPageContent() {
                       size="2"
                       disabled={!hasNext || isPageTransition}
                       onClick={() => updateParams({ page: page + 1 })}
-                      aria-label="Next page"
+                      aria-label={searchLabels.nextPage}
                     >
                       <ChevronRight size={18} aria-hidden="true" />
                     </IconButton>
@@ -558,10 +551,10 @@ function SearchPageContent() {
 
             {showEmpty && (
               <SearchEmptyState
-                title="No Welpers match your search"
-                description="Try a different postal code, widen your search, or browse another category."
+                title={searchLabels.emptyTitle}
+                description={searchLabels.emptyDescription}
                 primaryAction={{
-                  label: "Clear search & filters",
+                  label: searchLabels.clearSearchFilters,
                   onClick: handleResetFilters,
                 }}
               />
@@ -574,6 +567,7 @@ function SearchPageContent() {
 }
 
 export default function PublicSearchPageClient() {
+  const t = useTranslations("publicSearch");
   const isAuthenticated = useIsAuthenticated();
   const searchParams = useSearchParams();
   const returnTo = useMemo(() => {
@@ -582,19 +576,24 @@ export default function PublicSearchPageClient() {
   }, [searchParams]);
 
   return (
-    <Theme>
-      <Flex direction="column" minHeight="100vh">
-        <CustomerHeader signedIn={isAuthenticated} signedOutReturnTo={returnTo} />
+    <Flex direction="column" minHeight="100vh">
+      <CustomerHeader
+        signedIn={isAuthenticated}
+        signedOutReturnTo={returnTo}
+        signedOutLabels={{
+          signIn: t("signIn"),
+          signUp: t("signUp"),
+        }}
+      />
 
-        {/* SearchPageContent owns its own Containers so the hero band can
-            run full-width while content stays constrained. */}
-        <Box flexGrow="1">
-          <SearchPageContent />
-        </Box>
+      {/* SearchPageContent owns its own Containers so the hero band can
+          run full-width while content stays constrained. */}
+      <Box flexGrow="1">
+        <SearchPageContent />
+      </Box>
 
-        <Separator size="4" />
-        <Footer />
-      </Flex>
-    </Theme>
+      <Separator size="4" />
+      <Footer />
+    </Flex>
   );
 }

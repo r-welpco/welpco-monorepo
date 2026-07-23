@@ -35,6 +35,7 @@
     "clean:non-admin-users": "ts-node -r tsconfig-paths/register src/scripts/clean-non-admin-users.ts",
     "create:admin": "ts-node -r tsconfig-paths/register src/scripts/create-admin-user.ts",
     "stripe:reconcile-operations": "ts-node -r tsconfig-paths/register src/scripts/reconcile-stripe-operations.ts",
+    "sms:test": "ts-node -r tsconfig-paths/register src/scripts/sms-test.ts",
     "stripe:listen": "stripe listen --forward-to http://127.0.0.1:${PORT:-3000}/api/webhooks/stripe"
   },
   "dependencies": {

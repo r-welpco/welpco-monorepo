@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchServices } from "@/lib/hooks/use-service-discovery";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
+import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
 import { maskCustomerWelperName } from "@/lib/display-name";
 import type { SearchResultItem } from "@/types";
 import { SectionHeader } from "./section-header";
@@ -27,7 +29,8 @@ import styles from "./welpers-near-you.module.css";
  * the section never vanishes mid-interaction.
  *
  * Links go to the non-localized public routes (`/search`, `/welper/[id]`)
- * via plain `next/link` — that route family sits outside the next-intl tree.
+ * via plain `next/link`. Those routes read `NEXT_LOCALE` (cookie / geo) —
+ * sync the marketing locale onto the cookie before navigating so FR sticks.
  */
 
 const DEFAULT_POSTAL = (process.env.NEXT_PUBLIC_DEFAULT_SEARCH_POSTAL ?? "").trim() || "H2X 1Y4";
@@ -181,7 +184,9 @@ export function WelpersNearYou() {
         {showEmptyNote ? (
           <p className={styles.emptyNote}>
             {t("emptyForPostal")}{" "}
-            <Link href={searchHref}>{t("browseAll")}</Link>
+            <Link href={searchHref} onClick={() => syncPublicRouteLocale(locale)}>
+              {t("browseAll")}
+            </Link>
           </p>
         ) : (
           <div className={styles.railWrap}>
@@ -206,7 +211,11 @@ export function WelpersNearYou() {
               {items.map((item) => (
                 <WelperRailCard key={item.welperId} item={item} locale={locale} />
               ))}
-              <Link href={searchHref} className={`${styles.card} ${styles.endCard}`}>
+              <Link
+                href={searchHref}
+                className={`${styles.card} ${styles.endCard}`}
+                onClick={() => syncPublicRouteLocale(locale)}
+              >
                 <span
                   style={{
                     fontFamily: "var(--font-display)",
@@ -244,8 +253,10 @@ function WelperRailCard({
   locale: string;
 }) {
   const t = useTranslations("marketing.home.nearYou");
+  const categoryDisplayName = useCategoryDisplayName();
   const name = maskCustomerWelperName(item.name);
-  const category = item.categories?.[0] ?? item.title;
+  const rawCategory = item.categories?.[0] ?? item.title;
+  const category = categoryDisplayName(rawCategory);
   const hasRating =
     typeof item.rating === "number" &&
     typeof item.reviewCount === "number" &&
@@ -255,6 +266,7 @@ function WelperRailCard({
     <Link
       href={`/welper/${encodeURIComponent(item.welperId)}`}
       className={styles.card}
+      onClick={() => syncPublicRouteLocale(locale)}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         {item.profilePhotoUrl ? (

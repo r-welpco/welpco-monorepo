@@ -1,8 +1,10 @@
 "use client";
 
 import { Facebook, Instagram, Linkedin } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
+import { Link as LocaleLink } from "@/i18n/navigation";
+import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
 import { MarketingLogo } from "./marketing-logo";
 
 const SOCIAL_LINKS = [
@@ -26,6 +28,7 @@ const SOCIAL_LINKS = [
 export function Footer() {
   const t = useTranslations("marketing.footer");
   const tA11y = useTranslations("marketing.a11y");
+  const locale = useLocale();
 
   const cols: { titleKey: "welpco" | "customers" | "welpers" | "support"; links: { labelKey: string; href?: string }[] }[] = [
     {
@@ -182,16 +185,30 @@ export function Footer() {
                 {col.links.map((l) => (
                   <li key={l.labelKey}>
                     {l.href ? (
-                      <Link
-                        href={l.href}
-                        style={{
-                          color: "rgba(250,241,229,0.92)",
-                          textDecoration: "none",
-                          fontSize: 15,
-                        }}
-                      >
-                        {t(`links.${l.labelKey}`)}
-                      </Link>
+                      l.href === "/search" || l.href.startsWith("/search?") ? (
+                        <Link
+                          href={l.href}
+                          onClick={() => syncPublicRouteLocale(locale)}
+                          style={{
+                            color: "rgba(250,241,229,0.92)",
+                            textDecoration: "none",
+                            fontSize: 15,
+                          }}
+                        >
+                          {t(`links.${l.labelKey}`)}
+                        </Link>
+                      ) : (
+                        <LocaleLink
+                          href={l.href}
+                          style={{
+                            color: "rgba(250,241,229,0.92)",
+                            textDecoration: "none",
+                            fontSize: 15,
+                          }}
+                        >
+                          {t(`links.${l.labelKey}`)}
+                        </LocaleLink>
+                      )
                     ) : (
                       <span
                         style={{
@@ -225,18 +242,18 @@ export function Footer() {
             {t("copyright")}
           </div>
           <div style={{ display: "flex", gap: 24, fontSize: 13, color: "rgba(250,241,229,0.86)" }}>
-            <Link href="/legal/terms" style={{ color: "inherit", textDecoration: "none" }}>
+            <LocaleLink href="/legal/terms" style={{ color: "inherit", textDecoration: "none" }}>
               {t("terms")}
-            </Link>
-            <Link href="/legal/privacy" style={{ color: "inherit", textDecoration: "none" }}>
+            </LocaleLink>
+            <LocaleLink href="/legal/privacy" style={{ color: "inherit", textDecoration: "none" }}>
               {t("privacy")}
-            </Link>
-            <Link href="/legal/code-of-conduct" style={{ color: "inherit", textDecoration: "none" }}>
+            </LocaleLink>
+            <LocaleLink href="/legal/code-of-conduct" style={{ color: "inherit", textDecoration: "none" }}>
               {t("codeOfConduct")}
-            </Link>
-            <Link href="/legal/privacy#cookies" style={{ color: "inherit", textDecoration: "none" }}>
+            </LocaleLink>
+            <LocaleLink href="/legal/privacy#cookies" style={{ color: "inherit", textDecoration: "none" }}>
               {t("cookies")}
-            </Link>
+            </LocaleLink>
             <a href="mailto:support@welpco.com" style={{ color: "inherit", textDecoration: "none" }}>
               support@welpco.com
             </a>

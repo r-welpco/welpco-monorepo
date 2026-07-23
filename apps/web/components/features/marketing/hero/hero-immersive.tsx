@@ -1,8 +1,8 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { HeroVideoMedia } from "./hero-video-media";
 import { HeroImmersiveFloatingNav } from "./hero-immersive-floating-nav";
 import {
@@ -14,6 +14,8 @@ import {
   IMMERSIVE_SHELL_LOGO_PAD_PX,
   IMMERSIVE_SHELL_WIDTH,
 } from "./immersive-shell";
+import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
+import { Link as LocaleLink } from "@/i18n/navigation";
 
 const HERO_TYPO = {
   headlineFont: "body" as const,
@@ -23,6 +25,7 @@ const HERO_TYPO = {
 
 export function HeroImmersive() {
   const t = useTranslations("marketing.home.hero");
+  const locale = useLocale();
   const headlineFamily = IMMERSIVE_HEADLINE_FONT_CSS[HERO_TYPO.headlineFont];
   const accentLineFont = immersiveHeadlineItalicFont(HERO_TYPO.headlineFont);
 
@@ -137,10 +140,15 @@ export function HeroImmersive() {
             marginTop: 8,
           }}
         >
-          <Link href="/search" className="btn btn-accent" style={{ justifyContent: "center", padding: "14px 22px" }}>
+          <Link
+            href="/search"
+            className="btn btn-accent"
+            style={{ justifyContent: "center", padding: "14px 22px" }}
+            onClick={() => syncPublicRouteLocale(locale)}
+          >
             {t("findHelp")} <span aria-hidden="true">→</span>
           </Link>
-          <Link
+          <LocaleLink
             href="/register"
             className="btn"
             style={{
@@ -153,7 +161,7 @@ export function HeroImmersive() {
             }}
           >
             {t("becomeWelper")}
-          </Link>
+          </LocaleLink>
         </div>
       </div>
     </section>

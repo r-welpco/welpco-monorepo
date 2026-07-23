@@ -11,6 +11,7 @@ export {
 } from "./transport";
 export {
   getSmsBody,
+  SMS_TEMPLATE_TYPES,
   type SmsLocale,
   type SmsTemplateType,
   type SmsTemplateVariables,

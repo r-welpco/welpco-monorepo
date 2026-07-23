@@ -135,6 +135,11 @@ export interface CustomerHeaderLabels {
     searchPlaceholder?: string;
     userMenuAria?: string;
   };
+  /** Public signed-out shell CTAs. */
+  signedOut?: {
+    signIn: string;
+    signUp: string;
+  };
 }
 
 /** @deprecated Use CustomerHeaderLabels */
@@ -152,6 +157,11 @@ export interface CustomerHeaderProps {
   signedIn?: boolean;
   /** Optional `next` query param appended to /login + /register links when signed-out. */
   signedOutReturnTo?: string;
+  /** Localized Sign in / Sign up when `signedIn={false}`. */
+  signedOutLabels?: {
+    signIn: string;
+    signUp: string;
+  };
   /** Localized nav and menu copy from the host app (next-intl). */
   labels?: CustomerHeaderLabels;
   user?: {
@@ -198,6 +208,7 @@ export function CustomerHeader({
   activeTab = "dashboard",
   signedIn = true,
   signedOutReturnTo,
+  signedOutLabels,
   labels: labelsProp,
   user,
   notificationCount = 0,
@@ -329,10 +340,14 @@ export function CustomerHeader({
 
               <Flex align="center" gap={{ initial: "2", md: "3" }} flexShrink="0">
                 <Button asChild variant="ghost" color="gray" size="2">
-                  <a href={loginHref}>Sign in</a>
+                  <a href={loginHref}>
+                    {signedOutLabels?.signIn ?? labels?.signedOut?.signIn ?? "Sign in"}
+                  </a>
                 </Button>
                 <Button asChild size="2">
-                  <a href={registerHref}>Sign up</a>
+                  <a href={registerHref}>
+                    {signedOutLabels?.signUp ?? labels?.signedOut?.signUp ?? "Sign up"}
+                  </a>
                 </Button>
               </Flex>
             </Flex>

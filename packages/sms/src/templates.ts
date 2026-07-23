@@ -14,6 +14,22 @@ export type SmsTemplateType =
   | "welper_dispute_opened"
   | "welper_dispute_resolved";
 
+/** All transactional SMS template ids (for CLIs / docs). */
+export const SMS_TEMPLATE_TYPES: readonly SmsTemplateType[] = [
+  "customer_booking_request_sent",
+  "customer_booking_accepted",
+  "customer_booking_declined",
+  "customer_job_application",
+  "customer_booking_checked_in",
+  "customer_booking_cancelled",
+  "welper_booking_request",
+  "welper_payment_processing",
+  "welper_payment_sent",
+  "welper_booking_cancelled",
+  "welper_dispute_opened",
+  "welper_dispute_resolved",
+] as const;
+
 export interface SmsTemplateVariables {
   welperName?: string;
   customerName?: string;

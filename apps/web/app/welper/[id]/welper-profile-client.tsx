@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Container } from "@welpco/ui/container";
-import { Theme } from "@radix-ui/themes";
 import { Button } from "@welpco/ui/button";
 import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
@@ -24,6 +24,10 @@ import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import { apiClient } from "@/lib/api/client";
 import { publicWelperDisplayName } from "@/lib/display-name";
 import { useWelperReviews } from "@/lib/hooks/use-booking-review";
+import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
+import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
+import { localizedPath } from "@/i18n/locale-routes";
+import type { Locale } from "@/i18n/routing";
 import { useIsAuthenticated } from "@/stores/authStore";
 import type { PublicPortfolioPhoto, PublicWelperProfile } from "@/types";
 import { format } from "date-fns";
@@ -88,34 +92,25 @@ function ProfileLoading() {
 }
 
 function ProfileError({ error }: { error: unknown }) {
+  const t = useTranslations("publicWelperProfile");
   return (
     <Callout.Root color={SEMANTIC_COLOR.danger} role="alert">
       <Callout.Text>
-        We couldn&apos;t load this Welper&apos;s profile.{" "}
+        {t("loadError")}{" "}
         {error instanceof Error && error.message
           ? error.message
-          : "They may have removed it, or the link may be out of date."}{" "}
-        Try again, or browse other Welpers.
+          : t("loadErrorFallback")}{" "}
+        {t("loadErrorHint")}
       </Callout.Text>
       <Box mt="3">
         <Flex gap="2" wrap="wrap">
           <Button asChild color={SEMANTIC_COLOR.primary} size="2">
-            <Link href="/search">Back to search</Link>
+            <Link href="/search">{t("backToSearch")}</Link>
           </Button>
         </Flex>
       </Box>
     </Callout.Root>
   );
-}
-
-/**
- * C5 fix — the BFF has always populated `responseTimeMinutes` (null below
- * 5 accepted bookings in 90 days), but it was never rendered. Hidden when
- * null — never show a fabricated SLA (bible §22.6).
- */
-function formatResponseTime(minutes: number): string {
-  if (minutes < 60) return `Responds in ~${minutes} min`;
-  return `Responds in ~${Math.max(1, Math.round(minutes / 60))}h`;
 }
 
 function RatingLine({
@@ -125,6 +120,7 @@ function RatingLine({
   averageRating?: number | null;
   reviewCount?: number | null;
 }) {
+  const t = useTranslations("publicWelperProfile");
   const hasRating =
     typeof averageRating === "number" &&
     averageRating > 0 &&
@@ -134,19 +130,19 @@ function RatingLine({
   if (!hasRating) {
     return (
       <Text size="2" color="gray" highContrast>
-        No reviews yet
+        {t("noReviewsYet")}
       </Text>
     );
   }
 
   const rating = (averageRating ?? 0).toFixed(2);
-  const reviewLabel = reviewCount === 1 ? "review" : "reviews";
+  const reviewLabel = reviewCount === 1 ? t("review") : t("reviews");
   return (
     <Flex
       align="center"
       gap="2"
       role="group"
-      aria-label={`${rating} out of 5 stars from ${reviewCount} ${reviewLabel}`}
+      aria-label={t("ratedAria", { rating, count: reviewCount ?? 0, reviewLabel })}
     >
       <Star
         size={16}
@@ -178,6 +174,8 @@ function RatingLine({
  * appear next to the score either.
  */
 function PublicReviewsSection({ welperId }: { welperId: string }) {
+  const t = useTranslations("publicWelperProfile");
+  const dateLocale = useDateFnsLocale();
   const { data, isLoading } = useWelperReviews(welperId, { limit: 5 });
   const reviews =
     data?.data.filter((r) => r.reviewerType === "customer") ?? [];
@@ -191,7 +189,7 @@ function PublicReviewsSection({ welperId }: { welperId: string }) {
   return (
     <Box>
       <Heading as="h2" size="5" mb="3" trim="start">
-        Reviews
+        {t("reviewsHeading")}
       </Heading>
       <ReviewList
         reviews={reviews.map((r) => ({
@@ -199,12 +197,14 @@ function PublicReviewsSection({ welperId }: { welperId: string }) {
           // we don't expose reviewer profiles publicly. A plain human label beats
           // an id-derived hex handle, which reads as fabricated (adoption report
           // C2). When customer profiles surface a public display name, swap in.
-          reviewerName: "Welpco customer",
+          reviewerName: t("welpcoCustomer"),
           rating: r.rating,
           comment: r.comment ?? undefined,
           date: (() => {
             try {
-              return format(new Date(r.createdAt), "MMM d, yyyy");
+              return format(new Date(r.createdAt), "MMM d, yyyy", {
+                locale: dateLocale,
+              });
             } catch {
               return r.createdAt;
             }
@@ -218,7 +218,7 @@ function PublicReviewsSection({ welperId }: { welperId: string }) {
       {total > reviews.length ? (
         <Box mt="3">
           <Text size="2" color="gray" highContrast>
-            Showing {reviews.length} of {total} customer reviews.
+            {t("showingReviews", { shown: reviews.length, total })}
           </Text>
         </Box>
       ) : null}
@@ -234,22 +234,14 @@ function PublicReviewsSection({ welperId }: { welperId: string }) {
  * grass-2 tint matches the /search hero band treatment so the public funnel
  * reads as one surface. Signed-in users already know the flow — hidden.
  */
-const BOOKING_STEPS = [
-  {
-    title: "Request a time",
-    detail: "Pick a service and time that works.",
-  },
-  {
-    title: "Welper accepts",
-    detail: "A one-hour hold goes on your card — not a charge.",
-  },
-  {
-    title: "Pay when done",
-    detail: "You're only charged after the job is complete.",
-  },
-] as const;
-
 function HowBookingWorksStrip() {
+  const t = useTranslations("publicWelperProfile");
+  const steps = [
+    { title: t("bookingStep1Title"), detail: t("bookingStep1Detail") },
+    { title: t("bookingStep2Title"), detail: t("bookingStep2Detail") },
+    { title: t("bookingStep3Title"), detail: t("bookingStep3Detail") },
+  ] as const;
+
   return (
     <Box
       p={{ initial: "4", sm: "5" }}
@@ -258,13 +250,13 @@ function HowBookingWorksStrip() {
         borderRadius: "var(--radius-4)",
       }}
       role="note"
-      aria-label="How booking works"
+      aria-label={t("howBookingWorksAria")}
     >
       <Heading as="h2" size="3" mb="3" trim="start">
-        How booking works
+        {t("howBookingWorks")}
       </Heading>
       <Flex gap={{ initial: "3", sm: "5" }} wrap="wrap">
-        {BOOKING_STEPS.map((step, index) => (
+        {steps.map((step, index) => (
           <Flex
             key={step.title}
             gap="2"
@@ -299,7 +291,7 @@ function HowBookingWorksStrip() {
         ))}
       </Flex>
       <Text as="p" size="2" color="gray" highContrast mt="3">
-        Free cancellation up to 24 hours before the start.
+        {t("freeCancellation")}
       </Text>
     </Box>
   );
@@ -313,6 +305,7 @@ function HowBookingWorksStrip() {
  * null (storage unconfigured) are skipped rather than rendered broken.
  */
 function WorkPhotosSection({ photos }: { photos: PublicPortfolioPhoto[] }) {
+  const t = useTranslations("publicWelperProfile");
   const [openPhoto, setOpenPhoto] = useState<PublicPortfolioPhoto | null>(null);
   const displayable = photos.filter(
     (photo): photo is PublicPortfolioPhoto & { url: string } =>
@@ -324,7 +317,7 @@ function WorkPhotosSection({ photos }: { photos: PublicPortfolioPhoto[] }) {
   return (
     <Box>
       <Heading as="h2" size="5" mb="3" trim="start">
-        Work photos
+        {t("workPhotos")}
       </Heading>
       <Grid columns={{ initial: "2", sm: "3" }} gap="3">
         {displayable.map((photo, index) => (
@@ -333,8 +326,8 @@ function WorkPhotosSection({ photos }: { photos: PublicPortfolioPhoto[] }) {
               type="button"
               aria-label={
                 photo.caption
-                  ? `View photo: ${photo.caption}`
-                  : `View work photo ${index + 1}`
+                  ? t("viewPhotoCaption", { caption: photo.caption })
+                  : t("viewWorkPhoto", { index: index + 1 })
               }
               onClick={() => setOpenPhoto(photo)}
               style={{
@@ -352,7 +345,7 @@ function WorkPhotosSection({ photos }: { photos: PublicPortfolioPhoto[] }) {
               {/* eslint-disable-next-line @next/next/no-img-element -- S3 host is env-dependent */}
               <img
                 src={photo.url}
-                alt={photo.caption || `Work photo ${index + 1}`}
+                alt={photo.caption || t("workPhotoAlt", { index: index + 1 })}
                 loading="lazy"
                 style={{
                   width: "100%",
@@ -384,7 +377,7 @@ function WorkPhotosSection({ photos }: { photos: PublicPortfolioPhoto[] }) {
               {/* eslint-disable-next-line @next/next/no-img-element -- S3 host is env-dependent */}
               <img
                 src={openPhoto.url}
-                alt={openPhoto.caption || "Work photo"}
+                alt={openPhoto.caption || t("workPhoto")}
                 style={{
                   width: "100%",
                   maxHeight: "70vh",
@@ -407,18 +400,18 @@ function WorkPhotosSection({ photos }: { photos: PublicPortfolioPhoto[] }) {
 }
 
 function ServicesEmptyState({ welperName }: { welperName: string }) {
+  const t = useTranslations("publicWelperProfile");
   return (
     <Card size="3" variant="surface">
       <Flex direction="column" gap="3" align="center" py="4">
         <Heading as="h3" size="4" align="center" trim="start">
-          No services listed yet
+          {t("noServicesTitle")}
         </Heading>
         <Text as="p" size="2" color="gray" highContrast align="center">
-          {welperName} hasn&apos;t published any services on their profile.
-          Check back soon, or browse other Welpers nearby.
+          {t("noServicesBody", { name: welperName })}
         </Text>
         <Button asChild variant="soft" color="gray" size="2">
-          <Link href="/search">Browse Welpers</Link>
+          <Link href="/search">{t("browseWelpers")}</Link>
         </Button>
       </Flex>
     </Card>
@@ -426,6 +419,9 @@ function ServicesEmptyState({ welperName }: { welperName: string }) {
 }
 
 function PublicWelperProfileContent({ welperId }: { welperId: string }) {
+  const t = useTranslations("publicWelperProfile");
+  const locale = useLocale() as Locale;
+  const categoryDisplayName = useCategoryDisplayName();
   const router = useRouter();
   const isAuthenticated = useIsAuthenticated();
   const { data, isLoading, isError, error } = usePublicWelperProfile(welperId);
@@ -450,30 +446,25 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
         profile.welperId
       )}&offeringId=${encodeURIComponent(singleOffering.id)}`
     : `/dashboard/booking/new?welperId=${encodeURIComponent(profile.welperId)}`;
+  const loginPath = localizedPath("/login", locale);
   const bookHref = isAuthenticated
     ? singleOffering
       ? bookingPath
       : "#services"
-    : `/login?next=${encodeURIComponent(
+    : `${loginPath}?next=${encodeURIComponent(
         singleOffering ? bookingPath : profileHref
       )}`;
   const bookLabel = isAuthenticated
     ? singleOffering
-      ? "Book"
-      : "Choose a service"
-    : "Sign in to book";
+      ? t("book")
+      : t("chooseService")
+    : t("signInToBook");
   const messageHref = isAuthenticated
     ? `/dashboard/messages?welperId=${encodeURIComponent(profile.welperId)}`
-    : `/login?next=${encodeURIComponent(
+    : `${loginPath}?next=${encodeURIComponent(
         `/dashboard/messages?welperId=${profile.welperId}`
       )}`;
 
-  /**
-   * This page sits OUTSIDE the i18n provider, so it must not run
-   * `useBookingReadinessGate` (its dialog labels use next-intl and crash the
-   * whole page). Navigate straight to the booking flow instead — that page
-   * lives in the dashboard shell and runs the readiness gate itself.
-   */
   const handleBookOffering = (offeringId: string) => {
     const next = `/dashboard/booking/new?welperId=${encodeURIComponent(
       profile.welperId,
@@ -481,8 +472,15 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
     if (isAuthenticated) {
       router.push(next);
     } else {
-      router.push(`/login?next=${encodeURIComponent(next)}`);
+      router.push(`${loginPath}?next=${encodeURIComponent(next)}`);
     }
+  };
+
+  const formatResponseTime = (minutes: number) => {
+    if (minutes < 60) return t("respondsInMinutes", { minutes });
+    return t("respondsInHours", {
+      hours: Math.max(1, Math.round(minutes / 60)),
+    });
   };
 
   return (
@@ -538,7 +536,7 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
                 </Button>
               )}
               <Button asChild variant="soft" color="gray" size="3">
-                <Link href={messageHref}>Message</Link>
+                <Link href={messageHref}>{t("message")}</Link>
               </Button>
             </Flex>
           </Box>
@@ -551,32 +549,37 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
       <Box id="services">
         <Flex justify="between" align="center" mb="3" gap="3" wrap="wrap">
           <Heading as="h2" size="5" trim="start">
-            Services
+            {t("services")}
           </Heading>
           {!isAuthenticated && hasOfferings && (
             <Button asChild variant="soft" size="2">
               <Link
-                href={`/login?next=${encodeURIComponent(profileHref)}`}
+                href={`${loginPath}?next=${encodeURIComponent(profileHref)}`}
               >
-                Sign in to book
+                {t("signInToBook")}
               </Link>
             </Button>
           )}
         </Flex>
         {hasOfferings ? (
           <Flex direction="column" gap="3">
-            {profile.serviceOfferings.map((offering) => (
-              <ServiceOfferingCard
-                key={offering.id}
-                title={offering.categoryName}
-                category={
-                  offering.parentCategoryName ?? offering.categoryName
-                }
-                hourlyRate={offering.hourlyRate}
-                description={offering.serviceDescription}
-                onBook={() => handleBookOffering(offering.id)}
-              />
-            ))}
+            {profile.serviceOfferings.map((offering) => {
+              const categoryName = categoryDisplayName(offering.categoryName);
+              const parentName = offering.parentCategoryName
+                ? categoryDisplayName(offering.parentCategoryName)
+                : categoryName;
+              return (
+                <ServiceOfferingCard
+                  key={offering.id}
+                  title={categoryName}
+                  category={parentName}
+                  hourlyRate={offering.hourlyRate}
+                  description={offering.serviceDescription}
+                  bookLabel={t("bookNow")}
+                  onBook={() => handleBookOffering(offering.id)}
+                />
+              );
+            })}
           </Flex>
         ) : (
           <ServicesEmptyState welperName={displayName} />
@@ -640,33 +643,39 @@ export default function WelperProfilePageClient({
   welperId: string;
 }) {
   const id = welperId;
+  const t = useTranslations("publicWelperProfile");
   const isAuthenticated = useIsAuthenticated();
   const profileHref = `/welper/${id}`;
 
   useProfileViewPing(id);
 
   return (
-    <Theme>
-      <Flex direction="column" minHeight="100vh">
-        <CustomerHeader signedIn={isAuthenticated} signedOutReturnTo={profileHref} />
+    <Flex direction="column" minHeight="100vh">
+      <CustomerHeader
+        signedIn={isAuthenticated}
+        signedOutReturnTo={profileHref}
+        signedOutLabels={{
+          signIn: t("signIn"),
+          signUp: t("signUp"),
+        }}
+      />
 
-        <Box py={{ initial: "5", sm: "7" }} flexGrow="1">
-          <Container size="3" px={{ initial: "4", sm: "6" }}>
-            <Box mb="4">
-              <Button asChild variant="ghost" color="gray" size="2">
-                <Link href="/search">
-                  <ArrowLeft size={16} aria-hidden="true" />
-                  Back to search
-                </Link>
-              </Button>
-            </Box>
-            <PublicWelperProfileContent welperId={id} />
-          </Container>
-        </Box>
+      <Box py={{ initial: "5", sm: "7" }} flexGrow="1">
+        <Container size="3" px={{ initial: "4", sm: "6" }}>
+          <Box mb="4">
+            <Button asChild variant="ghost" color="gray" size="2">
+              <Link href="/search">
+                <ArrowLeft size={16} aria-hidden="true" />
+                {t("backToSearch")}
+              </Link>
+            </Button>
+          </Box>
+          <PublicWelperProfileContent welperId={id} />
+        </Container>
+      </Box>
 
-        <Separator size="4" />
-        <Footer />
-      </Flex>
-    </Theme>
+      <Separator size="4" />
+      <Footer />
+    </Flex>
   );
 }

@@ -21,6 +21,8 @@ export interface ServiceOfferingCardProps {
   reviewsCount?: number;
   onBook?: () => void;
   onEdit?: () => void;
+  /** Localized book CTA; defaults to "Book now". */
+  bookLabel?: string;
 }
 
 export function ServiceOfferingCard({
@@ -34,6 +36,7 @@ export function ServiceOfferingCard({
   reviewsCount,
   onBook,
   onEdit,
+  bookLabel = "Book now",
 }: ServiceOfferingCardProps) {
   const mainCategory = categoryName ?? category ?? "Service";
 
@@ -92,7 +95,7 @@ export function ServiceOfferingCard({
             ) : null}
             {onBook ? (
               <Button onClick={onBook} size="2" variant="solid" color={SEMANTIC_COLOR.primary}>
-                Book now
+                {bookLabel}
               </Button>
             ) : null}
           </Flex>

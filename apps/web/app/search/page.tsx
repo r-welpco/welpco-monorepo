@@ -12,7 +12,7 @@ import PublicSearchPageClient from "./search-page-client";
 export const metadata: Metadata = {
   title: "Find local Welpers near you | Welpco",
   description:
-    "Browse vetted local service providers for babysitting, tutoring, home maintenance, and more. Search by postal code and category — no account needed.",
+    "Browse welpers offering services near you — no account needed. Search by postal code and category.",
 };
 
 export default function PublicSearchPage() {

@@ -2,17 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
 
 /**
  * SearchBar — pill-shaped two-input + submit button.
  *
  * Faithful port of `.design-reference/project/components/hero.jsx` `SearchBar`.
  *
- * Day 9 wiring: submitting the form now navigates to `/search?q=&postalCode=` —
- * `/search` is a thin client redirect that forwards to `/dashboard/search`
- * preserving the query string. This makes the hero functional without
- * coupling the marketing shell to the dashboard route directly.
+ * Submitting navigates to public `/search?q=&postalCode=` (outside `[locale]`).
+ * Locale is synced onto `NEXT_LOCALE` so FR marketing stays French on that page.
  */
 
 interface SearchBarProps {
@@ -21,6 +20,7 @@ interface SearchBarProps {
 
 export function SearchBar({ tone = "light" }: SearchBarProps) {
   const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations("marketing.home.hero");
   const [q, setQ] = useState("");
   const [postalCode, setPostalCode] = useState("");
@@ -28,6 +28,7 @@ export function SearchBar({ tone = "light" }: SearchBarProps) {
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    syncPublicRouteLocale(locale);
     const params = new URLSearchParams();
     if (q.trim()) params.set("q", q.trim());
     if (postalCode.trim()) params.set("postalCode", postalCode.trim());

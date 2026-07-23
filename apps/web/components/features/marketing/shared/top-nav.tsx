@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import NextLink from "next/link";
 import { Link, usePathname } from "@/i18n/navigation";
 import { isMarketingNavActive } from "@/i18n/path-utils";
+import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
 import { MarketingLogo } from "./marketing-logo";
 import {
   MARKETING_NAV_KEY_BY_HREF,
@@ -14,6 +16,7 @@ import { LanguageSwitcher } from "./language-switcher";
 
 export function TopNav() {
   const pathname = usePathname() ?? "/";
+  const locale = useLocale();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const t = useTranslations("marketing");
   const tNav = useTranslations("marketing.nav");
@@ -103,16 +106,17 @@ export function TopNav() {
           >
             {tNav("signIn")}
           </Link>
-          <Link
-            href="/login"
+          <NextLink
+            href="/search"
             className="btn btn-primary"
             style={{ padding: "10px 18px", fontSize: 14 }}
+            onClick={() => syncPublicRouteLocale(locale)}
           >
             {tNav("findHelp")}
             <span aria-hidden="true" style={{ display: "inline-block", transform: "translateY(-1px)" }}>
               →
             </span>
-          </Link>
+          </NextLink>
           <button
             type="button"
             onClick={() => setDrawerOpen((o) => !o)}
@@ -178,14 +182,17 @@ export function TopNav() {
               >
                 {tNav("signIn")}
               </Link>
-              <Link
-                href="/login"
+              <NextLink
+                href="/search"
                 className="btn btn-primary"
                 style={{ justifyContent: "center", fontSize: 14, padding: "12px 16px" }}
-                onClick={() => setDrawerOpen(false)}
+                onClick={() => {
+                  syncPublicRouteLocale(locale);
+                  setDrawerOpen(false);
+                }}
               >
                 {tNav("findHelp")}
-              </Link>
+              </NextLink>
             </div>
           </div>
         </div>

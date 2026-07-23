@@ -62,3 +62,13 @@ if (to) {
 ```
 
 BFF wraps this in `SmsService` / `SmsNotificationService`. Sends are gated by `notification_preferences.sms_enabled` (default **true**, user opt-out).
+
+### Local template smoke test
+
+```bash
+# Preview body only (no send)
+pnpm --filter @welpco/bff sms:test -- --to +15145551234 --type welper_booking_request --dry-run
+
+# Real send (needs TWILIO_* + SMS_PROVIDER=twilio in apps/bff/.env.local)
+pnpm --filter @welpco/bff sms:test -- --to +15145551234 --type customer_booking_accepted --locale fr --welper-name Alex
+```

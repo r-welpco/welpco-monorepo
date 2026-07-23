@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import NextLink from "next/link";
 import { Link, usePathname } from "@/i18n/navigation";
 import { isMarketingNavActive } from "@/i18n/path-utils";
+import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
 import { MarketingLogo } from "../shared/marketing-logo";
 import {
   MARKETING_NAV_KEY_BY_HREF,
@@ -15,6 +17,7 @@ import { IMMERSIVE_SHELL_LOGO_PAD_PX } from "./immersive-shell";
 
 export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss: string }) {
   const pathname = usePathname() ?? "/";
+  const locale = useLocale();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const t = useTranslations("marketing");
   const tNav = useTranslations("marketing.nav");
@@ -118,17 +121,18 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
           >
             {tNav("signIn")}
           </Link>
-          <Link
-            href="/login"
+          <NextLink
+            href="/search"
             data-immersive-header-cta
             className="btn btn-primary"
             style={{ padding: "8px 16px", fontSize: 13, fontWeight: 700, fontFamily: headlineFontCss }}
+            onClick={() => syncPublicRouteLocale(locale)}
           >
             {tNav("findHelp")}
             <span aria-hidden="true" style={{ display: "inline-block", transform: "translateY(-1px)" }}>
               →
             </span>
-          </Link>
+          </NextLink>
           <button
             type="button"
             data-immersive-burger
@@ -230,14 +234,17 @@ export function HeroImmersiveFloatingNav({ headlineFontCss }: { headlineFontCss:
               >
                 {tNav("signIn")}
               </Link>
-              <Link
-                href="/login"
+              <NextLink
+                href="/search"
                 className="btn btn-primary"
                 style={{ justifyContent: "center", fontSize: 14, fontWeight: 700, fontFamily: headlineFontCss }}
-                onClick={() => setDrawerOpen(false)}
+                onClick={() => {
+                  syncPublicRouteLocale(locale);
+                  setDrawerOpen(false);
+                }}
               >
                 {tNav("findHelp")}
-              </Link>
+              </NextLink>
             </div>
           </div>
         </div>
