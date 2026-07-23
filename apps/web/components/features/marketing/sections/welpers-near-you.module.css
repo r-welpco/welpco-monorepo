@@ -85,6 +85,16 @@
   overflow: hidden;
 }
 
+/* Background-checked — icon only; label via aria-label / title. */
+.verifiedIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--evergreen);
+  line-height: 0;
+}
+
 /* End card — "See all Welpers near you" (snaps to container right edge) */
 .endCard {
   scroll-snap-align: end;

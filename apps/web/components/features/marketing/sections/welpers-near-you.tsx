@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchServices } from "@/lib/hooks/use-service-discovery";
 import { maskCustomerWelperName } from "@/lib/display-name";
@@ -380,17 +380,11 @@ function WelperRailCard({
         </span>
         {item.verified === true ? (
           <span
-            style={{
-              padding: "4px 10px",
-              borderRadius: 999,
-              fontSize: 11,
-              background: "var(--pill-bg)",
-              color: "var(--fg-muted)",
-              border: "1px solid var(--line)",
-              whiteSpace: "nowrap",
-            }}
+            className={styles.verifiedIcon}
+            title={t("verified")}
+            aria-label={t("verified")}
           >
-            {t("verified")}
+            <ShieldCheck aria-hidden width={18} height={18} strokeWidth={2.25} />
           </span>
         ) : null}
       </div>
