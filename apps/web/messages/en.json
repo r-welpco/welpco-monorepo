@@ -103,10 +103,12 @@
             "services": [
               "Math tutoring",
               "French tutoring",
+              "Spanish tutoring",
               "English tutoring",
               "Music lessons",
               "Cooking lessons",
-              "Swimming lessons"
+              "Swimming lessons",
+              "Basketball lessons"
             ]
           },
           "exterior": {
@@ -922,10 +924,12 @@
         "Dog Training": "Dog Training",
         "Math Tutoring": "Math Tutoring",
         "French Tutoring": "French Tutoring",
+        "Spanish Tutoring": "Spanish Tutoring",
         "English Tutoring": "English Tutoring",
         "Music Lessons": "Music Lessons",
         "Cooking Lessons": "Cooking Lessons",
         "Swimming Lessons": "Swimming Lessons",
+        "Basketball Lessons": "Basketball Lessons",
         "Lawn Mowing": "Lawn Mowing",
         "Tree Planting": "Tree Planting",
         "Gardening": "Gardening",
@@ -967,6 +971,7 @@
         "Music lessons": "Music lessons",
         "Cooking lessons": "Cooking lessons",
         "Swimming lessons": "Swimming lessons",
+        "Basketball lessons": "Basketball lessons",
         "Exterior maintenance": "Exterior maintenance",
         "Lawn-mowing": "Lawn-mowing",
         "Tree-planting": "Tree-planting",
@@ -978,6 +983,7 @@
         "Summer/winter preparation": "Summer/winter preparation",
         "Math tutoring": "Math tutoring",
         "French tutoring": "French tutoring",
+        "Spanish tutoring": "Spanish tutoring",
         "English tutoring": "English tutoring",
         "Health and wellness": "Health and wellness",
         "Meal preparation": "Meal preparation",

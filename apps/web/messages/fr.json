@@ -103,10 +103,12 @@
             "services": [
               "Tutorat en mathématiques",
               "Tutorat en français",
+              "Tutorat en espagnol",
               "Tutorat en anglais",
               "Cours de musique",
               "Cours de cuisine",
-              "Cours de natation"
+              "Cours de natation",
+              "Cours de basketball"
             ]
           },
           "exterior": {
@@ -921,10 +923,12 @@
         "Dog Training": "Dressage canin",
         "Math Tutoring": "Tutorat en mathématiques",
         "French Tutoring": "Tutorat en français",
+        "Spanish Tutoring": "Tutorat en espagnol",
         "English Tutoring": "Tutorat en anglais",
         "Music Lessons": "Cours de musique",
         "Cooking Lessons": "Cours de cuisine",
         "Swimming Lessons": "Cours de natation",
+        "Basketball Lessons": "Cours de basketball",
         "Lawn Mowing": "Tonte de pelouse",
         "Tree Planting": "Plantation d'arbres",
         "Gardening": "Jardinage",
@@ -966,6 +970,7 @@
         "Music lessons": "Cours de musique",
         "Cooking lessons": "Cours de cuisine",
         "Swimming lessons": "Cours de natation",
+        "Basketball lessons": "Cours de basketball",
         "Exterior maintenance": "Entretien extérieur",
         "Lawn-mowing": "Tonte de pelouse",
         "Tree-planting": "Plantation d'arbres",
@@ -977,6 +982,7 @@
         "Summer/winter preparation": "Préparation été / hiver",
         "Math tutoring": "Tutorat en mathématiques",
         "French tutoring": "Tutorat en français",
+        "Spanish tutoring": "Tutorat en espagnol",
         "English tutoring": "Tutorat en anglais",
         "Health and wellness": "Santé et bien-être",
         "Meal preparation": "Préparation de repas",

@@ -256,6 +256,10 @@ export const SERVICE_SELECTION_SUBCATEGORY_QUESTIONS: ServiceSelectionSubcategor
     questions: mathOrFrenchTutoringQuestions(),
   },
   {
+    subcategoryName: 'Spanish Tutoring',
+    questions: mathOrFrenchTutoringQuestions(),
+  },
+  {
     subcategoryName: 'English Tutoring',
     questions: englishTutoringQuestions(),
   },
@@ -290,6 +294,24 @@ export const SERVICE_SELECTION_SUBCATEGORY_QUESTIONS: ServiceSelectionSubcategor
   },
   {
     subcategoryName: 'Swimming Lessons',
+    questions: [
+      {
+        label: 'Age',
+        type: QuestionType.NUMBER,
+        validationRules: { required: true, min: 0 },
+        required: true,
+      },
+      {
+        label: 'Current level',
+        type: QuestionType.CHOICE,
+        options: skillLevelOptions,
+        required: true,
+      },
+      ...dateTimeDescription(),
+    ],
+  },
+  {
+    subcategoryName: 'Basketball Lessons',
     questions: [
       {
         label: 'Age',
@@ -950,10 +972,12 @@ export const MARKDOWN_DOC_SUBCATEGORY_NAMES = [
   'Pet Sitting',
   'Math Tutoring',
   'French Tutoring',
+  'Spanish Tutoring',
   'English Tutoring',
   'Music Lessons',
   'Cooking Lessons',
   'Swimming Lessons',
+  'Basketball Lessons',
   'Housekeeping',
   'Organizing',
   'Lawn Mowing',

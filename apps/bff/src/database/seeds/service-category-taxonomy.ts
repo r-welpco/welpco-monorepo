@@ -34,14 +34,16 @@ export const SERVICE_CATEGORY_TAXONOMY: ServiceCategoryTaxonomyParent[] = [
   },
   {
     name: 'Learning & Lessons',
-    description: 'Tutoring, music, cooking, and swimming lessons',
+    description: 'Tutoring, music, cooking, and sports lessons',
     subcategories: [
       { name: 'Math Tutoring' },
       { name: 'French Tutoring' },
+      { name: 'Spanish Tutoring' },
       { name: 'English Tutoring' },
       { name: 'Music Lessons' },
       { name: 'Cooking Lessons' },
       { name: 'Swimming Lessons' },
+      { name: 'Basketball Lessons' },
     ],
   },
   {
