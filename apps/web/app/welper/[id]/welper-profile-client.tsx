@@ -53,7 +53,6 @@ function HeroSkeleton() {
           <Skeleton width="80%" height="16px" />
           <Flex gap="2" mt="2">
             <Skeleton width="120px" height="40px" />
-            <Skeleton width="120px" height="40px" />
           </Flex>
         </Flex>
       </Flex>
@@ -459,12 +458,6 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
       ? t("book")
       : t("chooseService")
     : t("signInToBook");
-  const messageHref = isAuthenticated
-    ? `/dashboard/messages?welperId=${encodeURIComponent(profile.welperId)}`
-    : `${loginPath}?next=${encodeURIComponent(
-        `/dashboard/messages?welperId=${profile.welperId}`
-      )}`;
-
   const handleBookOffering = (offeringId: string) => {
     const next = `/dashboard/booking/new?welperId=${encodeURIComponent(
       profile.welperId,
@@ -535,9 +528,6 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
                   <Link href={bookHref}>{bookLabel}</Link>
                 </Button>
               )}
-              <Button asChild variant="soft" color="gray" size="3">
-                <Link href={messageHref}>{t("message")}</Link>
-              </Button>
             </Flex>
           </Box>
         </Flex>
