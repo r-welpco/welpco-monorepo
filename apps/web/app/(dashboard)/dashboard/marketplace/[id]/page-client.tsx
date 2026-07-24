@@ -27,6 +27,7 @@ import {
   JobApplicationForm,
   JobStatusBadge,
 } from "@welpco/ui/platform";
+import { customerHourlyChargeFromWelperRate } from "@welpco/ui/pricing/welper-customer-rate";
 import { JobPostingReviewSummary } from "@/components/features/marketplace/job-posting-review-summary";
 import { ApplyBlockedDialog } from "@/components/features/marketplace/apply-blocked-dialog";
 import { useAuthStore } from "@/stores/authStore";
@@ -494,7 +495,11 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                     : labels.card.defaultCategory,
                   hourlyRate:
                     app.hourlyRateSnapshot != null
-                      ? labels.applicationReview.hourlyRate(app.hourlyRateSnapshot)
+                      ? labels.applicationReview.hourlyRate(
+                          customerHourlyChargeFromWelperRate(
+                            app.hourlyRateSnapshot,
+                          ),
+                        )
                       : "—",
                   submittedAt: new Date(app.createdAt).toLocaleDateString(locale),
                   proposalMessage: app.proposalMessage,

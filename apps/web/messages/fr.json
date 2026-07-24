@@ -2043,7 +2043,7 @@
         "verified": "Vérifié",
         "applied": "Candidature le {date}",
         "sendBookingRequest": "Envoyer une demande de réservation",
-        "hourlyRate": "{rate} $/h",
+        "hourlyRate": "Tarif client : {rate} $/h (frais Welpco inclus, avant taxes)",
         "emptyDescription": "Quand des Welpers postulent, ils apparaîtront ici pour examen.",
         "tryAgain": "Réessayer",
         "status": {

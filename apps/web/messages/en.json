@@ -2044,7 +2044,7 @@
         "verified": "Verified",
         "applied": "Applied {date}",
         "sendBookingRequest": "Send booking request",
-        "hourlyRate": "{rate}/hr",
+        "hourlyRate": "Customer rate: {rate}/hr (Welpco fee included, before tax)",
         "emptyDescription": "When Welpers apply to your job, they'll show up here for review.",
         "tryAgain": "Try again",
         "status": {

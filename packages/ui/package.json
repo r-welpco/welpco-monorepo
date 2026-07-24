@@ -14,6 +14,10 @@
       "types": "./dist/tokens.d.ts",
       "default": "./dist/tokens.js"
     },
+    "./pricing/welper-customer-rate": {
+      "types": "./dist/pricing/welper-customer-rate.d.ts",
+      "default": "./dist/pricing/welper-customer-rate.js"
+    },
     "./button": {
       "types": "./dist/button.d.ts",
       "default": "./dist/button.js"
