@@ -93,7 +93,12 @@
         { "type": "paragraph", "text": "Les paiements sont traités de façon sécurisée par Welpco." },
         {
           "type": "paragraph",
-          "text": "Lorsque vous réservez un service, un montant équivalent à une heure de service est préautorisé et mis en attente."
+          "text": "Vous n’êtes pas débité au moment de la réservation. Une fois que votre Welper accepte, nous plaçons une retenue équivalant à une heure de service sur votre carte environ trois jours avant le service — ou immédiatement si la réservation a lieu dans moins de trois jours."
+        },
+        {
+          "type": "callout",
+          "variant": "important",
+          "text": "Gardez un moyen de paiement valide sur votre compte. Si la retenue ne peut pas être autorisée au plus tard 24 heures avant le service, la réservation est annulée automatiquement."
         },
         {
           "type": "paragraph",

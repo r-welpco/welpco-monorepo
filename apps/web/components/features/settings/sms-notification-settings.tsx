@@ -16,6 +16,26 @@ import {
   useUpdateNotificationPreferences,
 } from "@/lib/hooks/use-notifications";
 
+/**
+ * Categories that can actually deliver an SMS today.
+ *
+ * A notification only texts when its emitter passes `smsBody` to
+ * `NotificationService.send()` (the single SMS path, notification.service.ts),
+ * and a matching template exists in `@welpco/sms` (`SMS_TEMPLATE_TYPES`).
+ * Only these four satisfy both: booking, payment (incl. payouts), dispute, job.
+ *
+ * `review`, `message`, `security` and `system` have preference rows but no SMS
+ * emitter — their toggles were inert, so they are not shown. (`security` is
+ * never emitted at all today.) Add a category here only once a template AND an
+ * emitter passing `smsBody` exist for it.
+ */
+const SMS_CAPABLE_CATEGORIES: readonly string[] = [
+  "booking",
+  "payment",
+  "dispute",
+  "job",
+];
+
 const CATEGORY_COPY: Record<string, { label: string; description: string }> = {
   booking: {
     label: "Bookings",
@@ -25,14 +45,6 @@ const CATEGORY_COPY: Record<string, { label: string; description: string }> = {
     label: "Payments",
     description: "Receipts, payouts, refunds.",
   },
-  review: {
-    label: "Reviews",
-    description: "When someone leaves you a review or replies.",
-  },
-  message: {
-    label: "Messages",
-    description: "Chat and message alerts.",
-  },
   dispute: {
     label: "Disputes",
     description: "Dispute updates and resolutions.",
@@ -40,14 +52,6 @@ const CATEGORY_COPY: Record<string, { label: string; description: string }> = {
   job: {
     label: "Jobs",
     description: "Job posting and application updates.",
-  },
-  security: {
-    label: "Account & security",
-    description: "Sign-in alerts and account changes.",
-  },
-  system: {
-    label: "Product news",
-    description: "Occasional updates about new Welpco features.",
   },
 };
 
@@ -75,21 +79,26 @@ export function SmsNotificationSettings() {
 
   const rows = useMemo(() => {
     if (!data?.length) return [];
-    return data.map((row) => ({
-      category: row.category,
-      label: CATEGORY_COPY[row.category]?.label ?? row.category,
-      description: CATEGORY_COPY[row.category]?.description,
-      smsEnabled: smsByCategory[row.category] ?? row.smsEnabled ?? true,
-    }));
+    return data
+      .filter((row) => SMS_CAPABLE_CATEGORIES.includes(row.category))
+      .map((row) => ({
+        category: row.category,
+        label: CATEGORY_COPY[row.category]?.label ?? row.category,
+        description: CATEGORY_COPY[row.category]?.description,
+        smsEnabled: smsByCategory[row.category] ?? row.smsEnabled ?? true,
+      }));
   }, [data, smsByCategory]);
 
+  // Save only what the user can see. The BFF upserts per row and preserves
+  // unspecified categories, so hidden ones keep their stored values instead of
+  // being rewritten from a toggle the user was never shown.
   const handleSave = async () => {
-    if (!data?.length) return;
+    if (!rows.length) return;
     setSavedFlash(false);
     await updateMutation.mutateAsync(
-      data.map((row) => ({
+      rows.map((row) => ({
         category: row.category,
-        smsEnabled: smsByCategory[row.category] ?? row.smsEnabled ?? true,
+        smsEnabled: row.smsEnabled,
       })),
     );
     setSavedFlash(true);

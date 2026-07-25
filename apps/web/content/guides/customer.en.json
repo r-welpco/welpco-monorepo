@@ -93,7 +93,12 @@
         { "type": "paragraph", "text": "Payments are processed securely through Welpco." },
         {
           "type": "paragraph",
-          "text": "When you book a service, an amount equivalent to one hour of service is pre-authorized and placed on hold."
+          "text": "You're not charged when you book. Once your Welper accepts, we place a hold equivalent to one hour of service on your card about three days before the service — or right away if the booking is less than three days away."
+        },
+        {
+          "type": "callout",
+          "variant": "important",
+          "text": "Keep a valid payment method on your account. If the hold cannot be authorized by 24 hours before the service, the booking is cancelled automatically."
         },
         {
           "type": "paragraph",
