@@ -53,7 +53,7 @@ const en = {
         howItWorks: "How it works",
         trustSafety: "Trust & safety",
         welperHandbook: "Welper handbook",
-        weeklyPayouts: "Weekly payouts (Friday)",
+        weeklyPayouts: "Weekly payouts (Monday)",
         community: "Community",
         faq: "FAQ",
         contactUs: "Contact us",
@@ -188,7 +188,7 @@ const en = {
           {
             n: "03",
             title: "Get paid",
-            body: "Welper confirms job is complete and submits end time. Invoice is sent to the customer and payment is taken. Welpco transfers weekly payouts to Welper's Stripe account the following week on the Friday.",
+            body: "The Welper confirms the job is complete and submits the end time. The customer is charged, and Welpco transfers eligible payouts to the Welper's Stripe account on Mondays after a minimum 7-day hold.",
           },
         ],
       },
@@ -236,7 +236,7 @@ const en = {
         points: [
           "Pick the services that match your skills",
           "Set your own rates and weekly availability",
-          "Get paid the following week on the Friday on a weekly basis",
+          "Receive eligible payouts on Mondays after a minimum 7-day hold",
           "Build a profile, ratings, and a regular client base",
         ],
         ctaPrimary: "Become a Welper",
@@ -261,7 +261,7 @@ const en = {
           },
           {
             q: "How do I get paid as a Welper?",
-            a: "Confirm \"Job Done\" when the work is finished. Customers are charged, and Welpers receive weekly payouts every Friday of the following week.",
+            a: "Confirm \"Job Done\" when the work is finished. Customers are charged, and eligible Welper payouts are transferred on Mondays after a minimum 7-day hold.",
           },
           {
             q: "When and how do I pay for a service?",
@@ -371,7 +371,7 @@ const en = {
           ["Accept your first booking", "Browse incoming requests, accept what fits, and meet your first neighbor."],
           [
             "Get paid, get reviewed",
-            "Payment is sent the following week on the Friday on a weekly basis. Reviews are submitted by the customer when the job is complete.",
+            "Eligible payments are transferred on Mondays after a minimum 7-day hold. Reviews are submitted by the customer when the job is complete.",
           ],
         ],
         cta: "Start your Welper profile",
@@ -410,8 +410,8 @@ const en = {
               "How do I get paid?",
               [
                 "Once the job is completed, the Welper will confirm \"Job Done\" through the app or website. A receipt will automatically be sent to the customer, and the payment process will then be finalized.",
-                "Welpers receive their payouts on a weekly basis, every Friday of the following week.",
-                "Example: If you begin completing jobs on Monday and continue working throughout that week, you will receive payment on the Friday of the following week, and so on.",
+                "Welpers receive eligible payouts weekly on Mondays, after each payment has completed a minimum 7-day hold.",
+                "Example: A payment released on Monday can be included the next Monday. A payment released later in the week is included on the first Monday after its 7-day hold.",
                 "When creating your profile, you will also need to set up your own Stripe account in order to receive your weekly payouts.",
                 "Once your payout becomes available in your Stripe account, you can manually transfer your funds to your bank account at no cost.",
               ],
@@ -581,7 +581,7 @@ Object.assign(fr.marketing.footer, {
     howItWorks: "Comment ça marche",
     trustSafety: "Confiance et sécurité",
     welperHandbook: "Guide du Welper",
-    weeklyPayouts: "Paiements hebdomadaires (vendredi)",
+    weeklyPayouts: "Paiements hebdomadaires (lundi)",
     community: "Communauté",
     faq: "FAQ",
     contactUs: "Nous joindre",
@@ -715,7 +715,7 @@ fr.marketing.home.howItWorks.customerSteps = [
 fr.marketing.home.howItWorks.welperSteps = [
   { n: "01", title: "Créez votre profil", body: "Inscrivez-vous, listez vos services, fixez vos tarifs et votre disponibilité hebdomadaire. Les adultes passent une vérification des antécédents." },
   { n: "02", title: "Acceptez les mandats qui vous conviennent", body: "Recevez des demandes qui correspondent à vos compétences et à votre horaire. Temps partiel, temps plein ou occasionnel — c'est vous qui décidez." },
-  { n: "03", title: "Recevez votre paiement", body: "Le Welper confirme que le travail est terminé et soumet l'heure de fin. La facture est envoyée au client et le paiement est prélevé. Welpco transfère les paiements hebdomadaires au compte Stripe du Welper le vendredi de la semaine suivante." },
+  { n: "03", title: "Recevez votre paiement", body: "Le Welper confirme que le travail est terminé et soumet l'heure de fin. Le client est facturé, et Welpco transfère les paiements admissibles au compte Stripe du Welper le lundi, après une retenue minimale de 7 jours." },
 ];
 
 writeFileSync(join(root, "messages/en.json"), JSON.stringify(en, null, 2));

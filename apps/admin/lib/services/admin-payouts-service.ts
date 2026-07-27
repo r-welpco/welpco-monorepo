@@ -40,7 +40,7 @@ export interface PayoutWelperRollup {
 
 export interface PayoutBatchSummary {
   id: string;
-  payoutFriday: string;
+  payoutDate: string;
   status: PayoutBatchStatus;
   bookingCount: number;
   welperCount: number;
@@ -60,7 +60,7 @@ export interface PayoutBatchReview extends PayoutBatchSummary {
 }
 
 export interface PayoutUpcomingPreview {
-  payoutFriday: string;
+  payoutDate: string;
   eligiblePendingCount: number;
   eligibleWelperCount: number;
   eligibleWelperNetCents: number;
@@ -101,12 +101,12 @@ export async function getPayoutUpcoming(): Promise<PayoutUpcomingPreview> {
 }
 
 export async function listPayoutBatches(params?: {
-  payoutFriday?: string;
+  payoutDate?: string;
   limit?: number;
 }): Promise<{ data: PayoutBatchSummary[] }> {
   return apiClient.get<{ data: PayoutBatchSummary[] }>("/api/admin/payouts/batches", {
     params: {
-      payoutFriday: params?.payoutFriday?.trim() || undefined,
+      payoutDate: params?.payoutDate?.trim() || undefined,
       limit: params?.limit,
     },
   });
@@ -138,9 +138,9 @@ export async function getPayoutBatch(id: string): Promise<PayoutBatchReview> {
   return apiClient.get<PayoutBatchReview>(`/api/admin/payouts/batches/${encodeURIComponent(id)}`);
 }
 
-export async function buildPayoutBatch(payoutFriday?: string): Promise<PayoutBatchReview> {
+export async function buildPayoutBatch(payoutDate?: string): Promise<PayoutBatchReview> {
   return apiClient.post<PayoutBatchReview>("/api/admin/payouts/batches/build", {
-    payoutFriday: payoutFriday?.trim() || undefined,
+    payoutDate: payoutDate?.trim() || undefined,
   });
 }
 

@@ -13,7 +13,7 @@ All 13 domain modules under `apps/bff/src/domains/`. See [../backend-overview.md
 | geocode | Address geocoding lookups | [geocode.md](geocode.md) |
 | job-posting | Customer job postings and welper applications | [job-posting.md](job-posting.md) |
 | notification | In-app notifications, notification preferences, localized email dispatch | [notification.md](notification.md) |
-| payment | Stripe card holds/captures, taxes, refunds, welper payout ledger and Friday payout batches via Stripe Connect | [payment.md](payment.md) |
+| payment | Stripe card holds/captures, taxes, refunds, welper payout ledger and Monday payout batches via Stripe Connect | [payment.md](payment.md) |
 | profile-management | Customer and welper profiles, service offerings, availability calendars/exceptions, favorites | [profile-management.md](profile-management.md) |
 | review | Post-booking reviews (customer ↔ welper) and welper rating aggregates | [review.md](review.md) |
 | safety-verification | Background check orders (Stripe checkout paid), minor guardian consent | [safety-verification.md](safety-verification.md) |

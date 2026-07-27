@@ -48,7 +48,7 @@ export default async function PayoutBatchPage({ params }: { params: Promise<{ ba
   return (
     <Flex direction="column" gap="4">
       <AdminPageHeader
-        title={`Payout batch — ${batch.payoutFriday}`}
+        title={`Payout batch — ${batch.payoutDate}`}
         description="Per-welper rollup and booking drill-down. Platform net = service fee spread minus Stripe processing fees."
       />
 

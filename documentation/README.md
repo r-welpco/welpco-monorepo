@@ -42,7 +42,7 @@ Two legacy documents remain authoritative and are referenced from here: `package
 
 | Doc | Contents |
 |---|---|
-| [operations/payment-operations-runbook.md](operations/payment-operations-runbook.md) | Payout batch lifecycle (incl. the reserved `approved` status and Friday unique index), admin operations, cron, failure recovery, troubleshooting |
+| [operations/payment-operations-runbook.md](operations/payment-operations-runbook.md) | Monday payout batch lifecycle (incl. the reserved `approved` status and legacy-named date index), admin operations, cron, failure recovery, troubleshooting |
 | [operations/migrations.md](operations/migrations.md) | How migrations are discovered/ordered/run, skeleton, gaps (no rollback invocation, no prod automation) |
 | [operations/environment-variables.md](operations/environment-variables.md) | Verified env var tables per app + known `.env.example` errors |
 | [operations/seeds.md](operations/seeds.md) | Seed scripts, order, guard flags |
@@ -55,7 +55,7 @@ Two legacy documents remain authoritative and are referenced from here: `package
 | [agents/README.md](agents/README.md) | Orientation, read order, source-of-truth rule, before-you-edit checklist |
 | [agents/codebase-map.md](agents/codebase-map.md) | Fast map: apps, packages, domains, ports, key locations |
 | [agents/conventions.md](agents/conventions.md) | Design-lint rules, NestJS patterns, migration naming, test layout |
-| [agents/guardrails.md](agents/guardrails.md) | Money paths, append-only migrations, Friday index constraint, things not to do |
+| [agents/guardrails.md](agents/guardrails.md) | Money paths, append-only migrations, payout-date index constraint, things not to do |
 | [agents/common-tasks.md](agents/common-tasks.md) | Recipes with real example files: endpoint, migration, UI component, seed, local stack |
 
 ## Improvements & risks

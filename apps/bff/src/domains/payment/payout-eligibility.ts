@@ -14,11 +14,11 @@ export function formatDateInPayoutTz(date: Date): string {
 }
 
 /** Parse YYYY-MM-DD as noon UTC anchor for stable comparisons. */
-export function parsePayoutFridayDate(isoDate: string): Date {
+export function parsePayoutDate(isoDate: string): Date {
   return new Date(`${isoDate}T12:00:00.000Z`);
 }
 
-/** Day-of-week in payout TZ: 0 = Sunday, 5 = Friday. */
+/** Day-of-week in payout TZ: 0 = Sunday, 1 = Monday. */
 export function dayOfWeekInPayoutTz(date: Date): number {
   const wd = new Intl.DateTimeFormat('en-US', {
     timeZone: PAYOUT_TIMEZONE,
@@ -36,12 +36,12 @@ export function dayOfWeekInPayoutTz(date: Date): number {
   return map[wd] ?? 0;
 }
 
-/** Next Friday on or after `from` (in payout TZ). Returns YYYY-MM-DD. */
-export function getUpcomingPayoutFriday(from: Date = new Date()): string {
-  const start = parsePayoutFridayDate(formatDateInPayoutTz(from));
+/** Next Monday on or after `from` (in payout TZ). Returns YYYY-MM-DD. */
+export function getUpcomingPayoutDate(from: Date = new Date()): string {
+  const start = parsePayoutDate(formatDateInPayoutTz(from));
   let cursor = start;
   for (let i = 0; i < 8; i++) {
-    if (dayOfWeekInPayoutTz(cursor) === 5) {
+    if (dayOfWeekInPayoutTz(cursor) === 1) {
       return formatDateInPayoutTz(cursor);
     }
     cursor = new Date(cursor.getTime() + 24 * 60 * 60 * 1000);
@@ -50,51 +50,62 @@ export function getUpcomingPayoutFriday(from: Date = new Date()): string {
 }
 
 /**
- * Ledger row is eligible for payout on Friday F when payment was released at
- * least PAYOUT_HOLD_DAYS before that Friday (Toronto calendar day).
+ * Ledger row is eligible on payout date D when payment was released at least
+ * PAYOUT_HOLD_DAYS before D (Toronto calendar day).
  */
-export function isEligibleForPayoutFriday(
+export function isEligibleForPayoutDate(
   paymentReleasedAt: Date,
-  payoutFridayIso: string,
+  payoutDateIso: string,
 ): boolean {
-  const releasedDay = parsePayoutFridayDate(formatDateInPayoutTz(paymentReleasedAt));
-  const payoutDay = parsePayoutFridayDate(payoutFridayIso);
+  const releasedDay = parsePayoutDate(formatDateInPayoutTz(paymentReleasedAt));
+  const payoutDay = parsePayoutDate(payoutDateIso);
   const msPerDay = 24 * 60 * 60 * 1000;
   const daysBetween = Math.floor((payoutDay.getTime() - releasedDay.getTime()) / msPerDay);
   return daysBetween >= PAYOUT_HOLD_DAYS;
 }
 
-/** Payout Friday must be a Friday in America/Toronto. */
-export function assertValidPayoutFriday(iso: string): void {
+function assertValidPayoutDateFormat(iso: string): void {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    throw new Error('Payout Friday must be YYYY-MM-DD');
+    throw new Error('Payout date must be YYYY-MM-DD');
   }
-  const day = parsePayoutFridayDate(iso);
-  if (dayOfWeekInPayoutTz(day) !== 5) {
-    throw new Error('Payout Friday must fall on a Friday (America/Toronto)');
+  const day = parsePayoutDate(iso);
+  if (Number.isNaN(day.getTime()) || formatDateInPayoutTz(day) !== iso) {
+    throw new Error('Payout date must be a valid calendar date');
   }
 }
 
-/** Transfers may execute on or after the batch payout Friday (Toronto calendar day). */
-export function isPayoutFridayReached(payoutFridayIso: string, now: Date = new Date()): boolean {
-  assertValidPayoutFriday(payoutFridayIso);
-  const today = parsePayoutFridayDate(formatDateInPayoutTz(now));
-  const payoutDay = parsePayoutFridayDate(payoutFridayIso);
+/** New payout batches must use Monday in America/Toronto. */
+export function assertValidPayoutDate(iso: string): void {
+  assertValidPayoutDateFormat(iso);
+  const day = parsePayoutDate(iso);
+  if (dayOfWeekInPayoutTz(day) !== 1) {
+    throw new Error('Payout date must fall on a Monday (America/Toronto)');
+  }
+}
+
+/**
+ * Transfers may execute on or after the stored payout date. This deliberately
+ * accepts historical Friday batches created before the Monday transition.
+ */
+export function isPayoutDateReached(payoutDateIso: string, now: Date = new Date()): boolean {
+  assertValidPayoutDateFormat(payoutDateIso);
+  const today = parsePayoutDate(formatDateInPayoutTz(now));
+  const payoutDay = parsePayoutDate(payoutDateIso);
   return today.getTime() >= payoutDay.getTime();
 }
 
 /**
- * Batch build allowed for the upcoming Friday or any past Friday — not future Fridays
- * beyond the upcoming payout date.
+ * Batch build is allowed for the upcoming Monday or any past Monday, but not a
+ * future Monday beyond the upcoming payout date.
  */
-export function assertBuildablePayoutFriday(iso: string, now: Date = new Date()): void {
-  assertValidPayoutFriday(iso);
-  const upcoming = getUpcomingPayoutFriday(now);
-  const requested = parsePayoutFridayDate(iso);
-  const upcomingDay = parsePayoutFridayDate(upcoming);
+export function assertBuildablePayoutDate(iso: string, now: Date = new Date()): void {
+  assertValidPayoutDate(iso);
+  const upcoming = getUpcomingPayoutDate(now);
+  const requested = parsePayoutDate(iso);
+  const upcomingDay = parsePayoutDate(upcoming);
   if (requested.getTime() > upcomingDay.getTime()) {
     throw new Error(
-      `Cannot build a batch for ${iso}; only the upcoming Friday (${upcoming}) or earlier is allowed`,
+      `Cannot build a batch for ${iso}; only the upcoming Monday (${upcoming}) or earlier is allowed`,
     );
   }
 }

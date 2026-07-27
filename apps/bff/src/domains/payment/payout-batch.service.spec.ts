@@ -93,7 +93,7 @@ describe('PayoutBatchService', () => {
               findOne: jest.fn().mockResolvedValue({
                 id: 'batch-1',
                 status: PayoutBatchStatus.REVIEW,
-                payoutFriday: '2026-06-12',
+                payoutDate: '2026-06-08',
               }),
               save: jest.fn(async (x) => x),
             };
@@ -136,7 +136,7 @@ describe('PayoutBatchService', () => {
     scheduledLine.status = WelperPayoutLedgerStatus.SCHEDULED;
     scheduledLine.stripeTransferId = null;
     scheduledLine.payoutBatchId = 'batch-1';
-    jest.spyOn(payoutEligibility, 'isPayoutFridayReached').mockReturnValue(true);
+    jest.spyOn(payoutEligibility, 'isPayoutDateReached').mockReturnValue(true);
     transfersCreate.mockResolvedValue({ id: 'tr_test_1' });
     mockStripeConnect.getStatus.mockResolvedValue({
       onboardingComplete: true,
@@ -201,12 +201,12 @@ describe('PayoutBatchService', () => {
   });
 
   describe('approveAndExecute', () => {
-    it('rejects when payout Friday has not been reached', async () => {
-      jest.spyOn(payoutEligibility, 'isPayoutFridayReached').mockReturnValue(false);
+    it('rejects when the payout date has not been reached', async () => {
+      jest.spyOn(payoutEligibility, 'isPayoutDateReached').mockReturnValue(false);
       mockBatchRepo.findOne.mockResolvedValue({
         id: 'batch-1',
         status: PayoutBatchStatus.REVIEW,
-        payoutFriday: '2026-06-12',
+        payoutDate: '2026-06-08',
       });
 
       await expect(service.approveAndExecute('batch-1', 'admin-1')).rejects.toBeInstanceOf(BadRequestException);
@@ -217,7 +217,7 @@ describe('PayoutBatchService', () => {
       mockBatchRepo.findOne.mockResolvedValue({
         id: 'batch-1',
         status: PayoutBatchStatus.REVIEW,
-        payoutFriday: '2026-06-12',
+        payoutDate: '2026-06-08',
       });
       mockApproveTransaction();
       mockLedgerRepo.find.mockResolvedValue([scheduledLine]);
@@ -246,7 +246,7 @@ describe('PayoutBatchService', () => {
       mockBatchRepo.findOne.mockResolvedValue({
         id: 'batch-1',
         status: PayoutBatchStatus.REVIEW,
-        payoutFriday: '2026-06-12',
+        payoutDate: '2026-06-08',
       });
       mockApproveTransaction();
       mockLedgerRepo.find.mockResolvedValue([scheduledLine]);
@@ -262,7 +262,7 @@ describe('PayoutBatchService', () => {
       mockBatchRepo.findOne.mockResolvedValue({
         id: 'batch-1',
         status: PayoutBatchStatus.REVIEW,
-        payoutFriday: '2026-06-12',
+        payoutDate: '2026-06-08',
       });
       mockApproveTransaction();
       mockLedgerRepo.find.mockResolvedValue([scheduledLine]);
@@ -294,7 +294,7 @@ describe('PayoutBatchService', () => {
       mockBatchRepo.findOne.mockResolvedValue({
         id: 'batch-1',
         status: PayoutBatchStatus.REVIEW,
-        payoutFriday: '2026-06-12',
+        payoutDate: '2026-06-08',
       });
       mockApproveTransaction();
       mockLedgerRepo.find.mockResolvedValue([scheduledLine]);
@@ -351,7 +351,7 @@ describe('PayoutBatchService', () => {
 
   describe('buildDraftBatch', () => {
     it('schedules eligible pending ledger lines', async () => {
-      const friday = '2026-06-12';
+      const monday = '2026-06-08';
       const txBatchRepo = {
         findOne: jest.fn().mockResolvedValue(null),
         create: jest.fn((x) => ({ id: 'batch-1', ...x })),
@@ -437,7 +437,7 @@ describe('PayoutBatchService', () => {
       });
       mockBatchRepo.findOne.mockResolvedValue({
         id: 'batch-1',
-        payoutFriday: friday,
+        payoutDate: monday,
         status: PayoutBatchStatus.REVIEW,
         bookingCount: 1,
         welperCount: 1,
@@ -472,7 +472,7 @@ describe('PayoutBatchService', () => {
         },
       ]);
 
-      const result = await service.buildDraftBatch(friday);
+      const result = await service.buildDraftBatch(monday);
 
       expect(result.id).toBe('batch-1');
 
@@ -490,7 +490,7 @@ describe('PayoutBatchService', () => {
       );
     });
 
-    it('rejects non-Friday payout dates', async () => {
+    it('rejects non-Monday payout dates', async () => {
       await expect(service.buildDraftBatch('2026-06-06')).rejects.toBeInstanceOf(BadRequestException);
     });
   });

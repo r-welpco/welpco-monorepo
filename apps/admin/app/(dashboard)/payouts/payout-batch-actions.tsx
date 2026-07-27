@@ -14,11 +14,11 @@ import {
 import { formatAdminMoneyCents } from "@/lib/admin-format";
 
 export function PayoutBuildAction({
-  payoutFriday,
+  payoutDate,
   existingBatchId,
   existingBatchStatus,
 }: {
-  payoutFriday: string;
+  payoutDate: string;
   existingBatchId: string | null;
   existingBatchStatus: string | null;
 }) {
@@ -30,7 +30,7 @@ export function PayoutBuildAction({
     setError(null);
     setLoading(true);
     try {
-      const batch = await buildPayoutBatch(payoutFriday);
+      const batch = await buildPayoutBatch(payoutDate);
       router.push(`/payouts/${batch.id}`);
       router.refresh();
     } catch (e) {

@@ -476,7 +476,7 @@ export function DashboardLive() {
                 href="/payouts"
                 label="Eligible bookings"
                 value={payoutQuery.data.eligiblePendingCount}
-                hint={`For Friday ${payoutQuery.data.payoutFriday}`}
+                hint={`For Monday ${payoutQuery.data.payoutDate}`}
               />
               <QueueCard
                 href="/payouts"

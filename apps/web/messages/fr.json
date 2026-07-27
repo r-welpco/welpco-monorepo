@@ -47,7 +47,7 @@
         "customerGuide": "Guide du Client",
         "welperGuide": "Guide du Welper",
         "welperHandbook": "Manuel du Welper",
-        "weeklyPayouts": "Paiements hebdomadaires (vendredi)",
+        "weeklyPayouts": "Paiements hebdomadaires (lundi)",
         "community": "Communauté",
         "faq": "FAQ",
         "contactUs": "Nous joindre",
@@ -205,7 +205,7 @@
           {
             "n": "03",
             "title": "Recevez votre paiement",
-            "body": "Le Welper confirme que le travail est terminé et soumet l'heure de fin. La facture est envoyée au client et le paiement est prélevé. Welpco transfère les paiements hebdomadaires au compte Stripe du Welper le vendredi de la semaine suivante."
+            "body": "Le Welper confirme que le travail est terminé et soumet l'heure de fin. Le client est facturé, et Welpco transfère les paiements admissibles au compte Stripe du Welper le lundi, après une retenue minimale de 7 jours."
           }
         ]
       },
@@ -297,7 +297,7 @@
           },
           {
             "q": "Comment suis-je payé comme Welper?",
-            "a": "Confirmez « Travail terminé ». Paiement hebdomadaire chaque vendredi de la semaine suivante."
+            "a": "Confirmez « Travail terminé ». Les paiements admissibles sont transférés le lundi, après une retenue minimale de 7 jours."
           },
           {
             "q": "Quand et comment payer un service?",
@@ -413,7 +413,7 @@
           ],
           [
             "Soyez payé, obtenez des évaluations",
-            "Pour recevoir vos paiements, les Welpers doivent créer et connecter un compte Stripe lors de leur inscription. Les paiements sont effectués chaque semaine et versés le vendredi de la semaine suivante. Les clients peuvent soumettre une évaluation une fois le travail terminé."
+            "Pour recevoir leurs paiements, les Welpers doivent créer et connecter un compte Stripe lors de leur inscription. Les paiements admissibles sont transférés le lundi, après une retenue minimale de 7 jours. Les clients peuvent soumettre une évaluation une fois le travail terminé."
           ]
         ],
         "cta": "Créer votre profil Welper",
@@ -463,8 +463,8 @@
               "Comment suis-je payé?",
               [
                 "Une fois le travail terminé, le Welper confirme « Travail terminé » via l'application ou le site web. Un reçu est automatiquement envoyé au client, puis le paiement est finalisé.",
-                "Les Welpers reçoivent leur paiement chaque semaine, le vendredi de la semaine suivante.",
-                "Exemple : Si vous commencez à effectuer des tâches un lundi et continuez toute la semaine, vous serez payé le vendredi de la semaine suivante.",
+                "Les Welpers reçoivent les paiements admissibles chaque semaine, le lundi, après une retenue minimale de 7 jours.",
+                "Exemple : Un paiement libéré le lundi peut être inclus le lundi suivant. Un paiement libéré plus tard dans la semaine est inclus le premier lundi suivant sa retenue de 7 jours.",
                 "Lors de la création de votre profil, vous devrez également configurer votre propre compte Stripe pour recevoir vos paiements hebdomadaires. Une fois votre paiement disponible dans Stripe, vous pouvez transférer vos fonds vers votre compte bancaire sans frais."
               ]
             ],
@@ -2537,7 +2537,7 @@
       "confirmCheckInCancel": "Pas encore",
       "checkInFailed": "Impossible d'enregistrer l'arrivée.",
       "checkInLateHint": "Vous avez oublié d'enregistrer votre arrivée ou votre départ pour un mandat terminé? Pas de problème! Vous pouvez maintenant enregistrer votre arrivée, votre départ et ajuster vos heures après la fin du mandat.",
-      "paymentReleasedPayoutNote": "Les paiements sont traités chaque vendredi de la semaine suivante pour les mandats terminés.",
+      "paymentReleasedPayoutNote": "Les paiements admissibles sont traités le lundi, après une retenue minimale de 7 jours.",
       "receiptDialogTitle": "Confirmer le reçu de service",
       "receiptDialogDescription": "Ajustez l'arrivée et le départ de facturation si nécessaire. Le client est facturé du total affiché lorsque vous confirmez.",
       "receiptBillingIn": "Arrivée (facturation)",

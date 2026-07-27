@@ -3,10 +3,11 @@ import { BaseEntity } from '../../../common/base-entity';
 import { PayoutBatchStatus } from './payout-ledger-status.enum';
 
 @Entity('payout_batches')
-@Index(['payoutFriday'])
+@Index(['payoutDate'])
 export class PayoutBatch extends BaseEntity {
+  // Keep the legacy database column name so the weekday change needs no data migration.
   @Column({ name: 'payout_friday', type: 'date' })
-  payoutFriday!: string;
+  payoutDate!: string;
 
   @Column({ type: 'varchar', length: 32, default: PayoutBatchStatus.REVIEW })
   status!: PayoutBatchStatus;

@@ -24,9 +24,9 @@ Rules:
 - Migrations live in **two kinds of places**: `apps/bff/src/database/migrations/` and `apps/bff/src/domains/<domain>/migrations/`. New files anywhere under those paths are picked up automatically — no registration list to update.
 - New migrations get a timestamp prefix **later than every existing one** (today's date + `000001`-style suffix). See [../operations/migrations.md](../operations/migrations.md).
 
-## Friday active-batch unique index
+## Payout-date active-batch unique index
 
-`payout_batches` has a partial unique index guaranteeing **one active payout batch per Friday**. Current predicate (newest migration, `apps/bff/src/domains/payment/migrations/20260703000001-IncludeApprovedPayoutBatchesInActiveFridayIndex.ts`):
+`payout_batches` has a partial unique index guaranteeing **one active payout batch per payout date**. Future batches use Mondays. The database column and index retain their legacy Friday names to avoid a data migration. Current predicate (newest migration, `apps/bff/src/domains/payment/migrations/20260703000001-IncludeApprovedPayoutBatchesInActiveFridayIndex.ts`):
 
 ```sql
 CREATE UNIQUE INDEX "IDX_payout_batches_active_friday"

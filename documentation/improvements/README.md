@@ -9,6 +9,7 @@ This folder tracks things that must change in the **implementation** (not just t
 |---|---|
 | [ux-trust-adoption-report.md](ux-trust-adoption-report.md) | **2026-07-04 adoption report**: why users aren't onboarding — funnel, trust-surface, and activation diagnosis with a prioritized fix plan. |
 | [welper-shareable-profile-plan.md](welper-shareable-profile-plan.md) | **2026-07-10 product plan**: portfolio-rich public welper profiles, QR digital cards, and the share-as-acquisition strategy (no dev scheduled). |
+| [dual-role-accounts-plan.md](dual-role-accounts-plan.md) | **2026-07-25 plan**: header role switcher (welper ↔ customer) + customer→welper upgrade path, with recommended decisions (proposed, not started). |
 | [implementation-risks.md](implementation-risks.md) | Code, tooling, and process risks found during the audit that need fixing or mitigating — each with evidence and a suggested remediation. |
 | [documentation-cleanup.md](documentation-cleanup.md) | Mapping of every legacy doc to its replacement in `documentation/`, with a staged removal plan — **executed 2026-07-04**. |
 | [backlog/](backlog/README.md) | The live feature-ticket backlog (formerly `features/` at the repo root): 125 tickets across 9 surfaces, sprint groupings, launch-blocker history. |

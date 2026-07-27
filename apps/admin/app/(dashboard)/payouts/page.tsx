@@ -64,7 +64,7 @@ export default async function PayoutsPage() {
   } catch (e) {
     err = e instanceof Error ? e.message : "Failed to load payouts";
     upcoming = {
-      payoutFriday: "—",
+      payoutDate: "—",
       eligiblePendingCount: 0,
       eligibleWelperCount: 0,
       eligibleWelperNetCents: 0,
@@ -82,7 +82,7 @@ export default async function PayoutsPage() {
     <Flex direction="column" gap="4">
       <AdminPageHeader
         title="Payouts"
-        description="Review Friday welper payout batches. Build a batch from eligible ledger lines (7-day hold), verify Connect readiness, then approve Stripe transfers."
+        description="Review Monday welper payout batches. Build a batch from eligible ledger lines (7-day hold), verify Connect readiness, then approve Stripe transfers."
       />
 
       {err ? <AdminErrorCallout message={err} /> : null}
@@ -206,14 +206,14 @@ export default async function PayoutsPage() {
           <Flex justify="between" align="center" wrap="wrap" gap="2">
             <div>
               <Text size="2" color="gray">
-                Upcoming payout Friday (Toronto)
+                Upcoming payout Monday (Toronto)
               </Text>
               <Text size="5" weight="medium" style={{ display: "block" }}>
-                {upcoming.payoutFriday}
+                {upcoming.payoutDate}
               </Text>
             </div>
             <PayoutBuildAction
-              payoutFriday={upcoming.payoutFriday}
+              payoutDate={upcoming.payoutDate}
               existingBatchId={upcoming.existingBatchId}
               existingBatchStatus={upcoming.existingBatchStatus}
             />
@@ -237,7 +237,7 @@ export default async function PayoutsPage() {
         title={
           upcoming.existingBatchStatus === "review"
             ? "Welpers in current batch (review)"
-            : "Eligible welpers (upcoming Friday)"
+            : "Eligible welpers (upcoming Monday)"
         }
         emptyMessage={
           upcoming.existingBatchStatus === "review"
@@ -256,7 +256,7 @@ export default async function PayoutsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableColumnHeaderCell>Payout Friday</TableColumnHeaderCell>
+                <TableColumnHeaderCell>Payout date</TableColumnHeaderCell>
                 <TableColumnHeaderCell>Status</TableColumnHeaderCell>
                 <TableColumnHeaderCell>Bookings</TableColumnHeaderCell>
                 <TableColumnHeaderCell>Welpers</TableColumnHeaderCell>
@@ -268,7 +268,7 @@ export default async function PayoutsPage() {
             <TableBody>
               {batches.map((b) => (
                 <TableRow key={b.id}>
-                  <TableCell>{b.payoutFriday}</TableCell>
+                  <TableCell>{b.payoutDate}</TableCell>
                   <TableCell>
                     <Badge
                       color={

@@ -1,15 +1,15 @@
 # Payment Domain
 
-> Last verified: 2026-07-03 · commit de88bd4 · generated from implementation
+> Last verified: 2026-07-27 · generated from implementation
 
-`apps/bff/src/domains/payment/` — Stripe integration for the whole platform: customer card holds and captures, Stripe Tax, refunds, the welper payout ledger, and Friday payout batches executed as Stripe Connect transfers. All money amounts are integer cents, currency `cad`.
+`apps/bff/src/domains/payment/` — Stripe integration for the whole platform: customer card holds and captures, Stripe Tax, refunds, the welper payout ledger, and Monday payout batches executed as Stripe Connect transfers. All money amounts are integer cents, currency `cad`.
 
 ## Purpose
 
 1. Hold the customer's card when a welper accepts a booking (manual-capture PaymentIntent for one hour of service + tax).
 2. Capture the hold (plus a delta charge if needed) when the welper submits the service receipt.
 3. Once all charges settle, mark the booking `payment_released` and write a `welper_payout_ledger` row.
-4. Every Friday (America/Toronto), admins build, review, approve, and execute a payout batch that transfers each welper's net earnings to their Stripe Connect account.
+4. Every Monday (America/Toronto), admins build, review, approve, and execute a payout batch that transfers each eligible welper's net earnings to their Stripe Connect account.
 5. Handle refunds (via dispute resolutions), Stripe Tax transactions/reversals, and transfer-reversal recovery bookkeeping.
 
 ## Entities (`entities/`)
@@ -18,7 +18,7 @@
 |---|---|---|---|
 | `BookingPayment` (`booking-payment.entity.ts`) | `booking_payments` | `bookingId`, `customerId`, `welperId`, `stripePaymentIntentId` (unique), `amountCents`, `paymentKind`, `capturedAmountCents`, `captureEligibleAt`, `refundedAmountCents`, `stripeFeeCents`, `stripeBalanceTransactionId` | `BookingPaymentRecordStatus`: `pending`, `requires_action`, `authorized`, `captured`, `canceled`, `failed`. `BookingPaymentKind`: `hold` (primary authorization) or `delta_receipt` (extra charge above the hold) |
 | `BookingRefund` (`booking-refund.entity.ts`) | `booking_refunds` | `bookingId`, `resolutionId`, `stripeRefundId` (unique), `stripeChargeId`, `stripePaymentIntentId`, `amountCents`, `taxReversalStatus`, `stripeTaxReversalId` | `status` is a plain varchar mirroring the Stripe refund status |
-| `PayoutBatch` (`payout-batch.entity.ts`) | `payout_batches` | `payoutFriday` (date), totals (`totalWelperNetCents`, `totalPlatformGrossCents`, `totalStripeFeeCents`, `totalCustomerCapturedCents`), `bookingCount`, `welperCount`, `approvedBy`, `approvedAt`, `executedAt`, `executionSummary` (jsonb) | `PayoutBatchStatus`: `review`, **`approved`**, `executing`, `completed`, `partial`, `failed` (see note below) |
+| `PayoutBatch` (`payout-batch.entity.ts`) | `payout_batches` | `payoutDate` (mapped to legacy column `payout_friday`), totals (`totalWelperNetCents`, `totalPlatformGrossCents`, `totalStripeFeeCents`, `totalCustomerCapturedCents`), `bookingCount`, `welperCount`, `approvedBy`, `approvedAt`, `executedAt`, `executionSummary` (jsonb) | `PayoutBatchStatus`: `review`, **`approved`**, `executing`, `completed`, `partial`, `failed` (see note below) |
 | `WelperPayoutLedger` (`welper-payout-ledger.entity.ts`) | `welper_payout_ledger` | One row per booking (`bookingId` unique): `welperId`, `customerId`, `paymentReleasedAt`, customer amounts, `welperGrossCents`, `welperRefundCents`, `welperNetCents`, `platformGrossCents`, `stripeFeeCents`, `exclusionReason`, `payoutBatchId`, `stripeTransferId` | `WelperPayoutLedgerStatus`: `pending`, `scheduled`, `transferred`, `excluded`, `failed` |
 | `PaymentRecoveryTask` (`payment-recovery-task.entity.ts`) | `payment_recovery_tasks` | `bookingId`, `resolutionId` (unique), `stripeTransferId`, `requiredReversalCents`, `recoveredCents`, `stripeDashboardUrl`, `exceptionMessage` | varchar `status`, default `open` |
 | `StripeTransferState` (`stripe-transfer-state.entity.ts`) | `stripe_transfer_states` | `stripeTransferId` (unique), `amountCents`, `amountReversedCents`, `destinationAccountId`, `payoutBatchId`, `welperId`, `lastEventAt` | — |
@@ -27,7 +27,7 @@
 
 Both status enums live in `entities/payout-ledger-status.enum.ts`.
 
-**Note on `PayoutBatchStatus.APPROVED` (working-tree state):** `approved` exists in the enum and is treated as an *active* batch state — `PayoutBatchService.getUpcomingPreview()` and `buildDraftBatch()` include it in their `In([REVIEW, APPROVED, EXECUTING])` queries (a batch in `approved` blocks rebuilding that Friday), and the new migration `20260703000001-IncludeApprovedPayoutBatchesInActiveFridayIndex.ts` recreates the partial unique index `IDX_payout_batches_active_friday` on `payout_friday WHERE status IN ('review','approved','executing')` (previously only `review`/`executing`). However, no code path currently *writes* `approved`: `approveAndExecute()` transitions `review → executing` in one step. The status is reserved/handled for a decoupled approve-then-execute flow (the admin app's `apps/admin/lib/services/admin-payouts-service.ts` already types it).
+**Note on `PayoutBatchStatus.APPROVED`:** `approved` exists in the enum and is treated as an active batch state — `PayoutBatchService.getUpcomingPreview()` and `buildDraftBatch()` include it in their `In([REVIEW, APPROVED, EXECUTING])` queries. The legacy-named partial unique index `IDX_payout_batches_active_friday` on `payout_friday` enforces one active batch per stored payout date. No code path currently writes `approved`: `approveAndExecute()` transitions `review → executing` in one step.
 
 ## Services
 
@@ -46,21 +46,21 @@ Customer-side card lifecycle:
 
 ### `PayoutBatchService` (`payout-batch.service.ts`) — payout batch lifecycle
 
-Timing rules in `payout-eligibility.ts`: timezone `America/Toronto`, `PAYOUT_HOLD_DAYS = 7`. A ledger line is eligible for payout Friday *F* when `paymentReleasedAt` is ≥ 7 Toronto calendar days before *F*. Batches may only be built for the upcoming Friday or earlier (`assertBuildablePayoutFriday`); transfers may only execute on/after the batch's Friday (`isPayoutFridayReached`).
+Timing rules in `payout-eligibility.ts`: timezone `America/Toronto`, `PAYOUT_HOLD_DAYS = 7`. A ledger line is eligible for payout Monday *D* when `paymentReleasedAt` is at least 7 Toronto calendar days before *D*. New batches may only be built for the upcoming Monday or an earlier Monday (`assertBuildablePayoutDate`). Transfers may execute on or after the stored date (`isPayoutDateReached`), including historical Friday batches created before the weekday change.
 
 End-to-end lifecycle as implemented now:
 
 1. **Ledger accrual** — `WelperPayoutLedgerService.upsertLedgerForReleasedBooking()` writes a `pending` ledger row when a booking reaches `payment_released`. Split (from `booking/booking-pricing.ts`): customer pays welper rate × 1.25; `welperGrossCents = subtotal / 1.25`, `platformGrossCents = subtotal − welperGross`. Rows are `excluded` with reason `stripe_fee_pending` / `stripe_tax_pending` until Stripe fee + tax transaction are synced, or `fully_refunded` when net ≤ 0.
-2. **Preview** — `getUpcomingPreview()`: upcoming Friday, eligible pending lines, per-welper rollups (`PayoutWelperRollupDto` with Connect readiness), or the existing active batch (`review`/`approved`/`executing`).
-3. **Build** — `buildDraftBatch(payoutFriday?)` (transactional): resets retryable `failed` lines to `pending`; if an active batch exists for that Friday it must be in `review` (its `scheduled` lines are released and the batch deleted) — a batch in `approved`/`executing` throws "already {status} and cannot be rebuilt". Eligible lines (status `pending`/`failed`, no transfer id, net > 0, 7-day hold met, booking in `payment_released`/`completed` and not `disputed`) are locked, marked `scheduled`, and attached to a new `review` batch with computed totals (`payout-batch-totals.util.ts`). The partial unique index `IDX_payout_batches_active_friday` guarantees at most one active batch per Friday.
+2. **Preview** — `getUpcomingPreview()`: upcoming Monday, eligible pending lines, per-welper rollups (`PayoutWelperRollupDto` with Connect readiness), or the existing active batch (`review`/`approved`/`executing`).
+3. **Build** — `buildDraftBatch(payoutDate?)` (transactional): resets retryable `failed` lines to `pending`; if an active batch exists for that date it must be in `review` (its `scheduled` lines are released and the batch deleted) — a batch in `approved`/`executing` throws "already {status} and cannot be rebuilt". Eligible lines (status `pending`/`failed`, no transfer id, net > 0, 7-day hold met, booking in `payment_released`/`completed` and not `disputed`) are locked, marked `scheduled`, and attached to a new `review` batch with computed totals (`payout-batch-totals.util.ts`). The legacy-named partial unique index `IDX_payout_batches_active_friday` guarantees at most one active batch per payout date.
 4. **Review** — `getBatchReview(batchId, { liveConnectCheck })` returns summary + per-welper rollups; with `liveConnectCheck` it queries Stripe Connect status per welper (batched 5 at a time). `exportBatchCsv()` produces the finance CSV.
 5. **Approve + execute** — `approveAndExecute(batchId, adminUserId)` (admin endpoint `POST /api/admin/payouts/batches/:id/approve`):
-   - Preconditions: Stripe configured; batch status `review`; payout Friday reached (Toronto); every welper with net > 0 is Connect-ready (live check).
+   - Preconditions: Stripe configured; batch status `review`; stored payout date reached (Toronto); every welper with net > 0 is Connect-ready (live check).
    - Transactionally locks the batch and its `scheduled` lines, re-validates each line (net > 0, no existing transfer, 7-day hold, booking not disputed/missing), then sets `status = executing`, `approvedBy`, `approvedAt`.
-   - Groups lines per welper and calls `transferWelperLinesAtomically()`: inside a transaction it locks bookings + ledger lines in deterministic order (the dispute-creation path locks the same rows in the same order, so exactly one side crosses the payout boundary), re-checks state, then creates one `stripe.transfers.create` per welper (idempotency key from `payout-idempotency.util.ts`, `transfer_group = batchId`, metadata `batchId`/`welperId`/`payoutFriday`; E2E accounts get a fake `e2e_tr_*` id in non-production). Lines become `transferred` with the transfer id before commit. Failures mark that welper's lines `failed`.
+   - Groups lines per welper and calls `transferWelperLinesAtomically()`: inside a transaction it locks bookings + ledger lines in deterministic order (the dispute-creation path locks the same rows in the same order, so exactly one side crosses the payout boundary), re-checks state, then creates one `stripe.transfers.create` per welper (idempotency key from `payout-idempotency.util.ts`, `transfer_group = batchId`, metadata `batchId`/`welperId`/`payoutDate`; E2E accounts get a fake `e2e_tr_*` id in non-production). Lines become `transferred` with the transfer id before commit. Failures mark that welper's lines `failed`.
    - Final batch status: `completed` (no failures), `partial` (mixed), `failed` (all failed); `executedAt` + `executionSummary.transfers` recorded.
 6. **Webhook reconciliation** — `handleTransferWebhook` (`transfer.created`) syncs `StripeTransferState` and marks any missed lines `transferred`; `handleTransferReversed` logs and syncs reversal amounts.
-7. **Retry** — rebuilding a Friday resets `failed` (transfer-less) lines to `pending`; `refreshPendingStripeFees()` re-checks `stripe_fee_pending` exclusions.
+7. **Retry** — building the next Monday batch resets `failed` (transfer-less) lines to `pending`; `refreshPendingStripeFees()` re-checks `stripe_fee_pending` exclusions.
 
 ### `WelperPayoutLedgerService` (`welper-payout-ledger.service.ts`)
 
@@ -101,10 +101,10 @@ Admin payout endpoints live in `apps/bff/src/domains/user-management/admin/admin
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/admin/payouts/upcoming` | Preview upcoming Friday batch |
-| GET | `/admin/payouts/batches` | List batches (`limit`, `payoutFriday`) |
+| GET | `/admin/payouts/upcoming` | Preview upcoming Monday batch |
+| GET | `/admin/payouts/batches` | List batches (`limit`, `payoutDate`) |
 | GET | `/admin/payouts/batches/:id` | Full review payload (live Connect check) |
-| POST | `/admin/payouts/batches/build` | Build/rebuild draft batch for a Friday |
+| POST | `/admin/payouts/batches/build` | Build/rebuild draft batch for a Monday |
 | POST | `/admin/payouts/batches/:id/approve` | Approve + execute transfers (`approveAndExecute`) |
 | GET | `/admin/payouts/batches/:id/export` | CSV export |
 | POST | `/admin/payouts/refresh-pending-fees` | Retry `stripe_fee_pending` exclusions |
@@ -135,7 +135,7 @@ Payout batches are **not** cron-driven; they are admin-triggered.
 | `20260602000001-AddPayoutBatchActiveFridayIndex.ts` | Partial unique index `IDX_payout_batches_active_friday` on `payout_friday WHERE status IN ('review','executing')` |
 | `20260609000001-FixPayoutLedgerFeeNullabilityAndBackfill.ts` | `stripe_fee_cents` nullability fix + backfill |
 | `20260614000001-StripeLedPaymentOperations.ts` | `booking_refunds`, `payment_recovery_tasks`, `stripe_transfer_states`, resolution workflow columns |
-| `20260703000001-IncludeApprovedPayoutBatchesInActiveFridayIndex.ts` | **New** — recreates the active-Friday unique index to also cover `'approved'` |
+| `20260703000001-IncludeApprovedPayoutBatchesInActiveFridayIndex.ts` | Recreates the legacy-named active-date unique index to also cover `'approved'` |
 | `20260722000002-ThreeDayCardAuthorization.ts` | IANA timezone, authorization expiry/risk evidence, cancellation source/fee, and payment capture metadata |
 
 Related cross-domain migration: `src/database/migrations/20260413120001-AddBookingPaymentRefundColumns.ts` (refund columns on `booking_payments`).

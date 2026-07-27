@@ -10,10 +10,10 @@ import { WelperPayoutLedgerService } from './welper-payout-ledger.service';
 import { StripeConnectService } from './stripe-connect.service';
 import { createStripeClient } from './stripe-client';
 import {
-  assertBuildablePayoutFriday,
-  getUpcomingPayoutFriday,
-  isEligibleForPayoutFriday,
-  isPayoutFridayReached,
+  assertBuildablePayoutDate,
+  getUpcomingPayoutDate,
+  isEligibleForPayoutDate,
+  isPayoutDateReached,
 } from './payout-eligibility';
 import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
 import { UserAccount } from '../user-management/entities/user-account.entity';
@@ -63,7 +63,7 @@ export type PayoutWelperRollupDto = {
 
 export type PayoutBatchSummaryDto = {
   id: string;
-  payoutFriday: string;
+  payoutDate: string;
   status: PayoutBatchStatus;
   bookingCount: number;
   welperCount: number;
@@ -83,7 +83,7 @@ export type PayoutBatchReviewDto = PayoutBatchSummaryDto & {
 };
 
 export type PayoutUpcomingPreviewDto = {
-  payoutFriday: string;
+  payoutDate: string;
   eligiblePendingCount: number;
   eligibleWelperCount: number;
   eligibleWelperNetCents: number;
@@ -127,10 +127,10 @@ export class PayoutBatchService {
   }
 
   async getUpcomingPreview(): Promise<PayoutUpcomingPreviewDto> {
-    const payoutFriday = getUpcomingPayoutFriday();
+    const payoutDate = getUpcomingPayoutDate();
     const existing = await this.batchRepo.findOne({
       where: {
-        payoutFriday,
+        payoutDate,
         status: In([PayoutBatchStatus.REVIEW, PayoutBatchStatus.APPROVED, PayoutBatchStatus.EXECUTING]),
       },
       order: { createdAt: 'DESC' },
@@ -139,7 +139,7 @@ export class PayoutBatchService {
     if (existing?.status === PayoutBatchStatus.REVIEW) {
       const review = await this.getBatchReview(existing.id);
       return {
-        payoutFriday,
+        payoutDate,
         eligiblePendingCount: review.bookingCount,
         eligibleWelperCount: review.welperCount,
         eligibleWelperNetCents: review.totalWelperNetCents,
@@ -149,12 +149,12 @@ export class PayoutBatchService {
       };
     }
 
-    const eligible = await this.findEligiblePendingLines(payoutFriday);
+    const eligible = await this.findEligiblePendingLines(payoutDate);
     const welperIds = new Set(eligible.map((l) => l.welperId));
     const welpers = await this.rollupWelpersFromLedgerLines(eligible, false);
 
     return {
-      payoutFriday,
+      payoutDate,
       eligiblePendingCount: eligible.length,
       eligibleWelperCount: welperIds.size,
       eligibleWelperNetCents: eligible.reduce((s, l) => s + l.welperNetCents, 0),
@@ -165,7 +165,7 @@ export class PayoutBatchService {
   }
 
   private async findEligiblePendingLines(
-    payoutFriday: string,
+    payoutDate: string,
     manager?: EntityManager,
   ): Promise<WelperPayoutLedger[]> {
     const ledgerRepo = manager ? manager.getRepository(WelperPayoutLedger) : this.ledgerRepo;
@@ -191,7 +191,7 @@ export class PayoutBatchService {
       (line) =>
         line.welperNetCents > 0 &&
         line.exclusionReason !== 'stripe_fee_pending' &&
-        isEligibleForPayoutFriday(line.paymentReleasedAt, payoutFriday),
+        isEligibleForPayoutDate(line.paymentReleasedAt, payoutDate),
     );
     if (candidateLines.length === 0) return [];
 
@@ -234,10 +234,10 @@ export class PayoutBatchService {
     );
   }
 
-  async buildDraftBatch(payoutFriday?: string): Promise<PayoutBatchReviewDto> {
-    const friday = payoutFriday ?? getUpcomingPayoutFriday();
+  async buildDraftBatch(payoutDate?: string): Promise<PayoutBatchReviewDto> {
+    const date = payoutDate ?? getUpcomingPayoutDate();
     try {
-      assertBuildablePayoutFriday(friday);
+      assertBuildablePayoutDate(date);
     } catch (err) {
       throw new BadRequestException((err as Error).message);
     }
@@ -254,7 +254,7 @@ export class PayoutBatchService {
 
       const existing = await batchRepo.findOne({
         where: {
-          payoutFriday: friday,
+          payoutDate: date,
           status: In([PayoutBatchStatus.REVIEW, PayoutBatchStatus.APPROVED, PayoutBatchStatus.EXECUTING]),
         },
         lock: { mode: 'pessimistic_write' },
@@ -262,7 +262,7 @@ export class PayoutBatchService {
 
       if (existing) {
         if (existing.status !== PayoutBatchStatus.REVIEW) {
-          throw new BadRequestException(`A batch for ${friday} is already ${existing.status} and cannot be rebuilt`);
+          throw new BadRequestException(`A batch for ${date} is already ${existing.status} and cannot be rebuilt`);
         }
         await ledgerRepo.update(
           {
@@ -274,11 +274,11 @@ export class PayoutBatchService {
         await batchRepo.remove(existing);
       }
 
-      const eligible = await this.findEligiblePendingLines(friday, manager);
+      const eligible = await this.findEligiblePendingLines(date, manager);
 
       const totals = computeTotalsFromLines(eligible);
       const batch = batchRepo.create({
-        payoutFriday: friday,
+        payoutDate: date,
         status: PayoutBatchStatus.REVIEW,
         ...totals,
       });
@@ -296,17 +296,17 @@ export class PayoutBatchService {
     return this.getBatchReview(batchId);
   }
 
-  async listBatchSummaries(limit = 20, payoutFriday?: string): Promise<PayoutBatchSummaryDto[]> {
+  async listBatchSummaries(limit = 20, payoutDate?: string): Promise<PayoutBatchSummaryDto[]> {
     const rows = await this.batchRepo.find({
-      where: payoutFriday ? { payoutFriday } : {},
-      order: { payoutFriday: 'DESC' },
+      where: payoutDate ? { payoutDate } : {},
+      order: { payoutDate: 'DESC' },
       take: Math.min(limit, 100),
     });
     return rows.map((batch) => this.toBatchSummaryDto(batch));
   }
 
-  async listBatches(limit = 20, payoutFriday?: string): Promise<PayoutBatchSummaryDto[]> {
-    return this.listBatchSummaries(limit, payoutFriday);
+  async listBatches(limit = 20, payoutDate?: string): Promise<PayoutBatchSummaryDto[]> {
+    return this.listBatchSummaries(limit, payoutDate);
   }
 
   async refreshPendingStripeFees() {
@@ -316,7 +316,7 @@ export class PayoutBatchService {
   private toBatchSummaryDto(batch: PayoutBatch): PayoutBatchSummaryDto {
     return {
       id: batch.id,
-      payoutFriday: batch.payoutFriday,
+      payoutDate: batch.payoutDate,
       status: batch.status,
       bookingCount: batch.bookingCount,
       welperCount: batch.welperCount,
@@ -462,9 +462,9 @@ export class PayoutBatchService {
     if (batch.status !== PayoutBatchStatus.REVIEW) {
       throw new BadRequestException(`Batch is ${batch.status}; only review batches can be approved`);
     }
-    if (!isPayoutFridayReached(batch.payoutFriday)) {
+    if (!isPayoutDateReached(batch.payoutDate)) {
       throw new BadRequestException(
-        `Transfers are only allowed on or after payout Friday (${batch.payoutFriday}, America/Toronto)`,
+        `Transfers are only allowed on or after the payout date (${batch.payoutDate}, America/Toronto)`,
       );
     }
 
@@ -504,9 +504,9 @@ export class PayoutBatchService {
         if (line.stripeTransferId) {
           throw new BadRequestException(`Ledger line ${line.id} already has a Stripe transfer`);
         }
-        if (!isEligibleForPayoutFriday(line.paymentReleasedAt, lockedBatch.payoutFriday)) {
+        if (!isEligibleForPayoutDate(line.paymentReleasedAt, lockedBatch.payoutDate)) {
           throw new BadRequestException(
-            `Booking ${line.bookingId} has not met the 7-day hold for ${lockedBatch.payoutFriday}`,
+            `Booking ${line.bookingId} has not met the 7-day hold for ${lockedBatch.payoutDate}`,
           );
         }
         const booking = await bookingRepo.findOne({
@@ -681,7 +681,7 @@ export class PayoutBatchService {
                   metadata: {
                     batchId: batch.id,
                     welperId,
-                    payoutFriday: batch.payoutFriday,
+                    payoutDate: batch.payoutDate,
                   },
                 },
                 { idempotencyKey },

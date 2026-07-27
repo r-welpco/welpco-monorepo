@@ -47,7 +47,7 @@
         "customerGuide": "Customer guide",
         "welperGuide": "Welper guide",
         "welperHandbook": "Welper handbook",
-        "weeklyPayouts": "Weekly payouts (Friday)",
+        "weeklyPayouts": "Weekly payouts (Monday)",
         "community": "Community",
         "faq": "FAQ",
         "contactUs": "Contact us",
@@ -205,7 +205,7 @@
           {
             "n": "03",
             "title": "Get paid",
-            "body": "Welper confirms job is complete and submits end time. Invoice is sent to the customer and payment is taken. Welpco transfers weekly payouts to Welper's Stripe account the following week on the Friday."
+            "body": "The Welper confirms the job is complete and submits the end time. The customer is charged, and Welpco transfers eligible payouts to the Welper's Stripe account on Mondays after a minimum 7-day hold."
           }
         ]
       },
@@ -297,7 +297,7 @@
           },
           {
             "q": "How do I get paid as a Welper?",
-            "a": "Confirm \"Job Done\" when the work is finished. Customers are charged, and Welpers receive weekly payouts every Friday of the following week."
+            "a": "Confirm \"Job Done\" when the work is finished. Customers are charged, and eligible Welper payouts are transferred on Mondays after a minimum 7-day hold."
           },
           {
             "q": "When and how do I pay for a service?",
@@ -413,7 +413,7 @@
           ],
           [
             "Get paid, get reviewed",
-            "To receive payments, Welpers must create and connect a Stripe account during registration. Payments are issued weekly and sent on the Friday of the following week. Customers can submit a review once the job has been completed."
+            "To receive payments, Welpers must create and connect a Stripe account during registration. Eligible payments are transferred on Mondays after a minimum 7-day hold. Customers can submit a review once the job has been completed."
           ]
         ],
         "cta": "Start your Welper profile",
@@ -463,8 +463,8 @@
               "How do I get paid?",
               [
                 "Once the job is completed, the Welper will confirm \"Job Done\" through the app or website. A receipt will automatically be sent to the customer, and the payment process will then be finalized.",
-                "Welpers receive their payouts on a weekly basis, every Friday of the following week.",
-                "Example: If you begin completing jobs on Monday and continue working throughout that week, you will receive payment on the Friday of the following week, and so on.",
+                "Welpers receive eligible payouts weekly on Mondays, after each payment has completed a minimum 7-day hold.",
+                "Example: A payment released on Monday can be included the next Monday. A payment released later in the week is included on the first Monday after its 7-day hold.",
                 "When creating your profile, you will also need to set up your own Stripe account in order to receive your weekly payouts.",
                 "Once your payout becomes available in your Stripe account, you can manually transfer your funds to your bank account at no cost."
               ]
@@ -2538,7 +2538,7 @@
       "confirmCheckInCancel": "Not yet",
       "checkInFailed": "Failed to check in.",
       "checkInLateHint": "Forgot to check in or check out on a completed job? No problem! You can now check in, check out, and adjust your hours after the job has been completed.",
-      "paymentReleasedPayoutNote": "Payouts will be processed every Friday of the following week for completed jobs.",
+      "paymentReleasedPayoutNote": "Eligible payouts are processed on Mondays after a minimum 7-day hold.",
       "receiptDialogTitle": "Confirm service receipt",
       "receiptDialogDescription": "Adjust billing check-in and check-out if needed. The customer is charged the total shown when you confirm.",
       "receiptBillingIn": "Billing check-in",

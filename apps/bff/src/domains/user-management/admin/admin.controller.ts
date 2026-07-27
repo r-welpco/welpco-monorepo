@@ -763,7 +763,7 @@ export class AdminController {
   }
 
   @Get('payouts/upcoming')
-  @ApiOperation({ summary: 'Preview upcoming Friday welper payout batch' })
+  @ApiOperation({ summary: 'Preview upcoming Monday welper payout batch' })
   async getPayoutUpcoming() {
     return this.payoutBatchService.getUpcomingPreview();
   }
@@ -802,16 +802,16 @@ export class AdminController {
   @Get('payouts/batches')
   @ApiOperation({ summary: 'List welper payout batches' })
   @ApiQuery({
-    name: 'payoutFriday',
+    name: 'payoutDate',
     required: false,
     description: 'YYYY-MM-DD (Toronto)',
   })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async listPayoutBatches(
-    @Query('payoutFriday') payoutFriday?: string,
+    @Query('payoutDate') payoutDate?: string,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
-    const batches = await this.payoutBatchService.listBatches(limit, payoutFriday?.trim() || undefined);
+    const batches = await this.payoutBatchService.listBatches(limit, payoutDate?.trim() || undefined);
     return { data: batches };
   }
 
@@ -824,12 +824,12 @@ export class AdminController {
 
   @Post('payouts/batches/build')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Build or refresh draft payout batch for a Friday' })
-  async buildPayoutBatch(@CurrentUser() actor: CurrentUserData, @Body('payoutFriday') payoutFriday?: string) {
-    const batch = await this.payoutBatchService.buildDraftBatch(payoutFriday?.trim() || undefined);
+  @ApiOperation({ summary: 'Build or refresh draft payout batch for a Monday' })
+  async buildPayoutBatch(@CurrentUser() actor: CurrentUserData, @Body('payoutDate') payoutDate?: string) {
+    const batch = await this.payoutBatchService.buildDraftBatch(payoutDate?.trim() || undefined);
     await this.adminAuditService.record(actor.userId, 'admin.payout_batch.build', {
       batchId: batch.id,
-      payoutFriday: batch.payoutFriday,
+      payoutDate: batch.payoutDate,
       bookingCount: batch.bookingCount,
       welperCount: batch.welperCount,
       totalWelperNetCents: batch.totalWelperNetCents,
@@ -869,7 +869,7 @@ export class AdminController {
     const batch = await this.payoutBatchService.approveAndExecute(id, actor.userId);
     await this.adminAuditService.record(actor.userId, 'admin.payout_batch.approve', {
       batchId: batch.id,
-      payoutFriday: batch.payoutFriday,
+      payoutDate: batch.payoutDate,
       status: batch.status,
       totalWelperNetCents: batch.totalWelperNetCents,
       welperCount: batch.welperCount,

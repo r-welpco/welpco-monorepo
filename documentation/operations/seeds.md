@@ -46,7 +46,7 @@ The `README-SEARCH-DEMO.md` and `README-SERVICE-QUESTIONS.md` files in `apps/bff
 
 ## Payout test bookings (`seed:payout-test-bookings`)
 
-Dev-DB-only (refuses production-like). Creates `welper_50@welpco.com` / `customer_50@welpco.com` and 5 completed, `payment_released` bookings on the last 5 Saturdays (Toronto), with service receipts (13% tax), fake Stripe payment ids, and `welper_payout_ledger` rows — i.e. everything the admin Payouts screen needs to build a Friday batch. Use after the main seed.
+Dev-DB-only (refuses production-like). Creates `welper_50@welpco.com` / `customer_50@welpco.com` and 5 completed, `payment_released` bookings on the last 5 Saturdays (Toronto), with service receipts (13% tax), fake Stripe payment ids, and `welper_payout_ledger` rows — i.e. everything the admin Payouts screen needs to build a Monday batch. Use after the main seed.
 
 ## Service selection questions (`seed:service-questions`)
 
