@@ -1,7 +1,7 @@
 /** Payout scheduling uses America/Toronto (Welpco primary market). */
 export const PAYOUT_TIMEZONE = 'America/Toronto';
 
-export const PAYOUT_HOLD_DAYS = 7;
+export const PAYOUT_HOLD_HOURS = 48;
 
 /** Format a Date as YYYY-MM-DD in the payout timezone. */
 export function formatDateInPayoutTz(date: Date): string {
@@ -49,19 +49,12 @@ export function getUpcomingPayoutDate(from: Date = new Date()): string {
   return formatDateInPayoutTz(from);
 }
 
-/**
- * Ledger row is eligible on payout date D when payment was released at least
- * PAYOUT_HOLD_DAYS before D (Toronto calendar day).
- */
-export function isEligibleForPayoutDate(
+/** A ledger row becomes eligible after 48 complete elapsed hours. */
+export function isEligibleForPayout(
   paymentReleasedAt: Date,
-  payoutDateIso: string,
+  asOf: Date = new Date(),
 ): boolean {
-  const releasedDay = parsePayoutDate(formatDateInPayoutTz(paymentReleasedAt));
-  const payoutDay = parsePayoutDate(payoutDateIso);
-  const msPerDay = 24 * 60 * 60 * 1000;
-  const daysBetween = Math.floor((payoutDay.getTime() - releasedDay.getTime()) / msPerDay);
-  return daysBetween >= PAYOUT_HOLD_DAYS;
+  return asOf.getTime() - paymentReleasedAt.getTime() >= PAYOUT_HOLD_HOURS * 60 * 60 * 1000;
 }
 
 function assertValidPayoutDateFormat(iso: string): void {

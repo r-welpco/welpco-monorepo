@@ -11,8 +11,9 @@ import { StripeConnectService } from './stripe-connect.service';
 import { createStripeClient } from './stripe-client';
 import {
   assertBuildablePayoutDate,
+  formatDateInPayoutTz,
   getUpcomingPayoutDate,
-  isEligibleForPayoutDate,
+  isEligibleForPayout,
   isPayoutDateReached,
 } from './payout-eligibility';
 import { WelperProfile } from '../profile-management/entities/welper-profile.entity';
@@ -191,7 +192,8 @@ export class PayoutBatchService {
       (line) =>
         line.welperNetCents > 0 &&
         line.exclusionReason !== 'stripe_fee_pending' &&
-        isEligibleForPayoutDate(line.paymentReleasedAt, payoutDate),
+        formatDateInPayoutTz(line.paymentReleasedAt) <= payoutDate &&
+        isEligibleForPayout(line.paymentReleasedAt),
     );
     if (candidateLines.length === 0) return [];
 
@@ -504,9 +506,12 @@ export class PayoutBatchService {
         if (line.stripeTransferId) {
           throw new BadRequestException(`Ledger line ${line.id} already has a Stripe transfer`);
         }
-        if (!isEligibleForPayoutDate(line.paymentReleasedAt, lockedBatch.payoutDate)) {
+        if (
+          formatDateInPayoutTz(line.paymentReleasedAt) > lockedBatch.payoutDate ||
+          !isEligibleForPayout(line.paymentReleasedAt)
+        ) {
           throw new BadRequestException(
-            `Booking ${line.bookingId} has not met the 7-day hold for ${lockedBatch.payoutDate}`,
+            `Booking ${line.bookingId} has not met the 48-hour hold for ${lockedBatch.payoutDate}`,
           );
         }
         const booking = await bookingRepo.findOne({

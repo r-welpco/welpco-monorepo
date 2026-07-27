@@ -11,7 +11,7 @@ Key code:
 | Batch lifecycle, transfers | `apps/bff/src/domains/payment/payout-batch.service.ts` |
 | Ledger creation/exclusions | `apps/bff/src/domains/payment/welper-payout-ledger.service.ts` |
 | Refund sync, recoveries, Stripe Tax | `apps/bff/src/domains/payment/stripe-operations.service.ts` |
-| Eligibility rules (Monday, 7-day hold) | `apps/bff/src/domains/payment/payout-eligibility.ts` |
+| Eligibility rules (Monday, 48-hour hold) | `apps/bff/src/domains/payment/payout-eligibility.ts` |
 | Admin endpoints | `apps/bff/src/domains/user-management/admin/admin.controller.ts` |
 | Stripe webhooks | `apps/bff/src/domains/payment/stripe-webhook.controller.ts` |
 | Statuses | `apps/bff/src/domains/payment/entities/payout-ledger-status.enum.ts` |
@@ -39,7 +39,7 @@ Key code:
 2. **`POST /api/admin/payouts/batches/build`** → `PayoutBatchService.buildDraftBatch(payoutDate)`:
    - Resets retryable `failed` lines (no `stripe_transfer_id`) back to `pending`.
    - If a `review` batch already exists for that payout date it is deleted and rebuilt (its `scheduled` lines return to `pending` first). If the existing batch is `approved` or `executing`, the build is rejected (`400: already <status> and cannot be rebuilt`).
-   - Selects eligible lines (`pending`/`failed`, no transfer id, `welper_net_cents > 0`, not `stripe_fee_pending`, booking is `payment_released`/`completed` and not `disputed`, and payment released ≥ 7 days before the payout Monday — `PAYOUT_HOLD_DAYS = 7`, timezone `America/Toronto`).
+   - Selects eligible lines (`pending`/`failed`, no transfer id, `welper_net_cents > 0`, not `stripe_fee_pending`, booking is `payment_released`/`completed` and not `disputed`, and payment released for at least 48 elapsed hours — `PAYOUT_HOLD_HOURS = 48`).
    - Creates the batch as `review`; lines become `scheduled`.
    - Only the upcoming Monday or a past Monday may be built (`assertBuildablePayoutDate`).
 3. **`POST /api/admin/payouts/batches/:id/approve`** → `PayoutBatchService.approveAndExecute(batchId, adminUserId)`:
@@ -127,7 +127,7 @@ Tables: `payout_batches`, `welper_payout_ledger`, `stripe_transfer_states`, `pay
 | Batch stuck in `review`, approve returns 400 | Has its payout date been reached in Toronto? Connect-not-ready welpers? `GET /payouts/batches/:id` shows `connectReady` per welper — have the welper finish Stripe onboarding, or rebuild after resolving blockers. |
 | Batch stuck in `executing` | The process died mid-loop (approve is synchronous; `executing` is normally seconds). Check `execution_summary` (null = crash before finish). Then: `SELECT status, stripe_transfer_id FROM welper_payout_ledger WHERE payout_batch_id = '<id>';` — cross-check each transfer id in Stripe Dashboard (search `transfer_group = <batch id>`). Lines `transferred` are done; `scheduled` lines with no transfer id were never sent and are safe to move forward manually only after confirming no transfer exists in Stripe for that welper/batch. There is no automatic recovery from a crashed `executing` batch — escalate to engineering. |
 | Batch `partial` / `failed` | Read `execution_summary.transfers[]` error strings. Failed lines (`status='failed'`, no transfer id) auto-return to the next build. `missing_connect_account` ⇒ welper lost their Connect account between review and execute. Do **not** rebuild the same payout date — a terminal batch can't be rebuilt into; the lines flow to the next Monday. |
-| Expected booking missing from preview | `SELECT status, exclusion_reason FROM welper_payout_ledger WHERE booking_id = '...';` — `stripe_fee_pending` → refresh fees; `stripe_tax_pending` → retry tax; `dispute_open` → resolve dispute; `fully_refunded` → nothing owed; no row at all → booking never reached `payment_released` or has no service receipt (see `createLedgerForPaymentReleased` warning log). Also verify the 7-day hold: `payment_released_at` must be ≥ 7 days before the payout Monday. |
+| Expected booking missing from preview | `SELECT status, exclusion_reason FROM welper_payout_ledger WHERE booking_id = '...';` — `stripe_fee_pending` → refresh fees; `stripe_tax_pending` → retry tax; `dispute_open` → resolve dispute; `fully_refunded` → nothing owed; no row at all → booking never reached `payment_released` or has no service receipt (see `createLedgerForPaymentReleased` warning log). Also verify that at least 48 elapsed hours have passed since `payment_released_at`. |
 | Transfer exists in Stripe but line not `transferred` | Webhook gap. `POST /payouts/recoveries/:transferId/refresh` syncs the transfer state; `transfer.created` webhook marks lines. Check `processed_webhook_events` and Stripe webhook delivery logs. |
 | Transfer reversed | Check `GET /payouts/recoveries`; reversals apply to open recovery tasks automatically via webhook. A reversal without a recovery task is a manual finance decision — never re-run the batch. |
 | Duplicate active batch error on build | The legacy-named unique index (`IDX_payout_batches_active_friday`) fired: a `review`/`approved`/`executing` batch already exists for that payout date. `SELECT id, status FROM payout_batches WHERE payout_friday = '...';` |

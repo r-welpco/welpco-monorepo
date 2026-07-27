@@ -84,7 +84,7 @@ describe('PayoutBatchService', () => {
     transaction: jest.fn(),
   };
 
-  function mockApproveTransaction(lines = [scheduledLine]) {
+  function mockApproveTransaction(lines = [scheduledLine], payoutDate = '2026-06-08') {
     mockDataSource.transaction.mockImplementation(async (fn) =>
       fn({
         getRepository: jest.fn((entity) => {
@@ -93,7 +93,7 @@ describe('PayoutBatchService', () => {
               findOne: jest.fn().mockResolvedValue({
                 id: 'batch-1',
                 status: PayoutBatchStatus.REVIEW,
-                payoutDate: '2026-06-08',
+                payoutDate,
               }),
               save: jest.fn(async (x) => x),
             };
@@ -206,10 +206,28 @@ describe('PayoutBatchService', () => {
       mockBatchRepo.findOne.mockResolvedValue({
         id: 'batch-1',
         status: PayoutBatchStatus.REVIEW,
-        payoutDate: '2026-06-08',
+        payoutDate: payoutEligibility.getUpcomingPayoutDate(),
       });
 
       await expect(service.approveAndExecute('batch-1', 'admin-1')).rejects.toBeInstanceOf(BadRequestException);
+      expect(transfersCreate).not.toHaveBeenCalled();
+    });
+
+    it('rejects a payout line before the 48-hour hold has elapsed', async () => {
+      const payoutDate = payoutEligibility.getUpcomingPayoutDate();
+      const recentLine = {
+        ...scheduledLine,
+        paymentReleasedAt: new Date(Date.now() - 47 * 60 * 60 * 1000),
+      };
+      mockBatchRepo.findOne.mockResolvedValue({
+        id: 'batch-1',
+        status: PayoutBatchStatus.REVIEW,
+        payoutDate,
+      });
+      mockApproveTransaction([recentLine], payoutDate);
+      mockLedgerRepo.find.mockResolvedValue([recentLine]);
+
+      await expect(service.approveAndExecute('batch-1', 'admin-1')).rejects.toThrow(/48-hour hold/);
       expect(transfersCreate).not.toHaveBeenCalled();
     });
 

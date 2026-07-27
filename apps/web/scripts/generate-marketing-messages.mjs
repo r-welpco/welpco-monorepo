@@ -188,7 +188,7 @@ const en = {
           {
             n: "03",
             title: "Get paid",
-            body: "The Welper confirms the job is complete and submits the end time. The customer is charged, and Welpco transfers eligible payouts to the Welper's Stripe account on Mondays after a minimum 7-day hold.",
+            body: "The Welper confirms the job is complete and submits the end time. The customer is charged, and Welpco transfers eligible payouts to the Welper's Stripe account on Mondays after payment has been released for at least 48 hours.",
           },
         ],
       },
@@ -236,7 +236,7 @@ const en = {
         points: [
           "Pick the services that match your skills",
           "Set your own rates and weekly availability",
-          "Receive eligible payouts on Mondays after a minimum 7-day hold",
+          "Receive eligible payouts on Mondays after payment has been released for at least 48 hours",
           "Build a profile, ratings, and a regular client base",
         ],
         ctaPrimary: "Become a Welper",
@@ -261,7 +261,7 @@ const en = {
           },
           {
             q: "How do I get paid as a Welper?",
-            a: "Confirm \"Job Done\" when the work is finished. Customers are charged, and eligible Welper payouts are transferred on Mondays after a minimum 7-day hold.",
+            a: "Confirm \"Job Done\" when the work is finished. Customers are charged, and eligible Welper payouts are transferred on Mondays after payment has been released for at least 48 hours.",
           },
           {
             q: "When and how do I pay for a service?",
@@ -371,7 +371,7 @@ const en = {
           ["Accept your first booking", "Browse incoming requests, accept what fits, and meet your first neighbor."],
           [
             "Get paid, get reviewed",
-            "Eligible payments are transferred on Mondays after a minimum 7-day hold. Reviews are submitted by the customer when the job is complete.",
+            "Eligible payments are transferred on Mondays after payment has been released for at least 48 hours. Reviews are submitted by the customer when the job is complete.",
           ],
         ],
         cta: "Start your Welper profile",
@@ -410,8 +410,8 @@ const en = {
               "How do I get paid?",
               [
                 "Once the job is completed, the Welper will confirm \"Job Done\" through the app or website. A receipt will automatically be sent to the customer, and the payment process will then be finalized.",
-                "Welpers receive eligible payouts weekly on Mondays, after each payment has completed a minimum 7-day hold.",
-                "Example: A payment released on Monday can be included the next Monday. A payment released later in the week is included on the first Monday after its 7-day hold.",
+                "Welpers receive eligible payouts weekly on Mondays, after each payment has been released for at least 48 hours.",
+                "Once 48 hours have elapsed, the payment is included in the next Monday payout batch.",
                 "When creating your profile, you will also need to set up your own Stripe account in order to receive your weekly payouts.",
                 "Once your payout becomes available in your Stripe account, you can manually transfer your funds to your bank account at no cost.",
               ],
@@ -715,7 +715,7 @@ fr.marketing.home.howItWorks.customerSteps = [
 fr.marketing.home.howItWorks.welperSteps = [
   { n: "01", title: "Créez votre profil", body: "Inscrivez-vous, listez vos services, fixez vos tarifs et votre disponibilité hebdomadaire. Les adultes passent une vérification des antécédents." },
   { n: "02", title: "Acceptez les mandats qui vous conviennent", body: "Recevez des demandes qui correspondent à vos compétences et à votre horaire. Temps partiel, temps plein ou occasionnel — c'est vous qui décidez." },
-  { n: "03", title: "Recevez votre paiement", body: "Le Welper confirme que le travail est terminé et soumet l'heure de fin. Le client est facturé, et Welpco transfère les paiements admissibles au compte Stripe du Welper le lundi, après une retenue minimale de 7 jours." },
+  { n: "03", title: "Recevez votre paiement", body: "Le Welper confirme que le travail est terminé et soumet l'heure de fin. Le client est facturé, et Welpco transfère les paiements admissibles au compte Stripe du Welper le lundi, au moins 48 heures après la libération du paiement." },
 ];
 
 writeFileSync(join(root, "messages/en.json"), JSON.stringify(en, null, 2));

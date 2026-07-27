@@ -82,7 +82,7 @@ export default async function PayoutsPage() {
     <Flex direction="column" gap="4">
       <AdminPageHeader
         title="Payouts"
-        description="Review Monday welper payout batches. Build a batch from eligible ledger lines (7-day hold), verify Connect readiness, then approve Stripe transfers."
+        description="Review Monday welper payout batches. Build a batch from eligible ledger lines (48-hour hold), verify Connect readiness, then approve Stripe transfers."
       />
 
       {err ? <AdminErrorCallout message={err} /> : null}
@@ -242,7 +242,7 @@ export default async function PayoutsPage() {
         emptyMessage={
           upcoming.existingBatchStatus === "review"
             ? "No welpers in this batch."
-            : "No eligible payout lines yet. Ensure bookings are payment_released and past the 7-day hold."
+            : "No eligible payout lines yet. Ensure bookings are payment_released and past the 48-hour hold."
         }
       />
 

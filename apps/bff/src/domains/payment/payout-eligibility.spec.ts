@@ -2,19 +2,23 @@ import {
   assertBuildablePayoutDate,
   assertValidPayoutDate,
   getUpcomingPayoutDate,
-  isEligibleForPayoutDate,
+  isEligibleForPayout,
   isPayoutDateReached,
-  PAYOUT_HOLD_DAYS,
+  PAYOUT_HOLD_HOURS,
 } from './payout-eligibility';
 
 describe('payout-eligibility', () => {
-  it('requires at least seven days between payment release and payout Monday', () => {
-    const released = new Date('2026-06-01T15:00:00.000Z');
-    const tooSoon = '2026-06-01';
-    const eligibleMonday = '2026-06-08';
-    expect(isEligibleForPayoutDate(released, tooSoon)).toBe(false);
-    expect(isEligibleForPayoutDate(released, eligibleMonday)).toBe(true);
-    expect(PAYOUT_HOLD_DAYS).toBe(7);
+  it('requires 48 complete elapsed hours after payment release', () => {
+    const released = new Date('2026-06-06T15:00:00.000Z');
+    expect(isEligibleForPayout(released, new Date('2026-06-08T14:59:59.999Z'))).toBe(false);
+    expect(isEligibleForPayout(released, new Date('2026-06-08T15:00:00.000Z'))).toBe(true);
+    expect(PAYOUT_HOLD_HOURS).toBe(48);
+  });
+
+  it('does not treat two calendar dates as 48 elapsed hours', () => {
+    const releasedLateSaturday = new Date('2026-06-07T03:30:00.000Z');
+    const mondayMorningToronto = new Date('2026-06-08T13:00:00.000Z');
+    expect(isEligibleForPayout(releasedLateSaturday, mondayMorningToronto)).toBe(false);
   });
 
   it('returns an upcoming Monday date string', () => {
