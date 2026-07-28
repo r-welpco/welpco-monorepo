@@ -79,7 +79,7 @@ describe('DisputeService', () => {
   };
 
   const mockApplicationSettings = {
-    getDisputeReportWindowMinutes: jest.fn().mockResolvedValue(10),
+    getDisputeReportWindowMinutes: jest.fn().mockResolvedValue(1440),
   };
 
   // DISPUTES-001 (Day 16): hoist the presigner mock so the new evidence-presign

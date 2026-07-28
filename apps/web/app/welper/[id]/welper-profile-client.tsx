@@ -16,7 +16,7 @@ import { Skeleton } from "@welpco/ui/skeleton";
 import { Grid } from "@welpco/ui/grid";
 import { Separator } from "@welpco/ui/separator";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { CustomerHeader, Footer } from "@welpco/ui/platform/layout";
+import { CustomerHeader } from "@welpco/ui/platform/layout";
 import { ServiceOfferingCard, ReviewList, VerifiedTrustBadge } from "@welpco/ui/platform";
 import { Star, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -28,6 +28,7 @@ import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import { localizedPath } from "@/i18n/locale-routes";
 import type { Locale } from "@/i18n/routing";
+import { PublicSiteFooter } from "@/components/layout/public-site-footer";
 import { useIsAuthenticated } from "@/stores/authStore";
 import type { PublicPortfolioPhoto, PublicWelperProfile } from "@/types";
 import { format } from "date-fns";
@@ -665,7 +666,7 @@ export default function WelperProfilePageClient({
       </Box>
 
       <Separator size="4" />
-      <Footer />
+      <PublicSiteFooter />
     </Flex>
   );
 }

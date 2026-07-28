@@ -39,47 +39,77 @@ const SOCIAL_LINKS = [
   },
 ] as const;
 
-const LINK_COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
-  {
-    title: "Welpco",
-    links: [
-      { label: "About us", href: "/about" },
-      { label: "Our mission", href: "/about#mission" },
-    ],
-  },
-  {
-    title: "For customers",
-    links: [
-      { label: "Find a Welper", href: "/search" },
-      { label: "How it works", href: "/how-it-works" },
-    ],
-  },
-  {
-    title: "Support",
-    links: [
-      { label: "FAQ", href: "/faq" },
-      { label: "Contact us", href: "/contact" },
-      { label: "Refund policy", href: "/legal/refund" },
-      { label: "Cancellation policy", href: "/legal/cancellation" },
-    ],
-  },
-];
+export interface FooterLink {
+  label: string;
+  href: string;
+}
 
-const BOTTOM_LINKS = [
-  { label: "Terms", href: "/legal/terms" },
-  { label: "Privacy", href: "/legal/privacy" },
-  { label: "Code of conduct", href: "/legal/code-of-conduct" },
-] as const;
+export interface FooterColumn {
+  title: string;
+  links: FooterLink[];
+}
+
+/** Host-provided copy + hrefs (next-intl). Defaults stay English. */
+export interface FooterLabels {
+  siteFooterAria?: string;
+  tagline: string;
+  socialAria?: string;
+  copyright: string;
+  columns: FooterColumn[];
+  bottomLinks: FooterLink[];
+}
+
+const DEFAULT_LABELS: FooterLabels = {
+  siteFooterAria: "Site footer",
+  tagline:
+    "A local-services marketplace. Provider profiles, secure payments, and on-platform messaging.",
+  socialAria: "Social media",
+  copyright: `© ${new Date().getFullYear()} Welpco — Built for community`,
+  columns: [
+    {
+      title: "Welpco",
+      links: [
+        { label: "About us", href: "/about" },
+        { label: "Our mission", href: "/about#mission" },
+      ],
+    },
+    {
+      title: "For customers",
+      links: [
+        { label: "Find a Welper", href: "/search" },
+        { label: "How it works", href: "/how-it-works" },
+      ],
+    },
+    {
+      title: "Support",
+      links: [
+        { label: "FAQ", href: "/faq" },
+        { label: "Contact us", href: "/contact" },
+        { label: "Refund policy", href: "/legal/refund" },
+        { label: "Cancellation policy", href: "/legal/cancellation" },
+      ],
+    },
+  ],
+  bottomLinks: [
+    { label: "Terms", href: "/legal/terms" },
+    { label: "Privacy", href: "/legal/privacy" },
+    { label: "Code of conduct", href: "/legal/code-of-conduct" },
+  ],
+};
 
 export interface FooterProps {
   /** `minimal` hides the link columns (brand block + bottom row only). */
   variant?: "default" | "minimal";
+  /** Localized copy + hrefs from the host app. */
+  labels?: FooterLabels;
 }
 
-export function Footer({ variant = "default" }: FooterProps) {
+export function Footer({ variant = "default", labels: labelsProp }: FooterProps) {
+  const labels = labelsProp ?? DEFAULT_LABELS;
+
   return (
     <footer
-      aria-label="Site footer"
+      aria-label={labels.siteFooterAria ?? "Site footer"}
       style={{
         background: EVERGREEN,
         color: CREAM,
@@ -132,10 +162,9 @@ export function Footer({ variant = "default" }: FooterProps) {
                   lineHeight: 1.55,
                 }}
               >
-                A local-services marketplace. Provider profiles, secure payments,
-                and on-platform messaging.
+                {labels.tagline}
               </p>
-              <nav aria-label="Social media" style={{ marginTop: 24 }}>
+              <nav aria-label={labels.socialAria ?? "Social media"} style={{ marginTop: 24 }}>
                 <ul
                   style={{
                     listStyle: "none",
@@ -175,7 +204,7 @@ export function Footer({ variant = "default" }: FooterProps) {
 
             {/* Link columns */}
             {variant !== "minimal" &&
-              LINK_COLUMNS.map((col) => (
+              labels.columns.map((col) => (
                 <nav key={col.title} aria-label={col.title}>
                   <div
                     style={{
@@ -199,7 +228,7 @@ export function Footer({ variant = "default" }: FooterProps) {
                     }}
                   >
                     {col.links.map((link) => (
-                      <li key={link.href}>
+                      <li key={`${col.title}-${link.href}`}>
                         <a
                           href={link.href}
                           style={{
@@ -233,14 +262,14 @@ export function Footer({ variant = "default" }: FooterProps) {
                 color: cream(0.72),
               }}
             >
-              © {new Date().getFullYear()} Welpco — Built for community
+              {labels.copyright}
             </div>
             <Flex
               align="center"
               wrap="wrap"
               style={{ columnGap: 24, rowGap: 8, fontSize: 13, color: cream(0.86) }}
             >
-              {BOTTOM_LINKS.map((link) => (
+              {labels.bottomLinks.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}

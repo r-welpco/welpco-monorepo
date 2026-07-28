@@ -463,7 +463,7 @@ const en = {
             ],
             [
               "What happens if a Welper does an unsatisfactory job?",
-              "If a Welper does an unsatisfactory job, discuss with them the issue you have with the job they did. If it cannot be resolved between both parties, please contact us directly and we will determine the outcome, whether or not, a refund or credit will be issued to you and if any disciplinary actions need to be taken in regards to the Welper using our platform. There is also a rating system, so you can rate the job provided by the Welper, which will also appear in their profile.",
+              "If a Welper does an unsatisfactory job, discuss with them the issue you have with the job they did. If it cannot be resolved between both parties, please contact us directly within 24 hours of the job being completed, and we will determine the outcome, whether or not, a refund or credit will be issued to you and if any disciplinary actions need to be taken in regards to the Welper using our platform. There is also a rating system, so you can rate the job provided by the Welper, which will also appear in their profile.",
             ],
             [
               "How do I know that allowing a Welper on my property, or in my home, is safe?",

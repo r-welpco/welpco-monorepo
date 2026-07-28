@@ -56,7 +56,7 @@ describe('CommunicationService', () => {
   };
 
   const mockApplicationSettings = {
-    getDisputeReportWindowMinutes: jest.fn().mockResolvedValue(10),
+    getDisputeReportWindowMinutes: jest.fn().mockResolvedValue(1440),
   };
 
   const mockWelperProfileRepo = {

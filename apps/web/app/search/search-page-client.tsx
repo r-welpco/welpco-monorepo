@@ -18,7 +18,7 @@ import { Card } from "@welpco/ui/card";
 import { Badge } from "@welpco/ui/badge";
 import { Separator } from "@welpco/ui/separator";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { CustomerHeader, Footer } from "@welpco/ui/platform/layout";
+import { CustomerHeader } from "@welpco/ui/platform/layout";
 import {
   SearchHero,
   SearchResultsToolbar,
@@ -46,6 +46,7 @@ import {
   isCustomerRole,
 } from "@/lib/search/search-destination";
 import type { Locale } from "@/i18n/routing";
+import { PublicSiteFooter } from "@/components/layout/public-site-footer";
 import type { SearchResultItem } from "@/types";
 
 /**
@@ -604,7 +605,7 @@ export default function PublicSearchPageClient() {
       </Box>
 
       <Separator size="4" />
-      <Footer />
+      <PublicSiteFooter />
     </Flex>
   );
 }

@@ -59,7 +59,7 @@ Note: no code path currently sets `no_show`; the status exists in the enum/state
 
 - `booking-pricing.ts` — `CUSTOMER_CHARGE_MULTIPLIER = 1.25` (customer hourly = welper rate × 1.25; welper share = 1/1.25), minimum billable duration 60 min, 15-minute receipt billing grid, hold total computation, welper/platform gross split, refund share pro-rating.
 - `booking-schedule-time.ts` — converts `scheduledDate` + `scheduledStartTime` + timezone offset to UTC ms.
-- `dispute-report-window.ts` — post-completion problem-report window (default 10 min, overridable via `application_settings.dispute_report_window_minutes`); anchored at `completedAt` for `completed`/`payment_released`/`no_show`.
+- `dispute-report-window.ts` — post-completion problem-report window (default 24 hours / 1440 min, overridable via `application_settings.dispute_report_window_minutes`); anchored at `completedAt` for `completed`/`payment_released`/`no_show`.
 - Conflict checking (`checkConflicts`/`countConflicts`) prevents a welper double-booking overlapping accepted/in-progress slots. Availability calendars themselves live in profile-management (`AvailabilityCalendar`, `AvailabilityException`), not here.
 
 ## API endpoints (`booking.controller.ts`)

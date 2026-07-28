@@ -74,7 +74,7 @@ describe('BookingService', () => {
 
   const mockApplicationSettingsService = {
     getBookingTaxRateBps: jest.fn().mockResolvedValue(0),
-    getDisputeReportWindowMinutes: jest.fn().mockResolvedValue(10),
+    getDisputeReportWindowMinutes: jest.fn().mockResolvedValue(1440),
   };
 
   const mockBookingTaxService = {

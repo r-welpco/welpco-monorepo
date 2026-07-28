@@ -1,7 +1,7 @@
 import { BookingRequest, BookingRequestStatus } from './entities/booking-request.entity';
 
 /** Default report window after completion (overridable via application settings). */
-export const DISPUTE_REPORT_WINDOW_MINUTES_DEFAULT = 10;
+export const DISPUTE_REPORT_WINDOW_MINUTES_DEFAULT = 24 * 60;
 
 const POST_COMPLETION_DISPUTE_STATUSES: ReadonlySet<BookingRequestStatus> = new Set([
   BookingRequestStatus.COMPLETED,

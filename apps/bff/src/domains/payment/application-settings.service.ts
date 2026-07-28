@@ -7,8 +7,8 @@ export const PAYMENT_CAPTURE_DELAY_KEY = 'payment_capture_delay_minutes';
 export const DISPUTE_REPORT_WINDOW_MINUTES_KEY = 'dispute_report_window_minutes';
 export const BOOKING_TAX_RATE_BPS_KEY = 'booking_tax_rate_bps';
 
-/** Matches `DISPUTE_REPORT_WINDOW_MINUTES_DEFAULT` in booking/dispute-report-window.ts */
-const DISPUTE_REPORT_WINDOW_MINUTES_FALLBACK = 10;
+/** Matches `DISPUTE_REPORT_WINDOW_MINUTES_DEFAULT` (24h) in booking/dispute-report-window.ts */
+const DISPUTE_REPORT_WINDOW_MINUTES_FALLBACK = 24 * 60;
 
 @Injectable()
 export class ApplicationSettingsService {
