@@ -5,7 +5,7 @@
   },
   "hero": {
     "title": "Conditions d'utilisation",
-    "lastUpdated": "Date de la dernière mise à jour : 04-29-2026",
+    "lastUpdated": "Dernière mise à jour : 07-22-2026",
     "notice": "VEUILLEZ LIRE ATTENTIVEMENT LES PRÉSENTES CONDITIONS D'UTILISATION AVANT D'ACCÉDER OU D'UTILISER LE SITE WWW.WELPCO.COM. EN ACCÉDANT OU EN UTILISANT LE SITE, VOUS ACCEPTEZ D'ÊTRE LIÉ PAR LES PRÉSENTES CONDITIONS. SI VOUS N'ACCEPTEZ PAS CES CONDITIONS, VEUILLEZ NE PAS UTILISER LE SITE WWW.WELPCO.COM."
   },
   "sections": [
@@ -61,6 +61,19 @@
         {
           "type": "subsection",
           "id": "3.2",
+          "title": "Communications et notifications",
+          "blocks": [
+            {
+              "type": "list",
+              "items": [
+                "En créant un compte Welpco, vous consentez à recevoir des communications de Welpco par courriel et par SMS (message texte) concernant votre compte, le fonctionnement de la plateforme, les demandes de clients, les demandes de services, les alertes de sécurité, la vérification de votre compte, les renseignements relatifs aux transactions, les mises à jour du Site ou des présentes Conditions, les offres promotionnelles, les communications marketing ainsi que toute autre information liée aux services de Welpco. Vous reconnaissez que ces communications font partie intégrante de votre utilisation de la plateforme. Lorsque la loi applicable l’exige, vous pouvez vous désabonner en tout temps des communications promotionnelles ou marketing en suivant les instructions de désabonnement fournies dans la communication ou en modifiant les paramètres de votre compte. Toutefois, vous comprenez et acceptez que vous puissiez continuer à recevoir les communications administratives, transactionnelles, de sécurité ou liées à votre compte qui sont essentielles au fonctionnement de votre compte et de la plateforme."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "subsection",
+          "id": "3.3",
           "title": "Confidentialité des identifiants",
           "blocks": [
             {
@@ -74,14 +87,13 @@
         },
         {
           "type": "subsection",
-          "id": "3.3",
+          "id": "3.4",
           "title": "Âge minimum",
           "blocks": [
             {
               "type": "list",
               "items": [
-                "L’utilisation du Site est réservée aux personnes âgées de 18 ans ou plus ayant la capacité juridique de conclure des contrats contraignants.",
-                "Toutefois, les personnes âgées de 14 ans et plus peuvent utiliser le Site avec le consentement et sous la supervision d’un parent ou tuteur légal. Dans un tel cas, le parent ou tuteur légal accepte d’être lié par les présentes Conditions au nom du mineur et demeure entièrement responsable de l’utilisation du Site par celui-ci, y compris toute activité, engagement ou obligation découlant de cette utilisation."
+                "L’utilisation du Site est réservée aux personnes âgées de 18 ans ou plus ayant la capacité juridique de conclure des contrats contraignants."
               ]
             },
             {
@@ -92,7 +104,7 @@
         },
         {
           "type": "subsection",
-          "id": "3.4",
+          "id": "3.5",
           "title": "Vérification des comptes",
           "blocks": [
             {
@@ -144,6 +156,22 @@
                 "Vous êtes seul responsable du contenu que vous publiez sur le Site, y compris les messages, évaluations, commentaires et autres informations.",
                 "En publiant du contenu sur le Site, vous accordez à Welpco une licence mondiale, non exclusive, transférable, sous-licenciable, sans redevance, pour utiliser, reproduire, modifier, adapter, publier, traduire, créer des œuvres dérivées, distribuer, diffuser et afficher ce contenu dans le cadre de l'exploitation du Site et des services associés.",
                 "Welpco se réserve le droit de supprimer tout contenu qui, à sa seule discrétion, viole les présentes Conditions ou est autrement inapproprié."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "subsection",
+          "id": "4.3",
+          "title": "Communications hors plateforme et partage de coordonnées",
+          "blocks": [
+            {
+              "type": "list",
+              "items": [
+                "Afin de préserver l’intégrité, la sécurité et le bon fonctionnement de la plateforme, toutes les communications entre les Clients et les Prestataires de services concernant les services offerts par l’intermédiaire de Welpco doivent avoir lieu exclusivement au moyen des fonctionnalités de messagerie et de communication offertes sur le Site.",
+                "Il est interdit aux Prestataires de services de publier, d’afficher ou de communiquer de toute autre manière leurs coordonnées personnelles, notamment leur numéro de téléphone, leur adresse courriel, leurs comptes de médias sociaux, leurs identifiants d’applications de messagerie, leur site Web ou toute autre information visant à faciliter les communications à l’extérieur de la plateforme Welpco. Cette interdiction s’applique à leur profil, à leur biographie, à leurs annonces, aux messages échangés avant la confirmation d’une réservation ainsi qu’à tout autre endroit sur le Site.",
+                "Tout Prestataire de services qui publie ou communique de telles coordonnées dans son profil Welper, sa biographie ou ailleurs sur le Site, ou qui tente de toute autre manière d’encourager ou de faciliter des communications ou des transactions à l’extérieur de la plateforme en violation des présentes Conditions, peut voir son compte immédiatement suspendu ou définitivement résilié, sans préavis, à la seule discrétion de Welpco.",
+                "Cette restriction vise à protéger les utilisateurs, à préserver l’intégrité de la place de marché, à assurer le traitement adéquat des transactions, à maintenir les mécanismes de règlement des différends et à faire respecter les politiques de Welpco. Welpco se réserve le droit de retirer tout contenu contenant des coordonnées interdites."
               ]
             }
           ]
@@ -210,7 +238,7 @@
             {
               "type": "list",
               "items": [
-                "Welpco collecte, utilise et traite les renseignements personnels des utilisateurs conformément à   sa Politique de confidentialité, laquelle fait partie intégrante des présentes Conditions.",
+                "Welpco collecte, utilise et traite les renseignements personnels des utilisateurs conformément à sa Politique de confidentialité, laquelle fait partie intégrante des présentes Conditions.",
                 "La Politique de confidentialité décrit notamment les types de renseignements recueillis, les fins de leur utilisation, les mesures de sécurité mises en place, ainsi que les droits des utilisateurs à l’égard de leurs renseignements personnels.",
                 "Les renseignements personnels collectés sont utilisés notamment pour fournir, exploiter, améliorer et personnaliser les services du Site, assurer la sécurité des utilisateurs, prévenir la fraude, ainsi que pour des fins administratives, légales et réglementaires.",
                 "En utilisant le Site, vous reconnaissez avoir pris connaissance de la Politique de confidentialité et en accepter les termes."
@@ -333,8 +361,8 @@
               "items": [
                 "Certaines fonctionnalités du Site peuvent nécessiter des frais, incluant notamment des frais de service applicables aux transactions effectuées via la plateforme.",
                 "Welpco applique généralement des frais de service équivalents à 20 % du montant du service fixé par le Prestataire. Ces frais sont ajoutés au prix affiché et sont payés par le Client lors de la transaction.",
-                "Le Prestataire reçoit le montant qu'il a fixé pour le service, sous réserve des frais applicables et des modalités du fournisseur de paiement.",
-                "Certains services, tels que les vérifications d'antécédents, peuvent également être assujettis à des frais distincts. Ces frais sont clairement indiqués avant leur facturation et sont, sauf indication contraire, non remboursables.",
+                "Le Prestataire reçoit le montant qu’il a fixé pour le service, sous réserve des frais applicables et des modalités du fournisseur de paiement.",
+                "Certains services, tels que les vérifications d’antécédents, peuvent également être assujettis à des frais distincts. Ces frais sont clairement indiqués avant leur facturation et sont, sauf indication contraire, non remboursables.",
                 "En utilisant le Site, vous acceptez de payer tous les frais applicables et reconnaissez que ceux-ci peuvent être modifiés en tout temps par Welpco, avec effet lors de leur publication ou lors de la prochaine transaction."
               ]
             },
@@ -345,7 +373,7 @@
             {
               "type": "list",
               "items": [
-                "Les paiements effectués via la plateforme sont traités par des fournisseurs de services de paiement tiers, notamment Stripe. Welpco n'est pas responsable des délais de traitement, des interruptions de service ou des frais additionnels pouvant être imposés par ces fournisseurs."
+                "Les paiements effectués via la plateforme sont traités par des fournisseurs de services de paiement tiers, notamment Stripe. Welpco n’est pas responsable des délais de traitement, des interruptions de service ou des frais additionnels pouvant être imposés par ces fournisseurs."
               ]
             }
           ]
@@ -358,10 +386,10 @@
             {
               "type": "list",
               "items": [
-                "En utilisant les services payants du Site, vous acceptez de payer tous les frais applicables, incluant le prix du service fixé par le Prestataire ainsi que les frais de service de Welpco, tels qu'indiqués au moment de la transaction.",
+                "En utilisant les services payants du Site, vous acceptez de payer tous les frais applicables, incluant le prix du service fixé par le Prestataire ainsi que les frais de service de Welpco, tels qu’indiqués au moment de la transaction.",
                 "Les paiements sont effectués via des méthodes de paiement sécurisées proposées sur le Site et sont traités par un fournisseur de services de paiement tiers, notamment Stripe.",
-                "Selon le fonctionnement de la plateforme, les fonds peuvent être temporairement retenus jusqu'à la confirmation de la réalisation du service, après quoi ils sont transférés au Prestataire, sous réserve des délais et conditions du fournisseur de paiement.",
-                "L'utilisateur reconnaît que Welpco ne contrôle pas les délais de traitement des paiements et ne peut être tenue responsable des retards, interruptions ou frais supplémentaires imposés par le fournisseur de paiement."
+                "Selon le fonctionnement de la plateforme, les fonds peuvent être temporairement retenus jusqu’à la confirmation de la réalisation du service, après quoi ils sont transférés au Prestataire, sous réserve des délais et conditions du fournisseur de paiement.",
+                "L’utilisateur reconnaît que Welpco ne contrôle pas les délais de traitement des paiements et ne peut être tenue responsable des retards, interruptions ou frais supplémentaires imposés par le fournisseur de paiement."
               ]
             }
           ]
@@ -376,7 +404,7 @@
               "items": [
                 "Welpco applique des frais de service sur les transactions effectuées via la plateforme.",
                 "Ces frais de service sont généralement équivalents à 20 % du montant du service fixé par le Prestataire et sont ajoutés au prix payable par le Client au moment de la transaction.",
-                "Le Prestataire reçoit le montant qu'il a fixé pour le service, sous réserve des conditions applicables du fournisseur de paiement.",
+                "Le Prestataire reçoit le montant qu’il a fixé pour le service, sous réserve des conditions applicables du fournisseur de paiement.",
                 "Les détails concernant les frais applicables, incluant tout frais additionnel, sont clairement indiqués au moment de la transaction ou sur le Site.",
                 "Welpco se réserve le droit de modifier ses frais de service à tout moment, lesquels prendront effet lors de leur publication ou lors de la prochaine transaction."
               ]
@@ -508,25 +536,12 @@
         {
           "type": "subsection",
           "id": "10.2",
-          "title": "Responsabilité parentale",
-          "blocks": [
-            {
-              "type": "list",
-              "items": [
-                "Lorsqu’un utilisateur est âgé de moins de 18 ans, le parent ou tuteur légal accepte d’être lié par les présentes Conditions au nom du mineur et demeure entièrement responsable de toute utilisation du Site par celui-ci, incluant toute activité, transaction ou obligation en découlant."
-              ]
-            }
-          ]
-        },
-        {
-          "type": "subsection",
-          "id": "10.3",
           "title": "Vérification de l’âge",
           "blocks": [
             {
               "type": "list",
               "items": [
-                "Welpco se réserve le droit de vérifier l’âge des utilisateurs à tout moment et d’exiger une preuve de consentement parental pour les utilisateurs mineurs. Welpco peut suspendre ou résilier tout compte en cas de non-respect des présentes dispositions."
+                "Welpco se réserve le droit de vérifier l’âge des utilisateurs à tout moment. Welpco peut suspendre ou résilier tout compte en cas de non-respect des présentes dispositions."
               ]
             }
           ]
@@ -607,62 +622,13 @@
             {
               "type": "list",
               "items": [
-                "Exclusion de responsabilité :"
+                "Exclusion de responsabilité : Dans la mesure permise par la loi, Welpco, ses affiliés, dirigeants, employés, agents et partenaires déclinent toute responsabilité pour tout dommage direct, indirect, accessoire, consécutif, spécial, exemplaire ou punitif résultant de votre accès ou de votre utilisation du Site ou des services, même si Welpco a été informé de la possibilité de tels dommages.",
+                "Aucune responsabilité pour les actes des utilisateurs : Welpco n'est pas responsable des actions, omissions ou comportements des utilisateurs du Site, y compris les Prestataires et les Clients. Welpco n’assume aucune responsabilité quant à l’exécution, la qualité, la sécurité ou la légalité des services fournis.",
+                "Absence de responsabilité pour les services : Welpco ne fournit pas les services proposés sur la plateforme et n’assume aucune responsabilité en cas de dommages matériels, blessures corporelles, pertes financières ou tout autre préjudice résultant de la réalisation ou de la non-réalisation d’un service.",
+                "Paiements et fournisseurs tiers : Welpco n’est pas responsable des paiements traités par des fournisseurs tiers, notamment Stripe, incluant les retards, erreurs, interruptions ou frais supplémentaires pouvant survenir.",
+                "Vérifications et sécurité : Toute vérification effectuée via des fournisseurs tiers (ex : Certn) est fournie à titre informatif seulement et ne constitue en aucun cas une garantie quant au comportement futur d’un utilisateur.",
+                "Limitation du montant : Dans la mesure permise par la loi, la responsabilité totale de Welpco envers vous pour toute réclamation découlant de votre utilisation du Site ou des services est limitée au montant que vous avez payé à Welpco au cours des douze (12) mois précédant l’événement."
               ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Dans la mesure permise par la loi, Welpco, ses affiliés, dirigeants, employés, agents et partenaires déclinent toute responsabilité pour tout dommage direct, indirect, accessoire, consécutif, spécial, exemplaire ou punitif résultant de votre accès ou de votre utilisation du Site ou des services, même si Welpco a été informé de la possibilité de tels dommages."
-            },
-            {
-              "type": "list",
-              "items": [
-                "Aucune responsabilité pour les actes des utilisateurs :"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Welpco n'est pas responsable des actions, omissions ou comportements des utilisateurs du Site, y compris les Prestataires et les Clients. Welpco n’assume aucune responsabilité quant à l’exécution, la qualité, la sécurité ou la légalité des services fournis."
-            },
-            {
-              "type": "list",
-              "items": [
-                "Absence de responsabilité pour les services :"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Welpco ne fournit pas les services proposés sur la plateforme et n’assume aucune responsabilité en cas de dommages matériels, blessures corporelles, pertes financières ou tout autre préjudice résultant de la réalisation ou de la non-réalisation d’un service."
-            },
-            {
-              "type": "list",
-              "items": [
-                "Paiements et fournisseurs tiers :"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Welpco n’est pas responsable des paiements traités par des fournisseurs tiers, notamment Stripe, incluant les retards, erreurs, interruptions ou frais supplémentaires pouvant survenir."
-            },
-            {
-              "type": "list",
-              "items": [
-                "Vérifications et sécurité :"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Toute vérification effectuée via des fournisseurs tiers (ex : Certn) est fournie à titre informatif seulement et ne constitue en aucun cas une garantie quant au comportement futur d’un utilisateur."
-            },
-            {
-              "type": "list",
-              "items": [
-                "Limitation du montant :"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Dans la mesure permise par la loi, la responsabilité totale de Welpco envers vous pour toute réclamation découlant de votre utilisation du Site ou des services est limitée au montant que vous avez payé à Welpco au cours des douze (12) mois précédant l’événement."
             }
           ]
         },
@@ -674,16 +640,7 @@
             {
               "type": "list",
               "items": [
-                "Votre engagement :"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Vous acceptez d’indemniser, de défendre et de dégager de toute responsabilité Welpco, ses affiliés, dirigeants, employés, agents et partenaires contre toute réclamation, perte, dommage, obligation, coût ou dépense (incluant les frais juridiques raisonnables) résultant de :"
-            },
-            {
-              "type": "list",
-              "items": [
+                "Votre engagement : Vous acceptez d’indemniser, de défendre et de dégager de toute responsabilité Welpco, ses affiliés, dirigeants, employés, agents et partenaires contre toute réclamation, perte, dommage, obligation, coût ou dépense (incluant les frais juridiques raisonnables) résultant de :",
                 "Votre utilisation du Site ou des services",
                 "Votre violation des présentes Conditions",
                 "Votre violation des droits d’un tiers",
@@ -826,7 +783,8 @@
             {
               "type": "list",
               "items": [
-                "Welpco se réserve le droit de suspendre ou de résilier votre compte et votre accès au Site à tout moment, avec ou sans motif, y compris, mais sans s'y limiter, en cas de violation des présentes Conditions."
+                "Welpco se réserve le droit de suspendre ou de résilier votre compte ainsi que votre accès au Site à tout moment, avec ou sans motif, notamment en cas de violation des présentes Conditions.",
+                "Sans limiter la portée de ce qui précède, Welpco peut suspendre ou résilier immédiatement tout compte, sans préavis, lorsqu’un utilisateur publie ou communique des coordonnées personnelles en violation des présentes Conditions, tente de contourner les systèmes de communication ou de paiement de la plateforme, ou adopte toute autre conduite visant à faciliter des transactions à l’extérieur de la plateforme."
               ]
             }
           ]
@@ -870,7 +828,7 @@
         },
         {
           "type": "paragraph",
-          "text": "Société Welpco inc."
+          "text": "WELPCO INC."
         },
         {
           "type": "paragraph",
@@ -882,11 +840,7 @@
         },
         {
           "type": "paragraph",
-          "text": "[Numéro de téléphone]"
-        },
-        {
-          "type": "paragraph",
-          "text": "[Adresse courriel de contact]"
+          "text": "support@welpco.com"
         }
       ]
     }

@@ -5,7 +5,7 @@
   },
   "hero": {
     "title": "Terms of Use",
-    "lastUpdated": "Last updated: 04-29-2026",
+    "lastUpdated": "Last updated: 07-22-2026",
     "notice": "PLEASE READ THESE TERMS OF USE CAREFULLY BEFORE ACCESSING OR USING THE WEBSITE WWW.WELPCO.COM. BY ACCESSING OR USING THE SITE, YOU AGREE TO BE BOUND BY THESE TERMS. IF YOU DO NOT ACCEPT THESE TERMS, PLEASE DO NOT USE THE WEBSITE WWW.WELPCO.COM."
   },
   "sections": [
@@ -61,6 +61,19 @@
         {
           "type": "subsection",
           "id": "3.2",
+          "title": "Communications and Notifications",
+          "blocks": [
+            {
+              "type": "list",
+              "items": [
+                "By creating a Welpco account, you consent to receive communications from Welpco by email and SMS (text message) regarding your account, the operation of the platform, customer inquiries, service requests, security alerts, account verification, transactional information, updates to the Site or these Terms, promotional offers, marketing communications, and other information related to Welpco's services. You acknowledge that such communications are part of your use of the platform. Where required by applicable law, you may opt out of promotional or marketing communications at any time by following the unsubscribe instructions provided in the communication or by adjusting your account settings. However, you understand and agree that you may continue to receive essential administrative, transactional, security, and account-related communications that are necessary for the operation of your account and the platform."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "subsection",
+          "id": "3.3",
           "title": "Confidentiality of Credentials",
           "blocks": [
             {
@@ -74,25 +87,20 @@
         },
         {
           "type": "subsection",
-          "id": "3.3",
+          "id": "3.4",
           "title": "Minimum Age",
           "blocks": [
             {
               "type": "list",
               "items": [
-                "Use of the Site is reserved for persons aged 18 or over having the legal capacity to enter into binding contracts.",
-                "However, persons aged 14 and over may use the Site with the consent and under the supervision of a parent or legal guardian. In such case, the parent or legal guardian agrees to be bound by these Terms on behalf of the minor and remains fully responsible for the use of the Site by the minor, including any activity, commitment or obligation arising from such use."
+                "Use of the Site is reserved for persons aged 18 or over having the legal capacity to enter into binding contracts."
               ]
-            },
-            {
-              "type": "paragraph",
-              "text": "By using the Site, you declare and warrant that you meet these conditions."
             }
           ]
         },
         {
           "type": "subsection",
-          "id": "3.4",
+          "id": "3.5",
           "title": "Account Verification",
           "blocks": [
             {
@@ -144,6 +152,22 @@
                 "You are solely responsible for the content you publish on the Site, including messages, ratings, comments and other information.",
                 "By publishing content on the Site, you grant Welpco a worldwide, non-exclusive, transferable, sublicensable, royalty-free license to use, reproduce, modify, adapt, publish, translate, create derivative works, distribute, broadcast and display such content as part of the operation of the Site and related services.",
                 "Welpco reserves the right to remove any content that, in its sole discretion, violates these Terms or is otherwise inappropriate."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "subsection",
+          "id": "4.3",
+          "title": "Off-Platform Communication and Sharing of Contact Information",
+          "blocks": [
+            {
+              "type": "list",
+              "items": [
+                "To preserve the integrity, security and proper operation of the platform, all communications between Clients and Service Providers relating to services offered through Welpco must take place exclusively through the messaging and communication features provided on the Site.",
+                "Service Providers are prohibited from posting, displaying or otherwise sharing personal contact information, including but not limited to telephone numbers, email addresses, social media accounts, messaging application usernames, websites or any other information intended to facilitate communication outside of the Welpco platform, in their profile, biography, listings, messages prior to a confirmed booking, or elsewhere on the Site.",
+                "Any Service Provider who posts or shares such contact information in their Welper profile, biography or elsewhere on the Site, or who otherwise attempts to encourage or facilitate off-platform communication or transactions in violation of these Terms, may have their account suspended or permanently terminated immediately and without prior notice, at Welpco's sole discretion.",
+                "This restriction is intended to protect users, preserve the integrity of the marketplace, ensure proper transaction processing, maintain dispute resolution capabilities and enforce Welpco's policies. Welpco reserves the right to remove any content containing prohibited contact information without notice."
               ]
             }
           ]
@@ -358,7 +382,7 @@
             {
               "type": "list",
               "items": [
-                "By using the paid services of the Site, you agree to pay all applicable fees, including the price of the service set by the Service Provider as well as Welpco's service fees, as indicated at the time of the transaction.",
+                "By using the paid services of the Site, you agree to pay all applicable fees, including the price of the service set by the Service Provider as well as Welpco’s service fees, as indicated at the time of the transaction.",
                 "Payments are made via secure payment methods offered on the Site and are processed by a third-party payment service provider, including Stripe.",
                 "Depending on the operation of the platform, funds may be temporarily held until confirmation of the completion of the service, after which they are transferred to the Service Provider, subject to the delays and conditions of the payment provider.",
                 "The user acknowledges that Welpco does not control payment processing times and cannot be held responsible for delays, interruptions or additional fees imposed by the payment provider."
@@ -499,8 +523,7 @@
             {
               "type": "list",
               "items": [
-                "Use of the Site is reserved for persons aged 18 or over who have the legal capacity to enter into binding contracts under the laws applicable in the province of Québec.",
-                "However, persons aged 14 and over may use the Site with the consent and under the supervision of a parent or legal guardian."
+                "Use of the Site is reserved for persons aged 18 or over who have the legal capacity to enter into binding contracts under the laws applicable in the province of Québec."
               ]
             }
           ]
@@ -508,25 +531,12 @@
         {
           "type": "subsection",
           "id": "10.2",
-          "title": "Parental Responsibility",
-          "blocks": [
-            {
-              "type": "list",
-              "items": [
-                "Where a user is under the age of 18, the parent or legal guardian agrees to be bound by these Terms on behalf of the minor and remains fully responsible for any use of the Site by the minor, including any activity, transaction or obligation arising therefrom."
-              ]
-            }
-          ]
-        },
-        {
-          "type": "subsection",
-          "id": "10.3",
           "title": "Age Verification",
           "blocks": [
             {
               "type": "list",
               "items": [
-                "Welpco reserves the right to verify the age of users at any time and to require proof of parental consent for minor users. Welpco may suspend or terminate any account in the event of non-compliance with these provisions."
+                "Welpco reserves the right to verify the age of users at any time. Welpco may suspend or terminate any account in the event of non-compliance with these provisions."
               ]
             }
           ]
@@ -607,62 +617,13 @@
             {
               "type": "list",
               "items": [
-                "Exclusion of liability:"
+                "Exclusion of liability: To the extent permitted by law, Welpco, its affiliates, officers, employees, agents and partners disclaim all liability for any direct, indirect, incidental, consequential, special, exemplary or punitive damages resulting from your access to or use of the Site or services, even if Welpco has been advised of the possibility of such damages.",
+                "No liability for user actions: Welpco is not responsible for the actions, omissions or conduct of users of the Site, including Service Providers and Clients. Welpco assumes no responsibility for the execution, quality, safety or legality of the services provided.",
+                "No liability for services: Welpco does not provide the services offered on the platform and assumes no responsibility in the event of property damage, bodily injury, financial loss or any other harm resulting from the performance or non-performance of a service.",
+                "Payments and third-party providers: Welpco is not responsible for payments processed by third-party providers, including Stripe, including any delays, errors, interruptions or additional fees that may occur.",
+                "Verifications and safety: Any verification carried out via third-party providers (e.g., Certn) is provided for informational purposes only and does not constitute in any way a guarantee regarding the future conduct of a user.",
+                "Limitation of amount: To the extent permitted by law, Welpco’s total liability toward you for any claim arising from your use of the Site or services is limited to the amount you have paid to Welpco during the twelve (12) months preceding the event giving rise to the liability."
               ]
-            },
-            {
-              "type": "paragraph",
-              "text": "To the extent permitted by law, Welpco, its affiliates, officers, employees, agents and partners disclaim all liability for any direct, indirect, incidental, consequential, special, exemplary or punitive damages resulting from your access to or use of the Site or services, even if Welpco has been advised of the possibility of such damages."
-            },
-            {
-              "type": "list",
-              "items": [
-                "No liability for user actions:"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Welpco is not responsible for the actions, omissions or conduct of users of the Site, including Service Providers and Clients. Welpco assumes no responsibility for the execution, quality, safety or legality of the services provided."
-            },
-            {
-              "type": "list",
-              "items": [
-                "No liability for services:"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Welpco does not provide the services offered on the platform and assumes no responsibility in the event of property damage, bodily injury, financial loss or any other harm resulting from the performance or non-performance of a service."
-            },
-            {
-              "type": "list",
-              "items": [
-                "Payments and third-party providers:"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Welpco is not responsible for payments processed by third-party providers, including Stripe, including any delays, errors, interruptions or additional fees that may occur."
-            },
-            {
-              "type": "list",
-              "items": [
-                "Verifications and safety:"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "Any verification carried out via third-party providers (e.g., Certn) is provided for informational purposes only and does not constitute in any way a guarantee regarding the future conduct of a user."
-            },
-            {
-              "type": "list",
-              "items": [
-                "Limitation of amount:"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "To the extent permitted by law, Welpco’s total liability toward you for any claim arising from your use of the Site or services is limited to the amount you have paid to Welpco during the twelve (12) months preceding the event giving rise to the liability."
             }
           ]
         },
@@ -674,16 +635,7 @@
             {
               "type": "list",
               "items": [
-                "Your commitment:"
-              ]
-            },
-            {
-              "type": "paragraph",
-              "text": "You agree to indemnify, defend and hold harmless Welpco, its affiliates, officers, employees, agents and partners from and against any claim, loss, damage, obligation, cost or expense (including reasonable legal fees) arising from:"
-            },
-            {
-              "type": "list",
-              "items": [
+                "Your commitment: You agree to indemnify, defend and hold harmless Welpco, its affiliates, officers, employees, agents and partners from and against any claim, loss, damage, obligation, cost or expense (including reasonable legal fees) arising from:",
                 "Your use of the Site or services",
                 "Your violation of these Terms",
                 "Your violation of the rights of a third party",
@@ -826,7 +778,8 @@
             {
               "type": "list",
               "items": [
-                "Welpco reserves the right to suspend or terminate your account and your access to the Site at any time, with or without cause, including but not limited to in the event of a violation of these Terms."
+                "Welpco reserves the right to suspend or terminate your account and your access to the Site at any time, with or without cause, including but not limited to in the event of a violation of these Terms.",
+                "Without limiting the foregoing, Welpco may immediately suspend or terminate any account, without prior notice, where a user posts or shares personal contact information in violation of these Terms, attempts to circumvent the platform's communication or payment systems, or otherwise engages in conduct intended to facilitate off-platform transactions."
               ]
             }
           ]
@@ -882,11 +835,7 @@
         },
         {
           "type": "paragraph",
-          "text": "[Phone Number]"
-        },
-        {
-          "type": "paragraph",
-          "text": "[Contact Email Address]"
+          "text": "support@welpco.com"
         }
       ]
     }
