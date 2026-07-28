@@ -37,7 +37,7 @@ export class StripeWebhookController {
   @ApiOperation({
     summary: 'Stripe webhook (signature verified)',
     description:
-      'Configure events including checkout.session.completed (background check), payment_intent.*, setup_intent.succeeded, charge.refunded, transfer.created, transfer.reversed, and payout.failed.',
+      'Configure events including checkout.session.completed (background check), payment_method.detached, payment_intent.*, setup_intent.succeeded, charge.refunded, transfer.created, transfer.reversed, and payout.failed.',
   })
   async handleStripe(
     @Req() req: RequestWithRawBody,

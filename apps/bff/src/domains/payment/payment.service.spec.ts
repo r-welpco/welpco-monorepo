@@ -45,6 +45,11 @@ describe('PaymentService', () => {
     save: jest.fn(),
   };
 
+  const mockWebhookEventRepo = {
+    insert: jest.fn(),
+    delete: jest.fn(),
+  };
+
   const mockDataSource = {
     transaction: jest.fn(),
   };
@@ -150,7 +155,7 @@ describe('PaymentService', () => {
         },
         {
           provide: getRepositoryToken(ProcessedWebhookEvent),
-          useValue: { findOne: jest.fn(), save: jest.fn(), create: jest.fn() },
+          useValue: mockWebhookEventRepo,
         },
         { provide: getRepositoryToken(UserAccount), useValue: mockUserRepo },
         {
@@ -682,6 +687,113 @@ describe('PaymentService', () => {
         'Payment method does not belong to this account',
       );
       expect(detach).not.toHaveBeenCalled();
+    });
+
+    it('promotes the newest remaining card when the default card is removed', async () => {
+      const user = {
+        id: 'user-1',
+        stripeCustomerId: 'cus_owner',
+        stripeDefaultPaymentMethodId: 'pm_default',
+      } as UserAccount;
+      mockUserRepo.findOne.mockResolvedValue(user);
+      mockUserRepo.save.mockImplementation(async (row) => row);
+      const detach = jest.fn().mockResolvedValue({ id: 'pm_default' });
+      const updateCustomer = jest.fn().mockResolvedValue({});
+      (service as unknown as { stripe: unknown }).stripe = {
+        paymentMethods: {
+          retrieve: jest.fn().mockResolvedValue({
+            id: 'pm_default',
+            customer: 'cus_owner',
+          }),
+          detach,
+          list: jest.fn().mockResolvedValue({
+            data: [
+              { id: 'pm_older', created: 100 },
+              { id: 'pm_newer', created: 200 },
+            ],
+          }),
+        },
+        customers: { update: updateCustomer },
+      };
+
+      await service.detachPaymentMethod('user-1', 'pm_default');
+
+      expect(detach).toHaveBeenCalledWith('pm_default');
+      expect(updateCustomer).toHaveBeenCalledWith('cus_owner', {
+        invoice_settings: { default_payment_method: 'pm_newer' },
+      });
+      expect(user.stripeDefaultPaymentMethodId).toBe('pm_newer');
+      expect(mockCustomerProfile.refreshProfileCompletionFromPayment).toHaveBeenCalledWith(
+        'user-1',
+      );
+    });
+
+    it('clears the default when its card is removed and no cards remain', async () => {
+      const user = {
+        id: 'user-1',
+        stripeCustomerId: 'cus_owner',
+        stripeDefaultPaymentMethodId: 'pm_default',
+      } as UserAccount;
+      mockUserRepo.findOne.mockResolvedValue(user);
+      mockUserRepo.save.mockImplementation(async (row) => row);
+      const updateCustomer = jest.fn().mockResolvedValue({});
+      (service as unknown as { stripe: unknown }).stripe = {
+        paymentMethods: {
+          retrieve: jest.fn().mockResolvedValue({
+            id: 'pm_default',
+            customer: 'cus_owner',
+          }),
+          detach: jest.fn().mockResolvedValue({ id: 'pm_default' }),
+          list: jest.fn().mockResolvedValue({ data: [] }),
+        },
+        customers: { update: updateCustomer },
+      };
+
+      await service.detachPaymentMethod('user-1', 'pm_default');
+
+      expect(updateCustomer).toHaveBeenCalledWith('cus_owner', {
+        invoice_settings: { default_payment_method: '' },
+      });
+      expect(user.stripeDefaultPaymentMethodId).toBeNull();
+    });
+
+    it('promotes a remaining card for a detached webhook without a customer id', async () => {
+      const user = {
+        id: 'user-1',
+        stripeCustomerId: 'cus_owner',
+        stripeDefaultPaymentMethodId: 'pm_default',
+      } as UserAccount;
+      mockUserRepo.findOne.mockResolvedValue(user);
+      mockUserRepo.save.mockImplementation(async (row) => row);
+      const updateCustomer = jest.fn().mockResolvedValue({});
+      (service as unknown as { stripe: unknown }).stripe = {
+        paymentMethods: {
+          list: jest.fn().mockResolvedValue({
+            data: [{ id: 'pm_replacement', created: 100 }],
+          }),
+        },
+        customers: { update: updateCustomer },
+      };
+
+      await service.processWebhookEvent({
+        id: 'evt_payment_method_detached',
+        type: 'payment_method.detached',
+        data: {
+          object: {
+            id: 'pm_default',
+            object: 'payment_method',
+            customer: null,
+          },
+        },
+      } as Stripe.Event);
+
+      expect(mockUserRepo.findOne).toHaveBeenCalledWith({
+        where: { stripeDefaultPaymentMethodId: 'pm_default' },
+      });
+      expect(updateCustomer).toHaveBeenCalledWith('cus_owner', {
+        invoice_settings: { default_payment_method: 'pm_replacement' },
+      });
+      expect(user.stripeDefaultPaymentMethodId).toBe('pm_replacement');
     });
   });
 });

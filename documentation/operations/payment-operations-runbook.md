@@ -115,7 +115,7 @@ There is **no cron for payout batches** — building and approving batches is al
 | Stripe Tax transactions + reversals | `stripe-operations.service.ts` (`ensureTaxTransaction`, `recordTaxReversal`) | Idempotency keys `tax-transaction-booking-<id>` / `tax-reversal-<refundId>` |
 | Refund sync | `stripe-operations.service.ts` (`syncRefund`, `syncChargeRefunds`) | Updates `booking_refunds`, `booking_payments.refunded_amount_cents`, applies welper refund share to the ledger |
 | Transfer state mirror | `stripe-transfer_states` table via `syncTransfer` | Tracks `amount_reversed_cents`; drives recovery tasks |
-| Webhooks | `stripe-webhook.controller.ts` (`/api/webhooks/stripe`) | Needs `transfer.created`, `transfer.reversed`, `charge.refunded`, `payment_intent.*`, etc.; idempotent via `processed_webhook_events` |
+| Webhooks | `stripe-webhook.controller.ts` (`/api/webhooks/stripe`) | Needs `payment_method.detached`, `setup_intent.succeeded`, `transfer.created`, `transfer.reversed`, `charge.refunded`, `payment_intent.*`, etc.; idempotent via `processed_webhook_events` |
 | Config | `STRIPE_SECRET_KEY` (all services no-op/reject without it), `STRIPE_WEBHOOK_SECRET` | `sk_live_` prefix flips dashboard URLs from test to live mode |
 
 ## Troubleshooting a stuck batch

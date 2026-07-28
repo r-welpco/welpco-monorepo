@@ -417,6 +417,44 @@ export class PaymentService {
     }));
   }
 
+  private async promoteDefaultPaymentMethodAfterDetach(
+    user: UserAccount,
+    detachedPaymentMethodId: string,
+  ): Promise<void> {
+    if (!user.stripeCustomerId) return;
+
+    const stripe = this.requireStripe();
+    const remaining = await stripe.paymentMethods.list({
+      customer: user.stripeCustomerId,
+      type: 'card',
+    });
+    const replacement =
+      remaining.data
+        .filter((paymentMethod) => paymentMethod.id !== detachedPaymentMethodId)
+        .sort(
+          (left, right) =>
+            right.created - left.created || left.id.localeCompare(right.id),
+        )[0] ?? null;
+
+    user.stripeDefaultPaymentMethodId = null;
+    await this.userRepo.save(user);
+    try {
+      await stripe.customers.update(user.stripeCustomerId, {
+        invoice_settings: {
+          default_payment_method: replacement?.id ?? '',
+        },
+      });
+    } catch (error) {
+      await this.customerProfileService.refreshProfileCompletionFromPayment(user.id);
+      throw error;
+    }
+    if (replacement) {
+      user.stripeDefaultPaymentMethodId = replacement.id;
+      await this.userRepo.save(user);
+    }
+    await this.customerProfileService.refreshProfileCompletionFromPayment(user.id);
+  }
+
   async setDefaultPaymentMethod(userId: string, paymentMethodId: string): Promise<void> {
     const stripe = this.requireStripe();
     const user = await this.ensureStripeCustomer(userId);
@@ -446,15 +484,13 @@ export class PaymentService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user?.stripeCustomerId) return;
     await this.requireOwnedPaymentMethod(stripe, user.stripeCustomerId, paymentMethodId, false);
-    if (user.stripeDefaultPaymentMethodId === paymentMethodId) {
-      user.stripeDefaultPaymentMethodId = null;
-      await this.userRepo.save(user);
-      await stripe.customers.update(user.stripeCustomerId, {
-        invoice_settings: { default_payment_method: undefined },
-      });
-    }
+    const wasDefault = user.stripeDefaultPaymentMethodId === paymentMethodId;
     await stripe.paymentMethods.detach(paymentMethodId);
-    await this.customerProfileService.refreshProfileCompletionFromPayment(userId);
+    if (wasDefault) {
+      await this.promoteDefaultPaymentMethodAfterDetach(user, paymentMethodId);
+    } else {
+      await this.customerProfileService.refreshProfileCompletionFromPayment(userId);
+    }
   }
 
   private async requireOwnedPaymentMethod(
@@ -1863,19 +1899,30 @@ export class PaymentService {
       switch (event.type) {
         case 'payment_method.detached': {
           const pm = event.data.object as Stripe.PaymentMethod;
-          const customerId = typeof pm.customer === 'string' ? pm.customer : pm.customer?.id;
-          if (!customerId || !pm.id) break;
+          if (!pm.id) break;
 
-          const user = await this.userRepo.findOne({
-            where: { stripeCustomerId: customerId },
-          });
+          const previousCustomer = (
+            event.data.previous_attributes as Partial<Stripe.PaymentMethod> | undefined
+          )?.customer;
+          const customerId =
+            typeof pm.customer === 'string'
+              ? pm.customer
+              : pm.customer?.id ??
+                (typeof previousCustomer === 'string'
+                  ? previousCustomer
+                  : previousCustomer?.id);
+          let user = customerId
+            ? await this.userRepo.findOne({ where: { stripeCustomerId: customerId } })
+            : null;
+          if (!user) {
+            user = await this.userRepo.findOne({
+              where: { stripeDefaultPaymentMethodId: pm.id },
+            });
+          }
           if (!user) break;
 
-          // If the detached method was the default we track locally, clear it.
           if (user.stripeDefaultPaymentMethodId === pm.id) {
-            user.stripeDefaultPaymentMethodId = null;
-            await this.userRepo.save(user);
-            await this.customerProfileService.refreshProfileCompletionFromPayment(user.id);
+            await this.promoteDefaultPaymentMethodAfterDetach(user, pm.id);
           }
           break;
         }
