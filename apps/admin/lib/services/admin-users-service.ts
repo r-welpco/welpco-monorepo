@@ -46,6 +46,7 @@ export interface AdminUserVerification {
 
 export interface AdminUserDetail extends AdminUserRow {
   updatedAt?: string;
+  stripeDefaultPaymentMethodId?: string | null;
   backgroundCheckPaidAt?: string | null;
   backgroundCheckCertnStatus?: string | null;
   backgroundCheckCertnApplicantUrl?: string | null;

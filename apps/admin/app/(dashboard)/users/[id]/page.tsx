@@ -274,6 +274,13 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
             <DetailRow label="Onboarding">
               {profile.onboardingCompleted ? "Completed" : "Not completed"}
             </DetailRow>
+            {profile.type === "customer" ? (
+              <DetailRow label="Default payment method ID">
+                <Text size="1" style={{ fontFamily: "ui-monospace, monospace" }}>
+                  {user.stripeDefaultPaymentMethodId ?? "Not set"}
+                </Text>
+              </DetailRow>
+            ) : null}
             <DetailRow label="Date of birth">{profile.dateOfBirth ?? "—"}</DetailRow>
             <DetailRow label="Phone">
               <Text
