@@ -107,6 +107,10 @@ describe('PaymentService', () => {
       subtotalCents: 885,
       taxCents: 115,
       totalCents: 1000,
+      currency: 'cad',
+    });
+    mockWelperPayoutLedger.upsertLedgerForReleasedBooking.mockResolvedValue({
+      welperNetCents: 708,
     });
     mockDataSource.transaction.mockImplementation(async (fn: (m: unknown) => Promise<unknown>) => {
       const bookingQb = {
@@ -496,7 +500,7 @@ describe('PaymentService', () => {
       expect(mockWelperPayoutLedger.upsertLedgerForReleasedBooking).toHaveBeenCalled();
     });
 
-    it('NOTIFICATIONS-001: emits PAYMENT capture notifications to BOTH customer and welper', async () => {
+    it('NOTIFICATIONS-001: emits PAYMENT capture notification to customer on PI capture', async () => {
       const bookingId = 'b-emit';
       const row: Partial<BookingPayment> = {
         id: 'pay-emit',
@@ -515,6 +519,8 @@ describe('PaymentService', () => {
       mockBookingRepo.findOne.mockResolvedValue({
         id: bookingId,
         status: BookingRequestStatus.PAYMENT_RELEASED,
+        customerId: 'cust-emit',
+        welperId: 'welp-emit',
       } as BookingRequest);
 
       const pi = {
@@ -524,18 +530,75 @@ describe('PaymentService', () => {
       } as Stripe.PaymentIntent;
       await service.syncPaymentIntentFromWebhook(pi);
 
-      expect(mockNotificationService.emitForUser).toHaveBeenCalledTimes(2);
-      const calls = mockNotificationService.emitForUser.mock.calls;
-      const recipients = calls.map((c) => c[0]);
-      expect(recipients).toEqual(expect.arrayContaining(['cust-emit', 'welp-emit']));
-      const customerCall = calls.find((c) => c[0] === 'cust-emit')!;
+      // Already payment_released → no welper payout email on this path; only customer capture.
+      expect(mockNotificationService.emitForUser).toHaveBeenCalledTimes(1);
+      const customerCall = mockNotificationService.emitForUser.mock.calls[0];
+      expect(customerCall[0]).toBe('cust-emit');
       expect(customerCall[1].category).toBe(NotificationCategory.PAYMENT);
       expect(customerCall[1].paymentEmailType).toBe('payment_captured_customer');
       expect(customerCall[1].paymentEmailVariables).toEqual(
         expect.objectContaining({ amount: '50.00', currency: 'CAD' }),
       );
-      const welperCall = calls.find((c) => c[0] === 'welp-emit')!;
-      expect(welperCall[1].paymentEmailType).toBe('payment_captured_welper');
+    });
+
+    it('NOTIFICATIONS-001: emits welper payout email with ledger net on payment release', async () => {
+      const bookingId = 'b-emit-release';
+      const row: Partial<BookingPayment> = {
+        id: 'pay-emit-release',
+        bookingId,
+        stripePaymentIntentId: 'pi_emit_release',
+        status: BookingPaymentRecordStatus.AUTHORIZED,
+        amountCents: 3737,
+        currency: 'cad',
+        paymentKind: BookingPaymentKind.HOLD,
+        customerId: 'cust-emit',
+        welperId: 'welp-emit',
+      };
+      mockBookingPaymentRepo.findOne.mockResolvedValue(row as BookingPayment);
+      mockBookingPaymentRepo.save.mockImplementation((r) => Promise.resolve(r as BookingPayment));
+      mockBookingPaymentRepo.find.mockResolvedValue([
+        {
+          ...row,
+          status: BookingPaymentRecordStatus.CAPTURED,
+          capturedAt: new Date(),
+          capturedAmountCents: 3737,
+        } as BookingPayment,
+      ]);
+      mockReceiptRepo.findOne.mockResolvedValue({
+        bookingId,
+        subtotalCents: 7313,
+        taxCents: 1095,
+        totalCents: 3737,
+        currency: 'cad',
+      });
+      mockWelperPayoutLedger.upsertLedgerForReleasedBooking.mockResolvedValue({
+        welperNetCents: 5850,
+      });
+      mockBookingRepo.findOne.mockResolvedValue({
+        id: bookingId,
+        status: BookingRequestStatus.COMPLETED,
+        customerId: 'cust-emit',
+        welperId: 'welp-emit',
+      } as BookingRequest);
+      mockBookingRepo.save.mockImplementation((b) => Promise.resolve(b as BookingRequest));
+
+      const pi = {
+        id: 'pi_emit_release',
+        status: 'succeeded',
+        amount_received: 3737,
+      } as Stripe.PaymentIntent;
+      await service.syncPaymentIntentFromWebhook(pi);
+
+      const welperCall = mockNotificationService.emitForUser.mock.calls.find(
+        (c) => c[0] === 'welp-emit',
+      );
+      expect(welperCall).toBeDefined();
+      expect(welperCall![1].paymentEmailType).toBe('payment_captured_welper');
+      expect(welperCall![1].paymentEmailVariables).toEqual(
+        expect.objectContaining({ amount: '58.50', currency: 'CAD' }),
+      );
+      // Must not use the hold capture amount (37.37).
+      expect(welperCall![1].paymentEmailVariables.amount).not.toBe('37.37');
     });
 
     it('NOTIFICATIONS-001: emit failure does not block payment release write', async () => {

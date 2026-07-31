@@ -15,8 +15,8 @@ import {
 } from "@welpco/ui";
 import Link from "next/link";
 import { useState } from "react";
+import { AdminDateTime } from "@/components/admin-date-time";
 import {
-  formatAdminDateTime,
   formatAdminMoneyCents,
   formatAdminStatusLabel,
   shortId,
@@ -141,7 +141,7 @@ export function PayoutComputationDetailsModal({
                   <TableCell>
                     <Link href={`/bookings/${line.bookingId}`}>{shortId(line.bookingId)}</Link>
                     <Text size="1" color="gray" style={{ display: "block" }}>
-                      {formatAdminDateTime(line.paymentReleasedAt)}
+                      <AdminDateTime value={line.paymentReleasedAt} />
                     </Text>
                   </TableCell>
                   <TableCell>
@@ -259,7 +259,7 @@ export function PayoutLineDetailsButton({
           </Flex>
 
           <Text size="2" color="gray">
-            Released {formatAdminDateTime(line.paymentReleasedAt)} ·{" "}
+            Released <AdminDateTime value={line.paymentReleasedAt} /> ·{" "}
             <Link href={`/bookings/${line.bookingId}`}>Booking {shortId(line.bookingId)}</Link>
           </Text>
 

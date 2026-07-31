@@ -1,5 +1,5 @@
 import { Box, Flex, Text } from "@welpco/ui";
-import { formatAdminDateTime } from "@/lib/admin-format";
+import { AdminDateTime } from "@/components/admin-date-time";
 
 export type AdminTimelineTone = "default" | "danger" | "success";
 
@@ -60,7 +60,7 @@ export function AdminTimeline({ events }: { events: AdminTimelineEvent[] }) {
                 {event.label}
               </Text>
               <Text size="1" color="gray">
-                {event.timestamp ? formatAdminDateTime(event.timestamp) : "—"}
+                <AdminDateTime value={event.timestamp} />
               </Text>
             </Flex>
           </Flex>

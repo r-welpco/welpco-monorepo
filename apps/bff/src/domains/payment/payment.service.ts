@@ -1137,18 +1137,19 @@ export class PaymentService {
         capturedRows.length > 0 &&
         capturedRows.every((row) => isStripeFeeSynced(row.stripeFeeCents, row.stripeBalanceTransactionId));
       const totalFeeCents = capturedRows.reduce((sum, row) => sum + (row.stripeFeeCents ?? 0), 0);
-      await this.welperPayoutLedgerService.upsertLedgerForReleasedBooking(
+      const ledger = await this.welperPayoutLedgerService.upsertLedgerForReleasedBooking(
         booking,
         receipt,
         { totalFeeCents, allSynced: allFeesSynced },
         manager,
       );
 
-      return { booking, newlyReleased };
+      return { booking, newlyReleased, ledger, currency: receipt.currency };
     });
 
     if (released?.newlyReleased) {
       await this.emitBookingPaymentReleased(released.booking);
+      await this.emitWelperPayoutQueued(released.booking, released.ledger, released.currency);
     }
   }
 
@@ -1278,14 +1279,9 @@ export class PaymentService {
   }
 
   /**
-   * NOTIFICATIONS-001 (Day 16 dispatch 2): emit "Payment received"
-   * notifications to BOTH the customer (charged) and the welper (payout
-   * queued). Per-recipient body shapes the message for the role.
-   *
-   * The `metadata.bookingId` dedup window (5 min) makes this safe to call
-   * from BOTH the in-process capture flow and the asynchronous webhook —
-   * whichever lands first emits, the second is a no-op. Bible §22 voice:
-   * concrete amount + booking link, no jargon.
+   * NOTIFICATIONS-001: in-app / booking email when payment is fully released.
+   * Welper "Versement en cours" (payout amount) is emitted separately via
+   * {@link emitWelperPayoutQueued} so the amount comes from the payout ledger.
    */
   private async emitBookingPaymentReleased(booking: BookingRequest): Promise<void> {
     for (const userId of [booking.customerId, booking.welperId]) {
@@ -1313,6 +1309,42 @@ export class PaymentService {
     }
   }
 
+  /**
+   * Welper "Versement en cours" / payout-queued email. Emitted once when the
+   * booking becomes payment_released, using ledger `welperNetCents` — not each
+   * PaymentIntent capture (hold/delta), which would show the customer charge.
+   */
+  private async emitWelperPayoutQueued(
+    booking: BookingRequest,
+    ledger: { welperNetCents: number },
+    currencyCode: string | null | undefined,
+  ): Promise<void> {
+    if (ledger.welperNetCents <= 0) {
+      return;
+    }
+    const amount = (ledger.welperNetCents / 100).toFixed(2);
+    const currency = (currencyCode ?? 'cad').toUpperCase();
+    try {
+      const welperLocale =
+        (await this.notificationService.resolveLocaleForUser(booking.welperId)) === 'fr'
+          ? 'fr'
+          : 'en';
+      await this.notificationService.emitForUser(booking.welperId, {
+        category: NotificationCategory.PAYMENT,
+        paymentEmailType: 'payment_captured_welper',
+        paymentEmailVariables: { amount, currency },
+        smsBody: getSmsBody('welper_payment_processing', welperLocale),
+        metadata: {
+          bookingId: booking.id,
+          kind: 'captured-welper',
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to emit payout-queued notification (welper): ${(err as Error).message}`);
+    }
+  }
+
+  /** Customer "Payment received" for each captured PaymentIntent (hold and/or delta). */
   private async emitPaymentCaptured(row: BookingPayment): Promise<void> {
     const amountCents = row.capturedAmountCents ?? row.amountCents;
     const amount = (amountCents / 100).toFixed(2);
@@ -1330,25 +1362,6 @@ export class PaymentService {
       });
     } catch (err) {
       this.logger.warn(`Failed to emit captured notification (customer): ${(err as Error).message}`);
-    }
-    try {
-      const welperLocale =
-        (await this.notificationService.resolveLocaleForUser(row.welperId)) === 'fr'
-          ? 'fr'
-          : 'en';
-      await this.notificationService.emitForUser(row.welperId, {
-        category: NotificationCategory.PAYMENT,
-        paymentEmailType: 'payment_captured_welper',
-        paymentEmailVariables: { amount, currency },
-        smsBody: getSmsBody('welper_payment_processing', welperLocale),
-        metadata: {
-          bookingId: row.bookingId,
-          paymentIntentId: row.stripePaymentIntentId,
-          kind: 'captured-welper',
-        },
-      });
-    } catch (err) {
-      this.logger.warn(`Failed to emit captured notification (welper): ${(err as Error).message}`);
     }
   }
 

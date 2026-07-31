@@ -13,6 +13,7 @@ import {
 } from "@welpco/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminUserAvatar } from "@/components/admin-user-avatar";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { DetailRow, DetailTable } from "@/components/detail-rows";
@@ -210,7 +211,7 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
             </DetailRow>
             {user.backgroundCheckPaidAt ? (
               <DetailRow label="Paid at">
-                {new Date(user.backgroundCheckPaidAt).toLocaleString()}
+                <AdminDateTime value={user.backgroundCheckPaidAt} />
               </DetailRow>
             ) : null}
             <DetailRow label="Screening">{user.backgroundCheckCertnStatus ?? "—"}</DetailRow>
@@ -237,10 +238,10 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
             <Text weight="bold">ID:</Text> {user.id}
           </Text>
           <Text size="2" color="gray">
-            Created {user.createdAt ? new Date(user.createdAt).toLocaleString() : "—"}
-            {user.lastLoginAt
-              ? ` · Last login ${new Date(user.lastLoginAt).toLocaleString()}`
-              : ""}
+            Created <AdminDateTime value={user.createdAt} />
+            {user.lastLoginAt ? (
+              <> · Last login <AdminDateTime value={user.lastLoginAt} /></>
+            ) : null}
           </Text>
         </Flex>
       </Card>
@@ -430,7 +431,8 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
           <ul style={{ margin: 0, paddingLeft: "1.25rem" }}>
               <li>
                 <Text size="2">
-                  <Text weight="bold">When:</Text> {new Date(user.statusChangedAt).toLocaleString()}
+                  <Text weight="bold">When:</Text>{" "}
+                  <AdminDateTime value={user.statusChangedAt} />
                 </Text>
               </li>
               {user.statusChangedByAdminId ? (

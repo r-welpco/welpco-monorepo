@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { listAdminNotifications, type AdminNotificationsResponse } from "@/lib/services/admin-notifications-service";
 
 export const dynamic = "force-dynamic";
@@ -75,7 +76,7 @@ export default async function NotificationsPage({
                 <td><span className="badge">{n.category}</span></td>
                 <td style={{ maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.title}</td>
                 <td>{n.isRead ? "Yes" : "No"}</td>
-                <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}>{new Date(n.createdAt).toLocaleDateString()}</td>
+                <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}><AdminDateTime value={n.createdAt} dateOnly /></td>
               </tr>
             ))}
           </tbody>

@@ -11,6 +11,7 @@ import {
   Text,
 } from "@welpco/ui";
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { listAdminAuditLogs } from "@/lib/services/admin-audit-service";
@@ -115,7 +116,7 @@ export default async function AuditLogsPage({
                 <TableRow key={row.id}>
                   <TableCell style={{ whiteSpace: "nowrap" }}>
                     <Text size="1" color="gray">
-                      {new Date(row.createdAt).toLocaleString()}
+                      <AdminDateTime value={row.createdAt} />
                     </Text>
                   </TableCell>
                   <TableCell>

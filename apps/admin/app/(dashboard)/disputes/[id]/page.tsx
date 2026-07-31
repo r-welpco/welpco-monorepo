@@ -1,10 +1,11 @@
 import { Badge, Button, Card, Flex, Grid, Heading, Text } from "@welpco/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminInfoCallout, AdminSuccessCallout, AdminWarningCallout } from "@/components/admin-callout";
 import { AdminTimeline } from "@/components/admin-timeline";
 import { DetailRow, DetailTable } from "@/components/detail-rows";
-import { formatAdminDateTime, formatAdminMoneyCents, formatAdminStatusLabel } from "@/lib/admin-format";
+import { formatAdminMoneyCents, formatAdminStatusLabel } from "@/lib/admin-format";
 import { buildDisputeTimeline } from "@/lib/dispute-detail-utils";
 import { getDisputeById, type DisputeItem, type DisputeParticipantSummary } from "@/lib/services/dispute-service";
 import { ResolutionForm } from "./resolution-form";
@@ -136,8 +137,8 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
               </Text>
             </Link>
           </DetailRow>
-          <DetailRow label="Filed">{formatAdminDateTime(dispute.createdAt)}</DetailRow>
-          <DetailRow label="Last updated">{formatAdminDateTime(dispute.updatedAt)}</DetailRow>
+          <DetailRow label="Filed"><AdminDateTime value={dispute.createdAt} /></DetailRow>
+          <DetailRow label="Last updated"><AdminDateTime value={dispute.updatedAt} /></DetailRow>
           <DetailRow label="Description">
             <Text size="2" style={{ whiteSpace: "pre-wrap" }}>
               {dispute.description?.trim() || "—"}
@@ -196,7 +197,9 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
           ) : null}
           <DetailTable>
             <DetailRow label="Type">{formatAdminStatusLabel(dispute.resolution.resolutionType)}</DetailRow>
-            <DetailRow label="Resolved at">{formatAdminDateTime(dispute.resolution.resolvedAt)}</DetailRow>
+            <DetailRow label="Resolved at">
+              <AdminDateTime value={dispute.resolution.resolvedAt} />
+            </DetailRow>
             {dispute.resolution.resolvedById ? (
               <DetailRow label="Resolved by">
                 <Link href={`/users/${dispute.resolution.resolvedById}`}>
@@ -237,7 +240,7 @@ export default async function DisputeDetailPage({ params }: { params: Promise<{ 
             ) : null}
             {dispute.resolution.stripeLastSyncedAt ? (
               <DetailRow label="Last Stripe refresh">
-                {formatAdminDateTime(dispute.resolution.stripeLastSyncedAt)}
+                <AdminDateTime value={dispute.resolution.stripeLastSyncedAt} />
               </DetailRow>
             ) : null}
             {dispute.resolution.notes ? (

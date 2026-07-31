@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { listAdminReviews, type AdminReviewsResponse } from "@/lib/services/admin-reviews-service";
 
 export const dynamic = "force-dynamic";
@@ -77,7 +78,7 @@ export default async function ReviewsPage({
                 <td><span className="badge">{r.reviewerType}</span></td>
                 <td style={{ maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.comment ?? "—"}</td>
                 <td><Link href={`/bookings/${r.bookingId}`}>{r.bookingId.slice(0, 8)}</Link></td>
-                <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}>{new Date(r.createdAt).toLocaleDateString()}</td>
+                <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}><AdminDateTime value={r.createdAt} dateOnly /></td>
                 <td><Link href={`/reviews/${r.id}`}>View</Link></td>
               </tr>
             ))}

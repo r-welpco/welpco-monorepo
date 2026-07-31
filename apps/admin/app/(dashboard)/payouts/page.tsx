@@ -11,9 +11,10 @@ import {
   Text,
 } from "@welpco/ui";
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminErrorCallout, AdminWarningCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
-import { formatAdminDateTime, formatAdminMoneyCents, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
+import { formatAdminMoneyCents, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
 import {
   getPayoutUpcoming,
   listPayoutTaxFailures,
@@ -136,7 +137,7 @@ export default async function PayoutsPage() {
                     <TableCell>
                       <Text weight="bold">{formatAdminMoneyCents(task.outstandingCents, "CAD")}</Text>
                     </TableCell>
-                    <TableCell>{formatAdminDateTime(task.createdAt)}</TableCell>
+                    <TableCell><AdminDateTime value={task.createdAt} /></TableCell>
                     <TableCell>
                       <PayoutRecoveryRefreshAction stripeTransferId={task.stripeTransferId} />
                     </TableCell>
@@ -192,7 +193,7 @@ export default async function PayoutsPage() {
                         {failure.error ?? "No error details"}
                       </Text>
                     </TableCell>
-                    <TableCell>{formatAdminDateTime(failure.updatedAt)}</TableCell>
+                    <TableCell><AdminDateTime value={failure.updatedAt} /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>

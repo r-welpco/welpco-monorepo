@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { listAdminReferrals, getAdminReferralStats, type AdminReferralsResponse, type AdminReferralStats } from "@/lib/services/admin-referrals-service";
 
 export const dynamic = "force-dynamic";
@@ -74,7 +75,7 @@ export default async function ReferralsPage({
                 <td><Link href={`/users/${r.refereeUserId}`}>{r.refereeUserId.slice(0, 8)}</Link></td>
                 <td><span className="badge">{r.status}</span></td>
                 <td>{r.rewardAmount != null ? `$${Number(r.rewardAmount).toFixed(2)}` : "—"} <span className="badge">{r.rewardStatus}</span></td>
-                <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}>{new Date(r.referralDate).toLocaleDateString()}</td>
+                <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}><AdminDateTime value={r.referralDate} dateOnly /></td>
               </tr>
             ))}
           </tbody>

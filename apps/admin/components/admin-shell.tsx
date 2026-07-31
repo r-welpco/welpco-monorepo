@@ -4,6 +4,7 @@ import { Button, Flex, Separator, Text } from "@welpco/ui";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ADMIN_LAUNCH_NAV } from "@/lib/admin-nav";
+import { AdminTimeZoneLabel } from "@/components/admin-date-time";
 
 function AdminNav() {
   const pathname = usePathname();
@@ -44,6 +45,7 @@ export function AdminShell({
       <Flex direction="column" gap="4">
         <AdminNav />
         <Flex align="center" gap="3" wrap="wrap">
+          <AdminTimeZoneLabel />
           {sessionEmail ? (
             <Text size="1" color="gray">
               {sessionEmail}

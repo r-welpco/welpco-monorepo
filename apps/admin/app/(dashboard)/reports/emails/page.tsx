@@ -18,6 +18,7 @@ import {
   SelectTrigger,
 } from "@welpco/ui/select";
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { NativeFormField, nativeInputProps } from "@/components/native-form-field";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
@@ -53,12 +54,6 @@ const EMPTY_REPORT: ResendEmailsReport = {
 
 function formatNumber(value: number): string {
   return new Intl.NumberFormat("en-CA").format(value);
-}
-
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("en-CA");
 }
 
 function eventColor(
@@ -243,7 +238,7 @@ export default async function ResendEmailsReportPage({
               <TableBody>
                 {report.emails.map((email) => (
                   <TableRow key={email.id}>
-                    <TableCell>{formatDateTime(email.createdAt)}</TableCell>
+                    <TableCell><AdminDateTime value={email.createdAt} /></TableCell>
                     <TableCell>
                       <Text className={styles.mono} size="2">
                         {email.to.join(", ")}
@@ -311,7 +306,7 @@ export default async function ResendEmailsReportPage({
 
       {report.generatedAt !== EMPTY_REPORT.generatedAt ? (
         <Text size="1" color="gray">
-          Generated {new Date(report.generatedAt).toLocaleString("en-CA")} ·
+          Generated <AdminDateTime value={report.generatedAt} /> ·
           recipient/event filters apply to the current page only
         </Text>
       ) : null}

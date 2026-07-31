@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { listAdminReviews, deleteAdminReview, type AdminReview } from "@/lib/services/admin-reviews-service";
 
 export default function ReviewDetailPage() {
@@ -42,7 +43,7 @@ export default function ReviewDetailPage() {
             <tr><td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Reviewer</td><td><Link href={`/users/${review.reviewerId}`}>{review.reviewerId}</Link></td></tr>
             <tr><td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Reviewee</td><td><Link href={`/users/${review.revieweeId}`}>{review.revieweeId}</Link></td></tr>
             <tr><td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Booking</td><td><Link href={`/bookings/${review.bookingId}`}>{review.bookingId}</Link></td></tr>
-            <tr><td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Date</td><td>{new Date(review.createdAt).toLocaleString()}</td></tr>
+            <tr><td style={{ padding: "4px 12px 4px 0", color: "var(--admin-muted)" }}>Date</td><td><AdminDateTime value={review.createdAt} /></td></tr>
           </tbody>
         </table>
         {review.comment ? (

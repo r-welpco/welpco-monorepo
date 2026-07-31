@@ -1,5 +1,6 @@
 import { Badge, Button, Card, Flex, Text } from "@welpco/ui";
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import {
@@ -10,12 +11,6 @@ import { EmailHtmlPreview } from "../email-html-preview";
 import styles from "../page.module.css";
 
 export const dynamic = "force-dynamic";
-
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("en-CA");
-}
 
 function eventColor(
   event: ResendEmailLastEvent,
@@ -85,7 +80,7 @@ export default async function ResendEmailDetailPage({
               </Text>
               <Text size="2">
                 <Text color="gray">Sent: </Text>
-                {formatDateTime(email.createdAt)}
+                <AdminDateTime value={email.createdAt} />
               </Text>
               <Text size="2">
                 <Text color="gray">Resend id: </Text>

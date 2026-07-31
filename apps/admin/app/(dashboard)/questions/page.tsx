@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { listQuestions, type AdminQuestion } from "@/lib/services/admin-questions-service";
 
 export const dynamic = "force-dynamic";
@@ -60,7 +61,7 @@ export default async function QuestionsPage() {
                       : "—"}
                   </td>
                   <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}>
-                    {q.createdAt ? new Date(q.createdAt).toLocaleDateString() : "—"}
+                    <AdminDateTime value={q.createdAt} dateOnly />
                   </td>
                   <td>
                     <Link href={`/questions/${q.id}`}>Edit</Link>

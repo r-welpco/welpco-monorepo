@@ -1,15 +1,3 @@
-export function formatAdminDateTime(value: unknown): string {
-  if (value == null || value === "") return "—";
-  const d = new Date(String(value));
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString();
-}
-
-export function formatAdminDate(value: unknown): string {
-  if (value == null || value === "") return "—";
-  const d = new Date(String(value));
-  return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString();
-}
-
 export function formatAdminAddress(address: Record<string, string> | null | undefined): string {
   if (!address || typeof address !== "object") return "—";
   const parts = [

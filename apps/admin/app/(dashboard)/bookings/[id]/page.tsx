@@ -9,12 +9,12 @@ import {
 } from "@welpco/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminTimeline } from "@/components/admin-timeline";
 import { AdminWarningCallout } from "@/components/admin-callout";
 import { DetailRow, DetailTable } from "@/components/detail-rows";
 import {
   formatAdminAddress,
-  formatAdminDateTime,
   formatAdminMoneyCents,
   formatAdminMoneyMajor,
   formatAdminStatusLabel,
@@ -138,8 +138,8 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
                 </Text>
               </Link>
             </DetailRow>
-            <DetailRow label="Created">{formatAdminDateTime(booking.createdAt)}</DetailRow>
-            <DetailRow label="Last updated">{formatAdminDateTime(booking.updatedAt)}</DetailRow>
+            <DetailRow label="Created"><AdminDateTime value={booking.createdAt} /></DetailRow>
+            <DetailRow label="Last updated"><AdminDateTime value={booking.updatedAt} /></DetailRow>
           </DetailTable>
         </Card>
       </Grid>
@@ -166,7 +166,7 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
               {booking.paymentPhase ? formatAdminStatusLabel(booking.paymentPhase) : "—"}
             </DetailRow>
             <DetailRow label="Capture eligible at">
-              {formatAdminDateTime(booking.captureEligibleAt)}
+              <AdminDateTime value={booking.captureEligibleAt} />
             </DetailRow>
             <DetailRow label="Authorization">
               {booking.paymentAuthorizationStatus
@@ -174,13 +174,13 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
                 : "—"}
             </DetailRow>
             <DetailRow label="Authorization due">
-              {formatAdminDateTime(booking.paymentAuthorizationDueAt)}
+              <AdminDateTime value={booking.paymentAuthorizationDueAt} />
             </DetailRow>
             <DetailRow label="Auto-cancel cutoff">
-              {formatAdminDateTime(booking.paymentAuthorizationDeadlineAt)}
+              <AdminDateTime value={booking.paymentAuthorizationDeadlineAt} />
             </DetailRow>
             <DetailRow label="Stripe authorization expires">
-              {formatAdminDateTime(booking.paymentAuthorizationExpiresAt)}
+              <AdminDateTime value={booking.paymentAuthorizationExpiresAt} />
             </DetailRow>
             <DetailRow label="Authorization risk">
               {booking.paymentAuthorizationRiskCode
@@ -188,7 +188,7 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
                 : "None"}
             </DetailRow>
             <DetailRow label="Last authorization attempt">
-              {formatAdminDateTime(booking.paymentAuthorizationLastAttemptAt)}
+              <AdminDateTime value={booking.paymentAuthorizationLastAttemptAt} />
             </DetailRow>
             <DetailRow label="Authorization attempts">
               {booking.paymentAuthorizationAttemptCount ?? 0}
@@ -222,7 +222,7 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
               <PaymentRefreshAction bookingId={booking.id} />
             </DetailRow>
             <DetailRow label="Dispute report deadline">
-              {formatAdminDateTime(booking.disputeReportDeadlineAt)}
+              <AdminDateTime value={booking.disputeReportDeadlineAt} />
             </DetailRow>
           </DetailTable>
         </Card>
@@ -271,8 +271,8 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
               </Text>
             </DetailRow>
             <DetailRow label="Billing window">
-              {formatAdminDateTime(receipt.billingCheckInAt)} –{" "}
-              {formatAdminDateTime(receipt.billingCheckOutAt)}
+              <AdminDateTime value={receipt.billingCheckInAt} /> –{" "}
+              <AdminDateTime value={receipt.billingCheckOutAt} />
             </DetailRow>
             <DetailRow label="Hourly rate">
               {formatAdminMoneyMajor(receipt.hourlyRate, receipt.currency)}
@@ -286,9 +286,9 @@ export default async function AdminBookingDetailPage({ params }: { params: Promi
             <DetailRow label="Total charged">
               {formatAdminMoneyCents(receipt.totalCents, receipt.currency)}
             </DetailRow>
-            <DetailRow label="Confirmed">{formatAdminDateTime(receipt.confirmedAt)}</DetailRow>
+            <DetailRow label="Confirmed"><AdminDateTime value={receipt.confirmedAt} /></DetailRow>
             <DetailRow label="Sent to customer">
-              {formatAdminDateTime(receipt.sentToCustomerAt)}
+              <AdminDateTime value={receipt.sentToCustomerAt} />
             </DetailRow>
             <DetailRow label="Stripe Tax transaction">
               {receipt.stripeTaxTransactionStatus

@@ -12,6 +12,7 @@ import {
   Text,
 } from "@welpco/ui";
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { NativeFormField, nativeSelectProps } from "@/components/native-form-field";
@@ -170,7 +171,7 @@ export default async function DisputesPage({
                   <TableCell>{d.category}</TableCell>
                   <TableCell>
                     <Text size="1" color="gray">
-                      {new Date(d.updatedAt).toLocaleString()}
+                      <AdminDateTime value={d.updatedAt} />
                     </Text>
                   </TableCell>
                   <TableCell>

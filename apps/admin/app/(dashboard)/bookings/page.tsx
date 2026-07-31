@@ -13,10 +13,11 @@ import {
   Text,
 } from "@welpco/ui";
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { NativeFormField, nativeInputProps, nativeSelectProps } from "@/components/native-form-field";
-import { formatAdminDateTime, formatAdminMoneyMajor, formatAdminStatusLabel } from "@/lib/admin-format";
+import { formatAdminMoneyMajor, formatAdminStatusLabel } from "@/lib/admin-format";
 import { searchAdminBookings } from "@/lib/services/admin-booking-service";
 import { BookingIdJump } from "./booking-id-jump";
 
@@ -238,7 +239,7 @@ export default async function BookingsSearchPage({
                       </Text>
                       {b.paymentAuthorizationDeadlineAt ? (
                         <Text size="1" color="gray">
-                          Cutoff {formatAdminDateTime(b.paymentAuthorizationDeadlineAt)}
+                          Cutoff <AdminDateTime value={b.paymentAuthorizationDeadlineAt} />
                         </Text>
                       ) : null}
                     </TableCell>
@@ -270,7 +271,7 @@ export default async function BookingsSearchPage({
                     </TableCell>
                     <TableCell>
                       <Text size="1" color="gray">
-                        {b.updatedAt ? new Date(b.updatedAt).toLocaleString() : "—"}
+                        <AdminDateTime value={b.updatedAt} />
                       </Text>
                     </TableCell>
                     <TableCell>{id ? <Link href={`/bookings/${id}`}>View</Link> : null}</TableCell>

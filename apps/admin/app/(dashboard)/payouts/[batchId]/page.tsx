@@ -12,9 +12,10 @@ import {
 } from "@welpco/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminErrorCallout, AdminWarningCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
-import { formatAdminDateTime, formatAdminMoneyCents, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
+import { formatAdminMoneyCents, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
 import { getPayoutBatch } from "@/lib/services/admin-payouts-service";
 import { PayoutApproveAction } from "../payout-batch-actions";
 import { PayoutLineDetailsButton, PayoutWelperDetailsButton } from "../payout-computation-details-modal";
@@ -86,7 +87,7 @@ export default async function PayoutBatchPage({ params }: { params: Promise<{ ba
             </Badge>
             {batch.executedAt ? (
               <Text size="2" color="gray">
-                Executed {formatAdminDateTime(batch.executedAt)}
+                Executed <AdminDateTime value={batch.executedAt} />
               </Text>
             ) : null}
           </Flex>
@@ -156,7 +157,7 @@ export default async function PayoutBatchPage({ params }: { params: Promise<{ ba
                   <TableCell>
                     <Link href={`/bookings/${line.bookingId}`}>{shortId(line.bookingId)}</Link>
                   </TableCell>
-                  <TableCell>{formatAdminDateTime(line.paymentReleasedAt)}</TableCell>
+                  <TableCell><AdminDateTime value={line.paymentReleasedAt} /></TableCell>
                   <TableCell>{formatAdminMoneyCents(line.welperNetCents, "CAD")}</TableCell>
                   <TableCell>{formatAdminMoneyCents(line.platformNetCents, "CAD")}</TableCell>
                   <TableCell>

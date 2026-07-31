@@ -19,6 +19,7 @@ import {
 } from "@welpco/ui/select";
 import { NativeFormField, nativeInputProps } from "@/components/native-form-field";
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { listCategories, type AdminCategory } from "@/lib/services/admin-categories-service";
@@ -390,7 +391,7 @@ export default async function WelperDistributionReportPage({
                     {mappableCount} mapped area buckets · generated{" "}
                     {report.generatedAt === EMPTY_REPORT.generatedAt
                       ? "after load failure"
-                      : new Date(report.generatedAt).toLocaleString()}
+                      : <AdminDateTime value={report.generatedAt} />}
                   </Text>
                 </Flex>
                 <form method="get">

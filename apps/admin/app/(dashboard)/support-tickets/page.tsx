@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { listAdminSupportTickets } from "@/lib/services/admin-support-tickets-service";
 
 export const dynamic = "force-dynamic";
@@ -90,7 +91,7 @@ export default async function SupportTicketsPage({
                     <Link href={`/users/${t.userId}`}>{t.userId.slice(0, 8)}…</Link>
                   </td>
                   <td style={{ fontSize: "0.85rem", color: "var(--admin-muted)" }}>
-                    {new Date(t.updatedAt).toLocaleString()}
+                    <AdminDateTime value={t.updatedAt} />
                   </td>
                   <td>
                     <Link href={`/support-tickets/${t.id}`}>Open</Link>

@@ -12,6 +12,7 @@ import {
   Text,
 } from "@welpco/ui";
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminUserAvatar } from "@/components/admin-user-avatar";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
@@ -408,7 +409,7 @@ export default async function AdminUsersPage({
                   </TableCell>
                   <TableCell>
                     <Text size="1" color="gray">
-                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
+                      <AdminDateTime value={u.createdAt} dateOnly />
                     </Text>
                   </TableCell>
                   <TableCell>

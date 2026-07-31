@@ -13,10 +13,11 @@ import {
   Text,
 } from "@welpco/ui";
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
 import { NativeFormField, nativeInputProps, nativeSelectProps } from "@/components/native-form-field";
-import { formatAdminDate, formatAdminStatusLabel, shortId } from "@/lib/admin-format";
+import { formatAdminStatusLabel, shortId } from "@/lib/admin-format";
 import { searchAdminJobs } from "@/lib/services/admin-job-service";
 
 export const dynamic = "force-dynamic";
@@ -224,7 +225,7 @@ export default async function AdminJobsPage({
                     )}
                   </TableCell>
                   <TableCell>
-                    {formatAdminDate(job.publishedAt)}
+                    <AdminDateTime value={job.publishedAt} dateOnly />
                   </TableCell>
                 </TableRow>
               ))

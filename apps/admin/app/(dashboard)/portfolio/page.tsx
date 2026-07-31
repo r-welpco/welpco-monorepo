@@ -15,9 +15,9 @@ import {
   Text,
 } from "@welpco/ui";
 import Link from "next/link";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
-import { formatAdminDateTime } from "@/lib/admin-format";
 import {
   listAdminPortfolioPhotos,
   type AdminPortfolioPhotosResponse,
@@ -152,7 +152,7 @@ export default async function PortfolioModerationPage({
                   </TableCell>
                   <TableCell>
                     <Text size="1" color="gray">
-                      {formatAdminDateTime(photo.createdAt)}
+                      <AdminDateTime value={photo.createdAt} />
                     </Text>
                   </TableCell>
                   <TableCell>

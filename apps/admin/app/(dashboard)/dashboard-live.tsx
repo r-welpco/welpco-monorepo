@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, Fragment } from "react";
 import { AdminErrorCallout } from "@/components/admin-callout";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { formatAdminMoneyCents } from "@/lib/admin-format";
 import { getAdminDashboardSnapshot, type AdminDashboardSnapshot } from "@/lib/services/admin-dashboard-service";
 import { listAdminAuditLogs, type AdminAuditEntry } from "@/lib/services/admin-audit-service";
@@ -100,7 +101,7 @@ function AuditTable({ rows }: { rows: AdminAuditEntry[] }) {
         {rows.map((r) => (
           <TableRow key={r.id}>
             <TableCell style={{ whiteSpace: "nowrap" }}>
-              <Text size="1">{new Date(r.createdAt).toLocaleString()}</Text>
+              <Text size="1"><AdminDateTime value={r.createdAt} /></Text>
             </TableCell>
             <TableCell>
               <Badge variant="soft" size="1">
@@ -320,7 +321,7 @@ export function DashboardLive() {
         </Button>
         {snap ? (
           <Text size="1" color="gray">
-            Last snapshot: {new Date(snap.generatedAt).toLocaleString()}
+            Last snapshot: <AdminDateTime value={snap.generatedAt} />
           </Text>
         ) : null}
       </Flex>

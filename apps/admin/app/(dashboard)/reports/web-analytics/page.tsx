@@ -16,6 +16,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@welpco/ui/select";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { NativeFormField, nativeInputProps } from "@/components/native-form-field";
 import { AdminErrorCallout } from "@/components/admin-callout";
 import { AdminPageHeader } from "@/components/admin-page-header";
@@ -339,7 +340,7 @@ export default async function WebAnalyticsReportPage({
 
       {report.generatedAt && report.generatedAt !== EMPTY_REPORT.generatedAt ? (
         <Text size="1" color="gray">
-          Generated {new Date(report.generatedAt).toLocaleString("en-CA")} ·
+          Generated <AdminDateTime value={report.generatedAt} /> ·
           environment {report.environment}
         </Text>
       ) : null}

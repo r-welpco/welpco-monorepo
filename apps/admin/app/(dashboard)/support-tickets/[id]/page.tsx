@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { getAdminSupportTicket } from "@/lib/services/admin-support-tickets-service";
 import { SupportTicketForm } from "./ticket-form";
 
@@ -33,7 +34,8 @@ export default async function SupportTicketDetailPage({ params }: { params: Prom
           <p style={{ marginTop: "1rem", whiteSpace: "pre-wrap" }}>{ticket.description}</p>
         ) : null}
         <p style={{ fontSize: "0.85rem", color: "var(--admin-muted)", marginTop: "1rem" }}>
-          Created {new Date(ticket.createdAt).toLocaleString()} · Updated {new Date(ticket.updatedAt).toLocaleString()}
+          Created <AdminDateTime value={ticket.createdAt} /> · Updated{" "}
+          <AdminDateTime value={ticket.updatedAt} />
         </p>
       </div>
       <SupportTicketForm key={`${ticket.updatedAt}-${ticket.status}`} ticket={ticket} />

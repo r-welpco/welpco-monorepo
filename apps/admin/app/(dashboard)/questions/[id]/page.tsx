@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminDateTime } from "@/components/admin-date-time";
 import { getQuestion } from "@/lib/services/admin-questions-service";
 import { QuestionForm } from "./question-form";
 import { AssignmentManager } from "./assignment-manager";
@@ -28,7 +29,7 @@ export default async function QuestionDetailPage({
       <h1 style={{ marginTop: 0 }}>{question.label}</h1>
       <p style={{ color: "var(--admin-muted)" }}>
         Type: <span className="badge">{question.type}</span> &middot; Created{" "}
-        {new Date(question.createdAt).toLocaleDateString()}
+        <AdminDateTime value={question.createdAt} dateOnly />
       </p>
 
       <QuestionForm question={question} />
