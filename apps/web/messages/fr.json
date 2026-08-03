@@ -1803,6 +1803,7 @@
       "decline": "Refuser",
       "accept": "Accepter",
       "cancelBooking": "Annuler la réservation",
+      "modifyBooking": "Modifier",
       "viewDetails": "Voir les détails",
       "customerFallback": "Client",
       "pendingWaitCustomer": "En attente de l'acceptation de votre Welper. Vous recevrez une notification — et aucune retenue n'est placée sur votre carte avant son acceptation.",
@@ -1852,7 +1853,12 @@
         "cancelConfirm": "Annuler la réservation",
         "cancelCancel": "Garder la réservation",
         "cancelReasonLabel": "Raison de l'annulation",
-        "cancelReasonPlaceholder": "p. ex. Plans changés, autre Welper trouvé"
+        "cancelReasonPlaceholder": "p. ex. Plans changés, autre Welper trouvé",
+        "modifyTitle": "Comment modifier une réservation",
+        "modifyDescription": "Les réservations ne peuvent pas être modifiées pour l'instant. Échangez avec le client sur la plateforme pour convenir d'une nouvelle heure ou de nouveaux détails, puis annulez cette réservation et faites-en créer une nouvelle. Les frais d'annulation habituels s'appliquent toujours si vous annulez dans les 24 h précédant le début.",
+        "modifyDescriptionCustomer": "Les réservations ne peuvent pas être modifiées pour l'instant. Échangez avec votre Welper sur la plateforme pour convenir d'une nouvelle heure ou de nouveaux détails, puis annulez cette réservation et créez-en une nouvelle. Les frais d'annulation habituels s'appliquent toujours si vous annulez dans les 24 h précédant le début.",
+        "modifyConfirm": "Compris",
+        "modifyCancel": "Fermer"
       }
     },
     "customerPreview": {

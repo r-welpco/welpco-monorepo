@@ -1804,6 +1804,7 @@
       "decline": "Decline",
       "accept": "Accept",
       "cancelBooking": "Cancel booking",
+      "modifyBooking": "Modify",
       "viewDetails": "View details",
       "customerFallback": "Customer",
       "pendingWaitCustomer": "Waiting for your welper to accept. You'll get a notification — and no hold is placed on your card until they do.",
@@ -1853,7 +1854,12 @@
         "cancelConfirm": "Cancel booking",
         "cancelCancel": "Keep booking",
         "cancelReasonLabel": "Reason for cancellation",
-        "cancelReasonPlaceholder": "e.g. Plans changed, found another welper"
+        "cancelReasonPlaceholder": "e.g. Plans changed, found another welper",
+        "modifyTitle": "How to modify a booking",
+        "modifyDescription": "Bookings can't be edited for now. Message the customer on the platform to agree on a new time or details, then cancel this booking and have them rebook. The usual cancellation fee still applies if you cancel within 24 hours of the start time.",
+        "modifyDescriptionCustomer": "Bookings can't be edited for now. Message your Welper on the platform to agree on a new time or details, then cancel this booking and create a new one. The usual cancellation fee still applies if you cancel within 24 hours of the start time.",
+        "modifyConfirm": "Got it",
+        "modifyCancel": "Close"
       }
     },
     "customerPreview": {

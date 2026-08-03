@@ -48,7 +48,7 @@ import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 // "Disputed" tab (and the off-paths Declined / No-show), a customer with one
 // of those bookings would have no way to filter to it. Bible §17.3: lists
 // must be honest about what's there.
-type ConfirmKind = "accept" | "decline" | "cancel";
+type ConfirmKind = "accept" | "decline" | "cancel" | "modify";
 interface PendingConfirm {
   kind: ConfirmKind;
   bookingId: string;
@@ -592,15 +592,25 @@ export default function BookingsPageClient() {
                       // is already shown (PENDING booking) — Decline is the
                       // semantically correct verb for the welper at this state.
                       !(isWelper && booking.availableActions?.includes("decline")) && (
-                        <Button
-                          size="2"
-                          color={SEMANTIC_COLOR.danger}
-                          variant="outline"
-                          onClick={openConfirm("cancel", booking.id)}
-                          disabled={cancelMutation.isPending}
-                        >
-                          {welperLabels.cancelBooking}
-                        </Button>
+                        <>
+                          <Button
+                            size="2"
+                            color="gray"
+                            variant="outline"
+                            onClick={openConfirm("modify", booking.id)}
+                          >
+                            {welperLabels.modifyBooking}
+                          </Button>
+                          <Button
+                            size="2"
+                            color={SEMANTIC_COLOR.danger}
+                            variant="outline"
+                            onClick={openConfirm("cancel", booking.id)}
+                            disabled={cancelMutation.isPending}
+                          >
+                            {welperLabels.cancelBooking}
+                          </Button>
+                        </>
                       )}
                     {isWelper && booking.availableActions?.includes("accept") && (
                       <Button
@@ -673,6 +683,22 @@ export default function BookingsPageClient() {
             required: true,
           }}
           onConfirm={(reason) => runCancel(pendingConfirm.bookingId, reason)}
+        />
+      )}
+      {pendingConfirm?.kind === "modify" && (
+        <ActionConfirmDialog
+          open
+          onOpenChange={(open) => !open && closeConfirm()}
+          title={welperLabels.confirm.modifyTitle}
+          description={
+            isWelper
+              ? welperLabels.confirm.modifyDescription
+              : welperLabels.confirm.modifyDescriptionCustomer
+          }
+          confirmLabel={welperLabels.confirm.modifyConfirm}
+          cancelLabel={welperLabels.confirm.modifyCancel}
+          variant="primary"
+          onConfirm={() => closeConfirm()}
         />
       )}
 

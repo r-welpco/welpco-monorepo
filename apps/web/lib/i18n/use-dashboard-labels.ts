@@ -484,6 +484,7 @@ export function useWelperBookingsLabels() {
     decline: t("decline"),
     accept: t("accept"),
     cancelBooking: t("cancelBooking"),
+    modifyBooking: t("modifyBooking"),
     viewDetails: t("viewDetails"),
     customerFallback: t("customerFallback"),
     pendingWaitCustomer: t("pendingWaitCustomer"),
@@ -515,6 +516,11 @@ export function useWelperBookingsLabels() {
       cancelCancel: t("confirm.cancelCancel"),
       cancelReasonLabel: t("confirm.cancelReasonLabel"),
       cancelReasonPlaceholder: t("confirm.cancelReasonPlaceholder"),
+      modifyTitle: t("confirm.modifyTitle"),
+      modifyDescription: t("confirm.modifyDescription"),
+      modifyDescriptionCustomer: t("confirm.modifyDescriptionCustomer"),
+      modifyConfirm: t("confirm.modifyConfirm"),
+      modifyCancel: t("confirm.modifyCancel"),
     },
   };
 }

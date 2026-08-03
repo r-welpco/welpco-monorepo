@@ -201,7 +201,7 @@ interface TimelineEvent {
   date: string | null;
 }
 
-type ConfirmKind = "accept" | "decline" | "check-in" | "cancel";
+type ConfirmKind = "accept" | "decline" | "check-in" | "cancel" | "modify";
 
 // ─── Sub-components ───────────────────────────────────────────────────────
 
@@ -938,6 +938,17 @@ export default function BookingDetailClient({
         );
       },
     },
+    modify: {
+      title: welperBookings.confirm.modifyTitle,
+      description: isWelper
+        ? welperBookings.confirm.modifyDescription
+        : welperBookings.confirm.modifyDescriptionCustomer,
+      confirmLabel: welperBookings.confirm.modifyConfirm,
+      cancelLabel: welperBookings.confirm.modifyCancel,
+      variant: "primary",
+      pending: false,
+      onConfirm: () => setConfirmKind(null),
+    },
   };
 
   const activeConfirm = confirmKind ? confirmConfig[confirmKind] : null;
@@ -1080,15 +1091,25 @@ export default function BookingDetailClient({
                 )}
                 {actions.includes("cancel") &&
                   !(isWelper && actions.includes("decline")) && (
-                  <Button
-                    size="3"
-                    color={SEMANTIC_COLOR.danger}
-                    variant="outline"
-                    onClick={() => setConfirmKind("cancel")}
-                    disabled={cancelMutation.isPending}
-                  >
-                    {welperBookings.cancelBooking}
-                  </Button>
+                  <>
+                    <Button
+                      size="3"
+                      color="gray"
+                      variant="outline"
+                      onClick={() => setConfirmKind("modify")}
+                    >
+                      {welperBookings.modifyBooking}
+                    </Button>
+                    <Button
+                      size="3"
+                      color={SEMANTIC_COLOR.danger}
+                      variant="outline"
+                      onClick={() => setConfirmKind("cancel")}
+                      disabled={cancelMutation.isPending}
+                    >
+                      {welperBookings.cancelBooking}
+                    </Button>
+                  </>
                 )}
                 {actions.includes("check-in") && isWelper && (
                   <Button
