@@ -200,7 +200,7 @@ export function TimeSlotAvailability({
 
   return (
     <Card
-      size="4"
+      size={{ initial: "2", sm: "4" }}
       variant="surface"
       style={{ width: "100%", maxWidth: "100%", minWidth: 0 }}
     >
@@ -243,8 +243,12 @@ export function TimeSlotAvailability({
 
             {selectedDays.length > 0 && (
               <>
-                <Flex gap="3" align="end">
-                  <Box style={{ flex: 1 }}>
+                <Flex
+                  gap="3"
+                  align={{ initial: "stretch", sm: "end" }}
+                  direction={{ initial: "column", sm: "row" }}
+                >
+                  <Box style={{ flex: 1, minWidth: 0 }}>
                     <Text as="label" size="2" weight="medium" htmlFor="start-time-input" mb={FORM_SPACING.labelGap}>
                       {labels?.startTime ?? "Start time"}
                     </Text>
@@ -262,7 +266,7 @@ export function TimeSlotAvailability({
                       aria-describedby={addSlotError ? "add-slot-error" : undefined}
                     />
                   </Box>
-                  <Box style={{ flex: 1 }}>
+                  <Box style={{ flex: 1, minWidth: 0 }}>
                     <Text as="label" size="2" weight="medium" htmlFor="end-time-input" mb={FORM_SPACING.labelGap}>
                       {labels?.endTime ?? "End time"}
                     </Text>
@@ -315,54 +319,75 @@ export function TimeSlotAvailability({
                 return (
                   <Card key={index} size="2" variant="surface">
                     <Flex direction="column" gap="2">
-                      <Flex align="center" justify="between" gap="3">
-                        <Flex align="center" gap="3" style={{ flex: 1 }}>
-                          <Text size="2" weight="bold" style={{ minWidth: "100px" }}>
-                            {getDayLabel(slot.dayOfWeek)}
-                          </Text>
-                          <Flex gap="2" align="center">
-                            <TextField.Root
-                              type="time"
-                              size="2"
-                              value={slot.startTime}
-                              onChange={(e) =>
-                                handleUpdateTimeSlot(index, "startTime", e.target.value)
-                              }
-                              disabled={loading}
-                              aria-label={`${getDayLabel(slot.dayOfWeek)} start time`}
-                              aria-invalid={slotErr ? "true" : undefined}
-                              aria-describedby={errId}
-                              style={{ width: "120px" }}
-                            />
-                            <Text size="2" color="gray" highContrast>
+                      <Flex
+                        align={{ initial: "stretch", sm: "center" }}
+                        direction={{ initial: "column", sm: "row" }}
+                        gap="3"
+                        style={{ minWidth: 0 }}
+                      >
+                        <Text
+                          size="2"
+                          weight="bold"
+                          style={{ minWidth: "100px", flexShrink: 0 }}
+                        >
+                          {getDayLabel(slot.dayOfWeek)}
+                        </Text>
+                        <Flex
+                          gap="2"
+                          align="center"
+                          style={{ flex: "1 1 auto", minWidth: 0, width: "100%" }}
+                        >
+                          <Flex
+                            gap="2"
+                            align="center"
+                            style={{ flex: "1 1 auto", minWidth: 0 }}
+                          >
+                            <Box style={{ flex: "1 1 120px", minWidth: 0 }}>
+                              <TextField.Root
+                                type="time"
+                                size="2"
+                                value={slot.startTime}
+                                onChange={(e) =>
+                                  handleUpdateTimeSlot(index, "startTime", e.target.value)
+                                }
+                                disabled={loading}
+                                aria-label={`${getDayLabel(slot.dayOfWeek)} start time`}
+                                aria-invalid={slotErr ? "true" : undefined}
+                                aria-describedby={errId}
+                                style={{ width: "100%", minWidth: 0 }}
+                              />
+                            </Box>
+                            <Text size="2" color="gray" highContrast style={{ flexShrink: 0 }}>
                               {labels?.to ?? "to"}
                             </Text>
-                            <TextField.Root
-                              type="time"
-                              size="2"
-                              value={slot.endTime}
-                              onChange={(e) =>
-                                handleUpdateTimeSlot(index, "endTime", e.target.value)
-                              }
-                              disabled={loading}
-                              aria-label={`${getDayLabel(slot.dayOfWeek)} end time`}
-                              aria-invalid={slotErr ? "true" : undefined}
-                              aria-describedby={errId}
-                              style={{ width: "120px" }}
-                            />
+                            <Box style={{ flex: "1 1 120px", minWidth: 0 }}>
+                              <TextField.Root
+                                type="time"
+                                size="2"
+                                value={slot.endTime}
+                                onChange={(e) =>
+                                  handleUpdateTimeSlot(index, "endTime", e.target.value)
+                                }
+                                disabled={loading}
+                                aria-label={`${getDayLabel(slot.dayOfWeek)} end time`}
+                                aria-invalid={slotErr ? "true" : undefined}
+                                aria-describedby={errId}
+                                style={{ width: "100%", minWidth: 0 }}
+                              />
+                            </Box>
                           </Flex>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            color={SEMANTIC_COLOR.danger}
+                            size="2"
+                            onClick={() => handleRemoveTimeSlot(index)}
+                            disabled={loading}
+                            aria-label={labels?.removeSlotAria ?? "Remove time slot"}
+                          >
+                            <X aria-hidden="true" style={{ width: "16px", height: "16px" }} />
+                          </Button>
                         </Flex>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          color={SEMANTIC_COLOR.danger}
-                          size="2"
-                          onClick={() => handleRemoveTimeSlot(index)}
-                          disabled={loading}
-                          aria-label={labels?.removeSlotAria ?? "Remove time slot"}
-                        >
-                          <X aria-hidden="true" style={{ width: "16px", height: "16px" }} />
-                        </Button>
                       </Flex>
                       {slotErr && (
                         <Text id={errId} size="1" role="alert" color={SEMANTIC_COLOR.danger}>
@@ -389,4 +414,3 @@ export function TimeSlotAvailability({
     </Card>
   );
 }
-

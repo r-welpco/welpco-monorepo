@@ -289,8 +289,11 @@ export class ServiceDiscoveryService {
 
     qb
       .select('p.welper_id', 'welper_id')
-      .skip((page - 1) * limit)
-      .take(limit);
+      // This is a raw joined query. TypeORM's skip/take pagination is only
+      // applied by its entity-loading path; getRawMany() requires explicit
+      // SQL offset/limit or every page returns the full result set.
+      .offset((page - 1) * limit)
+      .limit(limit);
 
     const rows = await qb.getRawMany<{ welper_id: string }>();
     const pageIds = rows.map((r) => r.welper_id);

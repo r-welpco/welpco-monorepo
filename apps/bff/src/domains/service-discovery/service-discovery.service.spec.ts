@@ -118,8 +118,8 @@ describe('ServiceDiscoveryService', () => {
     andWhere: jest.fn().mockReturnThis(),
     orderBy: jest.fn().mockReturnThis(),
     addOrderBy: jest.fn().mockReturnThis(),
-    skip: jest.fn().mockReturnThis(),
-    take: jest.fn().mockReturnThis(),
+    offset: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
     setParameter: jest.fn().mockReturnThis(),
     getCount: jest.fn(),
     getRawMany: jest.fn(),
@@ -385,8 +385,8 @@ describe('ServiceDiscoveryService', () => {
 
       const result = await service.searchServices({ page: 2, limit: 12 });
 
-      expect(mockQueryBuilder.skip).toHaveBeenCalledWith(12);
-      expect(mockQueryBuilder.take).toHaveBeenCalledWith(12);
+      expect(mockQueryBuilder.offset).toHaveBeenCalledWith(12);
+      expect(mockQueryBuilder.limit).toHaveBeenCalledWith(12);
       expect(mockQueryBuilder.addOrderBy).toHaveBeenCalledWith('p.welper_id', 'ASC');
       expect(result).toMatchObject({ total: 15, page: 2, limit: 12 });
       expect(result.items.map((item) => item.welperId)).toEqual(['w13', 'w14']);
@@ -654,8 +654,8 @@ describe('ServiceDiscoveryService', () => {
         addOrderBy: jest.fn().mockReturnThis(),
         getCount: jest.fn().mockResolvedValue(1),
         select: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
+        offset: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
         getRawMany: jest.fn().mockResolvedValue([{ welper_id: 'w1' }]),
         setParameter: jest.fn().mockReturnThis(),
       };
@@ -700,8 +700,8 @@ describe('ServiceDiscoveryService', () => {
         addOrderBy: jest.fn().mockReturnThis(),
         getCount: jest.fn().mockResolvedValue(2),
         select: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
+        offset: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
         getRawMany: jest.fn().mockResolvedValue([
           { welper_id: 'w1' },
           { welper_id: 'w2' },
@@ -761,8 +761,8 @@ describe('ServiceDiscoveryService', () => {
         addOrderBy: jest.fn().mockReturnThis(),
         getCount: jest.fn().mockResolvedValue(1),
         select: jest.fn().mockReturnThis(),
-        skip: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
+        offset: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
         getRawMany: jest.fn().mockResolvedValue([{ welper_id: 'w1' }]),
         setParameter: jest.fn().mockReturnThis(),
       };
