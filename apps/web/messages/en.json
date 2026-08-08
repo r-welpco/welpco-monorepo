@@ -3001,6 +3001,25 @@
     "signIn": "Sign in",
     "signUp": "Sign up"
   },
+  "validation": {
+    "publicContentPolicy": {
+      "fallback": "We couldn't save your changes. Please try again.",
+      "violations": {
+        "email": "an email address",
+        "phone": "a phone number",
+        "negotiation": "language about negotiating rates",
+        "restrictedContent": "restricted content"
+      },
+      "contexts": {
+        "bio": "Your bio can’t include {violations}. Remove that content and try again.",
+        "jobPosting": "Your job post can’t include {violations}. Remove that content and try again.",
+        "jobApplication": "Your proposal can’t include {violations}. Remove that content and try again.",
+        "serviceOffering": "Your service offering can’t include {violations}. Remove that content and try again.",
+        "portfolioCaption": "Your photo caption can’t include {violations}. Remove that content and try again.",
+        "publicContent": "This public content can’t include {violations}. Remove that content and try again."
+      }
+    }
+  },
   "publicWelperProfile": {
     "backToSearch": "Back to search",
     "loadError": "We couldn't load this Welper's profile.",

@@ -78,6 +78,7 @@ import {
 } from "@/lib/i18n/use-dashboard-labels";
 import { useDateFnsLocale } from "@/lib/i18n/date-fns-locale";
 import { useWelperServiceAreaStepLabels } from "@/lib/i18n/use-auth-labels";
+import { useApiErrorMessage } from "@/lib/i18n/use-api-error-message";
 
 /** Service offering form only supports radius areas; app `ServiceArea` also allows `"address"`. */
 function radiusServiceAreaForForm(area: AppServiceArea | undefined | null): ServiceArea | undefined {
@@ -223,6 +224,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
   const welperAvailabilityExceptionsLabels = useWelperAvailabilityExceptionsLabels();
   const dateFnsLocale = useDateFnsLocale();
   const welperServiceAreaLabels = useWelperServiceAreaStepLabels();
+  const apiErrorMessage = useApiErrorMessage();
 
   const welperSetupIncomplete = useMemo(() => {
     if (!isWelper || !welperSetup) return false;
@@ -603,9 +605,9 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
           <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
             <Callout.Text>
               {error instanceof Error
-                ? error.message
+                ? apiErrorMessage(error)
                 : updateCustomerProfileMutation.error instanceof Error
-                  ? updateCustomerProfileMutation.error.message
+                  ? apiErrorMessage(updateCustomerProfileMutation.error)
                   : customerProfileLabels.loadError}
             </Callout.Text>
           </Callout.Root>
@@ -639,7 +641,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                   labels={customerProfileLabels.form}
                   defaultValues={customerProfileFormDefaults}
                   loading={isLoading || updateCustomerProfileMutation.isPending}
-                  error={error instanceof Error ? error.message : updateCustomerProfileMutation.error instanceof Error ? updateCustomerProfileMutation.error.message : undefined}
+                  error={error instanceof Error ? apiErrorMessage(error) : updateCustomerProfileMutation.error instanceof Error ? apiErrorMessage(updateCustomerProfileMutation.error) : undefined}
                   onSubmit={handleCustomerProfileSubmit}
                 />
               </Flex>
@@ -701,9 +703,9 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
           <Callout.Root color={SEMANTIC_COLOR.danger} variant="surface" role="alert">
             <Callout.Text>
               {error instanceof Error
-                ? error.message
+                ? apiErrorMessage(error)
                 : updateWelperProfileMutation.error instanceof Error
-                  ? updateWelperProfileMutation.error.message
+                  ? apiErrorMessage(updateWelperProfileMutation.error, "bio")
                   : welperProfileLabels.loadError}
             </Callout.Text>
           </Callout.Root>
@@ -754,7 +756,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 <WelperProfileForm
                   defaultValues={welperProfileFormDefaults}
                   loading={isLoading || updateWelperProfileMutation.isPending}
-                  error={error instanceof Error ? error.message : updateWelperProfileMutation.error instanceof Error ? updateWelperProfileMutation.error.message : undefined}
+                  error={error instanceof Error ? apiErrorMessage(error) : updateWelperProfileMutation.error instanceof Error ? apiErrorMessage(updateWelperProfileMutation.error, "bio") : undefined}
                   onSubmit={handleWelperProfileSubmit}
                   labels={welperProfileFormLabels}
                 />
@@ -954,7 +956,7 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
                 provinceLabels={welperServiceAreaLabels.provinceLabels}
                 error={
                   updateWelperProfileMutation.error instanceof Error
-                    ? updateWelperProfileMutation.error.message
+                    ? apiErrorMessage(updateWelperProfileMutation.error)
                     : undefined
                 }
               />
@@ -996,9 +998,9 @@ export default function ProfilePageClient({ user: serverUser }: ProfilePageClien
               loading={createServiceOfferingMutation.isPending || updateServiceOfferingMutation.isPending}
               error={
                 createServiceOfferingMutation.error instanceof Error
-                  ? createServiceOfferingMutation.error.message
+                  ? apiErrorMessage(createServiceOfferingMutation.error, "serviceOffering")
                   : updateServiceOfferingMutation.error instanceof Error
-                    ? updateServiceOfferingMutation.error.message
+                    ? apiErrorMessage(updateServiceOfferingMutation.error, "serviceOffering")
                     : undefined
               }
               onSubmit={handleServiceOfferingSubmit}

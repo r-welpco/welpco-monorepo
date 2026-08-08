@@ -104,6 +104,8 @@ export interface ApiError {
   message: string;
   code?: string;
   statusCode?: number;
+  fields?: string[];
+  violations?: Array<"email" | "phone" | "negotiation">;
 }
 
 // Profile Management Types

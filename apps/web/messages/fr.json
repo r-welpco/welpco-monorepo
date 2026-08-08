@@ -3000,6 +3000,25 @@
     "signIn": "Connexion",
     "signUp": "Inscription"
   },
+  "validation": {
+    "publicContentPolicy": {
+      "fallback": "Impossible d’enregistrer vos modifications. Réessayez.",
+      "violations": {
+        "email": "une adresse courriel",
+        "phone": "un numéro de téléphone",
+        "negotiation": "du contenu sur la négociation des tarifs",
+        "restrictedContent": "du contenu interdit"
+      },
+      "contexts": {
+        "bio": "Votre bio ne peut pas contenir {violations}. Retirez ce contenu, puis réessayez.",
+        "jobPosting": "Votre annonce ne peut pas contenir {violations}. Retirez ce contenu, puis réessayez.",
+        "jobApplication": "Votre proposition ne peut pas contenir {violations}. Retirez ce contenu, puis réessayez.",
+        "serviceOffering": "Votre offre de service ne peut pas contenir {violations}. Retirez ce contenu, puis réessayez.",
+        "portfolioCaption": "La légende de votre photo ne peut pas contenir {violations}. Retirez ce contenu, puis réessayez.",
+        "publicContent": "Ce contenu public ne peut pas contenir {violations}. Retirez ce contenu, puis réessayez."
+      }
+    }
+  },
   "publicWelperProfile": {
     "backToSearch": "Retour à la recherche",
     "loadError": "Impossible de charger le profil de ce Welper.",

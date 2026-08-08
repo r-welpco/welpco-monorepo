@@ -41,6 +41,7 @@ import {
   type PortfolioPhoto,
   type PortfolioUploadStage,
 } from "@/lib/services/portfolio-service";
+import { useApiErrorMessage } from "@/lib/i18n/use-api-error-message";
 
 /**
  * SHARE-001 (web half): welper-facing portfolio manager.
@@ -103,6 +104,7 @@ function PortfolioPhotoCard({
   reorderPending: boolean;
 }) {
   const t = useTranslations("dashboard.profile.portfolio");
+  const apiErrorMessage = useApiErrorMessage();
   const updatePhoto = useUpdatePortfolioPhoto();
   const [caption, setCaption] = useState(photo.caption ?? "");
   const [captionError, setCaptionError] = useState<string | null>(null);
@@ -112,7 +114,11 @@ function PortfolioPhotoCard({
     setCaptionError(null);
     void updatePhoto
       .mutateAsync({ photoId: photo.id, data: { caption: caption.trim() } })
-      .catch(() => setCaptionError(t("updateFailed")));
+      .catch((error: unknown) =>
+        setCaptionError(
+          apiErrorMessage(error, "portfolioCaption", t("updateFailed")),
+        ),
+      );
   };
 
   return (

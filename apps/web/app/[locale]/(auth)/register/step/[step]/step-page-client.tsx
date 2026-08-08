@@ -51,6 +51,10 @@ import { useRegisterEdu } from "../../register-edu-context";
 import { safeNextPath, withNext } from "@/lib/auth/safe-next";
 import { getPresignedUrl, uploadFileToS3 } from "@/lib/services/upload-service";
 import type { SelectedRole, SignupStepName } from "@welpco/types";
+import {
+  useApiErrorMessage,
+  type PublicContentErrorContext,
+} from "@/lib/i18n/use-api-error-message";
 
 /**
  * Day 15 — Phase 2 Dispatch B. Dynamic step renderer with all 9 step
@@ -70,6 +74,7 @@ export default function StepPageClient({ slug }: { slug: string }) {
   const isAuthenticated = status === "authenticated";
   const tPage = useTranslations("auth.register.steps.page");
   const tCommon = useTranslations("auth.common");
+  const apiErrorMessage = useApiErrorMessage();
   const selectRoleLabels = useSelectRoleStepLabels();
   const identityLabels = useIdentityStepLabels();
   const welperBioLabels = useWelperBioStepLabels();
@@ -210,12 +215,17 @@ export default function StepPageClient({ slug }: { slug: string }) {
     }
   };
 
-  const guard = async <T,>(run: () => Promise<T>) => {
+  const guard = async <T,>(
+    run: () => Promise<T>,
+    errorContext: PublicContentErrorContext = "auto",
+  ) => {
     setSubmitError(null);
     try {
       await run();
     } catch (err) {
-      setSubmitError(messageFor(err, tCommon("somethingWentWrong")));
+      setSubmitError(
+        apiErrorMessage(err, errorContext, tCommon("somethingWentWrong")),
+      );
     }
   };
 
@@ -279,17 +289,25 @@ export default function StepPageClient({ slug }: { slug: string }) {
         labels={welperBioLabels}
         state={liteState}
         loading={completeWelperBio.isPending}
-        error={submitError ?? completeWelperBio.error?.message ?? null}
+        error={
+          submitError ??
+          (completeWelperBio.error
+            ? apiErrorMessage(completeWelperBio.error, "bio")
+            : null)
+        }
         onBack={
           backStep
             ? () => router.replace(`/register/step/${stepNameToSlug(backStep)}`)
             : undefined
         }
         onSubmit={(values: WelperBioStepValues) =>
-          guard(async () => {
-            const next = await completeWelperBio.mutateAsync({ bio: values.bio });
-            advanceTo(next.nextStep);
-          })
+          guard(
+            async () => {
+              const next = await completeWelperBio.mutateAsync({ bio: values.bio });
+              advanceTo(next.nextStep);
+            },
+            "bio",
+          )
         }
       />
     );
@@ -338,11 +356,6 @@ export default function StepPageClient({ slug }: { slug: string }) {
       fallbackMessage={tPage("comingSoonDefault")}
     />
   );
-}
-
-function messageFor(err: unknown, fallback: string): string {
-  if (err instanceof Error) return err.message;
-  return fallback;
 }
 
 function stepLabel(

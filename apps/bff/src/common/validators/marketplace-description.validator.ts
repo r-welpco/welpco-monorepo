@@ -274,7 +274,7 @@ export class MarketplaceDescriptionConstraint implements ValidatorConstraintInte
   }
 
   defaultMessage(args: ValidationArguments): string {
-    return `${args.property} must not include contact information or negotiation-related content`;
+    return `${args.property} contains contact information or negotiation-related content that is not allowed`;
   }
 }
 

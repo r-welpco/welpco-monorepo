@@ -99,7 +99,7 @@ async function bootstrap() {
           return new BadRequestException({
             code: 'MARKETPLACE_DESCRIPTION_POLICY_VIOLATION',
             message:
-              'Marketplace content must not include contact information or negotiation-related content',
+              'Public content must not include contact information or negotiation-related content',
             ...policyError,
           });
         }

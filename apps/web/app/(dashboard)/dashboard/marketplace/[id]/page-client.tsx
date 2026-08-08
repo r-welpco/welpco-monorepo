@@ -40,9 +40,9 @@ import {
   useJobPosting,
   useWithdrawJobApplication,
 } from "@/lib/hooks/use-job-posting";
-import { ApiClientError } from "@/lib/api/client";
 import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
+import { useApiErrorMessage } from "@/lib/i18n/use-api-error-message";
 import { ArrowLeft, ArrowRight, Check, MapPin, Users2 } from "lucide-react";
 
 interface JobDetailPageClientProps {
@@ -164,6 +164,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
   const router = useRouter();
   const locale = useLocale();
   const labels = useMarketplaceLabels();
+  const apiErrorMessage = useApiErrorMessage();
   const categoryDisplayName = useCategoryDisplayName();
   const searchParams = useSearchParams();
   const { user } = useAuthStore();
@@ -574,11 +575,11 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
                     setApplyOpen(false);
                   } catch (e) {
                     setApplyError(
-                      e instanceof ApiClientError
-                        ? e.message
-                        : e instanceof Error
-                          ? e.message
-                          : labels.detail.applyFailed,
+                      apiErrorMessage(
+                        e,
+                        "jobApplication",
+                        labels.detail.applyFailed,
+                      ),
                     );
                   }
                 }}

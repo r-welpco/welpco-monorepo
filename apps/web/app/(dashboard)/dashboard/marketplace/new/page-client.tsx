@@ -34,10 +34,10 @@ import {
 import type { ServiceQuestion } from "@/lib/services/booking-service";
 import { useBookableAction } from "@/lib/hooks/use-bookable-action";
 import { EmailVerificationRequiredDialog } from "@/components/features/dashboard/email-verification-required-dialog";
-import { ApiClientError } from "@/lib/api/client";
 import { MIN_BOOKING_DURATION_MINUTES } from "@/lib/booking/booking-pricing";
 import { useMarketplaceLabels } from "@/lib/i18n/use-dashboard-labels";
 import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
+import { useApiErrorMessage } from "@/lib/i18n/use-api-error-message";
 
 type WizardStep = 1 | 2;
 
@@ -75,6 +75,7 @@ export default function NewJobPageClient() {
   const { user } = useAuthStore();
   const bookable = useBookableAction();
   const createJob = useCreateJobPosting();
+  const apiErrorMessage = useApiErrorMessage();
 
   const [step, setStep] = useState<WizardStep>(1);
   const [categoryId, setCategoryId] = useState("");
@@ -183,11 +184,7 @@ export default function NewJobPageClient() {
       }
     } catch (e) {
       setSubmitError(
-        e instanceof ApiClientError
-          ? e.message
-          : e instanceof Error
-            ? e.message
-            : labels.new.submitFailed,
+        apiErrorMessage(e, "jobPosting", labels.new.submitFailed),
       );
     }
   }, [
@@ -205,6 +202,8 @@ export default function NewJobPageClient() {
     endTime,
     locationAddress,
     router,
+    apiErrorMessage,
+    labels.new.submitFailed,
   ]);
 
   return (
