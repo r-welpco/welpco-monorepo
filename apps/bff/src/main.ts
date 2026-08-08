@@ -1,12 +1,16 @@
 import { join } from 'path';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import helmet from 'helmet';
+import { collectMarketplaceDescriptionPolicyError } from './common/validators/marketplace-description.validator';
+
+const defaultValidationExceptionFactory =
+  new ValidationPipe().createExceptionFactory();
 
 /** Origins allowed for credentialed browser requests (web app, admin app, etc.). */
 function buildAllowedCorsOrigins(): string[] {
@@ -60,7 +64,12 @@ async function bootstrap() {
     origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'X-Requested-With',
+    ],
   });
 
   // Body parsers must use Nest's useBodyParser (not raw express.json) so req.rawBody is
@@ -84,6 +93,18 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      exceptionFactory: (errors) => {
+        const policyError = collectMarketplaceDescriptionPolicyError(errors);
+        if (policyError) {
+          return new BadRequestException({
+            code: 'MARKETPLACE_DESCRIPTION_POLICY_VIOLATION',
+            message:
+              'Marketplace content must not include contact information or negotiation-related content',
+            ...policyError,
+          });
+        }
+        return defaultValidationExceptionFactory(errors);
+      },
     }),
   );
 
@@ -126,7 +147,8 @@ async function bootstrap() {
         'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.10.3/swagger-ui-bundle.js',
         'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.10.3/swagger-ui-standalone-preset.js',
       ],
-      customCssUrl: 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.10.3/swagger-ui.css',
+      customCssUrl:
+        'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.10.3/swagger-ui.css',
       swaggerOptions: {
         persistAuthorization: true,
       },
@@ -136,6 +158,8 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   console.log(`BFF service is running on: http://localhost:${port}`);
-  console.log(`Swagger documentation available at: http://localhost:${port}/api/docs`);
+  console.log(
+    `Swagger documentation available at: http://localhost:${port}/api/docs`,
+  );
 }
 bootstrap();

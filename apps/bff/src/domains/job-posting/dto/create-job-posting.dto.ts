@@ -11,6 +11,7 @@ import {
   IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsMarketplaceDescriptionAllowed } from '../../../common/validators/marketplace-description.validator';
 
 export class CreateJobPostingDto {
   @ApiProperty({ description: 'Parent category ID (level-1)' })
@@ -25,16 +26,19 @@ export class CreateJobPostingDto {
     description: 'Answers to service questions (questionId -> value)',
   })
   @IsObject()
+  @IsMarketplaceDescriptionAllowed()
   answers!: Record<string, string | number | boolean>;
 
   @ApiProperty({ maxLength: 200 })
   @IsString()
   @MaxLength(200)
+  @IsMarketplaceDescriptionAllowed()
   title!: string;
 
   @ApiProperty()
   @IsString()
   @MaxLength(5000)
+  @IsMarketplaceDescriptionAllowed()
   description!: string;
 
   @ApiProperty({ example: '2026-06-15' })

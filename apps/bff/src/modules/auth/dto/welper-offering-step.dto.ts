@@ -13,6 +13,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+import { IsMarketplaceDescriptionAllowed } from '../../../common/validators/marketplace-description.validator';
 
 /**
  * One service offering in the welper signup wizard (subcategory + details).
@@ -33,6 +34,7 @@ export class WelperOfferingItemDto {
   @IsString()
   @MinLength(8, { message: 'title must be at least 8 characters' })
   @MaxLength(120, { message: 'title must be at most 120 characters' })
+  @IsMarketplaceDescriptionAllowed()
   title!: string;
 
   @ApiProperty({ description: 'Hourly rate (5–500).', example: 35 })
@@ -53,6 +55,7 @@ export class WelperOfferingItemDto {
   @IsString()
   @MinLength(20, { message: 'description must be at least 20 characters' })
   @MaxLength(1000, { message: 'description must be at most 1000 characters' })
+  @IsMarketplaceDescriptionAllowed()
   description!: string;
 }
 

@@ -1,8 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, Min, Max, IsBoolean, ValidateNested, IsArray, IsUUID, ArrayMinSize } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  Min,
+  Max,
+  IsBoolean,
+  ValidateNested,
+  IsArray,
+  IsUUID,
+  ArrayMinSize,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ServiceArea } from '../../../../common/types';
 import { IsValidGeoJSON } from '../../common/validators/geojson.validator';
+import { IsMarketplaceDescriptionAllowed } from '../../../../common/validators/marketplace-description.validator';
 
 export class CreateServiceOfferingDto {
   @ApiProperty({
@@ -17,6 +29,7 @@ export class CreateServiceOfferingDto {
     example: 'Professional lawn mowing and yard maintenance services',
   })
   @IsString()
+  @IsMarketplaceDescriptionAllowed()
   serviceDescription: string;
 
   @ApiProperty({
@@ -29,7 +42,10 @@ export class CreateServiceOfferingDto {
   // ceiling 1000 (defends against typo'd 99999 entries that would distort search filters
   // and percentile sort. Real welper rates are in the $20–$200/hr band — a 5× headroom
   // covers premium concierge while keeping garbage out).
-  @IsNumber({ maxDecimalPlaces: 2 }, { message: 'hourlyRate must be a number with up to 2 decimal places' })
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: 'hourlyRate must be a number with up to 2 decimal places' },
+  )
   @Min(1, { message: 'hourlyRate must be at least 1' })
   @Max(1000, { message: 'hourlyRate must be at most 1000' })
   hourlyRate: number;
@@ -48,10 +64,19 @@ export class CreateServiceOfferingDto {
   experienceYears?: number;
 
   @ApiProperty({
-    description: 'Service area (GeoJSON Point or Polygon, overrides default if set)',
+    description:
+      'Service area (GeoJSON Point or Polygon, overrides default if set)',
     example: {
       type: 'Polygon',
-      coordinates: [[[-122.4, 37.8], [-122.3, 37.8], [-122.3, 37.9], [-122.4, 37.9], [-122.4, 37.8]]],
+      coordinates: [
+        [
+          [-122.4, 37.8],
+          [-122.3, 37.8],
+          [-122.3, 37.9],
+          [-122.4, 37.9],
+          [-122.4, 37.8],
+        ],
+      ],
     },
     required: false,
   })
@@ -63,11 +88,16 @@ export class CreateServiceOfferingDto {
 
   @ApiProperty({
     description: 'Array of subcategory IDs (from Content Management)',
-    example: ['123e4567-e89b-12d3-a456-426614174001', '123e4567-e89b-12d3-a456-426614174002'],
+    example: [
+      '123e4567-e89b-12d3-a456-426614174001',
+      '123e4567-e89b-12d3-a456-426614174002',
+    ],
     type: [String],
   })
   @IsArray()
-  @ArrayMinSize(1, { message: 'subcategoryIds must include at least one subcategory' })
+  @ArrayMinSize(1, {
+    message: 'subcategoryIds must include at least one subcategory',
+  })
   @IsUUID(4, { each: true })
   subcategoryIds: string[];
 
@@ -86,4 +116,3 @@ export class CreateServiceOfferingDto {
   @IsBoolean()
   active?: boolean;
 }
-

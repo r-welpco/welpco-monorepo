@@ -12,6 +12,7 @@ import {
 } from 'class-validator';
 import { PortfolioPhotoStatus } from '../../entities/portfolio-photo-status.enum';
 import { PORTFOLIO_MAX_PHOTOS } from './portfolio-presign.dto';
+import { IsMarketplaceDescriptionAllowed } from '../../../../common/validators/marketplace-description.validator';
 
 export class CreatePortfolioPhotoDto {
   @ApiProperty({
@@ -28,6 +29,7 @@ export class CreatePortfolioPhotoDto {
   @IsOptional()
   @IsString()
   @MaxLength(200)
+  @IsMarketplaceDescriptionAllowed()
   caption?: string;
 
   @ApiPropertyOptional({
@@ -43,6 +45,7 @@ export class UpdatePortfolioPhotoDto {
   @IsOptional()
   @IsString()
   @MaxLength(200)
+  @IsMarketplaceDescriptionAllowed()
   caption?: string;
 
   @ApiPropertyOptional({ description: 'New sort position (0-based)', minimum: 0 })

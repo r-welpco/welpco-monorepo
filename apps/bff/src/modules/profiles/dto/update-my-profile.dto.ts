@@ -13,6 +13,7 @@ import {
 import { Type } from 'class-transformer';
 import { PhoneNumberDto } from '../../../domains/profile-management/common/dto/phone-number.dto';
 import { AddressDto } from '../../../domains/profile-management/common/dto/address.dto';
+import { IsMarketplaceDescriptionAllowed } from '../../../common/validators/marketplace-description.validator';
 
 const POSTAL_PREFIX_REGEX = /^[A-Za-z0-9]{1,10}$/;
 
@@ -57,6 +58,7 @@ export class UpdateMyProfileDto {
   @ApiProperty({ description: 'Bio (welper)', required: false })
   @IsOptional()
   @IsString()
+  @IsMarketplaceDescriptionAllowed()
   bio?: string;
 
   @ApiProperty({ description: 'Profile photo URL (customer and welper)', required: false })

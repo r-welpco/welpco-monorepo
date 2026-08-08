@@ -4,6 +4,7 @@ import {
   WELPER_SIGNUP_BIO_MAX_LENGTH,
   WELPER_SIGNUP_BIO_MIN_LENGTH,
 } from '../../../domains/user-management/auth/signup.constants';
+import { IsMarketplaceDescriptionAllowed } from '../../../common/validators/marketplace-description.validator';
 
 /** Welper-only signup step: short public bio before dashboard setup. */
 export class WelperBioStepDto {
@@ -21,5 +22,6 @@ export class WelperBioStepDto {
   @MaxLength(WELPER_SIGNUP_BIO_MAX_LENGTH, {
     message: `bio must be at most ${WELPER_SIGNUP_BIO_MAX_LENGTH} characters`,
   })
+  @IsMarketplaceDescriptionAllowed()
   bio!: string;
 }

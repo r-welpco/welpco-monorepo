@@ -18,10 +18,13 @@ import { ServiceArea } from '../../../../common/types';
 import { IsValidGeoJSON } from '../../common/validators/geojson.validator';
 import { PhoneNumberDto } from '../../common/dto/phone-number.dto';
 import { IsValidPhoneNumber } from '../../common/validators/phone.validator';
+import { IsMarketplaceDescriptionAllowed } from '../../../../common/validators/marketplace-description.validator';
 
 const POSTAL_PREFIX_REGEX = /^[A-Za-z0-9]{1,10}$/;
 
-export class UpdateWelperProfileDto extends PartialType(CreateWelperProfileDto) {
+export class UpdateWelperProfileDto extends PartialType(
+  CreateWelperProfileDto,
+) {
   @ApiProperty({
     description: 'First name',
     example: 'John',
@@ -44,7 +47,11 @@ export class UpdateWelperProfileDto extends PartialType(CreateWelperProfileDto) 
 
   @ApiProperty({
     description: 'Phone number',
-    example: { countryCode: '+1', number: '234567890', formatted: '+1 (234) 567-890' },
+    example: {
+      countryCode: '+1',
+      number: '234567890',
+      formatted: '+1 (234) 567-890',
+    },
     required: false,
   })
   @IsOptional()
@@ -63,6 +70,7 @@ export class UpdateWelperProfileDto extends PartialType(CreateWelperProfileDto) 
   @IsString()
   @MinLength(20, { message: 'bio must be at least 20 characters' })
   @MaxLength(600, { message: 'bio must be at most 600 characters' })
+  @IsMarketplaceDescriptionAllowed()
   bio?: string;
 
   @ApiProperty({
@@ -78,7 +86,15 @@ export class UpdateWelperProfileDto extends PartialType(CreateWelperProfileDto) 
     description: 'Service area (GeoJSON Point or Polygon)',
     example: {
       type: 'Polygon',
-      coordinates: [[[-122.4, 37.8], [-122.3, 37.8], [-122.3, 37.9], [-122.4, 37.9], [-122.4, 37.8]]],
+      coordinates: [
+        [
+          [-122.4, 37.8],
+          [-122.3, 37.8],
+          [-122.3, 37.9],
+          [-122.4, 37.9],
+          [-122.4, 37.8],
+        ],
+      ],
     },
     required: false,
   })
@@ -97,12 +113,18 @@ export class UpdateWelperProfileDto extends PartialType(CreateWelperProfileDto) 
   @IsEnum(ProfileVisibility)
   profileVisibility?: ProfileVisibility;
 
-  @ApiProperty({ description: 'Country code (e.g. CA). Used for location filter.', required: false })
+  @ApiProperty({
+    description: 'Country code (e.g. CA). Used for location filter.',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   countryCode?: string;
 
-  @ApiProperty({ description: 'Province/state code (e.g. QC). Used for location filter.', required: false })
+  @ApiProperty({
+    description: 'Province/state code (e.g. QC). Used for location filter.',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   provinceCode?: string;
