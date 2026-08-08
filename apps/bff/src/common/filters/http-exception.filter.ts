@@ -56,13 +56,25 @@ export class HttpExceptionFilter implements ExceptionFilter {
       if (Array.isArray(structured.missingFields)) {
         errorResponse.missingFields = structured.missingFields;
       }
-      if (typeof structured.nextStep === 'string' || structured.nextStep === null) {
+      if (
+        typeof structured.nextStep === 'string' ||
+        structured.nextStep === null
+      ) {
         errorResponse.nextStep = structured.nextStep;
+      }
+      if (Array.isArray(structured.violations)) {
+        errorResponse.violations = structured.violations;
+      }
+      if (Array.isArray(structured.fields)) {
+        errorResponse.fields = structured.fields;
       }
     }
 
     // Don't expose internal errors in production
-    if (status === HttpStatus.INTERNAL_SERVER_ERROR && process.env.NODE_ENV === 'production') {
+    if (
+      status === HttpStatus.INTERNAL_SERVER_ERROR &&
+      process.env.NODE_ENV === 'production'
+    ) {
       errorResponse.message = 'Internal server error';
     }
 
