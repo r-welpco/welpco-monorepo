@@ -75,6 +75,7 @@ describe('ServiceDiscoveryService', () => {
     getAggregates: jest.fn().mockResolvedValue({
       averageRating: null,
       reviewCount: 0,
+      completedBookingsCount: 0,
       responseTimeMinutes: null,
     }),
   };
@@ -529,6 +530,7 @@ describe('ServiceDiscoveryService', () => {
       mockAggregatesService.getAggregates.mockResolvedValueOnce({
         averageRating: 4.92,
         reviewCount: 12,
+        completedBookingsCount: 37,
         responseTimeMinutes: 23,
       });
       mockBackgroundCheckService.hasPassedBackgroundCheck.mockResolvedValue(true);
@@ -538,6 +540,7 @@ describe('ServiceDiscoveryService', () => {
       expect(result.verified).toBe(true);
       expect(result.averageRating).toBe(4.92);
       expect(result.reviewCount).toBe(12);
+      expect(result.completedBookingsCount).toBe(37);
       expect(result.responseTimeMinutes).toBe(23);
       expect(result.serviceAreaInfo).toEqual({
         city: 'Toronto',

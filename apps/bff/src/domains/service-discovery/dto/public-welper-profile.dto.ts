@@ -101,6 +101,12 @@ export class PublicWelperProfileDto {
   reviewCount!: number;
 
   @ApiProperty({
+    description: 'Number of jobs completed by the Welper.',
+    example: 24,
+  })
+  completedBookingsCount!: number;
+
+  @ApiProperty({
     description:
       'Median accept-latency in integer minutes over accepted bookings in the last 90 days. ' +
       'Null when fewer than 5 accepted bookings — bible §22.6 forbids inflated SLA signals.',

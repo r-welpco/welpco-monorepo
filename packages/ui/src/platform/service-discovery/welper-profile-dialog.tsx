@@ -11,6 +11,7 @@ import { Heading } from "@welpco/ui/heading";
 import { Skeleton } from "@welpco/ui/skeleton";
 import { Separator } from "@welpco/ui/separator";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
+import { BriefcaseBusiness, Star } from "lucide-react";
 import { customerWelperDisplayName } from "./customer-welper-display-name";
 import { VerifiedTrustBadge } from "./verified-trust-badge";
 import { WeeklyAvailabilityStrip } from "./weekly-availability-strip";
@@ -44,6 +45,12 @@ export interface WelperProfileDialogProfile {
   verified?: boolean;
   /** Minor welper (14–17) — render badge only when explicitly true. */
   isMinor?: boolean;
+  /** Average customer rating; null when the Welper has no reviews. */
+  averageRating?: number | null;
+  /** Number of customer reviews included in the average. */
+  reviewCount?: number;
+  /** Number of bookings completed by the Welper. */
+  completedBookingsCount?: number;
   /**
    * Median accept-latency in minutes (BFF trust aggregate). Rendered only
    * when a number — null/undefined hides the line (no fabricated SLA).
@@ -66,6 +73,9 @@ export interface WelperProfileDialogLabels {
   experienceYears?: (years: number) => string;
   minorBadge?: string;
   minorBadgeTooltip?: string;
+  noReviewsYet?: string;
+  ratingSummary?: (rating: string, count: number) => string;
+  completedJobs?: (count: number) => string;
   respondsInMinutes?: (minutes: number) => string;
   respondsInHours?: (hours: number) => string;
 }
@@ -102,6 +112,16 @@ export function WelperProfileDialog({
 
   const hasOfferings =
     !!profile?.serviceOfferings && profile.serviceOfferings.length > 0;
+  const averageRating = profile?.averageRating;
+  const reviewCount = profile?.reviewCount;
+  const ratingSummary =
+    typeof averageRating === "number" &&
+    averageRating > 0 &&
+    typeof reviewCount === "number" &&
+    reviewCount > 0
+      ? (l?.ratingSummary?.(averageRating.toFixed(2), reviewCount) ??
+        `${averageRating.toFixed(2)} · ${reviewCount} reviews`)
+    : (l?.noReviewsYet ?? "No reviews yet");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -144,6 +164,25 @@ export function WelperProfileDialog({
                       {displayName}
                     </Heading>
                     {profile.verified === true ? <VerifiedTrustBadge size="2" /> : null}
+                  </Flex>
+                  <Flex align="center" gap="3" wrap="wrap" mb="1">
+                    <Flex align="center" gap="1">
+                      <Star
+                        size={16}
+                        aria-hidden="true"
+                        style={{ fill: "var(--amber-9)", color: "var(--amber-9)" }}
+                      />
+                      <Text size="2" weight="medium">
+                        {ratingSummary}
+                      </Text>
+                    </Flex>
+                    <Flex align="center" gap="1">
+                      <BriefcaseBusiness size={16} aria-hidden="true" />
+                      <Text size="2" weight="medium">
+                        {l?.completedJobs?.(profile.completedBookingsCount ?? 0) ??
+                          `${profile.completedBookingsCount ?? 0} jobs completed`}
+                      </Text>
+                    </Flex>
                   </Flex>
                   {typeof profile.responseTimeMinutes === "number" && (
                     <Text as="p" size="2" color="gray" highContrast mb="1">

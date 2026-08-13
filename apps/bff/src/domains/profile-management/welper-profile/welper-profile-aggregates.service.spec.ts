@@ -31,6 +31,7 @@ describe('WelperProfileAggregatesService', () => {
   };
   const mockBookingRepo = {
     createQueryBuilder: jest.fn(() => bookingQb),
+    count: jest.fn().mockResolvedValue(0),
   };
 
   beforeEach(async () => {
@@ -187,6 +188,21 @@ describe('WelperProfileAggregatesService', () => {
 
       // All 5 rows = 10 min each.
       expect(result.responseTimeMinutes).toBe(10);
+    });
+  });
+
+  describe('completedBookingsCount', () => {
+    it('returns the authoritative count for completed Welper bookings', async () => {
+      reviewQb.getRawOne.mockResolvedValueOnce({ avgRating: null, count: '0' });
+      bookingQb.getRawMany.mockResolvedValueOnce([]);
+      mockBookingRepo.count.mockResolvedValueOnce(7);
+
+      const result = await service.getAggregates('w1');
+
+      expect(result.completedBookingsCount).toBe(7);
+      expect(mockBookingRepo.count).toHaveBeenCalledWith({
+        where: expect.objectContaining({ welperId: 'w1' }),
+      });
     });
   });
 

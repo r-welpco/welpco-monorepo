@@ -447,6 +447,7 @@ export class ServiceDiscoveryService {
       isMinor: isMinorWelper(profile.dateOfBirth),
       averageRating: aggregates.averageRating,
       reviewCount: aggregates.reviewCount,
+      completedBookingsCount: aggregates.completedBookingsCount,
       responseTimeMinutes: aggregates.responseTimeMinutes,
       serviceOfferings,
       weeklyAvailability,

@@ -2798,6 +2798,9 @@
         "experienceYears": "{years}+ yrs exp",
         "minorBadge": "Minor",
         "minorBadgeTooltip": "Welper is under 18",
+        "noReviewsYet": "No reviews yet",
+        "ratingSummary": "{rating} · {count, plural, one {# review} other {# reviews}}",
+        "completedJobs": "{count, plural, one {# job completed} other {# jobs completed}}",
         "respondsInMinutes": "Responds in ~{minutes} min",
         "respondsInHours": "Responds in ~{hours}h"
       },
@@ -3060,6 +3063,7 @@
     "review": "review",
     "reviews": "reviews",
     "ratedAria": "{rating} out of 5 stars from {count} {reviewLabel}",
+    "completedJobs": "{count, plural, one {# job completed} other {# jobs completed}}",
     "respondsInMinutes": "Responds in ~{minutes} min",
     "respondsInHours": "Responds in ~{hours}h",
     "book": "Book",

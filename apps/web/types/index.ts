@@ -395,6 +395,8 @@ export interface PublicWelperProfile {
   /** 2-decimal precision; null when reviewCount === 0 (bible §22.6: no fake social proof). */
   averageRating: number | null;
   reviewCount: number;
+  /** Number of bookings completed by this Welper. */
+  completedBookingsCount: number;
   /**
    * Median accept-latency in integer minutes over accepted bookings in the last 90 days.
    * Null when fewer than 5 accepted bookings (bible §22.6: no inflated SLA signals).

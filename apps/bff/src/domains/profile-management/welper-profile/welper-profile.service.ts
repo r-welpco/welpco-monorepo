@@ -103,7 +103,8 @@ export class WelperProfileService {
 
   /**
    * Returns the welper profile entity merged with the Wave 1 trust signals
-   * (verified, averageRating, reviewCount, responseTimeMinutes, serviceAreaInfo).
+   * (verified, averageRating, reviewCount, completedBookingsCount,
+   * responseTimeMinutes, serviceAreaInfo).
    *
    * Both the internal `GET /api/profiles/me` and the public `GET /api/search/welpers/:id`
    * endpoints use this so the two responses stay aligned. Per Wave 1 we compute

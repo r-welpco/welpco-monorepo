@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Review } from '../../review/entities/review.entity';
 import { ReviewerType } from '../../review/entities/reviewer-type.enum';
 import {
@@ -13,6 +13,8 @@ export interface WelperTrustAggregates {
   averageRating: number | null;
   /** Count of customer-authored reviews. */
   reviewCount: number;
+  /** Count of jobs that reached a completed, customer-paid state. */
+  completedBookingsCount: number;
   /**
    * Integer minutes from booking-creation → welper-acceptance, averaged over
    * accepted bookings in the last 90 days. Null when fewer than 5 accepted
@@ -23,6 +25,10 @@ export interface WelperTrustAggregates {
 
 const RESPONSE_TIME_MIN_BOOKINGS = 5;
 const RESPONSE_TIME_WINDOW_DAYS = 90;
+const COMPLETED_BOOKING_STATUSES: BookingRequestStatus[] = [
+  BookingRequestStatus.COMPLETED,
+  BookingRequestStatus.PAYMENT_RELEASED,
+];
 
 /**
  * On-demand aggregator for the welper trust signals exposed on the public
@@ -43,15 +49,26 @@ export class WelperProfileAggregatesService {
   ) {}
 
   async getAggregates(welperId: string): Promise<WelperTrustAggregates> {
-    const [ratingAggregate, responseTimeMinutes] = await Promise.all([
+    const [ratingAggregate, completedBookingsCount, responseTimeMinutes] = await Promise.all([
       this.getRatingAggregate(welperId),
+      this.getCompletedBookingsCount(welperId),
       this.getResponseTimeMinutes(welperId),
     ]);
 
     return {
       ...ratingAggregate,
+      completedBookingsCount,
       responseTimeMinutes,
     };
+  }
+
+  private async getCompletedBookingsCount(welperId: string): Promise<number> {
+    return this.bookingRepo.count({
+      where: {
+        welperId,
+        status: In(COMPLETED_BOOKING_STATUSES),
+      },
+    });
   }
 
   /**

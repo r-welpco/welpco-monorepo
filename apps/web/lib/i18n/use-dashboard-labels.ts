@@ -1260,6 +1260,10 @@ export function useSearchLabels() {
       experienceYears: (years: number) => profileDialog("experienceYears", { years }),
       minorBadge: profileDialog("minorBadge"),
       minorBadgeTooltip: profileDialog("minorBadgeTooltip"),
+      noReviewsYet: profileDialog("noReviewsYet"),
+      ratingSummary: (rating: string, count: number) =>
+        profileDialog("ratingSummary", { rating, count }),
+      completedJobs: (count: number) => profileDialog("completedJobs", { count }),
       respondsInMinutes: (minutes: number) => profileDialog("respondsInMinutes", { minutes }),
       respondsInHours: (hours: number) => profileDialog("respondsInHours", { hours }),
     },

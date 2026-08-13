@@ -99,6 +99,9 @@ function mapToWelperProfileDialogProfile(
     };
     verified?: boolean;
     isMinor?: boolean;
+    averageRating?: number | null;
+    reviewCount?: number;
+    completedBookingsCount?: number;
     responseTimeMinutes?: number | null;
   } | null
 ): WelperProfileDialogProfile | null {
@@ -112,6 +115,9 @@ function mapToWelperProfileDialogProfile(
     profilePhotoUrl: data.profilePhotoUrl,
     verified: data.verified === true ? true : undefined,
     isMinor: data.isMinor === true ? true : undefined,
+    averageRating: data.averageRating,
+    reviewCount: data.reviewCount,
+    completedBookingsCount: data.completedBookingsCount,
     responseTimeMinutes: data.responseTimeMinutes,
     serviceOfferings: (data.serviceOfferings ?? []).map((o) => ({
       id: o.id,

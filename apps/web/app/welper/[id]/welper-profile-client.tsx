@@ -18,7 +18,7 @@ import { Separator } from "@welpco/ui/separator";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { CustomerHeader } from "@welpco/ui/platform/layout";
 import { ServiceOfferingCard, ReviewList, VerifiedTrustBadge } from "@welpco/ui/platform";
-import { Star, ArrowLeft } from "lucide-react";
+import { BriefcaseBusiness, Star, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { usePublicWelperProfile } from "@/lib/hooks/use-service-discovery";
 import { apiClient } from "@/lib/api/client";
@@ -35,10 +35,10 @@ import { format } from "date-fns";
 import { Dialog, DialogContent } from "@welpco/ui/dialog";
 
 /**
- * Wave 1 (BFF) shipped: `verified`, `averageRating`, `reviewCount`,
- * `responseTimeMinutes`, and `serviceAreaInfo` are now part of the typed
- * PublicWelperProfile. The legacy alias is preserved so we can land DTO
- * widening without breaking older snapshot data still in flight.
+ * Trust signals (`verified`, `averageRating`, `reviewCount`,
+ * `completedBookingsCount`, `responseTimeMinutes`, and `serviceAreaInfo`) are
+ * part of the typed PublicWelperProfile. The alias is retained for older
+ * snapshot data still in flight.
  */
 type PublicWelperProfileWithTrust = PublicWelperProfile;
 
@@ -506,10 +506,18 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
             </Flex>
 
             <Box mb="3">
-              <RatingLine
-                averageRating={profile.averageRating}
-                reviewCount={profile.reviewCount}
-              />
+              <Flex align="center" gap="3" wrap="wrap">
+                <RatingLine
+                  averageRating={profile.averageRating}
+                  reviewCount={profile.reviewCount}
+                />
+                <Flex align="center" gap="1">
+                  <BriefcaseBusiness size={16} aria-hidden="true" />
+                  <Text size="2" color="gray" highContrast>
+                    {t("completedJobs", { count: profile.completedBookingsCount })}
+                  </Text>
+                </Flex>
+              </Flex>
               {typeof profile.responseTimeMinutes === "number" && (
                 <Text as="p" size="2" color="gray" highContrast mt="1">
                   {formatResponseTime(profile.responseTimeMinutes)}

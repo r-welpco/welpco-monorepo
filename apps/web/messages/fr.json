@@ -2797,6 +2797,9 @@
         "experienceYears": "{years}+ ans d'exp.",
         "minorBadge": "Mineur",
         "minorBadgeTooltip": "Le Welper a moins de 18 ans",
+        "noReviewsYet": "Aucun avis pour le moment",
+        "ratingSummary": "{rating} · {count, plural, one {# avis} other {# avis}}",
+        "completedJobs": "{count, plural, one {# service terminé} other {# services terminés}}",
         "respondsInMinutes": "Répond en ~{minutes} min",
         "respondsInHours": "Répond en ~{hours} h"
       },
@@ -3059,6 +3062,7 @@
     "review": "avis",
     "reviews": "avis",
     "ratedAria": "{rating} sur 5 étoiles d'après {count} {reviewLabel}",
+    "completedJobs": "{count, plural, one {# service terminé} other {# services terminés}}",
     "respondsInMinutes": "Répond en ~{minutes} min",
     "respondsInHours": "Répond en ~{hours} h",
     "book": "Réserver",
