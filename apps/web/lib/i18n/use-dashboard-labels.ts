@@ -1063,6 +1063,7 @@ export function useCustomerBookingDetailLabels() {
     actionsHint: t("actionsHint"),
     messageWelper: t("messageWelper"),
     reviewWelper: t("reviewWelper"),
+    downloadReceipt: t("downloadReceipt"),
     receiptWrongAmountCallout: t("receiptWrongAmountCallout"),
     locationSectionTitle: t("locationSectionTitle"),
     serviceAddress: t("serviceAddress"),
@@ -1107,6 +1108,41 @@ export function useCustomerBookingDetailLabels() {
       saveChanges: t("reviewDialog.saveChanges"),
       skip: t("reviewDialog.skip"),
     },
+  };
+}
+
+export function usePaymentReceiptLabels() {
+  const t = useTranslations("dashboard.paymentReceipt");
+  return {
+    title: t("title"),
+    paid: t("paid"),
+    bookingReference: t("bookingReference"),
+    issuedOn: t("issuedOn"),
+    customer: t("customer"),
+    welper: t("welper"),
+    serviceDetails: t("serviceDetails"),
+    service: t("service"),
+    serviceDate: t("serviceDate"),
+    billingPeriod: t("billingPeriod"),
+    duration: t("duration"),
+    hourlyRate: t("hourlyRate"),
+    paymentSummary: t("paymentSummary"),
+    subtotal: t("subtotal"),
+    tax: t("tax"),
+    totalPaid: t("totalPaid"),
+    securePayment: t("securePayment"),
+    support: t("support"),
+    print: t("print"),
+    backToBooking: t("backToBooking"),
+    unavailableTitle: t("unavailableTitle"),
+    unavailableDescription: t("unavailableDescription"),
+    customerFallback: t("customerFallback"),
+    welperFallback: t("welperFallback"),
+    serviceFallback: t("serviceFallback"),
+    durationMinutes: (minutes: number) => t("durationMinutes", { minutes }),
+    durationHours: (hours: number) => t("durationHours", { hours }),
+    durationHoursMinutes: (hours: number, minutes: number) =>
+      t("durationHoursMinutes", { hours, minutes }),
   };
 }
 

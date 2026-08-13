@@ -509,6 +509,13 @@ export default function BookingDetailClient({
   const showPaymentCard =
     !!booking && (needsCustomerAuthorization || showReceiptBalancePayment);
 
+  const canDownloadReceipt =
+    !!booking &&
+    isCustomer &&
+    user?.id === booking.customerId &&
+    !!booking.serviceReceipt &&
+    booking.paymentPhase === "captured";
+
   const showLocationCard =
     !!booking &&
     ((booking.address && Object.keys(booking.address).length > 0) ||
@@ -1507,11 +1514,25 @@ export default function BookingDetailClient({
                     </Text>
                   </Flex>
                 </Flex>
-                <Badge color={SEMANTIC_COLOR.primary} variant="soft" size="2">
-                  <Text size="2" weight="bold">
-                    {welperDetail.confirmed}
-                  </Text>
-                </Badge>
+                <Flex align="center" gap="2" wrap="wrap" justify="end">
+                  {canDownloadReceipt ? (
+                    <Button size="2" variant="solid" color={SEMANTIC_COLOR.primary} asChild>
+                      <a
+                        href={`/dashboard/bookings/${booking.id}/receipt?print=1`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Download size={16} aria-hidden />
+                        {customerDetail.downloadReceipt}
+                      </a>
+                    </Button>
+                  ) : null}
+                  <Badge color={SEMANTIC_COLOR.primary} variant="soft" size="2">
+                    <Text size="2" weight="bold">
+                      {welperDetail.confirmed}
+                    </Text>
+                  </Badge>
+                </Flex>
               </Flex>
 
               <Card size="2" variant="surface">
