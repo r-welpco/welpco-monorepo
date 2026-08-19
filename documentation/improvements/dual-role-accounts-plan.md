@@ -1,7 +1,21 @@
 # Dual-Role Accounts — Plan
 
-> **Date:** 2026-07-25 · verified against HEAD (`015f0ec`) · status: proposed, not started
+> **Date:** 2026-07-25 · verified against HEAD (`015f0ec`) · status: **Phase 1 implemented 2026-08-13** (mode switching); Phase 2 (customer→welper upgrade) not started
 > **Goal:** a role dropdown on the header logo that lets one person act as both customer and welper — including letting an existing customer become a welper through onboarding.
+
+## Implementation notes (Phase 1, 2026-08-13)
+
+Shipped as designed with two deviations from the decisions below:
+
+- **D4 (mode transport):** the mode lives in the NextAuth session token (`token.roleMode`, applied where `token.role` is computed in `apps/web/lib/auth/config.ts`) rather than a separate cookie — every existing `session.user.role` consumer (server guards, `useSession`, auth store, layout) follows automatically with zero changes. The `X-Welpco-Role` request header part of D4 is as planned: attached by `apps/web/lib/api/client.ts`, resolved downgrade-only in `apps/bff/src/common/auth/effective-role.util.ts` (`resolveEffectiveRole`) from `jwt.strategy.ts`.
+- **ROLE-002 (self-booking guard)** already existed at `booking.service.ts` (`Cannot book your own service`) — no change needed.
+
+Additions discovered during implementation:
+
+- `POST /api/profiles/me/customer-profile` — idempotent customer-profile bootstrap (a welper has no `customer_profiles` row); seeds name/phone/photo from the welper profile. Called by the web switch handler before the session flips.
+- The `/api/profiles/me/*` facade now passes the request's `effectiveRole` (was: DB re-read only) — behavior-identical for existing traffic, mode-aware for dual-role.
+- `getCustomerSetupChecklist` derives tasks from the customer profile row when `selectedRole !== customer` (the wizard state machine is keyed to `selectedRole`, which stays `welper` for mode users).
+- Header role-switch dropdown strings are now overridable (`roleSwitchLabels`) and localized (`dashboard.nav.roleSwitch` in `messages/{en,fr}.json`).
 
 ---
 

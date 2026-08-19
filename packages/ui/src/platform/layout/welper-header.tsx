@@ -151,6 +151,8 @@ export interface WelperHeaderProps {
   notificationSlot?: React.ReactNode;
   onTabChange?: (tab: string) => void;
   onRoleSwitch?: () => void;
+  /** Localized copy for the role-switch dropdown (defaults to English). */
+  roleSwitchLabels?: { menuLabel: string; switchTo: string };
   onSearch?: (query: string) => void;
   onFeedbackClick?: () => void;
   onNotificationClick?: () => void;
@@ -189,6 +191,7 @@ export function WelperHeader({
   notificationSlot,
   onTabChange,
   onRoleSwitch,
+  roleSwitchLabels,
   onSearch,
   onFeedbackClick,
   onNotificationClick,
@@ -339,10 +342,12 @@ export function WelperHeader({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" style={{ minWidth: "180px", maxWidth: "90vw" }}>
-                    <DropdownMenuLabel>Switch role</DropdownMenuLabel>
+                    <DropdownMenuLabel>
+                      {roleSwitchLabels?.menuLabel ?? "Switch role"}
+                    </DropdownMenuLabel>
                     <DropdownMenuItem onClick={onRoleSwitch}>
                       <Flex align="center" gap="2" justify="between" style={{ width: "100%" }}>
-                        <Text size="2">Customer</Text>
+                        <Text size="2">{roleSwitchLabels?.switchTo ?? "Customer"}</Text>
                         <ExternalLink size={14} aria-hidden="true" />
                       </Flex>
                     </DropdownMenuItem>

@@ -9,7 +9,8 @@ import {
   AccountType,
   UserAccount,
 } from '../../../domains/user-management/entities/user-account.entity';
-import { roleFromAccountType } from '../effective-role.util';
+import type { Request } from 'express';
+import { ROLE_MODE_HEADER, resolveEffectiveRole } from '../effective-role.util';
 
 export interface JwtPayload {
   sub: string;
@@ -37,10 +38,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         if (!secret) throw new Error('JWT_SECRET environment variable must be configured');
         return secret;
       })(),
+      passReqToCallback: true,
     });
   }
 
-  async validate(payload: JwtPayload) {
+  async validate(req: Request, payload: JwtPayload) {
     if (!payload.sub) {
       this.logger.warn(
         `Invalid token payload: missing sub. Payload: ${JSON.stringify({ sub: payload.sub, accountType: payload.accountType })}`,
@@ -81,7 +83,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Session has been revoked');
     }
 
-    const effectiveRole = roleFromAccountType(account.accountType);
+    // Dual-role accounts: a Welper account may act as a customer for this
+    // request via the X-Welpco-Role header. Downgrade-only — see
+    // resolveEffectiveRole for the truth table.
+    const effectiveRole = resolveEffectiveRole(
+      account.accountType,
+      req.headers[ROLE_MODE_HEADER],
+    );
     if (!effectiveRole) {
       throw new UnauthorizedException('Unsupported account type');
     }

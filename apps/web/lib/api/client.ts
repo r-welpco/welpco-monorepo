@@ -1,5 +1,13 @@
 import type { ApiError } from "@/types";
-import { getAccessToken } from "./get-token";
+import { getAuthContext } from "./get-token";
+
+/**
+ * Dual-role accounts: header carrying the acting role. The BFF only honors
+ * the welper→customer downgrade (a customer can never elevate), so sending
+ * the session role on every authenticated request is safe and keeps API
+ * authorization in lockstep with what the UI renders.
+ */
+const ROLE_MODE_HEADER = "X-Welpco-Role";
 
 export class ApiClientError extends Error {
   constructor(
@@ -53,19 +61,17 @@ class ApiClient {
     this.baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
   }
 
-  private async getAuthToken(): Promise<string | null> {
-    // Get JWT access token from NextAuth session
-    // The token is stored in the session by NextAuth after backend authentication
-    // According to architecture: Backend (NestJS) provides JWT tokens, NextAuth manages session
-    return getAccessToken();
-  }
-
   /**
    * Ensures we have a valid access token before making authenticated requests
-   * Returns the token or throws an error if token is unavailable
+   * Returns the token (plus the acting role for the X-Welpco-Role header)
+   * or throws an error if the token is unavailable.
+   * The token is stored in the session by NextAuth after backend authentication.
    */
-  private async ensureValidToken(): Promise<string> {
-    const token = await this.getAuthToken();
+  private async ensureValidAuthContext(): Promise<{
+    token: string;
+    actingRole: "customer" | "welper" | null;
+  }> {
+    const { token, actingRole } = await getAuthContext();
     if (!token) {
       throw new ApiClientError(
         "No access token available. Please login again.",
@@ -73,7 +79,7 @@ class ApiClient {
         "NO_TOKEN"
       );
     }
-    return token;
+    return { token, actingRole };
   }
 
   private async request<T>(
@@ -106,8 +112,13 @@ class ApiClient {
       // If no token is available, let the error propagate to the caller
       // instead of hard-redirecting — React Query error boundaries and
       // component-level error handling are more appropriate.
-      const token = await this.ensureValidToken();
+      const { token, actingRole } = await this.ensureValidAuthContext();
       headers.Authorization = `Bearer ${token}`;
+      // Dual-role accounts: claim the acting role unless the caller already
+      // set the header explicitly (e.g. the mode-switch bootstrap call).
+      if (actingRole && !headers[ROLE_MODE_HEADER]) {
+        headers[ROLE_MODE_HEADER] = actingRole;
+      }
     }
 
     try {

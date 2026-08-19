@@ -385,14 +385,39 @@ export class SignupOrchestratorService {
     setupComplete: boolean;
     allSetupComplete: boolean;
   }> {
-    await this.assertCustomer(userId);
-    const state = await this.getState(userId);
-    const setupTasks = (state.setupTasks ?? []) as CustomerSetupTask[];
-    const setupComplete = setupTasks
-      .filter((t) => t.required)
-      .every((t) => t.completed);
-    const allSetupComplete = setupTasks.every((t) => t.completed);
-    return { setupTasks, setupComplete, allSetupComplete };
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.selectedRole === SelectedRole.CUSTOMER) {
+      const state = await this.getState(userId);
+      const setupTasks = (state.setupTasks ?? []) as CustomerSetupTask[];
+      const setupComplete = setupTasks
+        .filter((t) => t.required)
+        .every((t) => t.completed);
+      const allSetupComplete = setupTasks.every((t) => t.completed);
+      return { setupTasks, setupComplete, allSetupComplete };
+    }
+
+    // Dual-role accounts: a Welper acting in customer mode (or a legacy
+    // account without a wizard role) still needs the customer dashboard
+    // checklist. The wizard state machine is keyed to `selectedRole`, so
+    // derive the tasks straight from the customer profile row instead.
+    const customer = await this.customerProfileRepo.findOne({
+      where: { customerId: userId },
+    });
+    const completed = new Set<SignupStepName>();
+    if (this.isCustomerOptionalProfileComplete(customer)) {
+      completed.add('optionalProfile');
+    }
+    if (user.stripeDefaultPaymentMethodId) {
+      completed.add('customerPayment');
+    }
+    const setupTasks = this.buildCustomerSetupTasks(completed, user.emailVerified);
+    return {
+      setupTasks,
+      setupComplete: setupTasks.filter((t) => t.required).every((t) => t.completed),
+      allSetupComplete: setupTasks.every((t) => t.completed),
+    };
   }
 
   /**

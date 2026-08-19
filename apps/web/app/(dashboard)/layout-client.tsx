@@ -4,9 +4,13 @@ import { CustomerHeader, WelperHeader } from "@welpco/ui/platform/layout";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { usePersonalizationStore } from "@/stores/personalizationStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { performClientSignOut } from "@/lib/auth/client-sign-out";
+import { apiClient } from "@/lib/api/client";
+import { clearTokenCache } from "@/lib/api/get-token";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useDashboardUser } from "@/lib/hooks/use-dashboard-user";
 import { useCustomerProfile, useWelperProfile } from "@/lib/hooks/use-profile";
@@ -33,6 +37,8 @@ interface DashboardLayoutClientProps {
     id: string;
     email: string;
     role: string;
+    /** Earned account type ("Welper" | "Customer"); `role` is the acting role. */
+    accountType?: string;
     emailVerified: boolean;
     /** Day 15 — post signup-merge source of truth. */
     signupCompleted: boolean;
@@ -52,6 +58,13 @@ export default function DashboardLayoutClient({
   const queryClient = useQueryClient();
   const { user } = useDashboardUser(serverUser);
   const userRole = user?.role || "customer";
+  const { data: session, update: updateSession } = useSession();
+  // Dual-role accounts: the earned account type never changes with the acting
+  // mode, so it decides whether the role switcher is available at all.
+  const isWelperAccount =
+    (session?.user?.accountType ?? serverUser.accountType)?.toLowerCase() ===
+    "welper";
+  const [isSwitchingRole, setIsSwitchingRole] = useState(false);
   const { data: customerProfile } = useCustomerProfile(user.id, userRole === "customer");
   const { data: welperProfile } = useWelperProfile(user.id, userRole === "welper");
   const backgroundId = usePersonalizationStore((s) => s.backgroundId);
@@ -119,6 +132,49 @@ export default function DashboardLayoutClient({
   const handleLogout = useCallback(async () => {
     await performClientSignOut({ callbackUrl: "/", queryClient });
   }, [queryClient]);
+
+  const handleRoleSwitch = useCallback(async () => {
+    if (!isWelperAccount || isSwitchingRole) return;
+    setIsSwitchingRole(true);
+    try {
+      if (userRole === "welper") {
+        // Entering customer mode: bootstrap the customer profile row first
+        // (idempotent) so the customer dashboard never renders against
+        // missing data. The explicit header makes the BFF authorize this
+        // call as customer before the session flips.
+        await apiClient.post("/api/profiles/me/customer-profile", undefined, {
+          headers: { "X-Welpco-Role": "customer" },
+        });
+        await updateSession({ roleMode: "customer" });
+      } else {
+        await updateSession({ roleMode: null });
+      }
+      // Session role changed: drop the cached token+role snapshot, refetch
+      // active queries under the new acting role, re-render server components.
+      clearTokenCache();
+      await queryClient.invalidateQueries();
+      router.refresh();
+    } catch (error) {
+      console.error(
+        "Role switch failed:",
+        error instanceof Error ? error.message : error,
+      );
+    } finally {
+      setIsSwitchingRole(false);
+    }
+  }, [isWelperAccount, isSwitchingRole, userRole, updateSession, queryClient, router]);
+
+  const tRoleSwitch = useTranslations("dashboard.nav.roleSwitch");
+  const roleSwitchLabels = useMemo(
+    () => ({
+      menuLabel: tRoleSwitch("menuLabel"),
+      switchTo:
+        userRole === "welper"
+          ? tRoleSwitch("toCustomer")
+          : tRoleSwitch("toWelper"),
+    }),
+    [tRoleSwitch, userRole],
+  );
 
   const setupRole = userRole === "welper" ? "welper" : "customer";
 
@@ -214,12 +270,16 @@ export default function DashboardLayoutClient({
           {...headerProps}
           labels={customerNavLabels}
           tabStripStyle={tabStripStyle}
+          onRoleSwitch={isWelperAccount ? handleRoleSwitch : undefined}
+          roleSwitchLabels={roleSwitchLabels}
         />
       ) : (
         <WelperHeader
           {...headerProps}
           labels={welperHeaderLabels}
           tabStripStyle={tabStripStyle}
+          onRoleSwitch={isWelperAccount ? handleRoleSwitch : undefined}
+          roleSwitchLabels={roleSwitchLabels}
         />
       )}
       <Box

@@ -8,6 +8,7 @@ import { FavoriteService } from '../../domains/profile-management/favorite/favor
 import { AvailabilityService } from '../../domains/profile-management/availability/availability.service';
 import { UsersService } from '../../domains/user-management/users/users.service';
 import { SignupOrchestratorService } from '../../domains/user-management/auth/signup-orchestrator.service';
+import { ProfileCreationService } from '../../domains/profile-management/profile-creation/profile-creation.service';
 import { AccountType } from '../../domains/user-management/entities/user-account.entity';
 
 describe('ProfilesService', () => {
@@ -74,6 +75,10 @@ describe('ProfilesService', () => {
       getWelperSetupChecklist: jest.fn(),
     };
 
+    const mockProfileCreationService = {
+      createProfileForUser: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProfilesService,
@@ -84,6 +89,7 @@ describe('ProfilesService', () => {
         { provide: AvailabilityService, useValue: mockAvailabilityService },
         { provide: UsersService, useValue: mockUsersService },
         { provide: SignupOrchestratorService, useValue: mockSignupOrchestrator },
+        { provide: ProfileCreationService, useValue: mockProfileCreationService },
       ],
     }).compile();
 

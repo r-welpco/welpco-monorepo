@@ -1698,6 +1698,11 @@
         "searchPlaceholder": "Rechercher des mandats…",
         "customerSearchPlaceholder": "Trouver des services ou des Welpers…",
         "userMenuAria": "Menu utilisateur"
+      },
+      "roleSwitch": {
+        "menuLabel": "Changer de rôle",
+        "toCustomer": "Passer en mode réservation",
+        "toWelper": "Repasser en mode Welper"
       }
     },
     "home": {

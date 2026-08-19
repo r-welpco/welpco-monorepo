@@ -69,6 +69,7 @@ async function bootstrap() {
       'Authorization',
       'Accept',
       'X-Requested-With',
+      'X-Welpco-Role',
     ],
   });
 

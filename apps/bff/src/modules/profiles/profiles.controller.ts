@@ -48,7 +48,7 @@ export class ProfilesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Profile not found' })
   async getMyProfile(@CurrentUser() user: AuthUser) {
-    return this.profilesService.getMyProfile(user.userId, user.accountType);
+    return this.profilesService.getMyProfile(user.userId, user.effectiveRole);
   }
 
   @Get('me/setup-checklist')
@@ -59,7 +59,23 @@ export class ProfilesController {
   @ApiResponse({ status: 200, description: 'Setup checklist retrieved' })
   @ApiResponse({ status: 403, description: 'Customer or welper accounts only' })
   async getSetupChecklist(@CurrentUser() user: AuthUser) {
-    return this.profilesService.getSetupChecklist(user.userId, user.accountType);
+    return this.profilesService.getSetupChecklist(user.userId, user.effectiveRole);
+  }
+
+  @Post('me/customer-profile')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('customer')
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Ensure a customer profile exists for the current user (idempotent). Used when a Welper account switches into customer mode.',
+  })
+  @ApiResponse({ status: 200, description: 'Customer profile exists' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Customer effective role required' })
+  async ensureCustomerProfile(@CurrentUser() user: AuthUser) {
+    return this.profilesService.ensureCustomerProfile(user.userId, user.email);
   }
 
   @Put('me')
@@ -72,7 +88,7 @@ export class ProfilesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Profile not found' })
   async updateMyProfile(@CurrentUser() user: AuthUser, @Body() data: UpdateMyProfileDto) {
-    return this.profilesService.updateMyProfile(user.userId, user.accountType, data);
+    return this.profilesService.updateMyProfile(user.userId, user.effectiveRole, data);
   }
 
   @Put('me/onboarding-complete')
@@ -83,7 +99,7 @@ export class ProfilesController {
   @ApiResponse({ status: 200, description: 'Onboarding marked as complete' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async completeOnboarding(@CurrentUser() user: AuthUser) {
-    return this.profilesService.completeOnboarding(user.userId, user.accountType);
+    return this.profilesService.completeOnboarding(user.userId, user.effectiveRole);
   }
 
   @Get('me/preferences')
@@ -95,7 +111,7 @@ export class ProfilesController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Customers only' })
   async getMyServicePreferences(@CurrentUser() user: AuthUser) {
-    return this.profilesService.getMyServicePreferences(user.userId, user.accountType);
+    return this.profilesService.getMyServicePreferences(user.userId, user.effectiveRole);
   }
 
   @Put('me/preferences')
@@ -111,7 +127,7 @@ export class ProfilesController {
     @CurrentUser() user: AuthUser,
     @Body() body: UpdateServicePreferencesDto,
   ) {
-    return this.profilesService.updateMyServicePreferences(user.userId, user.accountType, body);
+    return this.profilesService.updateMyServicePreferences(user.userId, user.effectiveRole, body);
   }
 
   @Get('me/services')

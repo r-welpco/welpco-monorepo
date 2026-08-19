@@ -56,5 +56,12 @@ declare module "next-auth/jwt" {
     onboardingCompleted?: boolean;
     /** See Session.user.signupCompleted. */
     signupCompleted?: boolean;
+    /**
+     * Dual-role accounts: when "customer", a Welper account is acting as a
+     * customer. Applied (downgrade-only) where `role` is computed from the
+     * BFF access token; ignored for non-Welper accounts. Absent = acting as
+     * the account's own role.
+     */
+    roleMode?: "customer";
   }
 }

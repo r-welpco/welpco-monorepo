@@ -47,7 +47,13 @@ function decodeAccessTokenExpMs(accessToken: string | undefined): number | undef
   return typeof exp === "number" ? exp * 1000 : undefined;
 }
 
-/** Sync NextAuth JWT role from the BFF access token (DB-backed accountType). */
+/**
+ * Sync NextAuth JWT role from the BFF access token (DB-backed accountType).
+ * Dual-role accounts: a Welper acting in customer mode (`token.roleMode`)
+ * gets `role = "customer"` so every session consumer — server guards,
+ * useSession, the auth store — reflects the acting role. Downgrade-only:
+ * roleMode is ignored (and cleared) for non-Welper accounts.
+ */
 function applyRoleFromAccessToken(
   token: JWT,
   accessToken: string | undefined,
@@ -55,7 +61,15 @@ function applyRoleFromAccessToken(
   const accountType = decodeAccessTokenPayload(accessToken)?.accountType;
   if (!accountType || typeof accountType !== "string") return;
   const normalized = accountType.toLowerCase();
-  token.role = normalized === "welper" ? "welper" : "customer";
+  if (normalized !== "welper" && token.roleMode) {
+    delete token.roleMode;
+  }
+  token.role =
+    normalized === "welper"
+      ? token.roleMode === "customer"
+        ? "customer"
+        : "welper"
+      : "customer";
   token.accountType = accountType;
 }
 
@@ -168,6 +182,21 @@ export const authConfig: NextAuthConfig = {
         token.accessTokenExpires = signInExp ?? Date.now() + 15 * 60 * 1000;
       }
       
+      // Dual-role accounts: mode switch via update({ roleMode }). "customer"
+      // enters customer mode (honored for Welper accounts only — enforced in
+      // applyRoleFromAccessToken below); null or "welper" exits it. Pure
+      // session mutation — no BFF token reissue involved.
+      if (trigger === "update" && token) {
+        const modeUpdate = session as { roleMode?: unknown } | null;
+        if (modeUpdate && "roleMode" in modeUpdate) {
+          if (modeUpdate.roleMode === "customer") {
+            token.roleMode = "customer";
+          } else {
+            delete token.roleMode;
+          }
+        }
+      }
+
       // Handle session update trigger (from update() call)
       if (trigger === "update" && token) {
         const sessionData = session as {
@@ -278,6 +307,7 @@ export const authConfig: NextAuthConfig = {
         token.accessTokenExpires = undefined;
         token.id = undefined;
         token.role = undefined;
+        token.roleMode = undefined;
         token.email = undefined;
         token.name = undefined;
         token.image = undefined;

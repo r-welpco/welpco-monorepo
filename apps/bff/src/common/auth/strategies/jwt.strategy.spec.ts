@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
+import type { Request } from 'express';
 import { Repository } from 'typeorm';
 import { JwtStrategy } from './jwt.strategy';
 import {
@@ -7,6 +8,12 @@ import {
   AccountType,
   UserAccount,
 } from '../../../domains/user-management/entities/user-account.entity';
+
+function requestWithRoleHeader(role?: string): Request {
+  return {
+    headers: role === undefined ? {} : { 'x-welpco-role': role },
+  } as unknown as Request;
+}
 
 describe('JwtStrategy', () => {
   const config = {
@@ -33,7 +40,7 @@ describe('JwtStrategy', () => {
     } as UserAccount);
 
     await expect(
-      strategy.validate({
+      strategy.validate(requestWithRoleHeader(), {
         sub: 'user-1',
         email: 'stale@example.com',
         accountType: AccountType.CUSTOMER,
@@ -48,6 +55,75 @@ describe('JwtStrategy', () => {
     });
   });
 
+  describe('role mode header (dual-role accounts)', () => {
+    const welperAccount = {
+      id: 'user-1',
+      email: 'welper@example.com',
+      accountType: AccountType.WELPER,
+      status: AccountStatus.ACTIVE,
+      signupCompleted: true,
+      authVersion: 0,
+    } as UserAccount;
+    const welperPayload = {
+      sub: 'user-1',
+      email: 'welper@example.com',
+      accountType: AccountType.WELPER,
+      authVersion: 0,
+    };
+
+    it('downgrades a welper to customer mode when requested', async () => {
+      repository.findOne.mockResolvedValue(welperAccount);
+
+      await expect(
+        strategy.validate(requestWithRoleHeader('customer'), welperPayload),
+      ).resolves.toMatchObject({ effectiveRole: 'customer' });
+    });
+
+    it('ignores case in the requested role', async () => {
+      repository.findOne.mockResolvedValue(welperAccount);
+
+      await expect(
+        strategy.validate(requestWithRoleHeader('Customer'), welperPayload),
+      ).resolves.toMatchObject({ effectiveRole: 'customer' });
+    });
+
+    it('ignores an unknown header value', async () => {
+      repository.findOne.mockResolvedValue(welperAccount);
+
+      await expect(
+        strategy.validate(requestWithRoleHeader('admin'), welperPayload),
+      ).resolves.toMatchObject({ effectiveRole: 'welper' });
+    });
+
+    it('never elevates a customer to welper', async () => {
+      repository.findOne.mockResolvedValue({
+        ...welperAccount,
+        accountType: AccountType.CUSTOMER,
+      } as UserAccount);
+
+      await expect(
+        strategy.validate(requestWithRoleHeader('welper'), {
+          ...welperPayload,
+          accountType: AccountType.CUSTOMER,
+        }),
+      ).resolves.toMatchObject({ effectiveRole: 'customer' });
+    });
+
+    it('never downgrades an admin', async () => {
+      repository.findOne.mockResolvedValue({
+        ...welperAccount,
+        accountType: AccountType.ADMIN,
+      } as UserAccount);
+
+      await expect(
+        strategy.validate(requestWithRoleHeader('customer'), {
+          ...welperPayload,
+          accountType: AccountType.ADMIN,
+        }),
+      ).resolves.toMatchObject({ effectiveRole: 'admin' });
+    });
+  });
+
   it.each([AccountStatus.SUSPENDED, AccountStatus.DEACTIVATED])(
     'rejects %s accounts',
     async (status) => {
@@ -59,7 +135,7 @@ describe('JwtStrategy', () => {
       } as UserAccount);
 
       await expect(
-        strategy.validate({
+        strategy.validate(requestWithRoleHeader(), {
           sub: 'user-1',
           email: 'user@example.com',
           accountType: AccountType.CUSTOMER,
@@ -72,7 +148,7 @@ describe('JwtStrategy', () => {
   it('rejects deleted accounts and revoked sessions', async () => {
     repository.findOne.mockResolvedValueOnce(null);
     await expect(
-      strategy.validate({
+      strategy.validate(requestWithRoleHeader(), {
         sub: 'user-1',
         email: 'user@example.com',
         accountType: AccountType.CUSTOMER,
@@ -86,7 +162,7 @@ describe('JwtStrategy', () => {
       authVersion: 2,
     } as UserAccount);
     await expect(
-      strategy.validate({
+      strategy.validate(requestWithRoleHeader(), {
         sub: 'user-1',
         email: 'user@example.com',
         accountType: AccountType.CUSTOMER,
@@ -104,7 +180,7 @@ describe('JwtStrategy', () => {
     } as UserAccount);
 
     await expect(
-      strategy.validate({
+      strategy.validate(requestWithRoleHeader(), {
         sub: 'admin-1',
         email: 'admin@example.com',
         accountType: AccountType.ADMIN,

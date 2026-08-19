@@ -1699,6 +1699,11 @@
         "searchPlaceholder": "Search jobs…",
         "customerSearchPlaceholder": "Find services or Welpers…",
         "userMenuAria": "User menu"
+      },
+      "roleSwitch": {
+        "menuLabel": "Switch role",
+        "toCustomer": "Switch to booking",
+        "toWelper": "Switch to welping"
       }
     },
     "home": {

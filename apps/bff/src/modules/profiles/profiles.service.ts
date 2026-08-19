@@ -1,5 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
+import { ProfileCreationService } from '../../domains/profile-management/profile-creation/profile-creation.service';
+import { CustomerProfile } from '../../domains/profile-management/entities/customer-profile.entity';
 import { CreateServiceOfferingDto } from '../../domains/profile-management/service-offering/dto/create-service-offering.dto';
 import { UpdateServiceOfferingDto } from '../../domains/profile-management/service-offering/dto/update-service-offering.dto';
 import { CustomerProfileService } from '../../domains/profile-management/customer-profile/customer-profile.service';
@@ -33,7 +35,38 @@ export class ProfilesService {
     private readonly availabilityService: AvailabilityService,
     private readonly usersService: UsersService,
     private readonly signupOrchestrator: SignupOrchestratorService,
+    private readonly profileCreationService: ProfileCreationService,
   ) {}
+
+  /**
+   * Dual-role accounts: make sure a customer profile row exists for the
+   * current user (idempotent). Called by the web app when a Welper account
+   * switches into customer mode for the first time. Seeds identity fields
+   * from the welper profile on first creation so customer mode doesn't start
+   * with an empty name.
+   */
+  async ensureCustomerProfile(userId: string, email: string): Promise<CustomerProfile> {
+    const profile = (await this.profileCreationService.createProfileForUser(
+      userId,
+      email,
+      'customer',
+    )) as CustomerProfile;
+
+    if (!profile.firstName && !profile.lastName) {
+      const welper = await this.welperProfileService
+        .findByWelperId(userId)
+        .catch(() => null);
+      const seed: Record<string, unknown> = {};
+      if (welper?.firstName) seed.firstName = welper.firstName;
+      if (welper?.lastName) seed.lastName = welper.lastName;
+      if (welper?.phoneNumber) seed.phoneNumber = welper.phoneNumber;
+      if (welper?.profilePhotoUrl) seed.profilePhotoUrl = welper.profilePhotoUrl;
+      if (Object.keys(seed).length > 0) {
+        return this.customerProfileService.update(userId, seed, userId);
+      }
+    }
+    return profile;
+  }
 
   async getSetupChecklist(userId: string, accountType: string) {
     const role = await this.resolveUserRole(userId, accountType);
@@ -49,12 +82,20 @@ export class ProfilesService {
 
   private async resolveUserRole(
     userId: string,
-    accountTypeFallback: string,
+    requestRole: string,
   ): Promise<'customer' | 'welper'> {
     const user = await this.usersService.findById(userId);
+    const dbRole = roleFromAccountType(user.accountType);
+    // Dual-role accounts: honor the request's customer-mode downgrade. The
+    // request role is computed by JwtStrategy from the X-Welpco-Role header
+    // and can only ever downgrade a Welper account to customer, so trusting
+    // it here cannot elevate anyone.
+    if (dbRole === 'welper' && requestRole === 'customer') {
+      return 'customer';
+    }
     return customerWelperRoleForAuthUser({
-      effectiveRole: roleFromAccountType(user.accountType),
-      accountType: accountTypeFallback,
+      effectiveRole: dbRole,
+      accountType: requestRole,
     });
   }
 

@@ -21,6 +21,13 @@ export interface AuthCheckResult {
     id: string;
     email: string;
     role: string;
+    /**
+     * Dual-role accounts: the account's earned type ("Customer" | "Welper").
+     * `role` is the acting role and may read "customer" while accountType is
+     * "Welper" (customer mode). Use accountType to decide whether the role
+     * switcher is available.
+     */
+    accountType?: string;
     emailVerified: boolean;
     /** Day 15 — post signup-merge source of truth. */
     signupCompleted: boolean;
@@ -49,6 +56,7 @@ const getServerSessionCached = cache(async (): Promise<AuthCheckResult> => {
     id?: string;
     email?: string;
     role?: string;
+    accountType?: string;
     emailVerified?: boolean;
     signupCompleted?: boolean;
     onboardingCompleted?: boolean;
@@ -65,6 +73,7 @@ const getServerSessionCached = cache(async (): Promise<AuthCheckResult> => {
       id: u.id ?? "",
       email: u.email ?? "",
       role: u.role ?? "",
+      accountType: u.accountType,
       emailVerified: u.emailVerified ?? false,
       signupCompleted,
       onboardingCompleted: signupCompleted,
