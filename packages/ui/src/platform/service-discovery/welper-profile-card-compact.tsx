@@ -32,8 +32,10 @@ export interface WelperProfileCardCompactProps {
   /** Total number of completed reviews. Required to gate the rating-vs-no-reviews choice honestly per bible §22.6. */
   reviews?: number;
   imageUrl?: string;
-  /** Background-check verified — render badge only when explicitly true. */
+  /** Background-check verified — true only when BFF explicitly sets it. */
   verified?: boolean;
+  verifiedBadgePassedLabel?: string;
+  verifiedBadgeNotPassedLabel?: string;
   /** Minor welper — render badge only when explicitly true. */
   isMinor?: boolean;
   minorBadgeLabel?: string;
@@ -55,6 +57,8 @@ export function WelperProfileCardCompact({
   reviews,
   imageUrl,
   verified = false,
+  verifiedBadgePassedLabel,
+  verifiedBadgeNotPassedLabel,
   isMinor = false,
   minorBadgeLabel,
   minorBadgeTooltip,
@@ -92,7 +96,12 @@ export function WelperProfileCardCompact({
                 <Heading size="4" weight="bold" trim="start">
                   {name}
                 </Heading>
-                {verified === true && <VerifiedTrustBadge size="2" />}
+                <VerifiedTrustBadge
+                  size="2"
+                  passed={verified === true}
+                  passedLabel={verifiedBadgePassedLabel}
+                  notPassedLabel={verifiedBadgeNotPassedLabel}
+                />
               </Flex>
               <Text size="2" color="gray" highContrast>
                 {`${title} \u00B7 ${location}`}

@@ -1222,6 +1222,8 @@ export function useSearchLabels() {
       ratingAria: filters("ratingAria"),
       anyRating: filters("anyRating"),
       starsPlus: (rating: string) => filters("starsPlus", { rating }),
+      backgroundCheck: filters("backgroundCheck"),
+      backgroundCheckAria: filters("backgroundCheckAria"),
     },
     toolbar: {
       loading: toolbar("loading"),
@@ -1246,6 +1248,8 @@ export function useSearchLabels() {
       viewProfile: card("viewProfile"),
       book: card("book"),
       bookNow: card("bookNow"),
+      verifiedBadgePassed: card("verifiedBadgePassed"),
+      verifiedBadgeNotPassed: card("verifiedBadgeNotPassed"),
     },
     profileDialog: {
       loading: profileDialog("loading"),
@@ -1260,6 +1264,8 @@ export function useSearchLabels() {
       experienceYears: (years: number) => profileDialog("experienceYears", { years }),
       minorBadge: profileDialog("minorBadge"),
       minorBadgeTooltip: profileDialog("minorBadgeTooltip"),
+      verifiedBadgePassed: profileDialog("verifiedBadgePassed"),
+      verifiedBadgeNotPassed: profileDialog("verifiedBadgeNotPassed"),
       noReviewsYet: profileDialog("noReviewsYet"),
       ratingSummary: (rating: string, count: number) =>
         profileDialog("ratingSummary", { rating, count }),

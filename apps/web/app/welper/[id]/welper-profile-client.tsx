@@ -499,10 +499,11 @@ function PublicWelperProfileContent({ welperId }: { welperId: string }) {
               <Heading as="h1" size="7" trim="start">
                 {displayName}
               </Heading>
-              {/* Bible §20.1 + §22.6: a verified badge must mean something.
-                  Render only when the BFF explicitly returns `verified: true`
-                  — never default to "yes" on missing data. */}
-              {profile.verified === true && <VerifiedTrustBadge />}
+              <VerifiedTrustBadge
+                passed={profile.verified === true}
+                passedLabel={t("verifiedBadgePassed")}
+                notPassedLabel={t("verifiedBadgeNotPassed")}
+              />
             </Flex>
 
             <Box mb="3">

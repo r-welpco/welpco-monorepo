@@ -10,6 +10,7 @@ import { Box } from "@welpco/ui/box";
 import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { Button } from "@welpco/ui/button";
+import { Checkbox } from "@welpco/ui/checkbox";
 import { X } from "lucide-react";
 import { FORM_SPACING } from "@welpco/ui/tokens";
 
@@ -39,6 +40,8 @@ export interface SearchFiltersSidebarLabels {
   ratingAria?: string;
   anyRating?: string;
   starsPlus?: (rating: string) => string;
+  backgroundCheck?: string;
+  backgroundCheckAria?: string;
 }
 
 export interface SearchFiltersSidebarProps {
@@ -58,6 +61,9 @@ export interface SearchFiltersSidebarProps {
   radiusOptions?: Array<{ value: number; label: string }>;
   /** When true, radius control is shown (e.g. when location is set). */
   showRadius?: boolean;
+  /** When true, only Welpers with a passed background check are requested. */
+  verifiedOnly?: boolean;
+  onVerifiedOnlyChange?: (value: boolean) => void;
   /** Compact layout for narrow sidebar */
   compact?: boolean;
   /** When "panel", filter fields use a responsive grid for full-width layouts. */
@@ -97,6 +103,8 @@ export function SearchFiltersSidebar({
   onRadiusChange,
   radiusOptions = [],
   showRadius = false,
+  verifiedOnly = false,
+  onVerifiedOnlyChange,
   compact = false,
   layout = "stack",
   fullHeight = false,
@@ -134,7 +142,8 @@ export function SearchFiltersSidebar({
     value.rating !== "any" ||
     !!categoryId ||
     !!keyword?.trim() ||
-    !!radiusKm;
+    !!radiusKm ||
+    verifiedOnly;
 
   const cardSize = "4";
   const sectionGap = "5";
@@ -296,6 +305,30 @@ export function SearchFiltersSidebar({
     </Flex>,
   );
 
+  if (onVerifiedOnlyChange) {
+    fieldNodes.push(
+      <Flex
+        key="verified"
+        align="center"
+        gap="2"
+        wrap="wrap"
+        role="group"
+        aria-label={l?.backgroundCheckAria ?? l?.backgroundCheck ?? "Background check passed"}
+        style={isPanel ? { alignSelf: "end", minHeight: "var(--space-8)" } : undefined}
+      >
+        <Checkbox
+          id="sidebar-verified-only"
+          checked={verifiedOnly}
+          onCheckedChange={(checked) => onVerifiedOnlyChange(checked === true)}
+          size="2"
+        />
+        <Text as="label" size="2" weight="medium" htmlFor="sidebar-verified-only">
+          {l?.backgroundCheck ?? "Background check passed"}
+        </Text>
+      </Flex>,
+    );
+  }
+
   return (
     <Card
       size={cardSize}
@@ -334,13 +367,13 @@ export function SearchFiltersSidebar({
           </Flex>
           {compact && (
             <Text size="1" color="gray" highContrast mt="1">
-              {l?.compactHint ?? "Category, price, rating"}
+              {l?.compactHint ?? "Category, price, rating, background check"}
             </Text>
           )}
         </Box>
 
         {isPanel ? (
-          <Grid columns={{ initial: "1", sm: "2", lg: "4" }} gap="4" style={{ width: "100%" }}>
+          <Grid columns={{ initial: "1", sm: "2", lg: "5" }} gap="4" style={{ width: "100%" }}>
             {fieldNodes}
           </Grid>
         ) : (

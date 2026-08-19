@@ -494,6 +494,8 @@ function SearchPageContent() {
                         reviews={item.reviews}
                         imageUrl={item.imageUrl}
                         verified={item.verified}
+                        verifiedBadgePassedLabel={searchLabels.card.verifiedBadgePassed}
+                        verifiedBadgeNotPassedLabel={searchLabels.card.verifiedBadgeNotPassed}
                         isMinor={item.isMinor}
                         weeklyAvailability={item.weeklyAvailability}
                         availabilityLabels={availabilityLabels}

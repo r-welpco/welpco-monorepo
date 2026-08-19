@@ -1,6 +1,7 @@
-import { IsOptional, IsString, IsInt, IsNumber, Min, Max, IsIn, MaxLength } from 'class-validator';
+import { IsOptional, IsString, IsInt, IsNumber, IsBoolean, Min, Max, IsIn, MaxLength } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { parseQueryBoolean } from '../../../common/dto/parse-query-boolean';
 
 function optionalNumberTransform({ value }: { value: unknown }) {
   if (value === '' || value === null || value === undefined) return undefined;
@@ -83,6 +84,14 @@ export class SearchServicesQueryDto {
   @Min(0)
   @Max(5)
   minRating?: number;
+
+  @ApiPropertyOptional({
+    description: 'When true, return only Welpers whose background check status is Passed.',
+  })
+  @IsOptional()
+  @Transform(({ value }) => parseQueryBoolean(value))
+  @IsBoolean()
+  verifiedOnly?: boolean;
 
   @ApiPropertyOptional({ description: 'Page number (1-based)', default: 1 })
   @IsOptional()

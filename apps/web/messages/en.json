@@ -2756,7 +2756,7 @@
         "title": "Filters",
         "clearAllAria": "Clear all filters",
         "clear": "Clear",
-        "compactHint": "Category, price, rating",
+        "compactHint": "Category, price, rating, background check",
         "serviceCategory": "Service category",
         "serviceCategoryAria": "Service category",
         "anyCategory": "Any category",
@@ -2772,7 +2772,9 @@
         "minRating": "Min. rating",
         "ratingAria": "Minimum rating",
         "anyRating": "Any rating",
-        "starsPlus": "{rating}+ stars"
+        "starsPlus": "{rating}+ stars",
+        "backgroundCheck": "Background check passed",
+        "backgroundCheckAria": "Show only Welpers with a passed background check"
       },
       "toolbar": {
         "loading": "Loading…",
@@ -2795,7 +2797,9 @@
         "view": "View",
         "viewProfile": "View profile",
         "book": "Book",
-        "bookNow": "Book now"
+        "bookNow": "Book now",
+        "verifiedBadgePassed": "Background check passed",
+        "verifiedBadgeNotPassed": "No background check"
       },
       "profileDialog": {
         "loading": "Loading…",
@@ -2810,6 +2814,8 @@
         "experienceYears": "{years}+ yrs exp",
         "minorBadge": "Minor",
         "minorBadgeTooltip": "Welper is under 18",
+        "verifiedBadgePassed": "Background check passed",
+        "verifiedBadgeNotPassed": "No background check",
         "noReviewsYet": "No reviews yet",
         "ratingSummary": "{rating} · {count, plural, one {# review} other {# reviews}}",
         "completedJobs": "{count, plural, one {# job completed} other {# jobs completed}}",
@@ -3104,6 +3110,8 @@
     "bookingStep3Detail": "You're only charged after the job is complete.",
     "freeCancellation": "Free cancellation up to 24 hours before the start.",
     "signIn": "Sign in",
-    "signUp": "Sign up"
+    "signUp": "Sign up",
+    "verifiedBadgePassed": "Background check passed",
+    "verifiedBadgeNotPassed": "No background check"
   }
 }

@@ -20,6 +20,7 @@ export const Default: Story = {
     rating: 4.9,
     reviews: 182,
     specialties: ['Deep clean', 'Move-out', 'Eco products'],
+    verified: true,
   },
 };
 
@@ -28,6 +29,20 @@ export const WithActions: Story = {
     ...Default.args,
     onView: () => console.log('view'),
     onBook: () => console.log('book'),
+  },
+};
+
+export const BackgroundCheckPassed: Story = {
+  args: {
+    ...Default.args,
+    verified: true,
+  },
+};
+
+export const BackgroundCheckNotPassed: Story = {
+  args: {
+    ...Default.args,
+    verified: false,
   },
 };
 

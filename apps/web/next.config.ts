@@ -84,12 +84,12 @@ const nextConfig: NextConfig = {
     // Monorepo root so Next.js uses pnpm-lock.yaml and avoids multiple-lockfile warning
     root: path.join(__dirname, "..", ".."),
   },
-  experimental: {
-    // The persistent cache has grown beyond 9 GB locally and causes Turbopack
-    // to saturate CPU and memory while loading and compacting old SST files.
-    turbopackFileSystemCacheForDev: false,
-  },
-  cacheComponents: true,
+  // experimental: {
+  //   // The persistent cache has grown beyond 9 GB locally and causes Turbopack
+  //   // to saturate CPU and memory while loading and compacting old SST files.
+  //   turbopackFileSystemCacheForDev: false,
+  // },
+  cacheComponents: false,
   async headers() {
     return [
       {

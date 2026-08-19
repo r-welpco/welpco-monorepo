@@ -424,6 +424,8 @@ export interface SearchServicesParams {
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;
+  /** When true, only Welpers with a passed background check. */
+  verifiedOnly?: boolean;
   page?: number;
   limit?: number;
   sort?: "relevance" | "price" | "distance";

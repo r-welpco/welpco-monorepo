@@ -41,7 +41,7 @@ export interface WelperProfileDialogProfile {
   lastName: string | null;
   bio: string | null;
   profilePhotoUrl: string | null;
-  /** Background-check verified — render badge only when explicitly true. */
+  /** Background-check verified — true only when BFF explicitly sets it. */
   verified?: boolean;
   /** Minor welper (14–17) — render badge only when explicitly true. */
   isMinor?: boolean;
@@ -73,6 +73,8 @@ export interface WelperProfileDialogLabels {
   experienceYears?: (years: number) => string;
   minorBadge?: string;
   minorBadgeTooltip?: string;
+  verifiedBadgePassed?: string;
+  verifiedBadgeNotPassed?: string;
   noReviewsYet?: string;
   ratingSummary?: (rating: string, count: number) => string;
   completedJobs?: (count: number) => string;
@@ -163,7 +165,12 @@ export function WelperProfileDialog({
                     <Heading size="5" trim="start">
                       {displayName}
                     </Heading>
-                    {profile.verified === true ? <VerifiedTrustBadge size="2" /> : null}
+                    <VerifiedTrustBadge
+                      size="2"
+                      passed={profile.verified === true}
+                      passedLabel={l?.verifiedBadgePassed}
+                      notPassedLabel={l?.verifiedBadgeNotPassed}
+                    />
                   </Flex>
                   <Flex align="center" gap="3" wrap="wrap" mb="1">
                     <Flex align="center" gap="1">

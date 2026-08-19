@@ -21,6 +21,8 @@ const meta = {
     onCategoryChange: () => {},
     keyword: '',
     onKeywordChange: () => {},
+    verifiedOnly: false,
+    onVerifiedOnlyChange: () => {},
     showRadius: false,
   },
 } satisfies Meta<typeof SearchFiltersSidebar>;
@@ -40,6 +42,8 @@ export const PanelWithActiveFilters: Story = {
     value: { priceRange: '50-100', rating: '4.5' },
     categoryId: 'pet-care',
     keyword: 'dog walking',
+    verifiedOnly: true,
+    onVerifiedOnlyChange: () => {},
   },
 };
 

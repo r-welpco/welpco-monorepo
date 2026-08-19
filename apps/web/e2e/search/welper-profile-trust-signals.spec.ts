@@ -99,6 +99,7 @@ test.describe("Welper profile trust signals", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByText("4.92 · 12 reviews")).toBeVisible();
     await expect(dialog.getByText("37 jobs completed")).toBeVisible();
+    await expect(dialog.getByLabel("Background check passed")).toBeVisible();
   });
 
   test("shows the same trust signals on the standalone public profile", async ({ page }) => {
@@ -107,5 +108,23 @@ test.describe("Welper profile trust signals", () => {
     await expect(page.getByRole("heading", { name: "Jean G." })).toBeVisible();
     await expect(page.getByText(/4\.92/)).toBeVisible();
     await expect(page.getByText("37 jobs completed")).toBeVisible();
+    await expect(page.getByLabel("Background check passed")).toBeVisible();
+  });
+
+  test("shows a not-passed badge when the welper has no background check", async ({
+    page,
+  }) => {
+    await page.route(`**/api/search/welpers/${WELPER_ID}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ...publicProfile, verified: false }),
+      });
+    });
+
+    await page.goto(`/welper/${WELPER_ID}`);
+
+    await expect(page.getByRole("heading", { name: "Jean G." })).toBeVisible();
+    await expect(page.getByLabel("No background check")).toBeVisible();
   });
 });

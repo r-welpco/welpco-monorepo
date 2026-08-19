@@ -753,6 +753,85 @@ describe('ServiceDiscoveryService', () => {
     });
   });
 
+  describe('searchServices - background check filter', () => {
+    function mockSearchQueryBuilder() {
+      return {
+        leftJoin: jest.fn().mockReturnThis(),
+        innerJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(1),
+        select: jest.fn().mockReturnThis(),
+        offset: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockResolvedValue([{ welper_id: 'w1' }]),
+        setParameter: jest.fn().mockReturnThis(),
+      };
+    }
+
+    it('should restrict results to passed background checks when verifiedOnly is true', async () => {
+      const qb = mockSearchQueryBuilder();
+      mockWelperProfileRepo.createQueryBuilder.mockReturnValue(qb);
+      mockWelperProfileRepo.find.mockResolvedValue([
+        {
+          welperId: 'w1',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          bio: 'Bio',
+          profilePhotoUrl: null,
+          serviceArea: null,
+          countryCode: 'CA',
+          provinceCode: 'QC',
+          rating: 4.5,
+          reviewCount: 10,
+        },
+      ]);
+      mockServiceOfferingRepo.find.mockResolvedValue([
+        { welperId: 'w1', hourlyRate: 25, serviceCategoryId: 'cat1' },
+      ]);
+      mockCategoriesService.findAll.mockResolvedValue([{ id: 'cat1', name: 'Care' }]);
+
+      await service.searchServices({ verifiedOnly: true });
+
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining('vs.background_check_status = :passedBackgroundCheck'),
+        { passedBackgroundCheck: 'Passed' },
+      );
+    });
+
+    it('should not apply background-check filter when verifiedOnly is not set', async () => {
+      const qb = mockSearchQueryBuilder();
+      mockWelperProfileRepo.createQueryBuilder.mockReturnValue(qb);
+      mockWelperProfileRepo.find.mockResolvedValue([
+        {
+          welperId: 'w1',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          bio: 'Bio',
+          profilePhotoUrl: null,
+          serviceArea: null,
+          countryCode: 'CA',
+          provinceCode: 'QC',
+          rating: 4.5,
+          reviewCount: 10,
+        },
+      ]);
+      mockServiceOfferingRepo.find.mockResolvedValue([
+        { welperId: 'w1', hourlyRate: 25, serviceCategoryId: 'cat1' },
+      ]);
+      mockCategoriesService.findAll.mockResolvedValue([{ id: 'cat1', name: 'Care' }]);
+
+      await service.searchServices({});
+
+      const backgroundCheckCalls = qb.andWhere.mock.calls.filter(
+        (call) => typeof call[0] === 'string' && call[0].includes('background_check_status'),
+      );
+      expect(backgroundCheckCalls).toHaveLength(0);
+    });
+  });
+
   describe('searchServices - radius filter', () => {
     it('should apply earth_distance filter when radius parameters are provided', async () => {
       const qb = {

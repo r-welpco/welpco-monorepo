@@ -35,6 +35,7 @@ export async function searchServices(
     minPrice: params.minPrice,
     maxPrice: params.maxPrice,
     minRating: params.minRating,
+    verifiedOnly: params.verifiedOnly === true ? true : undefined,
     page: params.page ?? 1,
     limit: params.limit ?? 20,
     sort: params.sort ?? "relevance",

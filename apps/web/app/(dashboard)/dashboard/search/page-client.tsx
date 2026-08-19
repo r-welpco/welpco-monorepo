@@ -171,6 +171,7 @@ export default function DashboardSearchPageClient() {
   const searchMinPrice = validMinPrice ? minPrice : undefined;
   const searchMaxPrice = validMaxPrice ? maxPrice : undefined;
   const searchMinRating = validMinRating ? minRating : undefined;
+  const verifiedOnly = searchParams.get("verifiedOnly") === "true";
   const parsedPage = parseInt(searchParams.get("page") ?? String(DEFAULT_PAGE), 10);
   const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : DEFAULT_PAGE;
   const sortParam = searchParams.get("sort");
@@ -224,11 +225,12 @@ export default function DashboardSearchPageClient() {
       minPrice: searchMinPrice,
       maxPrice: searchMaxPrice,
       minRating: searchMinRating,
+      verifiedOnly: verifiedOnly || undefined,
       page,
       limit: DEFAULT_LIMIT,
       sort,
     }),
-    [q, categoryId, postalCode, searchLat, searchLng, searchMinPrice, searchMaxPrice, searchMinRating, page, sort]
+    [q, categoryId, postalCode, searchLat, searchLng, searchMinPrice, searchMaxPrice, searchMinRating, verifiedOnly, page, sort]
   );
 
   const { data, isLoading, isFetching, isError, error, refetch } = useSearchServices(
@@ -250,11 +252,11 @@ export default function DashboardSearchPageClient() {
   const { data: categoriesData } = useDiscoveryCategories(false);
 
   const updateParams = useCallback(
-    (updates: Record<string, string | number | undefined>) => {
+    (updates: Record<string, string | number | boolean | undefined>) => {
       startTransition(() => {
         const next = new URLSearchParams(searchParams.toString());
         for (const [key, value] of Object.entries(updates)) {
-          if (value === undefined || value === "") {
+          if (value === undefined || value === "" || value === false) {
             next.delete(key);
           } else {
             next.set(key, String(value));
@@ -291,6 +293,7 @@ export default function DashboardSearchPageClient() {
       minPrice: undefined,
       maxPrice: undefined,
       minRating: undefined,
+      verifiedOnly: undefined,
       page: undefined,
     });
   }, [updateParams]);
@@ -345,6 +348,13 @@ export default function DashboardSearchPageClient() {
       } else {
         updateParams({ minRating: parseFloat(rating), page: undefined });
       }
+    },
+    [updateParams]
+  );
+
+  const handleVerifiedOnlyChange = useCallback(
+    (value: boolean) => {
+      updateParams({ verifiedOnly: value || undefined, page: undefined });
     },
     [updateParams]
   );
@@ -506,6 +516,8 @@ export default function DashboardSearchPageClient() {
       specialties: item.categories.map(localizeSearchCategory),
       imageUrl: item.profilePhotoUrl ?? undefined,
       verified: item.verified === true,
+      verifiedBadgePassedLabel: searchLabels.card.verifiedBadgePassed,
+      verifiedBadgeNotPassedLabel: searchLabels.card.verifiedBadgeNotPassed,
       isMinor: item.isMinor === true,
       minorBadgeLabel: searchLabels.profileDialog.minorBadge,
       minorBadgeTooltip: searchLabels.profileDialog.minorBadgeTooltip,
@@ -522,6 +534,8 @@ export default function DashboardSearchPageClient() {
     localizeSearchCategory,
     openProfileDialog,
     openServiceSelection,
+    searchLabels.card.verifiedBadgePassed,
+    searchLabels.card.verifiedBadgeNotPassed,
     searchLabels.profileDialog.minorBadge,
     searchLabels.profileDialog.minorBadgeTooltip,
   ]);
@@ -575,7 +589,8 @@ export default function DashboardSearchPageClient() {
     priceRangeFromUrl !== "any" ||
     ratingFromUrl !== "any" ||
     !!validCategoryId ||
-    !!q?.trim();
+    !!q?.trim() ||
+    verifiedOnly;
 
   const filtersSidebar = (
     <SearchFiltersSidebar
@@ -591,6 +606,8 @@ export default function DashboardSearchPageClient() {
       keyword={q ?? undefined}
       onKeywordChange={handleKeywordChange}
       showRadius={false}
+      verifiedOnly={verifiedOnly}
+      onVerifiedOnlyChange={handleVerifiedOnlyChange}
       layout="panel"
       labels={searchLabels.filters}
     />
@@ -806,6 +823,8 @@ export default function DashboardSearchPageClient() {
                         reviews={item.reviews}
                         imageUrl={item.imageUrl}
                         verified={item.verified}
+                        verifiedBadgePassedLabel={item.verifiedBadgePassedLabel}
+                        verifiedBadgeNotPassedLabel={item.verifiedBadgeNotPassedLabel}
                         isMinor={item.isMinor}
                         minorBadgeLabel={item.minorBadgeLabel}
                         minorBadgeTooltip={item.minorBadgeTooltip}

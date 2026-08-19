@@ -36,8 +36,10 @@ export interface WelperProfileCardProps {
   specialties?: string[];
   /** Optional avatar image URL */
   imageUrl?: string;
-  /** Background-check verified — render badge only when explicitly true. */
+  /** Background-check verified — true only when BFF explicitly sets it. */
   verified?: boolean;
+  verifiedBadgePassedLabel?: string;
+  verifiedBadgeNotPassedLabel?: string;
   /** Minor welper — render badge only when explicitly true. */
   isMinor?: boolean;
   minorBadgeLabel?: string;
@@ -68,6 +70,8 @@ export function WelperProfileCard({
   specialties = [],
   imageUrl,
   verified = false,
+  verifiedBadgePassedLabel,
+  verifiedBadgeNotPassedLabel,
   isMinor = false,
   minorBadgeLabel,
   minorBadgeTooltip,
@@ -115,7 +119,11 @@ export function WelperProfileCard({
               <Heading size="4" trim="start">
                 {name}
               </Heading>
-              {verified === true && <VerifiedTrustBadge />}
+              <VerifiedTrustBadge
+                passed={verified === true}
+                passedLabel={verifiedBadgePassedLabel}
+                notPassedLabel={verifiedBadgeNotPassedLabel}
+              />
             </Flex>
             <Text size="2" weight="medium" as="div" mb="1">
               {title}

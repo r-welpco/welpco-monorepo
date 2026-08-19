@@ -2755,7 +2755,7 @@
         "title": "Filtres",
         "clearAllAria": "Effacer tous les filtres",
         "clear": "Effacer",
-        "compactHint": "Catégorie, prix, note",
+        "compactHint": "Catégorie, prix, note, antécédents",
         "serviceCategory": "Catégorie de service",
         "serviceCategoryAria": "Catégorie de service",
         "anyCategory": "Toutes les catégories",
@@ -2771,7 +2771,9 @@
         "minRating": "Note min.",
         "ratingAria": "Note minimale",
         "anyRating": "Toute note",
-        "starsPlus": "{rating}+ étoiles"
+        "starsPlus": "{rating}+ étoiles",
+        "backgroundCheck": "Vérification des antécédents réussie",
+        "backgroundCheckAria": "Afficher uniquement les Welpers avec une vérification des antécédents réussie"
       },
       "toolbar": {
         "loading": "Chargement…",
@@ -2794,7 +2796,9 @@
         "view": "Voir",
         "viewProfile": "Voir le profil",
         "book": "Réserver",
-        "bookNow": "Réserver"
+        "bookNow": "Réserver",
+        "verifiedBadgePassed": "Vérification des antécédents réussie",
+        "verifiedBadgeNotPassed": "Aucune vérification des antécédents"
       },
       "profileDialog": {
         "loading": "Chargement…",
@@ -2809,6 +2813,8 @@
         "experienceYears": "{years}+ ans d'exp.",
         "minorBadge": "Mineur",
         "minorBadgeTooltip": "Le Welper a moins de 18 ans",
+        "verifiedBadgePassed": "Vérification des antécédents réussie",
+        "verifiedBadgeNotPassed": "Aucune vérification des antécédents",
         "noReviewsYet": "Aucun avis pour le moment",
         "ratingSummary": "{rating} · {count, plural, one {# avis} other {# avis}}",
         "completedJobs": "{count, plural, one {# service terminé} other {# services terminés}}",
@@ -3103,6 +3109,8 @@
     "bookingStep3Detail": "Vous n'êtes débité qu'après la fin du service.",
     "freeCancellation": "Annulation gratuite jusqu'à 24 heures avant le début.",
     "signIn": "Connexion",
-    "signUp": "Inscription"
+    "signUp": "Inscription",
+    "verifiedBadgePassed": "Vérification des antécédents réussie",
+    "verifiedBadgeNotPassed": "Aucune vérification des antécédents"
   }
 }

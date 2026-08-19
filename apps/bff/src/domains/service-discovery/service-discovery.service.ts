@@ -26,6 +26,7 @@ import { HandleService } from '../profile-management/sharing/handle.service';
 import { formatWelperDisplayNameForCustomer } from '../../common/display-name.util';
 import { customerHourlyChargeFromWelperRate } from '../booking/booking-pricing';
 import { isMinorWelper } from '../safety-verification/background-check-age.util';
+import { BackgroundCheckStatus } from '../user-management/entities/verification-status.entity';
 import {
   applyMarketplaceAccountFilters,
   isWelperAccountMarketplaceEligible,
@@ -260,6 +261,17 @@ export class ServiceDiscoveryService {
 
     if (minRating != null && typeof minRating === 'number') {
       qb.andWhere('(p.rating IS NOT NULL AND p.rating >= :minRating)', { minRating });
+    }
+
+    if (dto.verifiedOnly === true) {
+      qb.andWhere(
+        `EXISTS (
+          SELECT 1 FROM verification_statuses vs
+          WHERE vs.user_id = p.welper_id
+          AND vs.background_check_status = :passedBackgroundCheck
+        )`,
+        { passedBackgroundCheck: BackgroundCheckStatus.PASSED },
+      );
     }
 
     if (minPrice != null && typeof minPrice === 'number') {
