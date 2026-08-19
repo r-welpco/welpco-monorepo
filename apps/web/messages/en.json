@@ -1703,7 +1703,14 @@
       "roleSwitch": {
         "menuLabel": "Switch role",
         "toCustomer": "Switch to booking",
-        "toWelper": "Switch to welping"
+        "toWelper": "Switch to welping",
+        "confirmToCustomerTitle": "Switch to booking?",
+        "confirmToCustomerBody": "You'll browse and book services as a customer. Your Welper profile stays live, and you can switch back anytime.",
+        "confirmToWelperTitle": "Switch to welping?",
+        "confirmToWelperBody": "You'll return to your Welper dashboard — jobs, bookings, and payouts.",
+        "confirm": "Switch",
+        "cancel": "Cancel",
+        "switching": "Switching…"
       }
     },
     "home": {

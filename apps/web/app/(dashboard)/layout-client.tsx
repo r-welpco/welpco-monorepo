@@ -29,6 +29,7 @@ import { AppearanceTunerEffects } from "@/components/features/personalization/ap
 import { DashboardAppearanceTuner } from "@/components/features/personalization/dashboard-appearance-tuner";
 import { useAppearanceTunerStore } from "@/stores/appearanceTunerStore";
 import { AppFooter } from "@/components/layout/app-footer";
+import { RoleSwitchDialog } from "@/components/features/dashboard/role-switch-dialog";
 
 const showAppearanceTuner = process.env.NODE_ENV === "development";
 interface DashboardLayoutClientProps {
@@ -65,6 +66,7 @@ export default function DashboardLayoutClient({
     (session?.user?.accountType ?? serverUser.accountType)?.toLowerCase() ===
     "welper";
   const [isSwitchingRole, setIsSwitchingRole] = useState(false);
+  const [roleSwitchDialogOpen, setRoleSwitchDialogOpen] = useState(false);
   const { data: customerProfile } = useCustomerProfile(user.id, userRole === "customer");
   const { data: welperProfile } = useWelperProfile(user.id, userRole === "welper");
   const backgroundId = usePersonalizationStore((s) => s.backgroundId);
@@ -133,7 +135,12 @@ export default function DashboardLayoutClient({
     await performClientSignOut({ callbackUrl: "/", queryClient });
   }, [queryClient]);
 
-  const handleRoleSwitch = useCallback(async () => {
+  const handleRoleSwitch = useCallback(() => {
+    if (!isWelperAccount) return;
+    setRoleSwitchDialogOpen(true);
+  }, [isWelperAccount]);
+
+  const handleConfirmRoleSwitch = useCallback(async () => {
     if (!isWelperAccount || isSwitchingRole) return;
     setIsSwitchingRole(true);
     try {
@@ -150,9 +157,12 @@ export default function DashboardLayoutClient({
         await updateSession({ roleMode: null });
       }
       // Session role changed: drop the cached token+role snapshot, refetch
-      // active queries under the new acting role, re-render server components.
+      // active queries under the new acting role, then land on the dashboard
+      // home of the new mode.
       clearTokenCache();
       await queryClient.invalidateQueries();
+      setRoleSwitchDialogOpen(false);
+      router.push("/dashboard");
       router.refresh();
     } catch (error) {
       console.error(
@@ -309,6 +319,15 @@ export default function DashboardLayoutClient({
         </Box>
       </Box>
       <AppFooter />
+      {isWelperAccount ? (
+        <RoleSwitchDialog
+          open={roleSwitchDialogOpen}
+          onOpenChange={setRoleSwitchDialogOpen}
+          targetRole={userRole === "welper" ? "customer" : "welper"}
+          onConfirm={handleConfirmRoleSwitch}
+          isSwitching={isSwitchingRole}
+        />
+      ) : null}
       {showAppearanceTuner ? (
         <>
           <AppearanceTunerEffects />

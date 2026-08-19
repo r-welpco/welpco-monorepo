@@ -1702,7 +1702,14 @@
       "roleSwitch": {
         "menuLabel": "Changer de rôle",
         "toCustomer": "Passer en mode réservation",
-        "toWelper": "Repasser en mode Welper"
+        "toWelper": "Repasser en mode Welper",
+        "confirmToCustomerTitle": "Passer en mode réservation ?",
+        "confirmToCustomerBody": "Vous pourrez chercher et réserver des services comme client. Votre profil Welper reste en ligne et vous pouvez revenir à tout moment.",
+        "confirmToWelperTitle": "Repasser en mode Welper ?",
+        "confirmToWelperBody": "Vous retrouverez votre tableau de bord Welper — mandats, réservations et paiements.",
+        "confirm": "Changer",
+        "cancel": "Annuler",
+        "switching": "Changement…"
       }
     },
     "home": {
