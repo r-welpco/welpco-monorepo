@@ -9,7 +9,7 @@ function getCustomerContentEn(): string {
 <p style="${pStyle}">You're probably wondering how it works, so let us give you a brief explanation.</p>
 
 <h2 style="${h2Style}">What is it?</h2>
-<p style="${pStyle}">Welpco is a platform that connects you to trusted service providers in your community, which we refer to as Welpers. Welpers go through a background check and provide services to fulfill your domestic service needs.</p>
+<p style="${pStyle}">Welpco is a platform that connects you to service providers in your community, which we refer to as Welpers. Adult Welpers can choose to complete a third-party background check; profiles with a passed check display a verified badge.</p>
 
 <h2 style="${h2Style}">Which services are offered?</h2>
 <ul style="${listStyle}">
@@ -35,7 +35,7 @@ function getWelperContentEn(): string {
 <p style="${pStyle}">You're probably wondering how it works, so let us give you a brief explanation.</p>
 
 <h2 style="${h2Style}">What is it?</h2>
-<p style="${pStyle}">Welpco is a platform that connects Welpers to customers in or around their community. Welpers go through a background check and provide services to fulfill domestic service needs.</p>
+<p style="${pStyle}">Welpco is a platform that connects Welpers to customers in or around their community. Adult Welpers can choose to complete a third-party background check and earn a verified badge.</p>
 
 <h2 style="${h2Style}">Which services are offered?</h2>
 <ul style="${listStyle}">
@@ -50,8 +50,8 @@ function getWelperContentEn(): string {
 <p style="${pStyle}">*Customers will also be able to post want ads for services that may not be categorized on our platform, which you can browse through and apply for, as well.</p>
 
 <h2 style="${h2Style}">How does it work?</h2>
-<p style="${pStyle}">It's simple! You create your bio as a Welper on our platform. You choose the services you'd like to offer, as well as your availability. That's right! You have the flexibility to choose your own schedule. You also choose your hourly rate for the services you'd like to offer, and we will add 25% to that fee plus tax (paid by the customer), which covers operational costs and support provided by Welpco. You will also have to pass a background check before you start earning, which insures our customers that you are trustworthy enough to be on their property. This background check is provided by Certn within our platform.</p>
-<p style="${pStyle}">Once you complete your bio, schedule, and background check, you will be ready to start earning! Customers will browse for the services they need, view the Welpers in their area who provide those services, and select the Welper they wish to hire. When you are selected, you will be able to confirm the booking and communicate with the customer via our platform. Once you complete the service, your earnings will be viewable in your Welpco account and payout will be issued on a weekly basis.</p>
+<p style="${pStyle}">It's simple! You create your bio as a Welper on our platform. You choose the services you'd like to offer, as well as your availability. That's right! You have the flexibility to choose your own schedule. You also choose your hourly rate for the services you'd like to offer, and we will add 25% to that fee plus tax (paid by the customer), which covers operational costs and support provided by Welpco. Adult Welpers can optionally complete a background check provided by Certn to earn a verified badge. It is not required to activate your profile or receive bookings.</p>
+<p style="${pStyle}">Once you complete the required profile setup and your schedule, you will be ready to start earning! Customers will browse for the services they need, view the Welpers in their area who provide those services, and select the Welper they wish to hire. When you are selected, you will be able to confirm the booking and communicate with the customer via our platform. Once you complete the service, your earnings will be viewable in your Welpco account and payout will be issued on a weekly basis.</p>
 
 <h2 style="${h2Style}">How are you paid?</h2>
 <p style="${pStyle}">You earn the hourly rate you chose, and the fees are deducted from the customer's total. There are no hidden fees or deductions from your earnings. We will provide you with an annual T4A tax form, which you are responsible for submitting for your provincial and federal taxes, if you meet the required threshold of annual earnings. Payout will be issued on a weekly basis via direct deposit to your bank account.</p>
@@ -66,7 +66,7 @@ function getCustomerContentFr(): string {
 <p style="${pStyle}">Vous vous demandez probablement comment \u00e7a fonctionne, alors laissez-nous vous donner une br\u00e8ve explication.</p>
 
 <h2 style="${h2Style}">Qu\u2019est-ce que c\u2019est\u00a0?</h2>
-<p style="${pStyle}">Welpco est une plateforme qui vous connecte \u00e0 des prestataires de services de confiance dans votre communaut\u00e9, que nous appelons des Welpers. Les Welpers passent une v\u00e9rification des ant\u00e9c\u00e9dents et offrent des services pour r\u00e9pondre \u00e0 vos besoins en services domestiques.</p>
+<p style="${pStyle}">Welpco est une plateforme qui vous connecte \u00e0 des prestataires de services dans votre communaut\u00e9, que nous appelons des Welpers. Les Welpers adultes peuvent choisir d\u2019effectuer une v\u00e9rification des ant\u00e9c\u00e9dents par un tiers; les profils dont la v\u00e9rification est r\u00e9ussie affichent un badge v\u00e9rifi\u00e9.</p>
 
 <h2 style="${h2Style}">Quels services sont offerts\u00a0?</h2>
 <ul style="${listStyle}">
@@ -92,7 +92,7 @@ function getWelperContentFr(): string {
 <p style="${pStyle}">Vous vous demandez probablement comment \u00e7a fonctionne, alors laissez-nous vous donner une br\u00e8ve explication.</p>
 
 <h2 style="${h2Style}">Qu\u2019est-ce que c\u2019est\u00a0?</h2>
-<p style="${pStyle}">Welpco est une plateforme qui connecte les Welpers aux clients dans leur communaut\u00e9 ou aux alentours. Les Welpers passent une v\u00e9rification des ant\u00e9c\u00e9dents et offrent des services pour r\u00e9pondre aux besoins en services domestiques.</p>
+<p style="${pStyle}">Welpco est une plateforme qui connecte les Welpers aux clients dans leur communaut\u00e9 ou aux alentours. Les Welpers adultes peuvent choisir d\u2019effectuer une v\u00e9rification des ant\u00e9c\u00e9dents par un tiers afin d\u2019obtenir un badge v\u00e9rifi\u00e9.</p>
 
 <h2 style="${h2Style}">Quels services sont offerts\u00a0?</h2>
 <ul style="${listStyle}">
@@ -107,8 +107,8 @@ function getWelperContentFr(): string {
 <p style="${pStyle}">*Les clients pourront \u00e9galement publier des petites annonces pour des services qui ne sont pas cat\u00e9goris\u00e9s sur notre plateforme, que vous pourrez consulter et auxquelles vous pourrez postuler.</p>
 
 <h2 style="${h2Style}">Comment \u00e7a fonctionne\u00a0?</h2>
-<p style="${pStyle}">C\u2019est simple\u00a0! Vous cr\u00e9ez votre profil de Welper sur notre plateforme. Vous choisissez les services que vous souhaitez offrir, ainsi que vos disponibilit\u00e9s. Eh oui\u00a0! Vous avez la flexibilit\u00e9 de cr\u00e9er votre propre horaire. Vous choisissez \u00e9galement votre taux horaire pour les services que vous souhaitez offrir, et nous ajouterons 25\u00a0% \u00e0 ce tarif plus taxes (pay\u00e9 par le client), ce qui couvre les co\u00fbts op\u00e9rationnels et le soutien fourni par Welpco. Vous devrez \u00e9galement passer une v\u00e9rification des ant\u00e9c\u00e9dents avant de commencer \u00e0 gagner, ce qui assure \u00e0 nos clients que vous \u00eates digne de confiance. Cette v\u00e9rification est fournie par Certn au sein de notre plateforme.</p>
-<p style="${pStyle}">Une fois votre profil, votre horaire et votre v\u00e9rification des ant\u00e9c\u00e9dents compl\u00e9t\u00e9s, vous serez pr\u00eat \u00e0 commencer \u00e0 gagner\u00a0! Les clients parcourront les services dont ils ont besoin, consulteront les Welpers de leur r\u00e9gion qui offrent ces services et s\u00e9lectionneront le Welper qu\u2019ils souhaitent engager. Lorsque vous serez s\u00e9lectionn\u00e9, vous pourrez confirmer la r\u00e9servation et communiquer avec le client via notre plateforme. Une fois le service termin\u00e9, vos gains seront visibles dans votre compte Welpco et le versement sera effectu\u00e9 sur une base hebdomadaire.</p>
+<p style="${pStyle}">C\u2019est simple\u00a0! Vous cr\u00e9ez votre profil de Welper sur notre plateforme. Vous choisissez les services que vous souhaitez offrir, ainsi que vos disponibilit\u00e9s. Eh oui\u00a0! Vous avez la flexibilit\u00e9 de cr\u00e9er votre propre horaire. Vous choisissez \u00e9galement votre taux horaire pour les services que vous souhaitez offrir, et nous ajouterons 25\u00a0% \u00e0 ce tarif plus taxes (pay\u00e9 par le client), ce qui couvre les co\u00fbts op\u00e9rationnels et le soutien fourni par Welpco. Les Welpers adultes peuvent choisir d\u2019effectuer une v\u00e9rification des ant\u00e9c\u00e9dents fournie par Certn afin d\u2019obtenir un badge v\u00e9rifi\u00e9. Elle n\u2019est pas requise pour activer votre profil ni recevoir des r\u00e9servations.</p>
+<p style="${pStyle}">Une fois les \u00e9tapes requises de votre profil et votre horaire compl\u00e9t\u00e9s, vous serez pr\u00eat \u00e0 commencer \u00e0 gagner\u00a0! Les clients parcourront les services dont ils ont besoin, consulteront les Welpers de leur r\u00e9gion qui offrent ces services et s\u00e9lectionneront le Welper qu\u2019ils souhaitent engager. Lorsque vous serez s\u00e9lectionn\u00e9, vous pourrez confirmer la r\u00e9servation et communiquer avec le client via notre plateforme. Une fois le service termin\u00e9, vos gains seront visibles dans votre compte Welpco et le versement sera effectu\u00e9 sur une base hebdomadaire.</p>
 
 <h2 style="${h2Style}">Comment \u00eates-vous pay\u00e9\u00a0?</h2>
 <p style="${pStyle}">Vous gagnez le taux horaire que vous avez choisi, et les frais sont d\u00e9duits du total du client. Il n\u2019y a pas de frais cach\u00e9s ni de d\u00e9ductions sur vos gains. Nous vous fournirons un formulaire fiscal annuel T4A, que vous \u00eates responsable de soumettre pour vos imp\u00f4ts provinciaux et f\u00e9d\u00e9raux, si vous atteignez le seuil requis de gains annuels. Le versement sera effectu\u00e9 sur une base hebdomadaire par d\u00e9p\u00f4t direct dans votre compte bancaire.</p>
@@ -155,7 +155,7 @@ function getLaunchDayAnnouncementContentEn(): string {
 <p style="${pStyle}">We\u2019re getting very close, and we\u2019re excited to have you with us from the very beginning. Whether you're looking for services or planning to offer them as a Welper, you\u2019re part of our early community \u2014 and that means a lot to us.</p>
 
 <h2 style="${h2Style}">What\u2019s next?</h2>
-<p style="${pStyle}">On May 16th, Welpers will be able to create their account and complete their profile and background check. You\u2019ll receive another email within a week or two after that with full access to the platform and all the details to get started.</p>
+<p style="${pStyle}">On May 16th, Welpers will be able to create their account, complete their profile, and optionally start a background check to earn a verified badge. You\u2019ll receive another email within a week or two after that with full access to the platform and all the details to get started.</p>
 <p style="${pStyle}">In the meantime, if you have any questions or feedback, feel free to reach out anytime at <a href="mailto:support@welpco.com" style="color:${brandGreen}; text-decoration:none;">support@welpco.com</a> \u2014 we\u2019d love to hear from you.</p>
 <p style="${pStyle}">Talk soon,<br><strong>The Welpco Team</strong></p>`;
 }
@@ -167,7 +167,7 @@ function getLaunchDayAnnouncementContentFr(): string {
 <p style="${pStyle}">Nous nous rapprochons rapidement du grand jour, et nous sommes ravis de vous compter parmi les tout premiers membres de notre communaut\u00e9. Que vous soyez \u00e0 la recherche de services ou pr\u00eat(e) \u00e0 en offrir en tant que Welper, votre pr\u00e9sence d\u00e8s le d\u00e9but compte \u00e9norm\u00e9ment pour nous.</p>
 
 <h2 style="${h2Style}">Quelle est la prochaine \u00e9tape\u00a0?</h2>
-<p style="${pStyle}">\u00c0 partir du 16 mai, les Welpers pourront cr\u00e9er leur compte, compl\u00e9ter leur profil et effectuer leur v\u00e9rification d\u2019ant\u00e9c\u00e9dents. Vous recevrez ensuite un autre courriel dans un d\u00e9lai de 1 \u00e0 2 semaines vous donnant un acc\u00e8s complet \u00e0 la plateforme, ainsi que tous les d\u00e9tails pour commencer.</p>
+<p style="${pStyle}">\u00c0 partir du 16 mai, les Welpers pourront cr\u00e9er leur compte, compl\u00e9ter leur profil et, s\u2019ils le souhaitent, commencer une v\u00e9rification des ant\u00e9c\u00e9dents afin d\u2019obtenir un badge v\u00e9rifi\u00e9. Vous recevrez ensuite un autre courriel dans un d\u00e9lai de 1 \u00e0 2 semaines vous donnant un acc\u00e8s complet \u00e0 la plateforme, ainsi que tous les d\u00e9tails pour commencer.</p>
 <p style="${pStyle}">D\u2019ici l\u00e0, si vous avez des questions ou des commentaires, n\u2019h\u00e9sitez pas \u00e0 nous \u00e9crire \u00e0 tout moment \u00e0 <a href="mailto:support@welpco.com" style="color:${brandGreen}; text-decoration:none;">support@welpco.com</a> \u2014 il nous fera plaisir de vous r\u00e9pondre.</p>
 <p style="${pStyle}">Au plaisir de vous retrouver tr\u00e8s bient\u00f4t,<br><strong>L\u2019\u00e9quipe Welpco</strong></p>`;
 }

@@ -456,9 +456,9 @@ export const DEFAULT_WELPER_BACKGROUND_CHECK_LABELS: WelperBackgroundCheckStepLa
     ...DEFAULT_SIGNUP_COMMON,
     title: "Background check",
     under18Description:
-      "Because you are under 18, a criminal background check is not required at this time.",
+      "Welpers under 18 do not complete the criminal background check.",
     description:
-      "Adult Welpers must complete a Basic Canadian criminal record check before going live. Pay the fee below, then finish identity verification with our screening partner.",
+      "Adult Welpers can complete a Basic Canadian criminal record check to earn a verified badge. It is optional: you can be active and receive bookings without completing it. Pay the fee below if you choose to continue, then complete the screening with our partner.",
     limitedTimeRate: "Limited-time rate",
     pricePlusTax: "+ tax",
     payAndContinue: "Pay {amount} + tax and continue",
@@ -473,7 +473,7 @@ export const DEFAULT_WELPER_BACKGROUND_CHECK_LABELS: WelperBackgroundCheckStepLa
     resendInviteEmailSent:
       "Email sent — check your inbox and spam folder for the screening link.",
     footer:
-      "Results are usually ready within a few business days. You can finish signup while your check is processing; search and bookings unlock once you are cleared.",
+      "Results are usually ready within a few business days. Your profile can appear in search and receive bookings while screening is in progress. Approval adds the verified badge to your profile.",
     continue: "Continue",
     paymentReceivedPrefix: "Payment received.",
     paymentInviteReady:

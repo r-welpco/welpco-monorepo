@@ -247,7 +247,7 @@
         "items": [
           {
             "title": "Background-checked — look for the badge",
-            "body": "Welpers can complete a real third-party background check. Pass it, and a badge appears on their profile — no badge means no check."
+            "body": "Adult Welpers can complete a real third-party background check. Pass it, and a verified badge appears on their profile — no badge means no passed check."
           },
           {
             "title": "Charged only when done",
@@ -305,7 +305,7 @@
           },
           {
             "q": "Is it safe to have a Welper in my home?",
-            "a": "Safety is a top priority at Welpco. Every Welper is an adult (18+), and Welpers can complete a background check to earn a badge on their profile — look for it when you browse. You can also report a problem on any booking."
+            "a": "Safety is a top priority at Welpco. Adult Welpers can optionally complete a background check to earn a verified badge; minor Welpers use guardian-managed accounts and do not take the check. Look for the badges when you browse. You can also report a problem on any booking."
           }
         ]
       }
@@ -368,7 +368,7 @@
           {
             "n": "02",
             "t": "Trust by system",
-            "b": "Background checks, secure payment holds, on-platform messaging, two-way ratings. Trust is engineered, not assumed."
+            "b": "Verified background-check badges, secure payment holds, on-platform messaging, and two-way ratings help you make informed choices."
           },
           {
             "n": "03",
@@ -520,7 +520,7 @@
             ],
             [
               "How do I know that allowing a Welper on my property, or in my home, is safe?",
-              "Welpco prioritizes safety. Every Welper is an adult (18+), and Welpers can complete a background check to earn a badge on their profile — look for it when you browse. All messaging and payments stay on the platform, and you can report a problem on any booking."
+              "Welpco prioritizes safety. Adult Welpers can optionally complete a background check to earn a verified badge; minor Welpers use guardian-managed accounts and do not take the check. Look for the badges when you browse. All messaging and payments stay on the platform, and you can report a problem on any booking."
             ],
             [
               "What if there is a service I need that I don't see offered on the platform?",
@@ -713,9 +713,9 @@
     "welpersOpen": {
       "badge": "Welpers welcome",
       "title": "Welpco is open for Welpers",
-      "intro": "You can create your account today, complete your profile, and start your background check. We're rolling out access in phases so every Welper is set up properly from day one.",
+      "intro": "You can create your account today, complete your profile, and optionally start a background check to earn a verified badge. We're rolling out access in phases so every Welper is set up properly from day one.",
       "whatsNextTitle": "What's next?",
-      "whatsNextBody": "After you register, you'll finish your profile and background check. We'll email you when full platform access opens — with everything you need to start Welping.",
+      "whatsNextBody": "After you register, you'll finish your profile and can optionally complete a background check for a verified badge. We'll email you when full platform access opens — with everything you need to start Welping.",
       "feedbackPrefix": "Questions or feedback? Reach us anytime at",
       "feedbackSuffix": " — we'd love to hear from you.",
       "supportEmail": "support@welpco.com",
@@ -1183,8 +1183,8 @@
         },
         "welperBackgroundCheck": {
           "title": "Background check",
-          "under18Description": "Because you are under 18, a criminal background check is not required at this time.",
-          "description": "Adult Welpers must complete a Basic Canadian criminal record check before going live. Pay the fee below — you'll receive an email with steps to complete screening.",
+          "under18Description": "Welpers under 18 do not complete the criminal background check.",
+          "description": "Adult Welpers can complete a Basic Canadian criminal record check to earn a verified badge. It is optional: you can be active and receive bookings without completing it. Pay the fee below if you choose to continue — you'll receive an email with the screening steps.",
           "limitedTimeRate": "Limited-time rate",
           "pricePlusTax": "+ tax",
           "payAndContinue": "Pay {amount} + tax and continue",
@@ -1195,7 +1195,7 @@
           "resendInviteEmail": "Resend screening email",
           "resendInviteEmailSending": "Sending…",
           "resendInviteEmailSent": "Email sent — check your inbox and spam folder for the screening link.",
-          "footer": "Results are usually ready within a few business days. You can finish signup while your check is processing; search and bookings unlock once you are cleared.",
+          "footer": "Results are usually ready within a few business days. Your profile can appear in search and receive bookings while screening is in progress. Approval adds the verified badge to your profile.",
           "continue": "Continue",
           "paymentReceivedPrefix": "Payment received.",
           "failureMissingProfile": "We couldn't send your screening invite — your name and date of birth from the identity step are required. Update identity, then contact support if needed."
@@ -2027,7 +2027,7 @@
         "close": "Close",
         "manageOfferings": "Manage offerings",
         "completeProfile": "Complete profile",
-        "NOT_DISCOVERABLE": "Complete your profile setup and background check to appear in search before applying.",
+        "NOT_DISCOVERABLE": "Complete the required profile setup to appear in search before applying. A background check is optional and only adds the verified badge.",
         "NO_MATCHING_OFFERING": "Add an active service offering that includes this job's subcategory before you can apply.",
         "JOB_CLOSED": "This job is no longer accepting applications.",
         "JOB_EXPIRED": "This job has expired.",
@@ -2800,7 +2800,7 @@
         "book": "Book",
         "bookNow": "Book now",
         "verifiedBadgePassed": "Background check passed",
-        "verifiedBadgeNotPassed": "No background check"
+        "verifiedBadgeNotPassed": "No verification badge"
       },
       "profileDialog": {
         "loading": "Loading…",
@@ -2816,7 +2816,7 @@
         "minorBadge": "Minor",
         "minorBadgeTooltip": "Welper is under 18",
         "verifiedBadgePassed": "Background check passed",
-        "verifiedBadgeNotPassed": "No background check",
+        "verifiedBadgeNotPassed": "No verification badge",
         "noReviewsYet": "No reviews yet",
         "ratingSummary": "{rating} · {count, plural, one {# review} other {# reviews}}",
         "completedJobs": "{count, plural, one {# job completed} other {# jobs completed}}",
@@ -3113,6 +3113,6 @@
     "signIn": "Sign in",
     "signUp": "Sign up",
     "verifiedBadgePassed": "Background check passed",
-    "verifiedBadgeNotPassed": "No background check"
+    "verifiedBadgeNotPassed": "No verification badge"
   }
 }

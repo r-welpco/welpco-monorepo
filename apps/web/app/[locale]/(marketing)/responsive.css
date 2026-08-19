@@ -109,12 +109,19 @@
 
 /* ---------- Become a Welper CTA — mobile copy + CTAs ---------- */
 @media (max-width: 1024px) {
-  .welpco [data-grid="becomewelper-grid"] > * {
+  .welpco [data-grid="becomewelper-grid"] > *,
+  .welpco [data-grid="howitworks-page-grid"] > * {
     min-width: 0;
   }
 }
 
 @media (max-width: 640px) {
+  .welpco [data-become-welper-copy] {
+    order: 1;
+  }
+  .welpco [data-become-welper-media] {
+    order: 2;
+  }
   .welpco [data-become-welper-body] {
     max-width: 100% !important;
   }

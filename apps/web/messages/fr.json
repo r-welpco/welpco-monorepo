@@ -247,7 +247,7 @@
         "items": [
           {
             "title": "Antécédents vérifiés — cherchez le badge",
-            "body": "Les Welpers peuvent effectuer une vraie vérification d'antécédents par un tiers. S'ils la réussissent, un badge apparaît sur leur profil — pas de badge, pas de vérification."
+            "body": "Les Welpers adultes peuvent effectuer une vraie vérification d'antécédents par un tiers. S'ils la réussissent, un badge vérifié apparaît sur leur profil — sans badge, aucune vérification réussie."
           },
           {
             "title": "Débité seulement à la fin",
@@ -305,7 +305,7 @@
           },
           {
             "q": "Est-ce sécuritaire d'avoir un Welper chez moi?",
-            "a": "La sécurité est une priorité sur Welpco. Tous les Welpers sont des adultes (18 ans et plus), et les Welpers peuvent compléter une vérification des antécédents pour obtenir un badge sur leur profil — cherchez-le en parcourant les profils. Vous pouvez aussi signaler un problème sur toute réservation."
+            "a": "La sécurité est une priorité sur Welpco. Les Welpers adultes peuvent choisir d'effectuer une vérification des antécédents pour obtenir un badge vérifié; les Welpers mineurs utilisent un compte géré par un tuteur et ne passent pas cette vérification. Repérez les badges en parcourant les profils. Vous pouvez aussi signaler un problème sur toute réservation."
           }
         ]
       }
@@ -368,7 +368,7 @@
           {
             "n": "02",
             "t": "Confiance par le système",
-            "b": "Vérifications, retenues de paiement sécurisées, messagerie sur la plateforme, évaluations bidirectionnelles."
+            "b": "Les badges de vérification des antécédents, les retenues de paiement sécurisées, la messagerie sur la plateforme et les évaluations bidirectionnelles vous aident à faire un choix éclairé."
           },
           {
             "n": "03",
@@ -445,9 +445,9 @@
               "Pour devenir Welper, inscrivez-vous simplement via notre site web ou notre application et créez votre profil. Vous pouvez y indiquer votre expérience et les types de services que vous offrez. Vous devrez également choisir le tarif que vous souhaitez demander pour vos services."
             ],
             [
-              "Pourquoi ai-je besoin d'une vérification d'antécédents?",
+              "Ai-je besoin d'une vérification d'antécédents?",
               [
-                "Welpco est conçu pour être une plateforme sécuritaire et accueillante. Nous visons à assurer, dans la mesure du possible, un environnement sécuritaire pour nos clients. Une vérification d'antécédents permet d'offrir une tranquillité d'esprit supplémentaire lorsque un Welper entre dans le domicile ou sur la propriété d'un client.",
+                "Welpco est conçu pour être une plateforme sécuritaire et accueillante. Nous visons à assurer, dans la mesure du possible, un environnement sécuritaire pour nos clients. La vérification d'antécédents est facultative, mais elle offre une tranquillité d'esprit supplémentaire lorsqu'un Welper entre dans le domicile ou sur la propriété d'un client.",
                 "Si vous complétez la vérification avec succès, un badge de vérification apparaîtra sur votre profil. Si vous ne complétez pas ou ne réussissez pas la vérification, vous n'obtiendrez pas le badge, mais vous pourrez tout de même devenir Welper."
               ]
             ],
@@ -519,7 +519,7 @@
             ],
             [
               "Comment savoir si un Welper est sécuritaire?",
-              "Welpco met la sécurité au premier plan. Tous les Welpers sont des adultes (18 ans et plus), et les Welpers peuvent effectuer une vérification des antécédents afin d'obtenir un badge sur leur profil — cherchez-le en parcourant les profils. Les messages et les paiements restent sur la plateforme, et vous pouvez signaler un problème sur toute réservation."
+              "Welpco met la sécurité au premier plan. Les Welpers adultes peuvent choisir d'effectuer une vérification des antécédents pour obtenir un badge vérifié; les Welpers mineurs utilisent un compte géré par un tuteur et ne passent pas cette vérification. Repérez les badges en parcourant les profils. Les messages et les paiements restent sur la plateforme, et vous pouvez signaler un problème sur toute réservation."
             ],
             [
               "Et si un service dont j'ai besoin n'est pas offert?",
@@ -712,9 +712,9 @@
     "welpersOpen": {
       "badge": "Ouvert aux Welpers",
       "title": "Welpco est ouvert aux Welpers",
-      "intro": "Vous pouvez créer votre compte dès aujourd'hui, compléter votre profil et entamer votre vérification des antécédents. Nous ouvrons l'accès par étapes pour que chaque Welper soit bien configuré dès le départ.",
+      "intro": "Vous pouvez créer votre compte dès aujourd'hui, compléter votre profil et, si vous le souhaitez, entamer une vérification des antécédents pour obtenir un badge vérifié. Nous ouvrons l'accès par étapes pour que chaque Welper soit bien configuré dès le départ.",
       "whatsNextTitle": "Et ensuite?",
-      "whatsNextBody": "Après votre inscription, vous compléterez votre profil et votre vérification des antécédents. Nous vous enverrons un courriel lorsque l'accès complet à la plateforme sera ouvert — avec tout ce qu'il faut pour commencer à Welper.",
+      "whatsNextBody": "Après votre inscription, vous compléterez votre profil et pourrez choisir d'effectuer une vérification des antécédents pour obtenir un badge vérifié. Nous vous enverrons un courriel lorsque l'accès complet à la plateforme sera ouvert — avec tout ce qu'il faut pour commencer à Welper.",
       "feedbackPrefix": "Des questions ou des commentaires? Écrivez-nous à",
       "feedbackSuffix": " — nous serons ravis de vous lire.",
       "supportEmail": "support@welpco.com",
@@ -1182,8 +1182,8 @@
         },
         "welperBackgroundCheck": {
           "title": "Vérification des antécédents",
-          "under18Description": "Comme vous avez moins de 18 ans, une vérification des antécédents criminels n'est pas requise pour le moment.",
-          "description": "Les Welpers adultes doivent compléter une vérification d'antécédents criminels de base au Canada avant d'être actifs. Payez les frais ci-dessous — vous recevrez un courriel pour compléter la vérification.",
+          "under18Description": "Les Welpers de moins de 18 ans ne passent pas la vérification des antécédents criminels.",
+          "description": "Les Welpers adultes peuvent effectuer une vérification de base des antécédents criminels au Canada pour obtenir un badge vérifié. Elle est facultative : vous pouvez être actif et recevoir des réservations sans la compléter. Si vous choisissez de continuer, payez les frais ci-dessous — vous recevrez un courriel avec les étapes de vérification.",
           "limitedTimeRate": "Tarif promotionnel",
           "pricePlusTax": "+ taxes",
           "payAndContinue": "Payer {amount} + taxes et continuer",
@@ -1194,7 +1194,7 @@
           "resendInviteEmail": "Renvoyer le courriel de vérification",
           "resendInviteEmailSending": "Envoi…",
           "resendInviteEmailSent": "Courriel envoyé — vérifiez votre boîte de réception et vos indésirables pour le lien de vérification.",
-          "footer": "Les résultats sont généralement prêts en quelques jours ouvrables. Vous pouvez terminer l'inscription pendant le traitement; la recherche et les réservations s'activent une fois approuvé.",
+          "footer": "Les résultats sont généralement prêts en quelques jours ouvrables. Votre profil peut apparaître dans la recherche et recevoir des réservations pendant le traitement. L'approbation ajoute le badge vérifié à votre profil.",
           "continue": "Continuer",
           "paymentReceivedPrefix": "Paiement reçu.",
           "failureMissingProfile": "Impossible d'envoyer l'invitation — votre nom et votre date de naissance de l'étape d'identité sont requis. Mettez à jour l'identité, puis contactez le soutien au besoin."
@@ -2026,7 +2026,7 @@
         "close": "Fermer",
         "manageOfferings": "Gérer les offres de service",
         "completeProfile": "Compléter le profil",
-        "NOT_DISCOVERABLE": "Complétez votre profil et votre vérification des antécédents pour apparaître dans la recherche avant de postuler.",
+        "NOT_DISCOVERABLE": "Complétez les étapes requises de votre profil pour apparaître dans la recherche avant de postuler. La vérification des antécédents est facultative et ajoute seulement le badge vérifié.",
         "NO_MATCHING_OFFERING": "Ajoutez une offre de service active incluant la sous-catégorie de cette offre avant de pouvoir postuler.",
         "JOB_CLOSED": "Cette offre n'accepte plus de candidatures.",
         "JOB_EXPIRED": "Cette offre a expiré.",
@@ -2799,7 +2799,7 @@
         "book": "Réserver",
         "bookNow": "Réserver",
         "verifiedBadgePassed": "Vérification des antécédents réussie",
-        "verifiedBadgeNotPassed": "Aucune vérification des antécédents"
+        "verifiedBadgeNotPassed": "Aucun badge de vérification"
       },
       "profileDialog": {
         "loading": "Chargement…",
@@ -2815,7 +2815,7 @@
         "minorBadge": "Mineur",
         "minorBadgeTooltip": "Le Welper a moins de 18 ans",
         "verifiedBadgePassed": "Vérification des antécédents réussie",
-        "verifiedBadgeNotPassed": "Aucune vérification des antécédents",
+        "verifiedBadgeNotPassed": "Aucun badge de vérification",
         "noReviewsYet": "Aucun avis pour le moment",
         "ratingSummary": "{rating} · {count, plural, one {# avis} other {# avis}}",
         "completedJobs": "{count, plural, one {# service terminé} other {# services terminés}}",
@@ -3112,6 +3112,6 @@
     "signIn": "Connexion",
     "signUp": "Inscription",
     "verifiedBadgePassed": "Vérification des antécédents réussie",
-    "verifiedBadgeNotPassed": "Aucune vérification des antécédents"
+    "verifiedBadgeNotPassed": "Aucun badge de vérification"
   }
 }

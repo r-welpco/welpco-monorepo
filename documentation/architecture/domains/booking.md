@@ -40,7 +40,7 @@ Note: no code path currently sets `no_show`; the status exists in the enum/state
 | Transition | Method | Details |
 |---|---|---|
 | — → `pending` | `create()` | Customer creates request; requires a default payment method (`PaymentService.assertCustomerHasDefaultPaymentMethod`), validates service-question answers, resolves address, checks scheduling conflicts (`checkConflicts`) |
-| `pending → accepted` | `accept()` | Welper accepts. Order: background-check gate (`BackgroundCheckService.assertCanAcceptBookings`), lock + conflict re-check, then `PaymentService.prepareAuthorizationForAcceptance()` (**hold placed or scheduled before the status flips**), then locked transition to `accepted`. If the final transaction fails the hold is released (`onBookingCanceled`) |
+| `pending → accepted` | `accept()` | Welper accepts. Order: optional background-check policy hook (`BackgroundCheckService.assertCanAcceptBookings`, currently non-blocking), lock + conflict re-check, then `PaymentService.prepareAuthorizationForAcceptance()` (**hold placed or scheduled before the status flips**), then locked transition to `accepted`. If the final transaction fails the hold is released (`onBookingCanceled`) |
 | `pending → declined` | `decline()` | Welper declines; `onBookingCanceled` releases any hold |
 | `accepted → in_progress` | `checkIn()` | Welper checks in (`checkedInAt`) |
 | `in_progress → completed` | `submitServiceReceipt()` (also called by `checkOut()`, which auto-fills the billing window from `checkedInAt`→now) | Persists the receipt (subtotal from billed minutes × hourly rate, tax via `BookingTaxService.quoteServiceReceipt`), flips to `completed`, then `PaymentService.captureForServiceReceipt()` captures the hold + optional delta charge. **On capture failure the receipt is deleted and the booking rolled back to `in_progress`.** May return `deltaPayment` (client secret) when customer SCA is needed |
@@ -90,7 +90,7 @@ None in this domain. Deferred authorization and deadline cancellation for bookin
 
 - **payment** — hold/capture/release, late-cancellation fee, tax quotes, payment summary attached to booking responses ([payment.md](payment.md)).
 - **dispute** — sets/clears `disputed`; report window helpers live here ([dispute.md](dispute.md)).
-- **safety-verification** — background-check gate on accept.
+- **safety-verification** — optional background-check status and verified badge; accepting bookings is not gated by check approval.
 - **notification** — lifecycle notifications (accepted, declined, checked-in, receipt, cancelled) via `NotificationService`.
 - **profile-management / content-management** — offering + service-question validation on create.
 

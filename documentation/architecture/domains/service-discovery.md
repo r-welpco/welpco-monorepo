@@ -13,7 +13,7 @@ None owned. Queries `WelperProfile` and `ServiceOffering` (profile-management) a
 ## Services
 
 - `ServiceDiscoveryService` (`service-discovery.service.ts`) — `searchServices` (query builder over welper profiles + offerings, geocoded location filtering, category resolution, cached category tree via `DiscoveryCategoriesCacheService` from `common/discovery-categories-cache`), `getCategories`, `getPublicWelperProfile`.
-- `welper-marketplace-eligibility.util.ts` — `isWelperAccountMarketplaceEligible` / `applyMarketplaceAccountFilters`: welper is discoverable only if accountType=Welper, status=Active, signupCompleted, emailVerified (mirrors the admin "discoverable" definition). Background-check visibility is additionally enforced through `BackgroundCheckService.assertVisibleInSearch`.
+- `welper-marketplace-eligibility.util.ts` — `isWelperAccountMarketplaceEligible` / `applyMarketplaceAccountFilters`: welper is discoverable only if accountType=Welper, status=Active, signupCompleted, emailVerified (mirrors the admin "discoverable" definition). A background check is optional: approval adds the verified badge, and customers can request only verified results with the `verifiedOnly` filter.
 
 ## API endpoints (prefix `api`)
 

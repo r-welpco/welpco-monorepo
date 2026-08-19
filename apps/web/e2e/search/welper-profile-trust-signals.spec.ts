@@ -111,7 +111,7 @@ test.describe("Welper profile trust signals", () => {
     await expect(page.getByLabel("Background check passed")).toBeVisible();
   });
 
-  test("shows a not-passed badge when the welper has no background check", async ({
+  test("shows a neutral state when the welper has no verification badge", async ({
     page,
   }) => {
     await page.route(`**/api/search/welpers/${WELPER_ID}`, async (route) => {
@@ -125,6 +125,6 @@ test.describe("Welper profile trust signals", () => {
     await page.goto(`/welper/${WELPER_ID}`);
 
     await expect(page.getByRole("heading", { name: "Jean G." })).toBeVisible();
-    await expect(page.getByLabel("No background check")).toBeVisible();
+    await expect(page.getByLabel("No verification badge")).toBeVisible();
   });
 });

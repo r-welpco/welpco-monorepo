@@ -178,7 +178,7 @@ const en = {
           {
             n: "01",
             title: "Build your profile",
-            body: "Sign up, list your services, set your rates and weekly availability. Adults complete a background check.",
+            body: "Sign up, list your services, set your rates and weekly availability. Adults can optionally complete a background check for a verified badge.",
           },
           {
             n: "02",
@@ -208,11 +208,11 @@ const en = {
         titleLine1: "Trust,",
         titleLine2: "by design.",
         subtitle:
-          "Background checks, escrow payments, on-platform messaging, and two-way ratings — baked into every booking.",
+          "Verified badges, secure payment holds, on-platform messaging, and two-way ratings help you make informed choices.",
         items: [
           {
-            title: "Background-checked Welpers",
-            body: "Every adult Welper passes a background check before they can take their first booking.",
+            title: "Background-check badges",
+            body: "Adult Welpers can choose a third-party background check. A passed check adds a verified badge to the profile; it is not required to take bookings.",
           },
           {
             title: "Funds held until done",
@@ -269,7 +269,7 @@ const en = {
           },
           {
             q: "How do I know that having a Welper at my home is safe?",
-            a: "Adult Welpers complete background checks and earn a certified badge on their profile. Minor Welpers display a Minor badge and sign up under a guardian-managed account.",
+            a: "Adult Welpers can optionally complete a background check to earn a verified badge. Minor Welpers display a Minor badge and sign up under a guardian-managed account.",
           },
         ],
       },
@@ -366,7 +366,7 @@ const en = {
         titleItalic: "join the community.",
         steps: [
           ["Sign up & build a profile", "Add your experience, the services you provide, and what you charge."],
-          ["Pass a background check", "Required for adult Welpers — keeps customers confident, keeps Welpers credible."],
+          ["Earn a verified badge", "Adult Welpers can optionally complete a third-party background check to add a verified badge to their profile."],
           ["Set your availability", "You tell us when you work. Part-time, full-time, weekends, evenings — all welcome."],
           ["Accept your first booking", "Browse incoming requests, accept what fits, and meet your first neighbor."],
           [
@@ -403,8 +403,8 @@ const en = {
               "To become a Welper, simply sign up via our website or app and create your profile. You can include your experience and the type of services you provide. You will also need to choose the amount you will charge for the service(s) you will provide.",
             ],
             [
-              "Why do I need a background check?",
-              "Welpco identifies itself as a safe and user-friendly platform. We want to ensure, to the best of our ability, that our platform is a safe environment for our customers. A background check gives our customers the ease of mind they require when having a Welper enter their home and/or their property. If you pass the background check, you will receive a certified badge on your profile. If you fail the background check, you will not receive a certified badge on your profile, but you will still be able to be a Welper.",
+              "What does the background-check badge mean?",
+              "A background check is optional for adult Welpers. If you complete and pass the third-party check, a verified badge appears on your profile. If you do not complete or pass it, you will not receive the badge, but you can still be active and take bookings.",
             ],
             [
               "How do I get paid?",
@@ -467,7 +467,7 @@ const en = {
             ],
             [
               "How do I know that allowing a Welper on my property, or in my home, is safe?",
-              "Welpco prides itself on providing a safe and secure environment for both our customers and our Welpers. Welpers will need to pass a background check during sign up to ensure the integrity of the work they will provide. Welpers who pass their background check, will have a certified badge on their profile. Welpers who are minors, will not need to complete a background check, so their profiles will display a \"Minor badge\".",
+              "Adult Welpers can optionally complete a third-party background check. Welpers who pass display a verified badge on their profile, so look for the badge when choosing whom to book. Minor Welpers do not complete a background check and instead display a Minor badge.",
             ],
             [
               "What if there is a service I need that I don't see offered on the platform?",
@@ -713,7 +713,7 @@ fr.marketing.home.howItWorks.customerSteps = [
   { n: "03", title: "Confirmer et évaluer", body: "Le Welper confirme que le travail est terminé et soumet l'heure de fin. Le paiement est prélevé et la facture finale est envoyée au client. Laissez une évaluation pour maintenir la responsabilité sur la plateforme." },
 ];
 fr.marketing.home.howItWorks.welperSteps = [
-  { n: "01", title: "Créez votre profil", body: "Inscrivez-vous, listez vos services, fixez vos tarifs et votre disponibilité hebdomadaire. Les adultes passent une vérification des antécédents." },
+  { n: "01", title: "Créez votre profil", body: "Inscrivez-vous, listez vos services, fixez vos tarifs et votre disponibilité hebdomadaire. Les adultes peuvent choisir une vérification des antécédents pour obtenir un badge vérifié." },
   { n: "02", title: "Acceptez les mandats qui vous conviennent", body: "Recevez des demandes qui correspondent à vos compétences et à votre horaire. Temps partiel, temps plein ou occasionnel — c'est vous qui décidez." },
   { n: "03", title: "Recevez votre paiement", body: "Le Welper confirme que le travail est terminé et soumet l'heure de fin. Le client est facturé, et Welpco transfère les paiements admissibles au compte Stripe du Welper le lundi, au moins 48 heures après la libération du paiement." },
 ];

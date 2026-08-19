@@ -5,7 +5,7 @@
 Root: `apps/bff/src/domains/safety-verification/`
 
 ## Purpose
-Welper background checks — Stripe-paid checkout, Certn invite/webhook lifecycle, and pricing — plus guardian-consent flows for minor welpers (who skip the background check; see `background-check-age.util.ts`).
+Optional adult Welper background checks — Stripe-paid checkout, Certn invite/webhook lifecycle, verified-badge status, and pricing — plus guardian-consent flows for minor Welpers (who do not take the check; see `background-check-age.util.ts`). Check approval does not gate profile activation, default search visibility, or bookings.
 
 ## Entities (`entities/`)
 
@@ -18,7 +18,7 @@ Also writes `VerificationStatus.backgroundCheckStatus` (user-management entity).
 
 ## Services
 
-- `BackgroundCheckService` (`background-check.service.ts`) — status/eligibility API used across domains (`isBackgroundCheckRequiredForUser`, `assertVisibleInSearch`, `hasPassedBackgroundCheck`, batch lookups), Certn invite submission/retry, webhook handling, `onPaymentSucceeded`.
+- `BackgroundCheckService` (`background-check.service.ts`) — status/eligibility API used across domains (`isBackgroundCheckRequiredForUser`, non-blocking booking hook, `hasPassedBackgroundCheck`, batch lookups), Certn invite submission/retry, webhook handling, `onPaymentSucceeded`.
 - `BackgroundCheckPaymentService` (`background-check-payment.service.ts`) — Stripe Checkout session creation (via `payment/stripe-client`), `handleCheckoutSessionCompleted`, return-confirmation reconciliation.
 - `BackgroundCheckPricingService` — pricing from `ApplicationSetting` (payment domain entity; seeded at $19.99 CAD per migration `20260518120001`).
 - `GuardianConsentService` (`guardian-consent.service.ts`) — minor detection, consent request/resend, token-hashed public approve/decline/revoke with expiry and rate limiting.

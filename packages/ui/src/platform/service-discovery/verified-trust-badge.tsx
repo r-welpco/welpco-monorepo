@@ -6,7 +6,7 @@ import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
 import { Check, ShieldCheck, X } from "lucide-react";
 
 const PASSED_LABEL = "Background check passed";
-const NOT_PASSED_LABEL = "No background check";
+const NOT_PASSED_LABEL = "No verification badge";
 
 export interface VerifiedTrustBadgeProps {
   /** Badge size — `1` for compact cards, `2` for full profile cards. */

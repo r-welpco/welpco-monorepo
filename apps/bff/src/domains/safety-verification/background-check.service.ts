@@ -297,11 +297,10 @@ export class BackgroundCheckService {
     // reflects Passed status on public profiles.
   }
 
-  async assertVisibleInSearch(userId: string): Promise<boolean> {
-    if (!(await this.isBackgroundCheckRequiredForUser(userId))) {
-      return true;
-    }
-    return this.isAdminBackgroundCheckApproved(userId);
+  async assertVisibleInSearch(_userId: string): Promise<boolean> {
+    // Background checks are optional. Default marketplace visibility is
+    // determined by profile/account eligibility, not verification status.
+    return true;
   }
 
   /** Dashboard setup checklist — green only after admin marks verification Passed. */

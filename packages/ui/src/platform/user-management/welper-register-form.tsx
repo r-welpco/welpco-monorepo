@@ -122,9 +122,9 @@ export function WelperRegisterForm({
         {!isMinor && (
           <Callout.Root color={SEMANTIC_COLOR.warning} variant="surface">
             <Callout.Text>
-              Adult Welpers (18+) must complete a background check before
-              account activation. This will be initiated after email
-              verification.
+              Adult Welpers (18+) can optionally complete a background check
+              after email verification to earn a verified profile badge. It
+              is not required for account activation.
             </Callout.Text>
           </Callout.Root>
         )}
@@ -244,8 +244,9 @@ export function WelperRegisterForm({
                   size="2"
                 />
                 <Text as="label" size="2" htmlFor="acknowledge-bg-check">
-                  I understand that a background check is required for adult
-                  Welpers and will be initiated after email verification.
+                  I understand that adult Welpers can optionally complete a
+                  background check after email verification to earn a verified
+                  profile badge.
                 </Text>
               </Flex>
             </Box>
@@ -317,4 +318,3 @@ export function WelperRegisterForm({
     </Card>
   );
 }
-
