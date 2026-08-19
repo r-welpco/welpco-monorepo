@@ -1214,15 +1214,16 @@ export function useSearchLabels() {
       priceRange: filters("priceRange"),
       priceAria: filters("priceAria"),
       anyPrice: filters("anyPrice"),
-      pricePerHour: (range: string) =>
-        filters("pricePerHour", {
-          range: locale === "fr" ? range : `$${range}`,
-        }),
+      priceAmount: (amount: number) =>
+        locale === "fr" ? `${amount} $` : `$${amount}`,
+      priceRangeValue: (min: string, max: string) =>
+        filters("priceRangeValue", { min, max }),
       minRating: filters("minRating"),
       ratingAria: filters("ratingAria"),
       anyRating: filters("anyRating"),
       starsPlus: (rating: string) => filters("starsPlus", { rating }),
       backgroundCheck: filters("backgroundCheck"),
+      backgroundCheckHint: filters("backgroundCheckHint"),
       backgroundCheckAria: filters("backgroundCheckAria"),
     },
     toolbar: {

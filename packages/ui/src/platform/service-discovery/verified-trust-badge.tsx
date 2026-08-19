@@ -22,8 +22,9 @@ export interface VerifiedTrustBadgeProps {
 }
 
 /**
- * Background-check trust signal. Shield badge plus a status mark: green
- * check when passed, light-grey x when not.
+ * Background-check trust signal. One chip holding the shield and its verdict:
+ * green shield + check when passed, muted grey shield + x when not. Both
+ * states share a shape so the hue and the mark carry the whole difference.
  */
 export function VerifiedTrustBadge({
   size = "2",
@@ -31,43 +32,23 @@ export function VerifiedTrustBadge({
   passedLabel = PASSED_LABEL,
   notPassedLabel = NOT_PASSED_LABEL,
 }: VerifiedTrustBadgeProps) {
-  const iconSize = size === "1" ? 16 : 18;
-  const statusIconSize = size === "1" ? 14 : 16;
+  const iconSize = size === "1" ? 14 : 16;
   const label = passed ? passedLabel : notPassedLabel;
   const StatusIcon = passed ? Check : X;
 
   return (
     <Tooltip content={label}>
-      <span
+      <Badge
+        color={passed ? SEMANTIC_COLOR.success : SEMANTIC_COLOR.neutral}
+        variant="soft"
+        highContrast={passed}
+        size={size}
         aria-label={label}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "var(--space-1)",
-          cursor: "default",
-        }}
+        style={{ cursor: "default" }}
       >
-        <Badge
-          color={passed ? SEMANTIC_COLOR.success : SEMANTIC_COLOR.neutral}
-          variant={passed ? "solid" : "soft"}
-          highContrast={passed}
-          size={size}
-          style={{
-            paddingInline: size === "1" ? "var(--space-1)" : "var(--space-2)",
-          }}
-        >
-          <ShieldCheck size={iconSize} aria-hidden="true" strokeWidth={2.25} />
-        </Badge>
-        <StatusIcon
-          size={statusIconSize}
-          aria-hidden="true"
-          strokeWidth={2.5}
-          style={{
-            color: passed ? "var(--green-9)" : "var(--gray-8)",
-            flexShrink: 0,
-          }}
-        />
-      </span>
+        <ShieldCheck size={iconSize} aria-hidden="true" strokeWidth={2.25} />
+        <StatusIcon size={iconSize} aria-hidden="true" strokeWidth={2.5} />
+      </Badge>
     </Tooltip>
   );
 }

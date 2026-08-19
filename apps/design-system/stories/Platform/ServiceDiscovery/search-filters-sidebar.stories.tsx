@@ -14,7 +14,7 @@ const meta = {
   parameters: { layout: 'padded' },
   tags: ['autodocs'],
   args: {
-    value: { priceRange: 'any', rating: 'any' },
+    value: { priceRange: [0, 200], rating: 'any' },
     onChange: () => {},
     onReset: () => {},
     categoryOptions,
@@ -39,7 +39,7 @@ export const Panel: Story = {
 export const PanelWithActiveFilters: Story = {
   args: {
     layout: 'panel',
-    value: { priceRange: '50-100', rating: '4.5' },
+    value: { priceRange: [50, 100], rating: '4.5' },
     categoryId: 'pet-care',
     keyword: 'dog walking',
     verifiedOnly: true,

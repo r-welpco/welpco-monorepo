@@ -14,7 +14,10 @@ import {
   SearchResultsList,
   SearchEmptyState,
   WelperProfileCardCompact,
+  SEARCH_PRICE_MAX,
+  SEARCH_PRICE_MIN,
   type SearchFiltersSidebarState,
+  type SearchPriceRange,
   type SearchResultsViewMode,
   type WelperProfileDialogProfile,
   type WelperProfileDialogOffering,
@@ -301,12 +304,12 @@ export default function DashboardSearchPageClient() {
   const handleClearSearchAndFilters = handleResetFilters;
 
   // Derive price range and rating for sidebar from URL (so price/rating filters are applied to API)
-  const priceRangeFromUrl = useMemo((): SearchFiltersSidebarState["priceRange"] => {
-    if (searchMinPrice === 0 && searchMaxPrice === 50) return "0-50";
-    if (searchMinPrice === 50 && searchMaxPrice === 100) return "50-100";
-    if (searchMinPrice === 100 && searchMaxPrice === 200) return "100-200";
-    if (searchMinPrice === 200 && searchMaxPrice === undefined) return "200+";
-    return "any";
+  const priceRangeFromUrl = useMemo((): SearchPriceRange => {
+    const clamp = (amount: number) =>
+      Math.min(SEARCH_PRICE_MAX, Math.max(SEARCH_PRICE_MIN, amount));
+    const min = searchMinPrice != null ? clamp(searchMinPrice) : SEARCH_PRICE_MIN;
+    const max = searchMaxPrice != null ? clamp(searchMaxPrice) : SEARCH_PRICE_MAX;
+    return min <= max ? [min, max] : [max, min];
   }, [searchMinPrice, searchMaxPrice]);
 
   const ratingFromUrl = useMemo((): SearchFiltersSidebarState["rating"] => {
@@ -325,18 +328,13 @@ export default function DashboardSearchPageClient() {
   );
 
   const handlePriceRangeChange = useCallback(
-    (range: SearchFiltersSidebarState["priceRange"]) => {
-      if (range === "any") {
-        updateParams({ minPrice: undefined, maxPrice: undefined, page: undefined });
-      } else if (range === "0-50") {
-        updateParams({ minPrice: 0, maxPrice: 50, page: undefined });
-      } else if (range === "50-100") {
-        updateParams({ minPrice: 50, maxPrice: 100, page: undefined });
-      } else if (range === "100-200") {
-        updateParams({ minPrice: 100, maxPrice: 200, page: undefined });
-      } else if (range === "200+") {
-        updateParams({ minPrice: 200, maxPrice: undefined, page: undefined });
-      }
+    ([min, max]: SearchPriceRange) => {
+      updateParams({
+        minPrice: min > SEARCH_PRICE_MIN ? min : undefined,
+        // The top of the scale means "and up", so it drops the ceiling entirely.
+        maxPrice: max < SEARCH_PRICE_MAX ? max : undefined,
+        page: undefined,
+      });
     },
     [updateParams]
   );
@@ -586,7 +584,8 @@ export default function DashboardSearchPageClient() {
   const showLocationPrompt = !hasSearchCenter;
 
   const hasActiveFilters =
-    priceRangeFromUrl !== "any" ||
+    searchMinPrice != null ||
+    searchMaxPrice != null ||
     ratingFromUrl !== "any" ||
     !!validCategoryId ||
     !!q?.trim() ||
@@ -596,7 +595,9 @@ export default function DashboardSearchPageClient() {
     <SearchFiltersSidebar
       value={filterStateFromUrl}
       onChange={(next) => {
-        if (next.priceRange !== filterStateFromUrl.priceRange) handlePriceRangeChange(next.priceRange);
+        const [nextMin, nextMax] = next.priceRange;
+        const [currentMin, currentMax] = filterStateFromUrl.priceRange;
+        if (nextMin !== currentMin || nextMax !== currentMax) handlePriceRangeChange(next.priceRange);
         if (next.rating !== filterStateFromUrl.rating) handleRatingChange(next.rating);
       }}
       onReset={handleResetFilters}

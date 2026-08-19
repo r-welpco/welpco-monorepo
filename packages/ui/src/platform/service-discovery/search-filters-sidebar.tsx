@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
+import { Badge } from "@welpco/ui/badge";
 import { Card } from "@welpco/ui/card";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@welpco/ui/select";
 import { Input } from "@welpco/ui/input";
@@ -10,12 +11,22 @@ import { Box } from "@welpco/ui/box";
 import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { Button } from "@welpco/ui/button";
-import { Checkbox } from "@welpco/ui/checkbox";
+import { Separator } from "@welpco/ui/separator";
+import { Slider } from "@welpco/ui/slider";
+import { Switch } from "@welpco/ui/switch";
 import { X } from "lucide-react";
-import { FORM_SPACING } from "@welpco/ui/tokens";
+import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
+
+/** Hourly-rate slider bounds. `SEARCH_PRICE_MAX` doubles as the "and up" cap. */
+export const SEARCH_PRICE_MIN = 0;
+export const SEARCH_PRICE_MAX = 200;
+export const SEARCH_PRICE_STEP = 5;
+
+/** `[min, max]` hourly rate. `[MIN, MAX]` means the filter is off. */
+export type SearchPriceRange = [number, number];
 
 export interface SearchFiltersSidebarState {
-  priceRange: "any" | "0-50" | "50-100" | "100-200" | "200+";
+  priceRange: SearchPriceRange;
   rating: "any" | "4" | "4.5" | "5";
 }
 
@@ -35,12 +46,16 @@ export interface SearchFiltersSidebarLabels {
   priceRange?: string;
   priceAria?: string;
   anyPrice?: string;
-  pricePerHour?: (range: string) => string;
+  /** Formats a bare amount, e.g. `40` → "$40" (en) / "40 $" (fr). */
+  priceAmount?: (amount: number) => string;
+  /** Joins two formatted amounts, e.g. "$40 – $120/hr". */
+  priceRangeValue?: (min: string, max: string) => string;
   minRating?: string;
   ratingAria?: string;
   anyRating?: string;
   starsPlus?: (rating: string) => string;
   backgroundCheck?: string;
+  backgroundCheckHint?: string;
   backgroundCheckAria?: string;
 }
 
@@ -73,22 +88,18 @@ export interface SearchFiltersSidebarProps {
   labels?: SearchFiltersSidebarLabels;
 }
 
-const priceOptions: SearchFiltersSidebarState["priceRange"][] = [
-  "any",
-  "0-50",
-  "50-100",
-  "100-200",
-  "200+",
-];
-
 const ratingOptions: SearchFiltersSidebarState["rating"][] = ["any", "4", "4.5", "5"];
 
 const defaultState: SearchFiltersSidebarState = {
-  priceRange: "any",
+  priceRange: [SEARCH_PRICE_MIN, SEARCH_PRICE_MAX],
   rating: "any",
 };
 
 export const FILTER_ANY = "__any__";
+
+function isWholeRange([min, max]: SearchPriceRange): boolean {
+  return min <= SEARCH_PRICE_MIN && max >= SEARCH_PRICE_MAX;
+}
 
 export function SearchFiltersSidebar({
   value,
@@ -137,25 +148,44 @@ export function SearchFiltersSidebar({
     return () => clearTimeout(timeoutId);
   }, [localKeyword, keyword, onKeywordChange]);
 
+  // The slider tracks the drag locally and only commits on release, so a drag
+  // across the scale doesn't fire a search per step.
+  const [priceMin, priceMax] = value.priceRange;
+  const [localPrice, setLocalPrice] = useState<SearchPriceRange>([priceMin, priceMax]);
+  useEffect(() => {
+    setLocalPrice([priceMin, priceMax]);
+  }, [priceMin, priceMax]);
+
+  const formatAmount = l?.priceAmount ?? ((amount: number) => `$${amount}`);
+  const formatRange =
+    l?.priceRangeValue ?? ((min: string, max: string) => `${min} – ${max}/hr`);
+  const priceCapText = `${formatAmount(SEARCH_PRICE_MAX)}+`;
+  const priceValueText = isWholeRange(localPrice)
+    ? (l?.anyPrice ?? "Any price")
+    : formatRange(
+        formatAmount(localPrice[0]),
+        localPrice[1] >= SEARCH_PRICE_MAX ? priceCapText : formatAmount(localPrice[1]),
+      );
+
+  const priceActive = !isWholeRange(value.priceRange);
   const hasActiveFilters =
-    value.priceRange !== "any" ||
+    priceActive ||
     value.rating !== "any" ||
     !!categoryId ||
     !!keyword?.trim() ||
     !!radiusKm ||
     verifiedOnly;
 
-  const cardSize = "4";
-  const sectionGap = "5";
   const isPanel = layout === "panel";
   const fieldDirection = isPanel ? "column" : "row";
   const fieldAlign = isPanel ? { alignItems: "stretch" as const } : undefined;
   const controlWidth = isPanel ? "100%" : undefined;
 
-  const fieldNodes: ReactNode[] = [];
+  /** Selects and text inputs — uniform height, so they share a tidy grid. */
+  const pickerFields: ReactNode[] = [];
 
   if (categoryOptions.length > 0 && onCategoryChange) {
-    fieldNodes.push(
+    pickerFields.push(
       <Flex
         key="category"
         align="center"
@@ -189,7 +219,7 @@ export function SearchFiltersSidebar({
   }
 
   if (onKeywordChange) {
-    fieldNodes.push(
+    pickerFields.push(
       <Flex key="keyword" direction="column" gap={FORM_SPACING.labelGap}>
         <Text as="label" size="2" weight="medium" htmlFor="sidebar-keyword">
           {l?.keyword ?? "Keyword (optional)"}
@@ -206,7 +236,7 @@ export function SearchFiltersSidebar({
   }
 
   if (showRadius && radiusOptions.length > 0 && onRadiusChange) {
-    fieldNodes.push(
+    pickerFields.push(
       <Flex
         key="radius"
         align="center"
@@ -239,40 +269,7 @@ export function SearchFiltersSidebar({
     );
   }
 
-  fieldNodes.push(
-    <Flex
-      key="price"
-      align="center"
-      justify="between"
-      gap={isPanel ? FORM_SPACING.labelGap : "3"}
-      wrap="wrap"
-      direction={fieldDirection}
-      style={fieldAlign}
-    >
-      <Text as="label" size="2" weight="medium" id="sidebar-price-label" htmlFor="sidebar-price" style={{ display: "block" }}>
-        {l?.priceRange ?? "Price range"}
-      </Text>
-      <Box style={{ flex: 1, minWidth: 0, width: controlWidth }}>
-        <Select
-          value={value.priceRange}
-          onValueChange={(v) => update({ priceRange: v as SearchFiltersSidebarState["priceRange"] })}
-        >
-          <SelectTrigger id="sidebar-price" aria-labelledby="sidebar-price-label" style={{ width: "100%" }} />
-          <SelectContent>
-            {priceOptions.map((opt) => (
-              <SelectItem key={opt} value={opt}>
-                {opt === "any"
-                  ? (l?.anyPrice ?? "Any price")
-                  : (l?.pricePerHour ? l.pricePerHour(opt) : `$${opt}/hr`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Box>
-    </Flex>,
-  );
-
-  fieldNodes.push(
+  pickerFields.push(
     <Flex
       key="rating"
       align="center"
@@ -305,33 +302,96 @@ export function SearchFiltersSidebar({
     </Flex>,
   );
 
-  if (onVerifiedOnlyChange) {
-    fieldNodes.push(
-      <Flex
-        key="verified"
-        align="center"
-        gap="2"
-        wrap="wrap"
-        role="group"
-        aria-label={l?.backgroundCheckAria ?? l?.backgroundCheck ?? "Background check passed"}
-        style={isPanel ? { alignSelf: "end", minHeight: "var(--space-8)" } : undefined}
-      >
-        <Checkbox
-          id="sidebar-verified-only"
-          checked={verifiedOnly}
-          onCheckedChange={(checked) => onVerifiedOnlyChange(checked === true)}
-          size="2"
-        />
-        <Text as="label" size="2" weight="medium" htmlFor="sidebar-verified-only">
-          {l?.backgroundCheck ?? "Background check passed"}
+  const priceField = (
+    <Box
+      role="group"
+      aria-labelledby="sidebar-price-label"
+      style={{ minWidth: 0, width: "100%" }}
+    >
+      <Flex align="center" justify="between" gap="3" mb="2">
+        <Text as="label" size="2" weight="medium" id="sidebar-price-label">
+          {l?.priceRange ?? "Price range"}
         </Text>
-      </Flex>,
-    );
-  }
+        <Badge
+          size="1"
+          variant="soft"
+          color={priceActive ? SEMANTIC_COLOR.primary : SEMANTIC_COLOR.neutral}
+          highContrast
+        >
+          {priceValueText}
+        </Badge>
+      </Flex>
+      <Box px="1">
+        <Slider
+          value={localPrice}
+          onValueChange={(next) => setLocalPrice([next[0], next[1]])}
+          onValueCommit={(next) => update({ priceRange: [next[0], next[1]] })}
+          min={SEARCH_PRICE_MIN}
+          max={SEARCH_PRICE_MAX}
+          step={SEARCH_PRICE_STEP}
+          size="2"
+          // A full-width green bar would claim the filter is doing something
+          // when the whole scale is selected, so the untouched state stays quiet.
+          variant={priceActive ? "surface" : "soft"}
+          color={priceActive ? SEMANTIC_COLOR.primary : SEMANTIC_COLOR.neutral}
+          style={{ width: "100%" }}
+        />
+      </Box>
+      <Flex justify="between" mt="2">
+        <Text size="1" color="gray" highContrast>
+          {formatAmount(SEARCH_PRICE_MIN)}
+        </Text>
+        <Text size="1" color="gray" highContrast>
+          {priceCapText}
+        </Text>
+      </Flex>
+    </Box>
+  );
+
+  const verifiedField = onVerifiedOnlyChange ? (
+    <Flex
+      align="center"
+      justify="between"
+      gap="3"
+      px="3"
+      py="2"
+      style={{
+        minWidth: 0,
+        width: "100%",
+        borderRadius: "var(--radius-3)",
+        border: `1px solid ${verifiedOnly ? "var(--grass-a7)" : "var(--gray-a5)"}`,
+        backgroundColor: verifiedOnly ? "var(--grass-a2)" : "var(--gray-a2)",
+      }}
+    >
+      <Box style={{ minWidth: 0 }}>
+        <Text
+          as="label"
+          size="2"
+          weight="medium"
+          htmlFor="sidebar-verified-only"
+          style={{ display: "block" }}
+        >
+          {l?.backgroundCheck ?? "Background check"}
+        </Text>
+        <Text size="1" color="gray" highContrast>
+          {l?.backgroundCheckHint ?? "Only show Welpers who passed"}
+        </Text>
+      </Box>
+      <Switch
+        id="sidebar-verified-only"
+        checked={verifiedOnly}
+        onCheckedChange={(checked) => onVerifiedOnlyChange(checked === true)}
+        size="2"
+        color={SEMANTIC_COLOR.primary}
+        aria-label={l?.backgroundCheckAria ?? l?.backgroundCheck ?? "Background check"}
+        style={{ flexShrink: 0 }}
+      />
+    </Flex>
+  ) : null;
 
   return (
     <Card
-      size={cardSize}
+      size="4"
       variant="surface"
       style={{
         width: "100%",
@@ -342,7 +402,7 @@ export function SearchFiltersSidebar({
     >
       <Flex
         direction="column"
-        gap={sectionGap}
+        gap="4"
         style={fullHeight ? { flex: 1, minHeight: 0, minWidth: 0 } : { minWidth: 0 }}
       >
         <Box>
@@ -373,11 +433,28 @@ export function SearchFiltersSidebar({
         </Box>
 
         {isPanel ? (
-          <Grid columns={{ initial: "1", sm: "2", lg: "5" }} gap="4" style={{ width: "100%" }}>
-            {fieldNodes}
-          </Grid>
+          <>
+            <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4" style={{ width: "100%" }}>
+              {pickerFields}
+            </Grid>
+            <Separator size="4" />
+            <Grid
+              columns={{ initial: "1", md: "2" }}
+              gap={{ initial: "4", md: "6" }}
+              align="center"
+              style={{ width: "100%" }}
+            >
+              {priceField}
+              {verifiedField}
+            </Grid>
+          </>
         ) : (
-          fieldNodes
+          <Flex direction="column" gap="5" style={{ minWidth: 0 }}>
+            {pickerFields}
+            <Separator size="4" />
+            {priceField}
+            {verifiedField}
+          </Flex>
         )}
       </Flex>
     </Card>

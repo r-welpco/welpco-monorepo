@@ -2767,12 +2767,13 @@
         "priceRange": "Fourchette de prix",
         "priceAria": "Fourchette de prix",
         "anyPrice": "Tous les prix",
-        "pricePerHour": "{range} $/h",
+        "priceRangeValue": "{min} – {max}/h",
         "minRating": "Note min.",
         "ratingAria": "Note minimale",
         "anyRating": "Toute note",
         "starsPlus": "{rating}+ étoiles",
-        "backgroundCheck": "Vérification des antécédents réussie",
+        "backgroundCheck": "Vérification des antécédents",
+        "backgroundCheckHint": "Afficher uniquement les Welpers vérifiés",
         "backgroundCheckAria": "Afficher uniquement les Welpers avec une vérification des antécédents réussie"
       },
       "toolbar": {

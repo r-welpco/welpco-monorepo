@@ -2768,12 +2768,13 @@
         "priceRange": "Price range",
         "priceAria": "Price range",
         "anyPrice": "Any price",
-        "pricePerHour": "{range}/hr",
+        "priceRangeValue": "{min} – {max}/hr",
         "minRating": "Min. rating",
         "ratingAria": "Minimum rating",
         "anyRating": "Any rating",
         "starsPlus": "{rating}+ stars",
-        "backgroundCheck": "Background check passed",
+        "backgroundCheck": "Background check",
+        "backgroundCheckHint": "Only show Welpers who passed",
         "backgroundCheckAria": "Show only Welpers with a passed background check"
       },
       "toolbar": {
