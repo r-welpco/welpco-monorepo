@@ -59,9 +59,6 @@
   .welpco [data-grid="howitworks-steps"] {
     grid-template-columns: 1fr !important;
   }
-  .welpco [data-grid="testimonials-grid"] {
-    grid-template-columns: 1fr !important;
-  }
   .welpco [data-grid="footer-cols"] {
     /* 4 nav columns fold to a balanced 2×2 (brand block spans full width below). */
     grid-template-columns: 1fr 1fr !important;

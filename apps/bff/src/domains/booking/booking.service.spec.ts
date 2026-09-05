@@ -208,6 +208,10 @@ describe('BookingService', () => {
     dataSource = module.get<DataSource>(DataSource);
   });
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
@@ -518,6 +522,50 @@ describe('BookingService', () => {
       expect(result.availableActions).not.toContain('decline');
     });
 
+    it('should hide check-in until 60 minutes before the scheduled start', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-06-20T12:29:00.000Z'));
+      mockBookingRepo.findOne.mockResolvedValue({
+        id: 'b1',
+        customerId: 'c1',
+        welperId: 'w1',
+        status: BookingRequestStatus.ACCEPTED,
+        scheduledDate: '2026-06-20',
+        scheduledStartTime: '09:30',
+        scheduledEndTime: '11:30',
+        timezoneOffsetMinutes: -240,
+        timezoneName: 'America/Toronto',
+        answers: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await service.findById('b1', 'w1', 'welper');
+
+      expect(result.availableActions).not.toContain('check-in');
+    });
+
+    it('should show check-in at the 60-minute boundary', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-06-20T12:30:00.000Z'));
+      mockBookingRepo.findOne.mockResolvedValue({
+        id: 'b1',
+        customerId: 'c1',
+        welperId: 'w1',
+        status: BookingRequestStatus.ACCEPTED,
+        scheduledDate: '2026-06-20',
+        scheduledStartTime: '09:30',
+        scheduledEndTime: '11:30',
+        timezoneOffsetMinutes: -240,
+        timezoneName: 'America/Toronto',
+        answers: {},
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const result = await service.findById('b1', 'w1', 'welper');
+
+      expect(result.availableActions).toContain('check-in');
+    });
+
     it('should still offer customer cancel on pending requests', async () => {
       mockBookingRepo.findOne.mockResolvedValue({
         id: 'b1',
@@ -534,6 +582,101 @@ describe('BookingService', () => {
       expect(result.availableActions).toContain('cancel');
       expect(result.availableActions).not.toContain('accept');
       expect(result.availableActions).not.toContain('decline');
+    });
+  });
+
+  describe('checkIn', () => {
+    const makeAcceptedBooking = () => ({
+      id: 'b1',
+      customerId: 'c1',
+      welperId: 'w1',
+      serviceOfferingId: 'offering-1',
+      status: BookingRequestStatus.ACCEPTED,
+      scheduledDate: '2026-06-20',
+      scheduledStartTime: '09:30',
+      scheduledEndTime: '11:30',
+      durationMinutes: 120,
+      timezoneOffsetMinutes: -240,
+      timezoneName: 'America/Toronto',
+      answers: {},
+      checkedInAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    it('rejects check-in more than 60 minutes before the scheduled start', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-06-20T12:29:00.000Z'));
+      const booking = makeAcceptedBooking();
+      txQueryBuilder.getOne.mockResolvedValue(booking);
+
+      const error = await service.checkIn('b1', 'w1').then(
+        () => {
+          throw new Error('checkIn() should have rejected');
+        },
+        (reason: unknown) => reason,
+      );
+
+      expect(error).toBeInstanceOf(BadRequestException);
+      expect((error as BadRequestException).getResponse()).toMatchObject({
+        statusCode: 400,
+        code: 'CHECK_IN_TOO_EARLY',
+        message: 'Check-in is not available yet.',
+        availableAt: '2026-06-20T12:30:00.000Z',
+      });
+      expect(booking.status).toBe(BookingRequestStatus.ACCEPTED);
+      expect(booking.checkedInAt).toBeNull();
+      expect(txBookingRepo.save).not.toHaveBeenCalled();
+      expect(mockNotificationService.send).not.toHaveBeenCalled();
+    });
+
+    it('allows check-in at the 60-minute boundary', async () => {
+      const now = new Date('2026-06-20T12:30:00.000Z');
+      jest.useFakeTimers().setSystemTime(now);
+      const booking = makeAcceptedBooking();
+      txQueryBuilder.getOne.mockResolvedValue(booking);
+      txBookingRepo.save.mockImplementation(async (value: unknown) => value);
+
+      const result = await service.checkIn('b1', 'w1');
+
+      expect(result.status).toBe(BookingRequestStatus.IN_PROGRESS);
+      expect(booking.checkedInAt).toEqual(now);
+      expect(txBookingRepo.save).toHaveBeenCalledWith(booking);
+    });
+
+    it('continues to allow a late check-in', async () => {
+      const now = new Date('2026-06-20T16:00:00.000Z');
+      jest.useFakeTimers().setSystemTime(now);
+      const booking = makeAcceptedBooking();
+      txQueryBuilder.getOne.mockResolvedValue(booking);
+      txBookingRepo.save.mockImplementation(async (value: unknown) => value);
+
+      const result = await service.checkIn('b1', 'w1');
+
+      expect(result.status).toBe(BookingRequestStatus.IN_PROGRESS);
+      expect(booking.checkedInAt).toEqual(now);
+    });
+
+    it('rejects check-in when an accepted legacy booking has no schedule', async () => {
+      const booking = {
+        ...makeAcceptedBooking(),
+        scheduledDate: null,
+        scheduledStartTime: null,
+      };
+      txQueryBuilder.getOne.mockResolvedValue(booking);
+
+      const error = await service.checkIn('b1', 'w1').then(
+        () => {
+          throw new Error('checkIn() should have rejected');
+        },
+        (reason: unknown) => reason,
+      );
+
+      expect(error).toBeInstanceOf(BadRequestException);
+      expect((error as BadRequestException).getResponse()).toMatchObject({
+        statusCode: 400,
+        code: 'BOOKING_SCHEDULE_UNAVAILABLE',
+      });
+      expect(txBookingRepo.save).not.toHaveBeenCalled();
     });
   });
 

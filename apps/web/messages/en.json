@@ -226,7 +226,41 @@
         "verified": "Background-checked",
         "seeAll": "See all Welpers near you",
         "emptyForPostal": "No Welpers there yet — try another postal code, or browse everyone on the platform.",
-        "browseAll": "Browse all Welpers"
+        "browseAll": "Browse all Welpers",
+        "marketplaceTitle": "Can’t find the right Welper?",
+        "marketplaceDescription": "Post a job in the Marketplace so nearby Welpers can find it and apply.",
+        "postJob": "Post a job"
+      },
+      "testimonials": {
+        "eyebrow": "Testimonials",
+        "titleLine1": "What the community",
+        "titleLine2": "is saying.",
+        "subtitle": "Real experiences from people who booked help or offered their skills through Welpco.",
+        "railLabel": "Testimonials",
+        "prevAria": "Previous testimonials",
+        "nextAria": "More testimonials",
+        "items": [
+          {
+            "quote": "A wonderful experience with Welpco! I found a Welper quickly. They were punctual, efficient, and very friendly. It’s truly a convenient platform for encouraging neighbours to help one another. I recommend it 100%.",
+            "role": "Customer",
+            "imageAlt": "Portrait of a Welpco customer"
+          },
+          {
+            "quote": "Excellent service! Professional work, a courteous team, and results that met my expectations. I’m very satisfied and recommend Welpco without hesitation.",
+            "role": "Customer",
+            "imageAlt": "Portrait of a Welpco customer"
+          },
+          {
+            "quote": "I really like this app. It lets me provide services around my availability and get paid. It’s very easy to use, and I recommend Welpco to anyone looking to earn extra income.",
+            "role": "Welper",
+            "imageAlt": "Portrait of a Welper"
+          },
+          {
+            "quote": "I’m very happy I found someone quickly. It’s fast and efficient. Going to Welpco has become second nature whenever I need a service.",
+            "role": "Customer",
+            "imageAlt": "Portrait of a Welpco customer"
+          }
+        ]
       },
       "minors": {
         "badge": "Coming soon",
@@ -2555,7 +2589,8 @@
       "confirmCheckInConfirm": "Check in",
       "confirmCheckInCancel": "Not yet",
       "checkInFailed": "Failed to check in.",
-      "checkInLateHint": "Forgot to check in or check out on a completed job? No problem! You can now check in, check out, and adjust your hours after the job has been completed.",
+      "checkInTooEarly": "Check-in becomes available 60 minutes before the scheduled start time.",
+      "checkInArrivalHint": "Check in when you arrive at the job.",
       "paymentReleasedPayoutNote": "Eligible payouts are processed on Mondays after payment has been released for at least 48 hours.",
       "receiptDialogTitle": "Confirm service receipt",
       "receiptDialogDescription": "Adjust billing check-in and check-out if needed. The customer is charged the total shown when you confirm.",
@@ -2737,7 +2772,7 @@
       "nextPage": "Next page",
       "pageOf": "Page {page} of {total}",
       "emptyTitle": "No Welpers found",
-      "emptyDescription": "Try adjusting your search or filters, or post a job and let welpers apply.",
+      "emptyDescription": "Try adjusting your search or filters, or post a job in the Marketplace and let Welpers apply.",
       "clearSearchFilters": "Clear search & filters",
       "browseCategories": "Browse categories",
       "hero": {
@@ -3050,6 +3085,7 @@
     "dashboardSearchCta": "Go to your dashboard search",
     "createAccountCallout": "Create a free account to book — you're only charged after the job is done.",
     "createAccountCta": "Create a free account",
+    "postJob": "Post a job",
     "clearCategoryAria": "Clear category filter {category}",
     "signIn": "Sign in",
     "signUp": "Sign up"

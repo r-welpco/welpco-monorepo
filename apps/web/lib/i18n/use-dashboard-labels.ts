@@ -967,7 +967,8 @@ export function useWelperBookingDetailLabels() {
       cancel: t("confirmCheckInCancel"),
     },
     checkInFailed: t("checkInFailed"),
-    checkInLateHint: t("checkInLateHint"),
+    checkInTooEarly: t("checkInTooEarly"),
+    checkInArrivalHint: t("checkInArrivalHint"),
     paymentReleasedPayoutNote: t("paymentReleasedPayoutNote"),
     receiptDialog: {
       title: t("receiptDialogTitle"),

@@ -226,7 +226,41 @@
         "verified": "Antécédents vérifiés",
         "seeAll": "Voir tous les Welpers près de chez vous",
         "emptyForPostal": "Pas encore de Welpers à cet endroit — essayez un autre code postal ou parcourez tous les profils.",
-        "browseAll": "Parcourir tous les Welpers"
+        "browseAll": "Parcourir tous les Welpers",
+        "marketplaceTitle": "Vous ne trouvez pas le bon Welper ?",
+        "marketplaceDescription": "Publiez un mandat dans la Marketplace afin que les Welpers à proximité puissent le trouver et proposer leurs services.",
+        "postJob": "Publier un mandat"
+      },
+      "testimonials": {
+        "eyebrow": "Témoignages",
+        "titleLine1": "Ce que la communauté",
+        "titleLine2": "dit de Welpco.",
+        "subtitle": "Des expériences vécues par des personnes qui ont réservé de l’aide ou offert leurs services sur Welpco.",
+        "railLabel": "Témoignages",
+        "prevAria": "Témoignages précédents",
+        "nextAria": "Plus de témoignages",
+        "items": [
+          {
+            "quote": "Superbe expérience sur Welpco ! J’ai trouvé un Welper rapidement. La personne était ponctuelle, efficace et très sympathique. C’est vraiment une plateforme pratique pour encourager l’entraide dans notre quartier. Je recommande à 100 %.",
+            "role": "Client",
+            "imageAlt": "Portrait d’un client Welpco"
+          },
+          {
+            "quote": "Excellent service ! Travail professionnel, équipe courtoise et résultat à la hauteur de mes attentes. Je suis très satisfaite et je recommande Welpco sans hésiter.",
+            "role": "Cliente",
+            "imageAlt": "Portrait d’une cliente Welpco"
+          },
+          {
+            "quote": "J’aime vraiment cette application. Elle me permet de rendre des services selon mes disponibilités et d’être rémunérée. C’est super simple à utiliser et je recommande Welpco à tout le monde qui désire avoir un revenu supplémentaire.",
+            "role": "Welper",
+            "imageAlt": "Portrait d’une Welper"
+          },
+          {
+            "quote": "Je suis super satisfait d’avoir trouvé une personne rapidement. C’est super rapide et efficace. C’est devenu un réflexe pour moi d’aller sur Welpco aussitôt que j’ai besoin d’un service.",
+            "role": "Client",
+            "imageAlt": "Portrait d’un client Welpco"
+          }
+        ]
       },
       "minors": {
         "badge": "Bientôt disponible",
@@ -2554,7 +2588,8 @@
       "confirmCheckInConfirm": "Enregistrer l'arrivée",
       "confirmCheckInCancel": "Pas encore",
       "checkInFailed": "Impossible d'enregistrer l'arrivée.",
-      "checkInLateHint": "Vous avez oublié d'enregistrer votre arrivée ou votre départ pour un mandat terminé? Pas de problème! Vous pouvez maintenant enregistrer votre arrivée, votre départ et ajuster vos heures après la fin du mandat.",
+      "checkInTooEarly": "L’enregistrement de l’arrivée sera disponible 60 minutes avant l’heure de début prévue.",
+      "checkInArrivalHint": "Enregistrez votre arrivée lorsque vous arrivez sur le lieu du mandat.",
       "paymentReleasedPayoutNote": "Les paiements admissibles sont traités le lundi, au moins 48 heures après leur libération.",
       "receiptDialogTitle": "Confirmer le reçu de service",
       "receiptDialogDescription": "Ajustez l'arrivée et le départ de facturation si nécessaire. Le client est facturé du total affiché lorsque vous confirmez.",
@@ -2736,7 +2771,7 @@
       "nextPage": "Page suivante",
       "pageOf": "Page {page} sur {total}",
       "emptyTitle": "Aucun Welper trouvé",
-      "emptyDescription": "Ajustez votre recherche ou vos filtres, ou publiez une offre et laissez les Welpers postuler.",
+      "emptyDescription": "Ajustez votre recherche ou vos filtres, ou publiez un mandat dans la Marketplace et laissez les Welpers postuler.",
       "clearSearchFilters": "Effacer recherche et filtres",
       "browseCategories": "Parcourir les catégories",
       "hero": {
@@ -3049,6 +3084,7 @@
     "dashboardSearchCta": "Aller à la recherche du tableau de bord",
     "createAccountCallout": "Créez un compte gratuit pour réserver — vous n'êtes débité qu'après la fin du service.",
     "createAccountCta": "Créer un compte gratuit",
+    "postJob": "Publier un mandat",
     "clearCategoryAria": "Effacer le filtre de catégorie {category}",
     "signIn": "Connexion",
     "signUp": "Inscription"

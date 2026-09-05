@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import QRCode from "qrcode";
 import type { ReactElement } from "react";
 import type { PublicWelperProfile } from "@/types";
+import frMessages from "@/messages/fr.json";
 import { publicWelperDisplayName } from "@/lib/display-name";
 import { categoryChipNames } from "./profile-data";
 import { SUPPORT_EMAIL, displayHost } from "./app-origin";
@@ -107,6 +108,29 @@ const CARD_TEXT: Record<ShareCardLang, CardText> = {
 
 export function isShareCardLang(value: string | null): value is ShareCardLang {
   return value !== null && (SHARE_CARD_LANGS as readonly string[]).includes(value);
+}
+
+/* ------------------------------------------------------------------ */
+/* Category chips — taxonomy names arrive from the BFF in English      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The taxonomy stores one English name per category, so a FR card would
+ * otherwise print English chips under translated copy. This reuses the same
+ * map the dashboard uses (`useCategoryDisplayName`) rather than keeping a
+ * second list that could drift. English names are already display names.
+ */
+const CATEGORY_NAMES: Record<ShareCardLang, Record<string, string>> = {
+  en: {},
+  fr: frMessages.auth.register.categoryNames,
+};
+
+/** Localized chip label, falling back to the English name when unmapped. */
+export function shareCardCategoryName(
+  englishName: string,
+  lang: ShareCardLang,
+): string {
+  return CATEGORY_NAMES[lang][englishName] ?? englishName;
 }
 
 /* ------------------------------------------------------------------ */
@@ -441,6 +465,8 @@ interface CardContext {
   origin: string;
   host: string;
   text: CardText;
+  /** Localizes an English taxonomy name for this card's language. */
+  categoryName: (englishName: string) => string;
 }
 
 /**
@@ -454,7 +480,7 @@ function storyCard(
   ctx: CardContext,
 ): ReactElement {
   const name = ellipsize(publicWelperDisplayName(profile), 28);
-  const chips = categoryChipNames(profile, 3);
+  const chips = categoryChipNames(profile, 3).map((n) => ctx.categoryName(n));
   const urlText = shareCardUrlText(profile, "story", ctx.host);
   // UUID URLs are much longer than handle URLs — drop the font so one line fits.
   const urlFontSize = profile.handle ? 30 : 22;
@@ -546,7 +572,7 @@ function squareCard(
   ctx: CardContext,
 ): ReactElement {
   const name = ellipsize(publicWelperDisplayName(profile), 26);
-  const chips = categoryChipNames(profile, 3);
+  const chips = categoryChipNames(profile, 3).map((n) => ctx.categoryName(n));
   const urlText = shareCardUrlText(profile, "square", ctx.host);
   const urlFontSize = profile.handle ? 26 : 18;
 
@@ -630,7 +656,7 @@ function landscapeCard(
   ctx: CardContext,
 ): ReactElement {
   const name = ellipsize(publicWelperDisplayName(profile), 26);
-  const chips = categoryChipNames(profile, 3);
+  const chips = categoryChipNames(profile, 3).map((n) => ctx.categoryName(n));
   const urlText = shareCardUrlText(profile, "landscape", ctx.host);
   const urlFontSize = profile.handle ? 22 : 17;
 
@@ -757,10 +783,12 @@ export async function renderShareCard(
 ): Promise<ImageResponse> {
   const size = SHARE_CARD_SIZES[format];
   const responseInit = { ...size, headers: options.headers };
+  const lang = options.lang ?? "en";
   const ctx: CardContext = {
     origin: options.origin,
     host: displayHost(options.origin),
-    text: CARD_TEXT[options.lang ?? "en"],
+    text: CARD_TEXT[lang],
+    categoryName: (englishName) => shareCardCategoryName(englishName, lang),
   };
   if (!profile) {
     return new ImageResponse(fallbackCard(ctx), responseInit);

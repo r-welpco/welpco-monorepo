@@ -904,7 +904,9 @@ export default function BookingDetailClient({
           onSuccess: () => setConfirmKind(null),
           onError: (err) => {
             setMutationError(
-              handleBookableError(err, welperDetail.checkInFailed),
+              err instanceof ApiClientError && err.code === "CHECK_IN_TOO_EARLY"
+                ? welperDetail.checkInTooEarly
+                : handleBookableError(err, welperDetail.checkInFailed),
             );
             setConfirmKind(null);
           },
@@ -1080,9 +1082,9 @@ export default function BookingDetailClient({
                 </Text>
               </Flex>
               {isWelper && actions.includes("check-in") && (
-                <Callout.Root color={SEMANTIC_COLOR.info} variant="surface">
-                  <Callout.Text>{welperDetail.checkInLateHint}</Callout.Text>
-                </Callout.Root>
+                <Text as="p" size="2" color="gray">
+                  {welperDetail.checkInArrivalHint}
+                </Text>
               )}
               <Flex gap="3" justify="end" wrap="wrap">
                 {actions.includes("decline") && isWelper && (

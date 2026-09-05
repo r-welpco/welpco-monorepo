@@ -6,6 +6,7 @@ import { HowItWorks } from "@/components/features/marketing/sections/how-it-work
 // flow opens (adoption report C4).
 import { WelpersNearYou } from "@/components/features/marketing/sections/welpers-near-you";
 import { TrustSafety } from "@/components/features/marketing/sections/trust-safety";
+import { Testimonials } from "@/components/features/marketing/sections/testimonials";
 import { BecomeWelperCTA } from "@/components/features/marketing/sections/become-welper-cta";
 import { FAQTeaser } from "@/components/features/marketing/sections/faq-teaser";
 
@@ -23,6 +24,7 @@ export default function MarketingNewHomePage() {
       <WelpersNearYou />
       <CategoriesGrid />
       <HowItWorks />
+      <Testimonials />
       <TrustSafety />
       <BecomeWelperCTA />
       <FAQTeaser />

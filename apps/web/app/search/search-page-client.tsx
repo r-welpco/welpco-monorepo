@@ -41,6 +41,7 @@ import {
   useWelperAvailabilityDisplayLabels,
 } from "@/lib/i18n/use-dashboard-labels";
 import { localizedPath } from "@/i18n/locale-routes";
+import { withNext } from "@/lib/auth/safe-next";
 import {
   getSearchDestination,
   isCustomerRole,
@@ -77,6 +78,10 @@ function SearchPageContent() {
   const availabilityLabels = useWelperAvailabilityDisplayLabels();
   const categoryDisplayName = useCategoryDisplayName();
   const isAuthenticated = useIsAuthenticated();
+  const postJobHref = withNext(
+    localizedPath("/register", locale),
+    "/dashboard/marketplace/new",
+  );
 
   const q = searchParams.get("q") ?? undefined;
   const categoryId = searchParams.get("categoryId") ?? undefined;
@@ -550,6 +555,10 @@ function SearchPageContent() {
                 title={searchLabels.emptyTitle}
                 description={searchLabels.emptyDescription}
                 primaryAction={{
+                  label: t("postJob"),
+                  onClick: () => router.push(postJobHref),
+                }}
+                secondaryAction={{
                   label: searchLabels.clearSearchFilters,
                   onClick: handleResetFilters,
                 }}

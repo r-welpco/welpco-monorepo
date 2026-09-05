@@ -63,7 +63,8 @@ import { JobPostingService } from '../job-posting/job-posting.service';
 /** Hours before scheduled time when free cancellation is no longer possible */
 const FREE_CANCELLATION_HOURS = 24;
 const MAX_RECEIPT_BILLING_MINUTES = 720;
-const RECEIPT_SCHEDULE_GRACE_BEFORE_MINUTES = 60;
+/** Check-in opens this long before service; late check-in remains supported. */
+const SERVICE_START_EARLY_WINDOW_MINUTES = 60;
 const RECEIPT_SCHEDULE_GRACE_AFTER_MINUTES = 120;
 const MAX_BOOKING_ANSWER_KEYS = 100;
 const MAX_BOOKING_ANSWER_STRING_LENGTH = 2000;
@@ -356,7 +357,12 @@ export class BookingService {
           actions.push('cancel');
         }
       }
-      if (next === BookingRequestStatus.IN_PROGRESS && userRole === 'welper' && booking.welperId === userId) {
+      if (
+        next === BookingRequestStatus.IN_PROGRESS &&
+        userRole === 'welper' &&
+        booking.welperId === userId &&
+        this.isCheckInAvailable(booking)
+      ) {
         actions.push('check-in');
       }
       if (
@@ -370,6 +376,55 @@ export class BookingService {
     }
 
     return actions;
+  }
+
+  private getCheckInAvailableAt(booking: BookingRequest): Date | null {
+    if (
+      !booking.scheduledDate ||
+      !booking.scheduledStartTime ||
+      (booking.timezoneName && !isValidIanaTimeZone(booking.timezoneName))
+    ) {
+      return null;
+    }
+
+    const scheduledStartMs = scheduledTimeToUtcMs(
+      booking.scheduledDate,
+      booking.scheduledStartTime,
+      booking.timezoneOffsetMinutes ?? null,
+      booking.timezoneName ?? null,
+    );
+    if (!Number.isFinite(scheduledStartMs)) {
+      return null;
+    }
+
+    return new Date(
+      scheduledStartMs - SERVICE_START_EARLY_WINDOW_MINUTES * 60 * 1000,
+    );
+  }
+
+  private isCheckInAvailable(booking: BookingRequest, now = new Date()): boolean {
+    const availableAt = this.getCheckInAvailableAt(booking);
+    return availableAt !== null && now.getTime() >= availableAt.getTime();
+  }
+
+  private assertCheckInAvailable(booking: BookingRequest, now: Date): void {
+    const availableAt = this.getCheckInAvailableAt(booking);
+    if (!availableAt) {
+      throw new BadRequestException({
+        statusCode: 400,
+        code: 'BOOKING_SCHEDULE_UNAVAILABLE',
+        message: 'This booking does not have a valid schedule for check-in.',
+      });
+    }
+
+    if (now.getTime() < availableAt.getTime()) {
+      throw new BadRequestException({
+        statusCode: 400,
+        code: 'CHECK_IN_TOO_EARLY',
+        message: 'Check-in is not available yet.',
+        availableAt: availableAt.toISOString(),
+      });
+    }
   }
 
   private computeReceiptSubtotalCents(checkIn: Date, checkOut: Date, hourlyRate: number): number {
@@ -425,7 +480,7 @@ export class BookingService {
         booking.timezoneName ?? null,
       );
       const earliestMs =
-        scheduledStartMs - RECEIPT_SCHEDULE_GRACE_BEFORE_MINUTES * 60 * 1000;
+        scheduledStartMs - SERVICE_START_EARLY_WINDOW_MINUTES * 60 * 1000;
       const latestMs =
         scheduledEndMs + RECEIPT_SCHEDULE_GRACE_AFTER_MINUTES * 60 * 1000;
 
@@ -1065,9 +1120,11 @@ export class BookingService {
     const saved = await this.withTransaction(async (queryRunner) => {
       const booking = await this.getBookingForWelperLocked(queryRunner, bookingId, welperId);
       validateTransition(booking.status, BookingRequestStatus.IN_PROGRESS);
+      const checkedInAt = new Date();
+      this.assertCheckInAvailable(booking, checkedInAt);
 
       booking.status = BookingRequestStatus.IN_PROGRESS;
-      booking.checkedInAt = new Date();
+      booking.checkedInAt = checkedInAt;
 
       return queryRunner.manager.getRepository(BookingRequest).save(booking);
     });

@@ -8,6 +8,9 @@ import { useSearchServices } from "@/lib/hooks/use-service-discovery";
 import { useSearchDestination } from "@/lib/hooks/use-search-destination";
 import { useCategoryDisplayName } from "@/lib/i18n/category-display-name";
 import { syncPublicRouteLocale } from "@/lib/i18n/sync-public-route-locale";
+import { localizedPath } from "@/i18n/locale-routes";
+import type { Locale } from "@/i18n/routing";
+import { withNext } from "@/lib/auth/safe-next";
 import { maskCustomerWelperName } from "@/lib/display-name";
 import type { SearchResultItem } from "@/types";
 import { SectionHeader } from "./section-header";
@@ -22,12 +25,11 @@ import styles from "./welpers-near-you.module.css";
  * fabricated testimonial content — every card is a live profile that links
  * to `/welper/[id]`.
  *
- * HONESTY THRESHOLD: with the default region, the section renders NOTHING
- * (returns null) while loading, on error, or with fewer than
- * {@link MIN_RESULTS} results — no skeletons, no fake padding cards. Once a
- * visitor personalizes with their own postal code, we show whatever real
- * results exist (even 1–3 — real data is honest data) or a quiet empty note;
- * the section never vanishes mid-interaction.
+ * HONESTY THRESHOLD: with the default region, the profile rail remains hidden
+ * while loading, on error, or with fewer than {@link MIN_RESULTS} results —
+ * no skeletons or fake padding cards. The section still explains that a
+ * customer can post a Marketplace job. Once a visitor personalizes with their
+ * postal code, we show whatever real results exist or a quiet empty note.
  *
  * Links go to the non-localized public routes (`/search`, `/welper/[id]`)
  * via plain `next/link`. Those routes read `NEXT_LOCALE` (cookie / geo) —
@@ -75,7 +77,7 @@ export function WelpersNearYou() {
     [postalCode],
   );
 
-  const { data, isLoading, isFetching, isError } = useSearchServices(params);
+  const { data, isFetching, isError } = useSearchServices(params);
   const items: SearchResultItem[] = useMemo(() => data?.items ?? [], [data?.items]);
 
   // --- Rail scrolling (desktop arrows) ---
@@ -134,17 +136,16 @@ export function WelpersNearYou() {
   const searchHref = useSearchDestination(
     `/search?postalCode=${encodeURIComponent(postalCode)}`,
   );
+  const postJobHref = withNext(
+    localizedPath("/register", locale as Locale),
+    "/dashboard/marketplace/new",
+  );
   const usingDefault = activePostal === null;
-
-  // HONESTY THRESHOLD — default region: render nothing rather than a sparse,
-  // stuck, or padded rail. No skeleton either (avoids a stuck-skeleton state;
-  // the section simply appears once ≥4 real profiles are confirmed).
-  if (usingDefault && (isLoading || isError || items.length < MIN_RESULTS)) {
-    return null;
-  }
 
   const showEmptyNote =
     !usingDefault && !isFetching && (isError || items.length === 0);
+  const showRail =
+    items.length > 0 && (!usingDefault || items.length >= MIN_RESULTS);
 
   return (
     <section className={`section ${styles.section}`} id="near-you">
@@ -191,7 +192,7 @@ export function WelpersNearYou() {
               {t("browseAll")}
             </Link>
           </p>
-        ) : (
+        ) : showRail ? (
           <div className={styles.railWrap}>
             <button
               type="button"
@@ -242,7 +243,18 @@ export function WelpersNearYou() {
               <ChevronRight aria-hidden width={20} height={20} strokeWidth={1.75} />
             </button>
           </div>
-        )}
+        ) : null}
+
+        <aside className={styles.marketplaceCta} aria-labelledby="near-you-marketplace-title">
+          <div className={styles.marketplaceCtaCopy}>
+            <h3 id="near-you-marketplace-title">{t("marketplaceTitle")}</h3>
+            <p>{t("marketplaceDescription")}</p>
+          </div>
+          <Link href={postJobHref} className="btn btn-primary">
+            {t("postJob")}
+            <ArrowRight aria-hidden width={18} height={18} strokeWidth={1.75} />
+          </Link>
+        </aside>
       </div>
     </section>
   );
