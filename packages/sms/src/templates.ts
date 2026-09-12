@@ -34,6 +34,8 @@ export interface SmsTemplateVariables {
   welperName?: string;
   customerName?: string;
   jobTitle?: string;
+  /** Absolute dashboard URL. Defaults to `{FRONTEND_URL|https://welpco.com}{/fr}/dashboard`. */
+  dashboardUrl?: string;
 }
 
 function isFr(locale?: SmsLocale): boolean {
@@ -46,9 +48,25 @@ function welperLabel(vars: SmsTemplateVariables, locale?: SmsLocale): string {
   return isFr(locale) ? "votre Welper" : "your Welper";
 }
 
+const DEFAULT_APP_ORIGIN = "https://welpco.com";
+
+function dashboardLink(locale?: SmsLocale, explicit?: string): string {
+  const trimmed = explicit?.trim();
+  if (trimmed) return trimmed;
+  const base = (process.env.FRONTEND_URL ?? DEFAULT_APP_ORIGIN).replace(/\/+$/, "");
+  const prefix = isFr(locale) ? "/fr" : "";
+  return `${base}${prefix}/dashboard`;
+}
+
+/** Sign-off + dashboard link appended to every transactional SMS. */
+function smsFooter(locale?: SmsLocale, vars: SmsTemplateVariables = {}): string {
+  const team = isFr(locale) ? "L'équipe Welpco" : "The Welpco Team";
+  return `\n\n${team}\n${dashboardLink(locale, vars.dashboardUrl)}`;
+}
+
 /**
  * Short transactional SMS bodies (EN/FR) from the Welpco SMS flow doc.
- * Keep under typical SMS length; no URLs required (account CTA is in copy).
+ * Every message ends with the team sign-off and a dashboard link.
  */
 export function getSmsBody(
   type: SmsTemplateType,
@@ -57,7 +75,11 @@ export function getSmsBody(
 ): string {
   const fr = isFr(locale);
   const welper = welperLabel(vars, locale);
+  const body = smsBodyFor(type, fr, welper);
+  return `${body}${smsFooter(locale, vars)}`;
+}
 
+function smsBodyFor(type: SmsTemplateType, fr: boolean, welper: string): string {
   switch (type) {
     case "customer_booking_request_sent":
       return fr

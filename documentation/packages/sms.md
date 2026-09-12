@@ -20,7 +20,7 @@ Helpers:
 
 - `toE164({ countryCode, number })` — profile phone jsonb → E.164
 - `hasTwilioCredentials` / `resolveTwilioConfig`
-- `getSmsBody(type, locale, vars?)` — EN/FR transactional copy for booking, job, payment, and dispute events
+- `getSmsBody(type, locale, vars?)` — EN/FR transactional copy for booking, job, payment, and dispute events. Every body ends with the team sign-off (`The Welpco Team` / `L'équipe Welpco`) and a dashboard link (`{FRONTEND_URL|https://welpco.com}{/fr}/dashboard`, or `vars.dashboardUrl`)
 
 ## Transactional templates
 
