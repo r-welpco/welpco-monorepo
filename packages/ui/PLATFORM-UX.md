@@ -233,7 +233,7 @@ Components: `welper-profile-dialog`, `service-selection-dialog`, `booking-wizard
 
 | Aspect         | Rule                                                                       |
 | -------------- | -------------------------------------------------------------------------- |
-| Size           | `size="3"` for simple, `size="4"` for form-heavy, `size="5"` for wizards.  |
+| Size           | `size="3"` for simple, `size="4"` for form-heavy and wizards; supported sizes are 1–4.  |
 | Title          | `<Dialog.Title>` always present (a11y). Mirrored in visible `<Heading>`.   |
 | Description    | Single line, sentence case, period.                                        |
 | Close pattern  | Header `<Dialog.Close><IconButton>` (handled by new `DialogContent`).      |

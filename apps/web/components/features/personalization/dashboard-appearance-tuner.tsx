@@ -7,7 +7,7 @@ import { Card } from "@welpco/ui/card";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
 import { IconButton } from "@welpco/ui/icon-button";
-import { Slider } from "@welpco/ui/slider";
+import { LabeledSlider } from "@welpco/ui/slider";
 import { Switch } from "@welpco/ui/switch";
 import { Text } from "@welpco/ui/text";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
@@ -61,7 +61,9 @@ function SliderRow({
           {display}
         </Text>
       </Flex>
-      <Slider
+      <LabeledSlider
+        thumbLabels={[label]}
+        getValueText={() => display}
         value={[value]}
         min={min}
         max={max}

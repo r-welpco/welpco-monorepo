@@ -1909,6 +1909,7 @@
       }
     },
     "customerPreview": {
+      "close": "Close dialog",
       "unknownName": "Member",
       "statsHeading": "On WELPCO",
       "loadFailed": "Could not load customer details. Try again later.",
@@ -2590,6 +2591,7 @@
       "confirmCheckInCancel": "Not yet",
       "checkInFailed": "Failed to check in.",
       "checkInTooEarly": "Check-in becomes available 60 minutes before the scheduled start time.",
+      "checkInAvailableAt": "Check-in will be available on {dateTime}, 60 minutes before the scheduled start.",
       "checkInArrivalHint": "Check in when you arrive at the job.",
       "paymentReleasedPayoutNote": "Eligible payouts are processed on Mondays after payment has been released for at least 48 hours.",
       "receiptDialogTitle": "Confirm service receipt",

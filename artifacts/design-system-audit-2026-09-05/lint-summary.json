@@ -1,0 +1,18 @@
+{
+  "files": 857,
+  "warnings": 1436,
+  "errors": 0,
+  "byRule": {
+    "@welpco/design/no-disallowed-inline-style": 1372,
+    "@welpco/design/no-raw-semantic-color": 54,
+    "@welpco/design/canonical-signin-signout": 5,
+    "@welpco/design/require-iconbutton-aria-label": 2,
+    "@welpco/design/no-native-label-in-platform": 3
+  },
+  "byArea": {
+    "apps/admin": 280,
+    "apps/design-system": 63,
+    "apps/web": 1023,
+    "packages/ui": 70
+  }
+}

@@ -3,7 +3,6 @@
 import { Card } from "@welpco/ui/card";
 import { IconButton } from "@welpco/ui/icon-button";
 import { Flex } from "@welpco/ui/flex";
-import { Grid } from "@welpco/ui/grid";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Box } from "@welpco/ui/box";
@@ -191,154 +190,150 @@ export function AvailabilityCalendar({
           </Text>
         )}
 
-        {/* Weekday header */}
-        <Grid columns="7" gap="1" role="row">
-          {WEEKDAYS.map((day) => (
-            <Text
-              key={day}
-              size="1"
-              color="gray"
-              highContrast
-              weight="medium"
-              align="center"
-              role="columnheader"
-            >
-              {day}
-            </Text>
-          ))}
-        </Grid>
-
-        {/* Day cells */}
-        <Grid
-          columns="7"
-          gap="1"
-          role="grid"
+        <table
           aria-label={`Availability for ${format(currentMonth, "MMMM yyyy")}`}
+          // Native table geometry has no equivalent Radix layout prop.
+          // eslint-disable-next-line @welpco/design/no-disallowed-inline-style
+          style={{ width: "100%", tableLayout: "fixed", borderSpacing: "var(--space-1)" }}
         >
-          {days.map((day: Date) => {
-            const inMonth = isSameMonth(day, currentMonth);
-            const inRange = isInEffectiveRange(day);
-            const selected = isSelected(day);
-            const today = isToday(day);
-            const { status, isException, hasTimeSlots } = getDateStatus(day);
-            const exception = getException(day);
-            const isDisabled = !inMonth || !inRange;
+          <thead>
+            <tr>
+              {WEEKDAYS.map((day) => (
+                <Text key={day} asChild size="1" color="gray" highContrast weight="medium" align="center">
+                  <th scope="col">{day}</th>
+                </Text>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: Math.ceil(days.length / 7) }, (_, week) => (
+              <tr key={week}>
+                {days.slice(week * 7, week * 7 + 7).map((day: Date) => {
+                  const inMonth = isSameMonth(day, currentMonth);
+                  const inRange = isInEffectiveRange(day);
+                  const selected = isSelected(day);
+                  const today = isToday(day);
+                  const { status, isException, hasTimeSlots } = getDateStatus(day);
+                  const exception = getException(day);
+                  const isDisabled = !inMonth || !inRange;
 
-            const ariaLabel = [
-              format(day, "EEEE, MMMM d, yyyy"),
-              today ? "today" : null,
-              STATUS_LABELS[status].toLowerCase(),
-              isException ? "exception" : null,
-              hasTimeSlots ? "has time slots" : null,
-              exception?.reason ? `reason: ${exception.reason}` : null,
-              selected ? "selected" : null,
-            ]
-              .filter(Boolean)
-              .join(", ");
+                  const ariaLabel = [
+                    format(day, "EEEE, MMMM d, yyyy"),
+                    today ? "today" : null,
+                    STATUS_LABELS[status].toLowerCase(),
+                    isException ? "exception" : null,
+                    hasTimeSlots ? "has time slots" : null,
+                    exception?.reason ? `reason: ${exception.reason}` : null,
+                    selected ? "selected" : null,
+                  ]
+                    .filter(Boolean)
+                    .join(", ");
 
-            const backgroundColor = selected
-              ? STATUS_VAR[status]
-              : "transparent";
-            const borderColor = isException
-              ? "var(--yellow-9)"
-              : today
-                ? "var(--accent-9)"
-                : "var(--gray-5)";
-            const textColor = selected ? "var(--color-panel-solid)" : "inherit";
+                  const backgroundColor = selected
+                    ? STATUS_VAR[status]
+                    : "transparent";
+                  const borderColor = isException
+                    ? "var(--yellow-9)"
+                    : today
+                      ? "var(--accent-9)"
+                      : "var(--gray-5)";
+                  const textColor = selected ? "var(--color-panel-solid)" : "inherit";
 
-            const cellButton = (
-              <Box
-                asChild
-                minHeight="64px"
-                p="2"
-                style={{
-                  borderRadius: "var(--radius-2)",
-                  border: `${isException ? "2px" : "1px"} solid ${borderColor}`,
-                  backgroundColor,
-                  color: textColor,
-                  opacity: inMonth ? 1 : 0.4,
-                  textAlign: "center",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => !isDisabled && handleDateClick(day)}
-                  disabled={isDisabled}
-                  aria-label={ariaLabel}
-                  aria-pressed={selected}
-                  aria-current={today ? "date" : undefined}
-                >
-                  <Flex direction="column" align="center" gap="1" height="100%">
-                    <Text size="2" weight={selected || today ? "bold" : "regular"}>
-                      {format(day, "d")}
-                    </Text>
+                  const cellButton = (
+                    <Box
+                      asChild
+                      minHeight="64px"
+                      width="100%"
+                      p="2"
+                      style={{
+                        borderRadius: "var(--radius-2)",
+                        border: `${isException ? "2px" : "1px"} solid ${borderColor}`,
+                        backgroundColor,
+                        color: textColor,
+                        opacity: inMonth ? 1 : 0.4,
+                        textAlign: "center",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => !isDisabled && handleDateClick(day)}
+                        disabled={isDisabled}
+                        aria-label={ariaLabel}
+                        aria-pressed={selected}
+                        aria-current={today ? "date" : undefined}
+                      >
+                        <Flex direction="column" align="center" gap="1" height="100%">
+                          <Text size="2" weight={selected || today ? "bold" : "regular"}>
+                            {format(day, "d")}
+                          </Text>
 
-                    {/* Mobile: single colored dot */}
-                    <Box display={{ initial: "block", sm: "none" }}>
-                      <Box
-                        style={{
-                          width: "6px",
-                          height: "6px",
-                          borderRadius: "9999px",
-                          backgroundColor: STATUS_VAR[status],
-                        }}
-                      />
+                          {/* Mobile: single colored dot */}
+                          <Box display={{ initial: "block", sm: "none" }}>
+                            <Box
+                              style={{
+                                width: "6px",
+                                height: "6px",
+                                borderRadius: "9999px",
+                                backgroundColor: STATUS_VAR[status],
+                              }}
+                            />
+                          </Box>
+
+                          {/* Desktop: status icon */}
+                          <Box display={{ initial: "none", sm: "block" }}>
+                            {status === "available" && (
+                              <CheckCircle2
+                                size={14}
+                                aria-hidden="true"
+                                style={{ color: STATUS_VAR.available }}
+                              />
+                            )}
+                            {status === "busy" && (
+                              <Clock
+                                size={14}
+                                aria-hidden="true"
+                                style={{ color: STATUS_VAR.busy }}
+                              />
+                            )}
+                            {status === "unavailable" && (
+                              <AlertCircle
+                                size={14}
+                                aria-hidden="true"
+                                style={{ color: STATUS_VAR.unavailable }}
+                              />
+                            )}
+                          </Box>
+
+                          {/* Slots indicator — a small dot only, desktop-only */}
+                          {showTimeSlots && hasTimeSlots && (
+                            <Box display={{ initial: "none", sm: "block" }}>
+                              <Box
+                                style={{
+                                  width: "4px",
+                                  height: "4px",
+                                  borderRadius: "9999px",
+                                  backgroundColor: "var(--blue-9)",
+                                }}
+                              />
+                            </Box>
+                          )}
+                        </Flex>
+                      </button>
                     </Box>
+                  );
 
-                    {/* Desktop: status icon */}
-                    <Box display={{ initial: "none", sm: "block" }}>
-                      {status === "available" && (
-                        <CheckCircle2
-                          size={14}
-                          aria-hidden="true"
-                          style={{ color: STATUS_VAR.available }}
-                        />
-                      )}
-                      {status === "busy" && (
-                        <Clock
-                          size={14}
-                          aria-hidden="true"
-                          style={{ color: STATUS_VAR.busy }}
-                        />
-                      )}
-                      {status === "unavailable" && (
-                        <AlertCircle
-                          size={14}
-                          aria-hidden="true"
-                          style={{ color: STATUS_VAR.unavailable }}
-                        />
-                      )}
-                    </Box>
-
-                    {/* Slots indicator — a small dot only, desktop-only */}
-                    {showTimeSlots && hasTimeSlots && (
-                      <Box display={{ initial: "none", sm: "block" }}>
-                        <Box
-                          style={{
-                            width: "4px",
-                            height: "4px",
-                            borderRadius: "9999px",
-                            backgroundColor: "var(--blue-9)",
-                          }}
-                        />
-                      </Box>
-                    )}
-                  </Flex>
-                </button>
-              </Box>
-            );
-
-            // Wrap in Tooltip when there's an exception reason — hover/focus
-            // surfaces the reason without breaking the grid layout.
-            return exception?.reason ? (
-              <Tooltip key={day.toISOString()} content={exception.reason}>
-                {cellButton}
-              </Tooltip>
-            ) : (
-              <Box key={day.toISOString()}>{cellButton}</Box>
-            );
-          })}
-        </Grid>
+                  return (
+                    <td key={day.toISOString()}>
+                      {exception?.reason ? (
+                        <Tooltip content={exception.reason}>{cellButton}</Tooltip>
+                      ) : cellButton}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
         {/* Legend */}
         <Flex gap="4" wrap="wrap" align="center">

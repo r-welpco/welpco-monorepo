@@ -1,0 +1,6 @@
+/* Platform typography. Marketing sets its own family in .welpco tokens;
+   admin has its own stylesheet and deliberately retains the system stack. */
+.radix-themes {
+  --default-font-family: var(--font-geist-sans, system-ui), sans-serif;
+  --heading-font-family: var(--default-font-family);
+}

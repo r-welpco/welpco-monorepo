@@ -10,7 +10,7 @@ const meta = {
 } satisfies Meta<typeof ReviewCard>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof ReviewCard>;
 
 export const Default: Story = {
   args: {

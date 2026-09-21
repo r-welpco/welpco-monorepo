@@ -44,14 +44,14 @@ export const Padding: Story = {
 export const AsVariants: Story = {
   render: () => (
     <Flex gap="4" direction="column">
-      <Box as="section" p="4" style={{ backgroundColor: 'var(--gray-3)', borderRadius: 'var(--radius-3)' }}>
+      <Box asChild p="4" style={{ backgroundColor: 'var(--gray-3)', borderRadius: 'var(--radius-3)' }}><section>
         <Heading size="4">Section Box</Heading>
         <Text>This is a section element</Text>
-      </Box>
-      <Box as="article" p="4" style={{ backgroundColor: 'var(--gray-3)', borderRadius: 'var(--radius-3)' }}>
+      </section></Box>
+      <Box asChild p="4" style={{ backgroundColor: 'var(--gray-3)', borderRadius: 'var(--radius-3)' }}><article>
         <Heading size="4">Article Box</Heading>
         <Text>This is an article element</Text>
-      </Box>
+      </article></Box>
       <Box as="div" p="4" style={{ backgroundColor: 'var(--gray-3)', borderRadius: 'var(--radius-3)' }}>
         <Heading size="4">Div Box</Heading>
         <Text>This is a div element</Text>

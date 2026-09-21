@@ -1,0 +1,74 @@
+{
+  "runtime": "22.21.1",
+  "storybook": {
+    "originalStories": 484,
+    "originalStoryExportsRemoved": 0,
+    "finalStories": 503,
+    "suites": 139,
+    "failed": 0,
+    "automaticAxe": "custom runner; document.body; WCAG 2.1 A/AA; addon manual",
+    "storySpecificRuleSuppressions": 0
+  },
+  "matrix": {
+    "passed": 120,
+    "failed": 0,
+    "viewports": [
+      375,
+      768,
+      1440
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "fontFamilies": [
+      "Geist, system-ui, sans-serif"
+    ]
+  },
+  "actualWebConsumerFixtures": {
+    "passed": 10,
+    "locales": [
+      "en",
+      "fr"
+    ],
+    "consumers": [
+      "RoleSwitchDialog",
+      "CustomerPreviewDialog",
+      "ApplyBlockedDialog",
+      "marketplace detail",
+      "DashboardAppearanceTuner"
+    ]
+  },
+  "builds": {
+    "ui": "passed",
+    "storybook": "passed",
+    "web": "passed",
+    "admin": "passed"
+  },
+  "typeChecks": {
+    "ui": "passed via build",
+    "storybook": "passed",
+    "web": "passed",
+    "admin": "passed"
+  },
+  "designLint": {
+    "originalWarnings": 1436,
+    "finalWarnings": 1429,
+    "fileRuleBaselineIncreases": 0
+  },
+  "primaryContrast": {
+    "light": 11.87,
+    "dark": 14.79,
+    "minimum": 4.5
+  },
+  "localProductionPageSmokes": [
+    "admin login reveal",
+    "web English login reveal",
+    "web French login reveal",
+    "web registration reveal",
+    "admin system font",
+    "web Geist",
+    "marketing Inter Tight"
+  ],
+  "authenticatedIntegrationParity": "NOT VERIFIED: intended BFF and verified test-account sessions unavailable; see report release prerequisites"
+}

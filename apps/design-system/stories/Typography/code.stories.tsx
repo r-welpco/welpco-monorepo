@@ -7,16 +7,6 @@ const meta = {
   component: Code,
   parameters: {
     layout: 'centered',
-    a11y: {
-      // Demo story — showcases Radix variants at every contrast level including
-      // decorative low-contrast options (ghost / outline / soft). Production
-      // code is still checked by bible §5.3 and the a11y addon panel. axe's
-      // color-contrast rule is disabled here so variant-exploration stories
-      // don't pollute the CI baseline.
-      config: {
-        rules: [{ id: 'color-contrast', enabled: false }],
-      },
-    },
   },
   tags: ['autodocs'],
   argTypes: {
@@ -47,7 +37,7 @@ export const Inline: Story = {
         Use the <Code>Code</Code> component for inline code snippets.
       </Text>
       <Text>
-        You can also use <Code color="blue">colored code</Code> for emphasis.
+        You can also use <Code highContrast color="blue">colored code</Code> for emphasis.
       </Text>
       <Text>
         Example: <Code>npm install @welpco/ui</Code>
@@ -60,16 +50,16 @@ export const Sizes: Story = {
   render: () => (
     <Flex gap="4" direction="column">
       <Text>
-        Size 1: <Code size="1">const x = 1;</Code>
+        Size 1: <Code highContrast size="1">const x = 1;</Code>
       </Text>
       <Text>
-        Size 2: <Code size="2">const x = 2;</Code>
+        Size 2: <Code highContrast size="2">const x = 2;</Code>
       </Text>
       <Text>
-        Size 3: <Code size="3">const x = 3;</Code>
+        Size 3: <Code highContrast size="3">const x = 3;</Code>
       </Text>
       <Text>
-        Size 4: <Code size="4">const x = 4;</Code>
+        Size 4: <Code highContrast size="4">const x = 4;</Code>
       </Text>
     </Flex>
   ),
@@ -82,16 +72,16 @@ export const Colors: Story = {
         Default: <Code>const x = 1;</Code>
       </Text>
       <Text>
-        Gray: <Code color="gray">const x = 1;</Code>
+        Gray: <Code highContrast color="gray">const x = 1;</Code>
       </Text>
       <Text>
-        Blue: <Code color="blue">const x = 1;</Code>
+        Blue: <Code highContrast color="blue">const x = 1;</Code>
       </Text>
       <Text>
-        Green: <Code color="green">const x = 1;</Code>
+        Green: <Code highContrast color="green">const x = 1;</Code>
       </Text>
       <Text>
-        Red: <Code color="red">const x = 1;</Code>
+        Red: <Code highContrast color="red">const x = 1;</Code>
       </Text>
     </Flex>
   ),

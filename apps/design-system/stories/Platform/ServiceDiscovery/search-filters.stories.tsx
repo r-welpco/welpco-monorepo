@@ -6,15 +6,6 @@ const meta = {
   component: SearchFilters,
   parameters: {
     layout: 'padded',
-    a11y: {
-      // SearchFilters contains a Radius Slider; Radix Themes Slider does not
-      // forward `aria-label` to the internal thumb span, so axe's
-      // `aria-input-field-name` rule flags a false-positive against the thumb.
-      // The component carries a visible Text-as-label above the Slider.
-      config: {
-        rules: [{ id: 'aria-input-field-name', enabled: false }],
-      },
-    },
   },
   tags: ['autodocs'],
 } satisfies Meta<typeof SearchFilters>;

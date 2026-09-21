@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { ActionConfirmDialog } from '@welpco/ui';
-import { Button } from '@radix-ui/themes';
+import { Button } from '@welpco/ui/button';
 
 const meta = {
   title: 'Platform/Feedback/ActionConfirmDialog',
@@ -11,7 +11,7 @@ const meta = {
 } satisfies Meta<typeof ActionConfirmDialog>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof ActionConfirmDialog>;
 
 export const Default: Story = {
   render: () => {
@@ -46,7 +46,7 @@ export const Danger: Story = {
       const [open, setOpen] = useState(false);
       return (
         <>
-          <Button color="red" onClick={() => setOpen(true)}>
+          <Button highContrast color="red" onClick={() => setOpen(true)}>
             Delete payment method
           </Button>
           <ActionConfirmDialog
@@ -76,7 +76,7 @@ export const WithReason: Story = {
       const [open, setOpen] = useState(false);
       return (
         <>
-          <Button color="red" variant="outline" onClick={() => setOpen(true)}>
+          <Button highContrast color="red" variant="outline" onClick={() => setOpen(true)}>
             Cancel booking
           </Button>
           <ActionConfirmDialog

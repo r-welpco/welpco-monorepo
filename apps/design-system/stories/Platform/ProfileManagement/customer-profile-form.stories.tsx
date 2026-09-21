@@ -35,7 +35,6 @@ export const WithDefaultValues: Story = {
           zipPostalCode: '94102',
           country: 'United States',
         },
-        bio: 'I love working with local Welpers for home services.',
       }}
       onSubmit={async (values) => {
         console.log('Form submitted:', values);

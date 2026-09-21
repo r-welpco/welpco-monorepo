@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AvailabilityCalendar } from '@welpco/ui/platform/profile-management';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { useState } from 'react';
 
 const meta = {
@@ -16,7 +17,7 @@ export const Default: Story = {
   render: () => {
     const [selectedDates, setSelectedDates] = useState<Date[]>([]);
     return (
-      <div style={{ width: '800px' }}>
+      <div style={{ width: '100%', maxWidth: '800px' }}>
         <AvailabilityCalendar
           selectedDates={selectedDates}
           onToggleDate={(date) => {
@@ -43,7 +44,7 @@ export const WithStatuses: Story = {
     dayAfter.setDate(dayAfter.getDate() + 2);
 
     return (
-      <div style={{ width: '800px' }}>
+      <div style={{ width: '100%', maxWidth: '800px' }}>
         <AvailabilityCalendar
           dateAvailabilities={[
             { date: today, status: 'available', hasTimeSlots: true },
@@ -64,7 +65,7 @@ export const WithExceptions: Story = {
     exceptionDate.setDate(exceptionDate.getDate() + 5);
 
     return (
-      <div style={{ width: '800px' }}>
+      <div style={{ width: '100%', maxWidth: '800px' }}>
         <AvailabilityCalendar
           exceptions={[
             {
@@ -93,7 +94,7 @@ export const WithEffectiveDateRange: Story = {
     endDate.setDate(endDate.getDate() + 30);
 
     return (
-      <div style={{ width: '800px' }}>
+      <div style={{ width: '100%', maxWidth: '800px' }}>
         <AvailabilityCalendar
           effectiveDateRange={{
             start: startDate,
@@ -123,7 +124,7 @@ export const ComplexExample: Story = {
     exceptionDate.setDate(exceptionDate.getDate() + 10);
 
     return (
-      <div style={{ width: '800px' }}>
+      <div style={{ width: '100%', maxWidth: '800px' }}>
         <AvailabilityCalendar
           selectedDates={dates.filter((_, i) => i % 2 === 0)}
           dateAvailabilities={dates.map((date, i) => ({
@@ -150,5 +151,30 @@ export const ComplexExample: Story = {
         />
       </div>
     );
+  },
+};
+
+export const KeyboardAndCallbackPrecedence: Story = {
+  args: {
+    month: new Date(2026, 9, 1),
+    effectiveDateRange: { start: new Date(2026, 9, 10), end: new Date(2026, 9, 20) },
+    onDateClick: fn(), onToggleDate: fn(), onMonthChange: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('table')).toHaveAccessibleName('Availability for October 2026');
+    await expect(canvas.getAllByRole('columnheader')).toHaveLength(7);
+    const date = canvas.getByRole('button', { name: /Thursday, October 15, 2026/ });
+    date.focus();
+    await userEvent.keyboard('{Enter} ');
+    await expect(args.onDateClick).toHaveBeenCalledTimes(2);
+    await expect(args.onDateClick).toHaveBeenCalledWith(new Date(2026, 9, 15));
+    await expect(args.onToggleDate).not.toHaveBeenCalled();
+    const disabledDate = canvas.getByRole('button', { name: /Thursday, October 1, 2026/ });
+    await expect(disabledDate).toBeDisabled();
+    await userEvent.click(disabledDate);
+    await expect(args.onDateClick).toHaveBeenCalledTimes(2);
+    await userEvent.click(canvas.getByRole('button', { name: 'Next month' }));
+    await expect(args.onMonthChange).toHaveBeenCalledWith(new Date(2026, 10, 1));
   },
 };

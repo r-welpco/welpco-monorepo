@@ -14,16 +14,6 @@ const meta = {
   component: Select,
   parameters: {
     layout: 'centered',
-    a11y: {
-      // Demo story — showcases Radix variants at every contrast level including
-      // decorative low-contrast options (ghost / outline / soft). Production
-      // code is still checked by bible §5.3 and the a11y addon panel. axe's
-      // color-contrast rule is disabled here so variant-exploration stories
-      // don't pollute the CI baseline.
-      config: {
-        rules: [{ id: 'color-contrast', enabled: false }],
-      },
-    },
   },
   tags: ['autodocs'],
 } satisfies Meta<typeof Select>;
@@ -83,8 +73,8 @@ export const Sizes: Story = {
         <Text as="label" htmlFor="select-size-1" size="2" weight="medium">
           Size 1
         </Text>
-        <Select defaultValue="1">
-          <SelectTrigger id="select-size-1" aria-label="Size 1 select" placeholder="Select..." size="1" />
+        <Select defaultValue="1" size="1">
+          <SelectTrigger id="select-size-1" aria-label="Size 1 select" placeholder="Select..." />
           <SelectContent>
             <SelectItem value="1">Option 1</SelectItem>
             <SelectItem value="2">Option 2</SelectItem>
@@ -96,8 +86,8 @@ export const Sizes: Story = {
         <Text as="label" htmlFor="select-size-2" size="2" weight="medium">
           Size 2
         </Text>
-        <Select defaultValue="1">
-          <SelectTrigger id="select-size-2" aria-label="Size 2 select" placeholder="Select..." size="2" />
+        <Select defaultValue="1" size="2">
+          <SelectTrigger id="select-size-2" aria-label="Size 2 select" placeholder="Select..." />
           <SelectContent>
             <SelectItem value="1">Option 1</SelectItem>
             <SelectItem value="2">Option 2</SelectItem>
@@ -109,8 +99,8 @@ export const Sizes: Story = {
         <Text as="label" htmlFor="select-size-3" size="2" weight="medium">
           Size 3
         </Text>
-        <Select defaultValue="1">
-          <SelectTrigger id="select-size-3" aria-label="Size 3 select" placeholder="Select..." size="3" />
+        <Select defaultValue="1" size="3">
+          <SelectTrigger id="select-size-3" aria-label="Size 3 select" placeholder="Select..." />
           <SelectContent>
             <SelectItem value="1">Option 1</SelectItem>
             <SelectItem value="2">Option 2</SelectItem>

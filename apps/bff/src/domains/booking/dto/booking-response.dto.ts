@@ -46,6 +46,11 @@ export class BookingResponseDto {
   @ApiPropertyOptional({ type: [String] })
   availableActions?: string[];
 
+  @ApiPropertyOptional({
+    description: 'Earliest time the Welper may check in, as an ISO timestamp',
+  })
+  checkInAvailableAt?: string | null;
+
   @ApiPropertyOptional()
   paymentPhase?:
     | 'none'

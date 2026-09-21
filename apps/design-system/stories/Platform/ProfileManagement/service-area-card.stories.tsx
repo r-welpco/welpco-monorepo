@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ServiceAreaCard } from '@welpco/ui/platform/profile-management';
 import { useState } from 'react';
+import type { ServiceArea } from '@welpco/ui/platform/profile-management';
 
 const meta = {
   title: 'Platform/ProfileManagement/ServiceAreaCard',
@@ -14,12 +15,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => {
-    const [area, setArea] = useState(undefined);
+    const [area, setArea] = useState<ServiceArea | undefined>(undefined);
     return (
       <div style={{ width: '700px' }}>
         <ServiceAreaCard
           defaultArea={area}
-          onChange={setArea}
+          onSave={setArea}
         />
       </div>
     );
@@ -28,7 +29,7 @@ export const Default: Story = {
 
 export const WithRadiusArea: Story = {
   render: () => {
-    const [area, setArea] = useState({
+    const [area, setArea] = useState<ServiceArea | undefined>({
       type: 'radius' as const,
       centerAddress: {
         streetAddress: '123 Main Street',
@@ -43,7 +44,7 @@ export const WithRadiusArea: Story = {
       <div style={{ width: '700px' }}>
         <ServiceAreaCard
           defaultArea={area}
-          onChange={setArea}
+          onSave={setArea}
         />
       </div>
     );
@@ -52,8 +53,8 @@ export const WithRadiusArea: Story = {
 
 export const WithAddressArea: Story = {
   render: () => {
-    const [area, setArea] = useState({
-      type: 'address' as const,
+    const [area, setArea] = useState<ServiceArea | undefined>({
+      type: 'radius' as const,
       centerAddress: {
         streetAddress: '456 Market Street',
         city: 'Oakland',
@@ -66,7 +67,7 @@ export const WithAddressArea: Story = {
       <div style={{ width: '700px' }}>
         <ServiceAreaCard
           defaultArea={area}
-          onChange={setArea}
+          onSave={setArea}
         />
       </div>
     );
@@ -75,12 +76,12 @@ export const WithAddressArea: Story = {
 
 export const Loading: Story = {
   render: () => {
-    const [area, setArea] = useState(undefined);
+    const [area, setArea] = useState<ServiceArea | undefined>(undefined);
     return (
       <div style={{ width: '700px' }}>
         <ServiceAreaCard
           defaultArea={area}
-          onChange={setArea}
+          onSave={setArea}
           loading={true}
         />
       </div>
@@ -90,12 +91,12 @@ export const Loading: Story = {
 
 export const WithError: Story = {
   render: () => {
-    const [area, setArea] = useState(undefined);
+    const [area, setArea] = useState<ServiceArea | undefined>(undefined);
     return (
       <div style={{ width: '700px' }}>
         <ServiceAreaCard
           defaultArea={area}
-          onChange={setArea}
+          onSave={setArea}
           error="Failed to save service area. Please try again."
         />
       </div>

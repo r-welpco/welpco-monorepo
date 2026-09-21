@@ -1,5 +1,7 @@
 "use client";
 
+import { VisuallyHidden } from "@radix-ui/themes";
+
 import { Badge } from "@welpco/ui/badge";
 import { Tooltip } from "@welpco/ui/tooltip";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
@@ -43,11 +45,11 @@ export function VerifiedTrustBadge({
         variant="soft"
         highContrast={passed}
         size={size}
-        aria-label={label}
         style={{ cursor: "default" }}
       >
         <ShieldCheck size={iconSize} aria-hidden="true" strokeWidth={2.25} />
         <StatusIcon size={iconSize} aria-hidden="true" strokeWidth={2.5} />
+        <VisuallyHidden>{label}</VisuallyHidden>
       </Badge>
     </Tooltip>
   );

@@ -40,6 +40,7 @@ export function RoleSwitchDialog({
       }}
     >
       <DialogContent
+        closeButtonLabel={t("cancel")}
         title={toCustomer ? t("confirmToCustomerTitle") : t("confirmToWelperTitle")}
         description={toCustomer ? t("confirmToCustomerBody") : t("confirmToWelperBody")}
       >

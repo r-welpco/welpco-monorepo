@@ -235,7 +235,7 @@ export function CustomerPreviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent closeButtonLabel={labels.close} aria-describedby={undefined}>
         <RadixDialog.Title style={visuallyHiddenTitleStyle}>
           {displayName}
         </RadixDialog.Title>

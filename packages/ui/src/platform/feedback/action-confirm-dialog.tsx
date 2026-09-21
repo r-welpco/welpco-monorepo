@@ -155,6 +155,7 @@ export function ActionConfirmDialog({
               <Button
                 variant="solid"
                 color={confirmColor}
+                highContrast
                 disabled={pending || requiredEmpty}
                 onClick={handleConfirmClick}
               >

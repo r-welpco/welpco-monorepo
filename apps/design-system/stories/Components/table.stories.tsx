@@ -24,7 +24,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <Table.Root>
+    <Table>
       <TableHeader>
         <TableRow>
           <TableColumnHeaderCell>Name</TableColumnHeaderCell>
@@ -49,13 +49,13 @@ export const Default: Story = {
           <TableCell>User</TableCell>
         </TableRow>
       </TableBody>
-    </Table.Root>
+    </Table>
   ),
 };
 
 export const WithManyRows: Story = {
   render: () => (
-    <Table.Root>
+    <Table>
       <TableHeader>
         <TableRow>
           <TableColumnHeaderCell>ID</TableColumnHeaderCell>
@@ -78,7 +78,7 @@ export const WithManyRows: Story = {
           </TableRow>
         ))}
       </TableBody>
-    </Table.Root>
+    </Table>
   ),
 };
 

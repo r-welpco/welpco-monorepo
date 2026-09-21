@@ -23,7 +23,10 @@
     "lint:root": "eslint . --max-warnings=9999",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean && rm -rf node_modules",
-    "prepare": "husky && node scripts/install-husky-hook.mjs"
+    "prepare": "husky && node scripts/install-husky-hook.mjs",
+    "check:design-lint": "node scripts/check-design-lint.mjs",
+    "check:design-system": "node scripts/check-design-system.mjs",
+    "check:design-consumers": "node apps/web/scripts/check-design-dialogs.mjs"
   },
   "devDependencies": {
     "turbo": "^2.6.1",
@@ -37,7 +40,9 @@
     "lint-staged": "^15.2.10"
   },
   "lint-staged": {
-    "**/*.{ts,tsx}": ["eslint --fix"]
+    "**/*.{ts,tsx}": [
+      "eslint --fix"
+    ]
   },
   "engines": {
     "node": "22.x",

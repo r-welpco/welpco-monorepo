@@ -6,7 +6,6 @@ import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { TextField } from "@welpco/ui/text-field";
 import { RadioGroup } from "@welpco/ui/radio-group";
-import { Spinner } from "@welpco/ui/spinner";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
@@ -263,15 +262,14 @@ export function AccountRecoveryForm({
             )}
             <Button
               type="submit"
+              loading={loading}
               color={SEMANTIC_COLOR.primary}
               size="2"
               disabled={loading || Boolean(successMessage) || Boolean(submitDisabled)}
               title={submitDisabled ? submitTitle : undefined}
               style={{ width: "100%", flex: 1, minWidth: 0 }}
             >
-              {loading ? (
-                <Spinner />
-              ) : hideRecoveryMethod ? (
+              {hideRecoveryMethod ? (
                 labels.sendResetLink
               ) : (
                 labels.recoverAccount

@@ -12,7 +12,7 @@ import { Text } from "@welpco/ui/text";
 import { Heading } from "@welpco/ui/heading";
 import { Button } from "@welpco/ui/button";
 import { Separator } from "@welpco/ui/separator";
-import { Slider } from "@welpco/ui/slider";
+import { LabeledSlider } from "@welpco/ui/slider";
 import { Switch } from "@welpco/ui/switch";
 import { X } from "lucide-react";
 import { FORM_SPACING, SEMANTIC_COLOR } from "@welpco/ui/tokens";
@@ -322,7 +322,9 @@ export function SearchFiltersSidebar({
         </Badge>
       </Flex>
       <Box px="1">
-        <Slider
+        <LabeledSlider
+          thumbLabels={[`${l?.priceAria ?? "Price range"} — min`, `${l?.priceAria ?? "Price range"} — max`]}
+          getValueText={(amount) => amount >= SEARCH_PRICE_MAX ? priceCapText : formatAmount(amount)}
           value={localPrice}
           onValueChange={(next) => setLocalPrice([next[0], next[1]])}
           onValueCommit={(next) => update({ priceRange: [next[0], next[1]] })}

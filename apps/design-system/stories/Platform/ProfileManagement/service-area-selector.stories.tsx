@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ServiceAreaSelector } from '@welpco/ui/platform/profile-management';
 import { useState } from 'react';
+import type { ServiceArea } from '@welpco/ui/platform/profile-management';
 
 const meta = {
   title: 'Platform/ProfileManagement/ServiceAreaSelector',
@@ -14,12 +15,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => {
-    const [area, setArea] = useState(undefined);
+    const [area, setArea] = useState<ServiceArea | undefined>(undefined);
     return (
       <div style={{ width: '700px' }}>
         <ServiceAreaSelector
           defaultArea={area}
-          onChange={setArea}
+          onSave={setArea}
         />
       </div>
     );
@@ -28,7 +29,7 @@ export const Default: Story = {
 
 export const WithDefaultServiceArea: Story = {
   render: () => {
-    const [area, setArea] = useState(undefined);
+    const [area, setArea] = useState<ServiceArea | undefined>(undefined);
     const defaultArea = {
       type: 'radius' as const,
       centerAddress: {
@@ -44,7 +45,7 @@ export const WithDefaultServiceArea: Story = {
       <div style={{ width: '700px' }}>
         <ServiceAreaSelector
           defaultArea={area}
-          onChange={setArea}
+          onSave={setArea}
           allowOverride={true}
           defaultServiceArea={defaultArea}
         />
@@ -55,7 +56,7 @@ export const WithDefaultServiceArea: Story = {
 
 export const RadiusType: Story = {
   render: () => {
-    const [area, setArea] = useState({
+    const [area, setArea] = useState<ServiceArea | undefined>({
       type: 'radius' as const,
       centerAddress: {
         streetAddress: '123 Main Street',
@@ -70,7 +71,7 @@ export const RadiusType: Story = {
       <div style={{ width: '700px' }}>
         <ServiceAreaSelector
           defaultArea={area}
-          onChange={setArea}
+          onSave={setArea}
         />
       </div>
     );
@@ -79,8 +80,8 @@ export const RadiusType: Story = {
 
 export const AddressType: Story = {
   render: () => {
-    const [area, setArea] = useState({
-      type: 'address' as const,
+    const [area, setArea] = useState<ServiceArea | undefined>({
+      type: 'radius' as const,
       centerAddress: {
         streetAddress: '123 Main Street',
         city: 'San Francisco',
@@ -93,7 +94,7 @@ export const AddressType: Story = {
       <div style={{ width: '700px' }}>
         <ServiceAreaSelector
           defaultArea={area}
-          onChange={setArea}
+          onSave={setArea}
         />
       </div>
     );
@@ -102,12 +103,12 @@ export const AddressType: Story = {
 
 export const Loading: Story = {
   render: () => {
-    const [area, setArea] = useState(undefined);
+    const [area, setArea] = useState<ServiceArea | undefined>(undefined);
     return (
       <div style={{ width: '700px' }}>
         <ServiceAreaSelector
           defaultArea={area}
-          onChange={setArea}
+          onSave={setArea}
           loading={true}
         />
       </div>

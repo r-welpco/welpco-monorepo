@@ -291,6 +291,10 @@ export class BookingService {
     userRole: 'customer' | 'welper',
   ): BookingResponseDto {
     const actions = this.getAvailableActions(booking, userId, userRole);
+    const checkInAvailableAt =
+      booking.status === BookingRequestStatus.ACCEPTED
+        ? this.getCheckInAvailableAt(booking)?.toISOString() ?? null
+        : null;
     return {
       id: booking.id,
       customerId: booking.customerId,
@@ -330,6 +334,7 @@ export class BookingService {
       createdAt: booking.createdAt,
       updatedAt: booking.updatedAt,
       availableActions: actions,
+      checkInAvailableAt,
     };
   }
 

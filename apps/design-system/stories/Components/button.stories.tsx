@@ -1,22 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Button } from '@welpco/ui/button';
-import { Flex } from '@radix-ui/themes';
+import { expect, within } from 'storybook/test';
+import { SEMANTIC_COLOR } from '@welpco/ui/tokens';
+import { Flex, Theme } from '@radix-ui/themes';
 
 const meta = {
   title: 'Components/Button',
   component: Button,
   parameters: {
     layout: 'centered',
-    a11y: {
-      // Demo story — showcases Radix variants at every contrast level including
-      // decorative low-contrast options (ghost / outline / soft). Production
-      // code is still checked by bible §5.3 and the a11y addon panel. axe's
-      // color-contrast rule is disabled here so variant-exploration stories
-      // don't pollute the CI baseline.
-      config: {
-        rules: [{ id: 'color-contrast', enabled: false }],
-      },
-    },
   },
   tags: ['autodocs'],
   argTypes: {
@@ -61,11 +53,11 @@ export const Colors: Story = {
   render: () => (
     <Flex gap="3" direction="column">
       <Flex gap="2">
-        <Button color="green">Green</Button>
-        <Button color="blue">Blue</Button>
-        <Button color="red">Red</Button>
-        <Button color="gray">Gray</Button>
-        <Button color="amber">Amber</Button>
+        <Button color="green" highContrast>Green</Button>
+        <Button color="blue" highContrast>Blue</Button>
+        <Button color="red" highContrast>Red</Button>
+        <Button color="gray" highContrast>Gray</Button>
+        <Button color="amber" highContrast>Amber</Button>
       </Flex>
     </Flex>
   ),
@@ -91,3 +83,25 @@ export const Disabled: Story = {
   ),
 };
 
+
+/** Explicit low-contrast overrides are shown disabled, not as recommended CTAs. */
+export const ContrastCompatibility: Story = {
+  render: () => <Theme accentColor={SEMANTIC_COLOR.info}>
+    <Flex gap="3" wrap="wrap">
+      <Button color={SEMANTIC_COLOR.primary}>Explicit primary</Button>
+      <Button disabled>Inherited info</Button>
+      <Button color={SEMANTIC_COLOR.primary} highContrast={false} disabled>Explicit override</Button>
+      <Button color={SEMANTIC_COLOR.primary} variant="soft" disabled>Soft variant</Button>
+      <Button color={SEMANTIC_COLOR.primary} asChild><a href="#fixture">Primary link</a></Button>
+    </Flex>
+  </Theme>,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Explicit primary' })).toHaveClass('rt-high-contrast');
+    for (const name of ['Inherited info', 'Explicit override', 'Soft variant']) {
+      await expect(canvas.getByRole('button', { name })).not.toHaveClass('rt-high-contrast');
+    }
+    await expect(canvas.getByRole('link', { name: 'Primary link' })).toHaveClass('rt-high-contrast');
+    await expect(canvas.getByRole('link', { name: 'Primary link' })).toHaveAttribute('href', '#fixture');
+  },
+};

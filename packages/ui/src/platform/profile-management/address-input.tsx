@@ -187,7 +187,7 @@ export function AddressInput({
                 <SelectTrigger
                   id="address-state"
                   aria-labelledby="address-state-label"
-                  style={{ width: "100%" }}
+                  style={{ width: "100%", "--gray-a10": "var(--gray-11)" } as React.CSSProperties}
                   aria-required={required || undefined}
                   aria-invalid={errors?.stateProvince ? "true" : undefined}
                   aria-describedby={errors?.stateProvince ? "address-state-error" : undefined}
@@ -293,7 +293,7 @@ export function AddressInput({
             <SelectTrigger
               id="address-state"
               aria-labelledby="address-state-label"
-              style={{ width: "100%" }}
+              style={{ width: "100%", "--gray-a10": "var(--gray-11)" } as React.CSSProperties}
               aria-required={required || undefined}
               aria-invalid={errors?.stateProvince ? "true" : undefined}
               aria-describedby={errors?.stateProvince ? "address-state-error" : undefined}

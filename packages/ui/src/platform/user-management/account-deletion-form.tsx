@@ -6,7 +6,6 @@ import { Button } from "@welpco/ui/button";
 import { TextField } from "@welpco/ui/text-field";
 import { TextArea } from "@welpco/ui/text-area";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@welpco/ui/select";
-import { Spinner } from "@welpco/ui/spinner";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
@@ -248,13 +247,13 @@ export function AccountDeletionForm({
               </Button>
             )}
             <Button
-              type="submit"
+              type="submit" loading={loading}
               color={SEMANTIC_COLOR.danger}
               size="2"
               disabled={loading || !isConfirmValid}
               style={{ flex: 1, width: "100%", minWidth: 0 }}
             >
-              {loading ? <Spinner /> : labels.submit}
+              {labels.submit}
             </Button>
           </Flex>
         </form>

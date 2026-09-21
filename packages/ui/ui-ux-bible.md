@@ -93,7 +93,7 @@ Welpco sounds **warm, direct, competent**. We don't perform. We don't apologize 
 
 The brand accent is **`grass`** (Radix). Sage-leaning, warmer than `green`, less minty — signals **service, trust, and momentum** without reading clinical or corporate. Use it for the primary CTA on any screen, for "go" affordances, and as the warm mark anywhere the brand needs to assert itself. Never use the accent for danger or warning — semantic discipline outranks brand whimsy.
 
-`SEMANTIC_COLOR.primary` resolves to `"grass"` and is the single source of truth — never hand-write `"grass"` or `"green"` strings in product code. Both the marketing surface (`app/(marketing)/`) and the platform (`(auth)`, `(dashboard)`) are pinned to `accentColor="grass"` at the Radix `<Theme>` level so the brand reads consistently end-to-end.
+`SEMANTIC_COLOR.primary` resolves to `"grass"` and is the single source of truth — never hand-write `"grass"` or `"green"` strings in product code. The customer/welper platform (`(auth)`, `(dashboard)`) uses `accentColor="grass"` at the Radix `<Theme>` level. Marketing and admin retain their documented surface variants; do not use this remediation to rebrand either surface.
 
 `SEMANTIC_COLOR.success` stays on Radix `green` — that's a *meaning* token (booking paid, form saved), distinct from the brand mark.
 
@@ -147,7 +147,7 @@ Three layers:
 
    | Role       | Accent   | Use case                                           |
    | ---------- | -------- | -------------------------------------------------- |
-   | `primary`  | `green`  | Default CTAs, links, selected state                |
+   | `primary`  | `grass`  | Default CTAs, links, selected state                |
    | `neutral`  | `gray`   | Secondary text, borders, quiet surfaces            |
    | `info`     | `blue`   | Informational callouts, non-destructive highlights |
    | `success`  | `green`  | Completion, confirmation, positive progress        |
@@ -205,10 +205,12 @@ Test every new surface in both appearances before shipping.
 
 ### 6.1 Font stack
 
-- **Primary**: Geist (sans) — loaded globally.
+- **Customer/welper platform and Storybook**: Geist (sans), connected to Radix `--default-font-family` and `--heading-font-family`. Storybook self-hosts its Latin font subsets; the web app uses its existing Next font loader.
+- **Marketing variant**: preserve the deliberate Fraunces, Inter Tight, JetBrains Mono, Plus Jakarta Sans, and Uncut Sans typography in `.welpco`.
+- **Admin variant**: preserve the current system font and color palette; this remediation does not rebrand admin.
 - **Monospace**: `ui-monospace, SFMono-Regular, Menlo, Consolas` — used only for code and keyboard hints.
 
-Do not import other families. Add new weights via `@font-face` once, centrally, never per component.
+Within the platform, do not import other families. Add new weights via `@font-face` once, centrally, never per component.
 
 ### 6.2 Scale
 

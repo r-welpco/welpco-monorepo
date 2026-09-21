@@ -49,6 +49,9 @@ const preview: Preview = {
   },
   initialGlobals: {
     theme: 'light',
+    // The custom test runner owns automated axe checks, including portals.
+    // Keep the addon available through its manual Run button without racing it.
+    a11y: { manual: true },
   },
   decorators: [
     (Story, context) => {

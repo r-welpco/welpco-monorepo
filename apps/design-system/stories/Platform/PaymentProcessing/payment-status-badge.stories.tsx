@@ -10,14 +10,14 @@ const meta = {
 } satisfies Meta<typeof PaymentStatusBadge>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof PaymentStatusBadge>;
 
 export const AllStatuses: Story = {
   render: () => (
     <Flex direction="column" gap="3">
       <PaymentStatusBadge status="pending" />
-      <PaymentStatusBadge status="processing" />
-      <PaymentStatusBadge status="completed" />
+      <PaymentStatusBadge status="authorized" />
+      <PaymentStatusBadge status="succeeded" />
       <PaymentStatusBadge status="failed" />
       <PaymentStatusBadge status="refunded" />
     </Flex>
@@ -32,7 +32,7 @@ export const Pending: Story = {
 
 export const Completed: Story = {
   args: {
-    status: 'completed',
+    status: 'succeeded',
   },
 };
 

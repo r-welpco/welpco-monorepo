@@ -23,7 +23,7 @@ export function ApplyBlockedDialog({ open, onOpenChange, reason }: ApplyBlockedD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title={labels.applyBlocked.title}>
+      <DialogContent title={labels.applyBlocked.title} closeButtonLabel={labels.applyBlocked.close}>
         <Text size="2">{labels.applyBlocked.message(reason)}</Text>
         <Flex justify="end" gap="3" mt="4">
           <Button variant="soft" onClick={() => onOpenChange(false)}>

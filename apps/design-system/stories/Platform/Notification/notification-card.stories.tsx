@@ -10,7 +10,7 @@ const meta = {
 } satisfies Meta<typeof NotificationCard>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof NotificationCard>;
 
 export const Unread: Story = {
   args: {

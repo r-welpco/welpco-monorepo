@@ -7,7 +7,7 @@ import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Text } from "@welpco/ui/text";
 import { Button } from "@welpco/ui/button";
-import { Slider } from "@welpco/ui/slider";
+import { LabeledSlider } from "@welpco/ui/slider";
 import type { ProfilePhotoUploadLabels } from "./profile-photo-upload";
 
 export interface ProfilePhotoCropDialogProps {
@@ -48,6 +48,7 @@ export function ProfilePhotoCropDialog({
       }}
     >
       <DialogContent
+        closeButtonLabel={labels.cancel}
         title={labels.title}
         description={labels.description}
         maxWidth="480px"
@@ -86,7 +87,8 @@ export function ProfilePhotoCropDialog({
             <Text size="2" weight="medium">
               {labels.zoom}
             </Text>
-            <Slider
+            <LabeledSlider
+              thumbLabels={[labels.zoom]}
               value={[zoom]}
               min={1}
               max={3}

@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { PasswordField } from "@welpco/ui/password-field";
-import { Spinner } from "@welpco/ui/spinner";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
 import { Heading } from "@welpco/ui/heading";
@@ -241,13 +240,13 @@ export function PasswordChangeForm({
           </Box>
 
           <Button
-            type="submit"
+            type="submit" loading={loading}
             size="2"
             color={SEMANTIC_COLOR.primary}
             disabled={loading}
             mt={FORM_SPACING.submitGap}
           >
-            {loading ? <Spinner /> : labels.submit}
+            {labels.submit}
           </Button>
         </form>
       </Flex>

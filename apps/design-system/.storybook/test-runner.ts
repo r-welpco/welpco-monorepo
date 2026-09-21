@@ -27,6 +27,18 @@ const config: TestRunnerConfig = {
     }
   },
   async postVisit(page, context) {
+    // Check the settled open overlay, not an intermediate enter/exit frame.
+    // Ignore repeating spinners, which intentionally never finish.
+    await page.evaluate(async () => {
+      const animations = document.getAnimations().filter((animation) =>
+        animation.playState === "running" &&
+        animation.effect?.getComputedTiming().iterations !== Infinity,
+      );
+      await Promise.race([
+        Promise.all(animations.map((animation) => animation.finished.catch(() => {}))),
+        new Promise((resolve) => setTimeout(resolve, 2000)),
+      ]);
+    });
     const storyContext = await getStoryContext(page, context);
     const a11yParams = (storyContext.parameters?.a11y ?? {}) as {
       disable?: boolean;
@@ -57,7 +69,7 @@ const config: TestRunnerConfig = {
       }
     });
 
-    await checkA11y(page, "#storybook-root", {
+    await checkA11y(page, "body", {
       detailedReport: true,
       detailedReportOptions: { html: false },
       axeOptions: {

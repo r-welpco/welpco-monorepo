@@ -16,7 +16,6 @@ export const Default: Story = {
     title: 'Premium home cleaning',
     category: 'Home',
     hourlyRate: 95,
-    durationMinutes: 90,
     description: 'Deep cleaning with eco-friendly products and checklists.',
     rating: 4.9,
     reviewsCount: 182,

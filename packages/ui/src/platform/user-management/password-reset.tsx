@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { PasswordField } from "@welpco/ui/password-field";
-import { Spinner } from "@welpco/ui/spinner";
 import { TextField } from "@welpco/ui/text-field";
 import { Box } from "@welpco/ui/box";
 import { Flex } from "@welpco/ui/flex";
@@ -188,8 +187,8 @@ export function PasswordReset({
           </Box>
 
           <Flex gap="2" mt={FORM_SPACING.submitGap}>
-            <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading}>
-              {loading ? <Spinner /> : labels.updatePassword}
+            <Button type="submit" loading={loading} size="2" color={SEMANTIC_COLOR.primary} disabled={loading}>
+              {labels.updatePassword}
             </Button>
             {onCancel && (
               <Button type="button" size="2" variant="soft" color="gray" disabled={loading} onClick={onCancel}>

@@ -2,7 +2,7 @@
 
 import { Dialog as RadixDialog, IconButton, Flex, Box } from "@radix-ui/themes";
 import { Cross2Icon } from "@radix-ui/react-icons";
-import { type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { type ComponentPropsWithoutRef, type ReactNode, useRef } from "react";
 
 export interface DialogProps extends ComponentPropsWithoutRef<typeof RadixDialog.Root> {
   title?: string;
@@ -21,8 +21,10 @@ export const DialogContentRaw = RadixDialog.Content;
 type DialogContentProps = DialogProps &
   ComponentPropsWithoutRef<typeof RadixDialog.Content> & {
     children: ReactNode;
-    /** Hide the header close-button. Defaults to `true`. */
+    /** Show the header close-button. Defaults to `true`. */
     showCloseButton?: boolean;
+    /** Localized accessible name for the header close control. */
+    closeButtonLabel?: string;
   };
 
 /**
@@ -35,12 +37,35 @@ export function DialogContent({
   description,
   children,
   showCloseButton = true,
+  closeButtonLabel = "Close dialog",
+  onOpenAutoFocus,
+  onCloseAutoFocus,
   ...props
 }: DialogContentProps) {
+  const opener = useRef<HTMLElement | null>(null);
   const hasHeader = Boolean(title || description || showCloseButton);
 
   return (
-    <RadixDialog.Content size="4" {...props}>
+    <RadixDialog.Content
+      size="4"
+      {...props}
+      onOpenAutoFocus={(event) => {
+        // Controlled consumers often have no DialogTrigger. Remember their opener.
+        opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        onOpenAutoFocus?.(event);
+      }}
+      onCloseAutoFocus={(event) => {
+        onCloseAutoFocus?.(event);
+        const target = opener.current;
+        if (
+          !event.defaultPrevented && target?.isConnected &&
+          target !== document.body && !target.matches(":disabled")
+        ) {
+          event.preventDefault();
+          target.focus();
+        }
+      }}
+    >
       <Flex direction="column" gap="4">
         {hasHeader && (
           <Flex justify="between" align="start" gap="3">
@@ -58,7 +83,7 @@ export function DialogContent({
             </Box>
             {showCloseButton && (
               <RadixDialog.Close>
-                <IconButton variant="ghost" color="gray" size="2" aria-label="Close dialog">
+                <IconButton variant="ghost" color="gray" size="2" aria-label={closeButtonLabel}>
                   <Cross2Icon />
                 </IconButton>
               </RadixDialog.Close>

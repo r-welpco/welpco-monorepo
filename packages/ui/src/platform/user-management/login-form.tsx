@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import { Card } from "@welpco/ui/card";
 import { Button } from "@welpco/ui/button";
 import { PasswordField } from "@welpco/ui/password-field";
-import { Spinner } from "@welpco/ui/spinner";
 import { TextField } from "@welpco/ui/text-field";
 import { Checkbox } from "@welpco/ui/checkbox";
 import { Box } from "@welpco/ui/box";
@@ -176,8 +175,8 @@ export function LoginForm({
             </Flex>
           </Box>
 
-          <Button type="submit" size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
-            {loading ? <Spinner /> : labels.signIn}
+          <Button type="submit" loading={loading} size="2" color={SEMANTIC_COLOR.primary} disabled={loading} mt={FORM_SPACING.submitGap}>
+            {labels.signIn}
           </Button>
         </form>
 

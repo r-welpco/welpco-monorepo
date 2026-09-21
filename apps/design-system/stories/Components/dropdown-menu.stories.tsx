@@ -10,22 +10,13 @@ import {
 } from '@welpco/ui/dropdown-menu';
 import { Button } from '@welpco/ui/button';
 import { Flex } from '@radix-ui/themes';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 const meta = {
   title: 'Components/DropdownMenu',
   component: DropdownMenu,
   parameters: {
     layout: 'centered',
-    a11y: {
-      // Demo story — showcases Radix variants at every contrast level including
-      // decorative low-contrast options (ghost / outline / soft). Production
-      // code is still checked by bible §5.3 and the a11y addon panel. axe's
-      // color-contrast rule is disabled here so variant-exploration stories
-      // don't pollute the CI baseline.
-      config: {
-        rules: [{ id: 'color-contrast', enabled: false }],
-      },
-    },
   },
   tags: ['autodocs'],
 } satisfies Meta<typeof DropdownMenu>;
@@ -34,15 +25,25 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const trigger = within(canvasElement).getByRole('button', { name: 'Options' });
+    trigger.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(within(canvasElement.ownerDocument.body).getByRole('menu')).toBeVisible());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(trigger).toHaveFocus());
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(within(canvasElement.ownerDocument.body).getByRole('menu')).toBeVisible());
+  },
   render: () => (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger>
-        <Button variant="soft">
+        <Button variant="soft" highContrast>
           Options
           <DropdownMenuTriggerIcon />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent>
+      <DropdownMenuContent highContrast>
         <DropdownMenuItem shortcut="⌘ E">Edit</DropdownMenuItem>
         <DropdownMenuItem shortcut="⌘ D">Duplicate</DropdownMenuItem>
         <DropdownMenuSeparator />

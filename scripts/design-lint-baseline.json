@@ -1,0 +1,449 @@
+{
+  "apps/admin/app/(dashboard)/audit-logs/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 4
+  },
+  "apps/admin/app/(dashboard)/bookings/[id]/booking-actions.tsx": {
+    "@welpco/design/no-raw-semantic-color": 1
+  },
+  "apps/admin/app/(dashboard)/bookings/[id]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 10,
+    "@welpco/design/no-raw-semantic-color": 1
+  },
+  "apps/admin/app/(dashboard)/bookings/booking-id-jump.tsx": {
+    "@welpco/design/no-raw-semantic-color": 1
+  },
+  "apps/admin/app/(dashboard)/bookings/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/admin/app/(dashboard)/categories/[id]/category-form.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/admin/app/(dashboard)/categories/[id]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/admin/app/(dashboard)/categories/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 3
+  },
+  "apps/admin/app/(dashboard)/content/faq/[id]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/admin/app/(dashboard)/content/marketing/[id]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/admin/app/(dashboard)/content/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 15
+  },
+  "apps/admin/app/(dashboard)/content/static/[id]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/admin/app/(dashboard)/dashboard-live.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 19
+  },
+  "apps/admin/app/(dashboard)/disputes/[id]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 9
+  },
+  "apps/admin/app/(dashboard)/disputes/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/admin/app/(dashboard)/notifications/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 14
+  },
+  "apps/admin/app/(dashboard)/payouts/[batchId]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 6
+  },
+  "apps/admin/app/(dashboard)/payouts/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 8,
+    "@welpco/design/no-raw-semantic-color": 1
+  },
+  "apps/admin/app/(dashboard)/payouts/payout-batch-actions.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/admin/app/(dashboard)/payouts/payout-computation-details-modal.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 6
+  },
+  "apps/admin/app/(dashboard)/payouts/payout-welpers-table.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/admin/app/(dashboard)/portfolio/portfolio-photo-cells.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 3
+  },
+  "apps/admin/app/(dashboard)/questions/[id]/assignment-manager.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 14
+  },
+  "apps/admin/app/(dashboard)/questions/[id]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/admin/app/(dashboard)/questions/[id]/question-form.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 20
+  },
+  "apps/admin/app/(dashboard)/questions/new/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 4
+  },
+  "apps/admin/app/(dashboard)/questions/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 4
+  },
+  "apps/admin/app/(dashboard)/referrals/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 17
+  },
+  "apps/admin/app/(dashboard)/reports/emails/[id]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/admin/app/(dashboard)/reports/web-analytics/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/admin/app/(dashboard)/reports/welper-distribution/welper-distribution-map.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 4
+  },
+  "apps/admin/app/(dashboard)/reviews/[id]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 14
+  },
+  "apps/admin/app/(dashboard)/reviews/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 16
+  },
+  "apps/admin/app/(dashboard)/settings/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 3
+  },
+  "apps/admin/app/(dashboard)/support-tickets/[id]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 6
+  },
+  "apps/admin/app/(dashboard)/support-tickets/[id]/ticket-form.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 12
+  },
+  "apps/admin/app/(dashboard)/support-tickets/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 14
+  },
+  "apps/admin/app/(dashboard)/users/[id]/page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 17,
+    "@welpco/design/canonical-signin-signout": 1
+  },
+  "apps/admin/app/(dashboard)/users/[id]/user-actions.tsx": {
+    "@welpco/design/no-raw-semantic-color": 1,
+    "@welpco/design/canonical-signin-signout": 1
+  },
+  "apps/admin/components/admin-callout.tsx": {
+    "@welpco/design/no-raw-semantic-color": 4
+  },
+  "apps/admin/components/admin-date-time.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/admin/components/admin-shell.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/admin/components/admin-timeline.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 4
+  },
+  "apps/admin/components/detail-rows.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/design-system/stories/Components/alert-dialog.stories.tsx": {
+    "@welpco/design/no-raw-semantic-color": 3
+  },
+  "apps/design-system/stories/Components/aspect-ratio.stories.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 13
+  },
+  "apps/design-system/stories/Components/button.stories.tsx": {
+    "@welpco/design/no-raw-semantic-color": 4
+  },
+  "apps/design-system/stories/Components/callout.stories.tsx": {
+    "@welpco/design/no-raw-semantic-color": 5
+  },
+  "apps/design-system/stories/Components/context-menu.stories.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/design-system/stories/Components/dialog.stories.tsx": {
+    "@welpco/design/no-raw-semantic-color": 2
+  },
+  "apps/design-system/stories/Components/hover-card.stories.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/design-system/stories/Components/icon-button.stories.tsx": {
+    "@welpco/design/no-raw-semantic-color": 4
+  },
+  "apps/design-system/stories/Components/tooltip.stories.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 3,
+    "@welpco/design/no-raw-semantic-color": 1
+  },
+  "apps/design-system/stories/Layout/container.stories.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/design-system/stories/Layout/grid.stories.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/design-system/stories/Layout/section.stories.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/design-system/stories/Platform/Feedback/action-confirm-dialog.stories.tsx": {
+    "@welpco/design/no-raw-semantic-color": 2
+  },
+  "apps/design-system/stories/Platform/Layout/customer-header.stories.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 6
+  },
+  "apps/design-system/stories/Platform/Layout/footer.stories.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/design-system/stories/Platform/Layout/welper-header.stories.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 6
+  },
+  "apps/design-system/stories/Typography/text.stories.tsx": {
+    "@welpco/design/no-raw-semantic-color": 4
+  },
+  "apps/design-system/stories/examples/dashboard-patterns.stories.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 3
+  },
+  "apps/web/app/(dashboard)/dashboard/bookings/[id]/page-client.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 4
+  },
+  "apps/web/app/(dashboard)/dashboard/bookings/page-client.tsx": {
+    "@welpco/design/no-raw-semantic-color": 3,
+    "@welpco/design/no-disallowed-inline-style": 14
+  },
+  "apps/web/app/(dashboard)/dashboard/guides/guide-reader.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 6
+  },
+  "apps/web/app/(dashboard)/dashboard/marketplace/new/page-client.tsx": {
+    "@welpco/design/no-raw-semantic-color": 1
+  },
+  "apps/web/app/(dashboard)/dashboard/search/loading.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/web/app/(dashboard)/layout-client.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/web/app/(dashboard)/loading.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/web/app/(marketing)/layout.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/web/app/(marketing)/not-found.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 6
+  },
+  "apps/web/app/[locale]/(auth)/verification/verification-page-client.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/web/app/[locale]/(marketing)/layout.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/web/app/error.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2,
+    "@welpco/design/no-raw-semantic-color": 2
+  },
+  "apps/web/app/layout.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/web/app/welper/_shared/profile-og.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 38
+  },
+  "apps/web/app/welper/_shared/share-card.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 78
+  },
+  "apps/web/components/error-boundary.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2,
+    "@welpco/design/no-raw-semantic-color": 2
+  },
+  "apps/web/components/features/dashboard/customer-preview-dialog.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 3
+  },
+  "apps/web/components/features/dashboard/email-verification-required-dialog.tsx": {
+    "@welpco/design/no-raw-semantic-color": 3
+  },
+  "apps/web/components/features/dashboard/recent-activity.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/web/components/features/marketing/hero/floating-card.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 14
+  },
+  "apps/web/components/features/marketing/hero/hero-immersive-floating-nav.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 69
+  },
+  "apps/web/components/features/marketing/hero/hero-immersive.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 29
+  },
+  "apps/web/components/features/marketing/hero/hero-video-media.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/web/components/features/marketing/hero/hero-video-treatment.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 5
+  },
+  "apps/web/components/features/marketing/hero/search-bar.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 25
+  },
+  "apps/web/components/features/marketing/hero/stat-bubble.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 12
+  },
+  "apps/web/components/features/marketing/hero/video-frame.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 11
+  },
+  "apps/web/components/features/marketing/pages/about-page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 39
+  },
+  "apps/web/components/features/marketing/pages/contact-page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 46
+  },
+  "apps/web/components/features/marketing/pages/faq-page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 53
+  },
+  "apps/web/components/features/marketing/pages/field.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/web/components/features/marketing/pages/how-it-works-page.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 21
+  },
+  "apps/web/components/features/marketing/sections/become-welper-cta.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 25
+  },
+  "apps/web/components/features/marketing/sections/categories-grid.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 24
+  },
+  "apps/web/components/features/marketing/sections/community-spotlight.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 3
+  },
+  "apps/web/components/features/marketing/sections/faq-teaser.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 27
+  },
+  "apps/web/components/features/marketing/sections/how-it-works.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 25
+  },
+  "apps/web/components/features/marketing/sections/marquee-band.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 10
+  },
+  "apps/web/components/features/marketing/sections/minors-banner.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 41
+  },
+  "apps/web/components/features/marketing/sections/section-header.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 8
+  },
+  "apps/web/components/features/marketing/sections/trust-safety.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 32
+  },
+  "apps/web/components/features/marketing/sections/welper-card.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 24
+  },
+  "apps/web/components/features/marketing/sections/welpers-near-you.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 28
+  },
+  "apps/web/components/features/marketing/shared/footer.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 58
+  },
+  "apps/web/components/features/marketing/shared/hand-underline.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/web/components/features/marketing/shared/language-switcher.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 14
+  },
+  "apps/web/components/features/marketing/shared/placeholder.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 12
+  },
+  "apps/web/components/features/marketing/shared/top-nav.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 32
+  },
+  "apps/web/components/features/marketing/shared/wordmark.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 10
+  },
+  "apps/web/components/features/marketing/welper-launch-announcement/welper-launch-announcement.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 26
+  },
+  "apps/web/components/features/payments/add-payment-method-shared.tsx": {
+    "@welpco/design/no-raw-semantic-color": 1,
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "apps/web/components/features/payments/customer-payment-settings.tsx": {
+    "@welpco/design/no-raw-semantic-color": 3,
+    "@welpco/design/no-disallowed-inline-style": 4
+  },
+  "apps/web/components/features/personalization/dashboard-appearance-tuner.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 4
+  },
+  "apps/web/components/features/personalization/personalization-settings.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 18
+  },
+  "apps/web/components/features/settings/sms-notification-settings.tsx": {
+    "@welpco/design/no-raw-semantic-color": 1
+  },
+  "apps/web/components/features/share/share-qr-code.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 3
+  },
+  "apps/web/components/layout/app-footer.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 11
+  },
+  "apps/web/components/layout/auth-search-params-fallback.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 3
+  },
+  "apps/web/components/layout/dashboard-header-icon-trigger.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/web/components/layout/dashboard-header.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 8,
+    "@welpco/design/canonical-signin-signout": 1
+  },
+  "apps/web/components/layout/header.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 31,
+    "@welpco/design/canonical-signin-signout": 2,
+    "@welpco/design/no-raw-semantic-color": 1
+  },
+  "apps/web/components/layout/nav.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 3
+  },
+  "apps/web/components/layout/notification-bell-popover.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 6
+  },
+  "apps/web/components/layout/notification-bell.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "apps/web/components/layout/setup-checklist-popover.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 9
+  },
+  "apps/web/components/layout/theme-toggle.tsx": {
+    "@welpco/design/require-iconbutton-aria-label": 1
+  },
+  "apps/web/components/security/turnstile-widget.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 4
+  },
+  "apps/web/components/ui/dialog.tsx": {
+    "@welpco/design/require-iconbutton-aria-label": 1,
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "packages/ui/src/platform/communication/message-bubble.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "packages/ui/src/platform/job-posting-matching/job-card.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 3
+  },
+  "packages/ui/src/platform/layout/customer-header.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "packages/ui/src/platform/layout/footer.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 29
+  },
+  "packages/ui/src/platform/layout/welper-header.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "packages/ui/src/platform/profile-management/address-input.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 6
+  },
+  "packages/ui/src/platform/profile-management/availability-schedule-stats.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2
+  },
+  "packages/ui/src/platform/profile-management/service-offering-form.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1
+  },
+  "packages/ui/src/platform/service-discovery/weekly-availability-table.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 11
+  },
+  "packages/ui/src/platform/user-management/account-recovery-form.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2,
+    "@welpco/design/no-native-label-in-platform": 1
+  },
+  "packages/ui/src/platform/user-management/account-verification.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2,
+    "@welpco/design/no-native-label-in-platform": 1
+  },
+  "packages/ui/src/platform/user-management/signup-steps/email-password-step.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 2,
+    "@welpco/design/no-native-label-in-platform": 1
+  },
+  "packages/ui/src/platform/user-management/signup-steps/welper-background-check-step.tsx": {
+    "@welpco/design/no-disallowed-inline-style": 1,
+    "@welpco/design/no-raw-semantic-color": 3
+  }
+}

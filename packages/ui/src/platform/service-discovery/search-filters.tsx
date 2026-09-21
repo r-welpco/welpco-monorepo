@@ -3,7 +3,7 @@
 import { Card } from "@welpco/ui/card";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@welpco/ui/select";
 import { TextField } from "@welpco/ui/text-field";
-import { Slider } from "@welpco/ui/slider";
+import { LabeledSlider } from "@welpco/ui/slider";
 import { Flex } from "@welpco/ui/flex";
 import { Box } from "@welpco/ui/box";
 import { Text } from "@welpco/ui/text";
@@ -82,9 +82,10 @@ export function SearchFilters({ value, onChange }: SearchFiltersProps) {
                 {value.radius} km
               </Badge>
             </Flex>
-            <Slider
+            <LabeledSlider
               id="filter-radius"
-              aria-label="Search radius in kilometres"
+              thumbLabels={["Search radius in kilometres"]}
+              getValueText={(value) => `${value} km`}
               value={[value.radius]}
               onValueChange={(vals) => update({ radius: vals[0] })}
               min={5}

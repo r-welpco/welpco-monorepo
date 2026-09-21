@@ -1,0 +1,204 @@
+{
+  "counts": {
+    "a11y assertion": 28,
+    "render exception": 21
+  },
+  "failures": [
+    {
+      "test": "Platform/Feedback/ActionConfirmDialog \u203a Default \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/Feedback/ActionConfirmDialog \u203a Danger \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/Feedback/ActionConfirmDialog \u203a Pending \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/Feedback/ActionConfirmDialog \u203a Mobile \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ProfileManagement/AvailabilityCalendar \u203a Default \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ProfileManagement/AvailabilityCalendar \u203a WithStatuses \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ProfileManagement/AvailabilityCalendar \u203a WithExceptions \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ProfileManagement/AvailabilityCalendar \u203a WithEffectiveDateRange \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ProfileManagement/AvailabilityCalendar \u203a ComplexExample \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Components/Radio \u203a Default \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Components/Radio \u203a WithLabels \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Components/Radio \u203a Colors \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Platform/ProfileManagement/AddressInput \u203a Default \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ProfileManagement/AddressInput \u203a Optional \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ProfileManagement/AddressInput \u203a WithErrors \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Components/Table \u203a Default \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Components/Table \u203a WithManyRows \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Components/Tooltip \u203a Default \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Components/Tooltip \u203a WithText \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Components/Tooltip \u203a WithLongContent \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Components/CheckboxGroup \u203a Default \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Components/CheckboxGroup \u203a WithLabels \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Components/Callout \u203a Default \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Components/Callout \u203a Variants \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Components/Callout \u203a WithIcon \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Platform/ServiceDiscovery/SearchResultsList \u203a Default \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ServiceDiscovery/WelperProfileCard \u203a Default \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ServiceDiscovery/WelperProfileCard \u203a WithActions \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ServiceDiscovery/WelperProfileCard \u203a BackgroundCheckPassed \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ServiceDiscovery/WelperProfileCard \u203a BackgroundCheckNotPassed \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/PaymentProcessing/PaymentStatusBadge \u203a AllStatuses \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Platform/PaymentProcessing/PaymentStatusBadge \u203a Completed \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Platform/PaymentProcessing/PaymentAuthorizationCard \u203a Default \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Platform/PaymentProcessing/PaymentAuthorizationCard \u203a Loading \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Platform/PaymentProcessing/PaymentAuthorizationCard \u203a WithError \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Platform/BookingScheduling/BookingCalendar \u203a Default \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/UserManagement/AccountRecoveryForm \u203a Loading \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/UserManagement/AccountDeletionForm \u203a Loading \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ReviewRating/RatingForm \u203a Default \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ReviewRating/RatingForm \u203a WithError \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/ReviewRating/RatingForm \u203a WithDefaultRating \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/UserManagement/PasswordChangeForm \u203a Loading \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/JobPostingMatching/JobApplicationForm \u203a Default \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Platform/JobPostingMatching/JobApplicationForm \u203a Loading \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Platform/JobPostingMatching/JobApplicationForm \u203a WithError \u203a smoke-test",
+      "cause": "render exception"
+    },
+    {
+      "test": "Platform/DisputeResolution/DisputeForm \u203a Default \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/DisputeResolution/DisputeForm \u203a WithError \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/UserManagement/LoginForm \u203a Loading \u203a smoke-test",
+      "cause": "a11y assertion"
+    },
+    {
+      "test": "Platform/UserManagement/PasswordReset \u203a Loading \u203a smoke-test",
+      "cause": "a11y assertion"
+    }
+  ]
+}

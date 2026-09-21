@@ -3,7 +3,6 @@
 import { Card } from "@welpco/ui/card";
 import { IconButton } from "@welpco/ui/icon-button";
 import { Flex } from "@welpco/ui/flex";
-import { Grid } from "@welpco/ui/grid";
 import { Heading } from "@welpco/ui/heading";
 import { Text } from "@welpco/ui/text";
 import { Box } from "@welpco/ui/box";
@@ -101,99 +100,99 @@ export function BookingCalendar({
           </Flex>
         </Flex>
 
-        {/* Weekday header row */}
-        <Grid columns="7" gap="1" role="row">
-          {WEEKDAYS.map((day) => (
-            <Text
-              key={day}
-              size="1"
-              color="gray"
-              highContrast
-              weight="medium"
-              align="center"
-              role="columnheader"
-            >
-              {day}
-            </Text>
-          ))}
-        </Grid>
+        <table aria-label={`Bookings for ${format(currentMonth, "MMMM yyyy")}`}
+          // Native table geometry has no equivalent Radix layout prop.
+          // eslint-disable-next-line @welpco/design/no-disallowed-inline-style
+          style={{ width: "100%", tableLayout: "fixed", borderSpacing: "var(--space-1)" }}>
+          <thead><tr>
+            {WEEKDAYS.map((day) => (
+              <Text key={day} asChild size="1" color="gray" highContrast weight="medium" align="center">
+                <th scope="col">{day}</th>
+              </Text>
+            ))}
+          </tr></thead>
+          <tbody>
+            {Array.from({ length: Math.ceil(days.length / 7) }, (_, week) => (
+              <tr key={week}>
+                {days.slice(week * 7, week * 7 + 7).map((day) => {
+                  const key = format(day, "yyyy-MM-dd");
+                  const eventsForDay = eventsByDay[key] || [];
+                  const inMonth = isSameMonth(day, currentMonth);
+                  const today = isToday(day);
+                  const count = eventsForDay.length;
+                  const ariaLabel = `${format(day, "EEEE, MMMM d, yyyy")}${
+                    count > 0 ? `, ${count} booking${count > 1 ? "s" : ""}` : ""
+                  }${today ? ", today" : ""}`;
 
-        {/* Day cells */}
-        <Grid columns="7" gap="1" role="grid" aria-label={`Bookings for ${format(currentMonth, "MMMM yyyy")}`}>
-          {days.map((day) => {
-            const key = format(day, "yyyy-MM-dd");
-            const eventsForDay = eventsByDay[key] || [];
-            const inMonth = isSameMonth(day, currentMonth);
-            const today = isToday(day);
-            const count = eventsForDay.length;
-            const ariaLabel = `${format(day, "EEEE, MMMM d, yyyy")}${
-              count > 0 ? `, ${count} booking${count > 1 ? "s" : ""}` : ""
-            }${today ? ", today" : ""}`;
-
-            return (
-              <Box
-                key={key}
-                asChild
-                minHeight="72px"
-                p="2"
-                style={{
-                  borderRadius: "var(--radius-2)",
-                  border: today
-                    ? "1px solid var(--accent-9)"
-                    : "1px solid var(--gray-5)",
-                  backgroundColor: today ? "var(--accent-3)" : "transparent",
-                  opacity: inMonth ? 1 : 0.45,
-                  textAlign: "left",
-                }}
-              >
-                <button
-                  type="button"
-                  disabled={!inMonth}
-                  onClick={() => inMonth && onSelectDate?.(day)}
-                  aria-label={ariaLabel}
-                  aria-current={today ? "date" : undefined}
-                >
-                  <Flex direction="column" gap="1" height="100%">
-                    <Text size="2" weight={today ? "bold" : "regular"}>
-                      {format(day, "d")}
-                    </Text>
-
-                    {/* Desktop: up to 2 badges + overflow count */}
-                    <Box display={{ initial: "none", sm: "block" }}>
-                      <Flex direction="column" gap="1">
-                        {eventsForDay.slice(0, 2).map((event, index) => (
-                          <BookingStatusBadge
-                            key={`${key}-${index}`}
-                            status={event.status}
-                          />
-                        ))}
-                        {count > 2 && (
-                          <Text size="1" color="gray" highContrast>
-                            +{count - 2} more
+                  return (
+                    <td key={key}>
+                    <Box
+                      width="100%"
+                      asChild
+                      minHeight="72px"
+                      p="2"
+                      style={{
+                        borderRadius: "var(--radius-2)",
+                        border: today
+                          ? "1px solid var(--accent-9)"
+                          : "1px solid var(--gray-5)",
+                        backgroundColor: today ? "var(--accent-3)" : "transparent",
+                        opacity: inMonth ? 1 : 0.45,
+                        textAlign: "left",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        disabled={!inMonth}
+                        onClick={() => inMonth && onSelectDate?.(day)}
+                        aria-label={ariaLabel}
+                        aria-current={today ? "date" : undefined}
+                      >
+                        <Flex direction="column" gap="1" height="100%">
+                          <Text size="2" weight={today ? "bold" : "regular"}>
+                            {format(day, "d")}
                           </Text>
-                        )}
-                      </Flex>
-                    </Box>
 
-                    {/* Mobile: single status dot to indicate events exist */}
-                    {count > 0 && (
-                      <Box display={{ initial: "block", sm: "none" }}>
-                        <Box
-                          style={{
-                            width: "6px",
-                            height: "6px",
-                            borderRadius: "9999px",
-                            backgroundColor: "var(--accent-9)",
-                          }}
-                        />
-                      </Box>
-                    )}
-                  </Flex>
-                </button>
-              </Box>
-            );
-          })}
-        </Grid>
+                          {/* Desktop: up to 2 badges + overflow count */}
+                          <Box display={{ initial: "none", sm: "block" }}>
+                            <Flex direction="column" gap="1">
+                              {eventsForDay.slice(0, 2).map((event, index) => (
+                                <BookingStatusBadge
+                                  key={`${key}-${index}`}
+                                  status={event.status}
+                                />
+                              ))}
+                              {count > 2 && (
+                                <Text size="1" color="gray" highContrast>
+                                  +{count - 2} more
+                                </Text>
+                              )}
+                            </Flex>
+                          </Box>
+
+                          {/* Mobile: single status dot to indicate events exist */}
+                          {count > 0 && (
+                            <Box display={{ initial: "block", sm: "none" }}>
+                              <Box
+                                style={{
+                                  width: "6px",
+                                  height: "6px",
+                                  borderRadius: "9999px",
+                                  backgroundColor: "var(--accent-9)",
+                                }}
+                              />
+                            </Box>
+                          )}
+                        </Flex>
+                      </button>
+                    </Box>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </Flex>
     </Card>
   );

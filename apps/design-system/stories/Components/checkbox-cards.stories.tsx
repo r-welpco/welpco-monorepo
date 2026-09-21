@@ -96,12 +96,12 @@ export const Colors: Story = {
 export const Disabled: Story = {
   render: () => (
     <Box maxWidth="450px">
-      <CheckboxCards columns="2" defaultValue="2">
+      <CheckboxCards columns="2" defaultValue={["2"]}>
         <CheckboxCardsItem value="1">Off</CheckboxCardsItem>
         <CheckboxCardsItem value="2">On</CheckboxCardsItem>
       </CheckboxCards>
       <Box mt="4">
-        <CheckboxCards columns="2" defaultValue="2">
+        <CheckboxCards columns="2" defaultValue={["2"]}>
           <CheckboxCardsItem value="1" disabled>
             Off
           </CheckboxCardsItem>

@@ -13,26 +13,27 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    amount: 275.00,
-    description: 'Moving service and furniture assembly',
-    onAuthorize: () => console.log('Authorize'),
+    amount: '$275.00',
+    methodSummary: 'Visa •••• 4242',
+    status: 'authorized',
+    onApprove: () => console.log('Authorize'),
     onCancel: () => console.log('Cancel'),
   },
 };
 
 export const Loading: Story = {
   args: {
-    amount: 275.00,
-    description: 'Moving service',
-    loading: true,
+    amount: '$275.00',
+    methodSummary: 'Visa •••• 4242',
+    status: 'pending',
   },
 };
 
 export const WithError: Story = {
   args: {
-    amount: 275.00,
-    description: 'Moving service',
-    error: 'Payment authorization failed. Please try again.',
+    amount: '$275.00',
+    methodSummary: 'Visa •••• 4242',
+    status: 'failed',
   },
 };
 

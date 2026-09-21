@@ -10,7 +10,7 @@ const meta = {
 } satisfies Meta<typeof DisputeStatusBadge>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof DisputeStatusBadge>;
 
 export const AllStatuses: Story = {
   render: () => (

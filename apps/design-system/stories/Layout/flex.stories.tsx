@@ -1,22 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Flex } from '@welpco/ui/flex';
-import { Box, Text, Button } from '@radix-ui/themes';
+import { Button } from '@welpco/ui/button';
+import { Box, Text } from '@radix-ui/themes';
 
 const meta = {
   title: 'Layout/Flex',
   component: Flex,
   parameters: {
     layout: 'centered',
-    a11y: {
-      // Demo story — showcases Radix variants at every contrast level including
-      // decorative low-contrast options (ghost / outline / soft). Production
-      // code is still checked by bible §5.3 and the a11y addon panel. axe's
-      // color-contrast rule is disabled here so variant-exploration stories
-      // don't pollute the CI baseline.
-      config: {
-        rules: [{ id: 'color-contrast', enabled: false }],
-      },
-    },
   },
   tags: ['autodocs'],
 } satisfies Meta<typeof Flex>;

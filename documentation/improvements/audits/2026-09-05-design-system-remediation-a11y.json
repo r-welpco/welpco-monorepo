@@ -1,0 +1,239 @@
+{
+  "runtime": "Node 22.21.1",
+  "checkpoint": "After story API repairs, before component remediation",
+  "stories": 484,
+  "passed": 452,
+  "failed": 32,
+  "failures": [
+    {
+      "story": "Platform/ServiceDiscovery/SearchResultsList \u203a Default",
+      "rules": [
+        "aria-prohibited-attr"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ProfileManagement/AvailabilityCalendar \u203a Default",
+      "rules": [
+        "aria-required-children",
+        "aria-required-parent"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ProfileManagement/AvailabilityCalendar \u203a WithStatuses",
+      "rules": [
+        "aria-required-children",
+        "aria-required-parent"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ProfileManagement/AvailabilityCalendar \u203a WithExceptions",
+      "rules": [
+        "aria-required-children",
+        "aria-required-parent"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ProfileManagement/AvailabilityCalendar \u203a WithEffectiveDateRange",
+      "rules": [
+        "aria-required-children",
+        "aria-required-parent"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ProfileManagement/AvailabilityCalendar \u203a ComplexExample",
+      "rules": [
+        "aria-required-children",
+        "aria-required-parent"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ProfileManagement/AddressInput \u203a Default",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ProfileManagement/AddressInput \u203a Optional",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ProfileManagement/AddressInput \u203a WithErrors",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/UserManagement/LoginForm \u203a Loading",
+      "rules": [
+        "button-name"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/Feedback/ActionConfirmDialog \u203a Default",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/Feedback/ActionConfirmDialog \u203a Danger",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/Feedback/ActionConfirmDialog \u203a Pending",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/Feedback/ActionConfirmDialog \u203a Mobile",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/UserManagement/AccountDeletionForm \u203a Loading",
+      "rules": [
+        "button-name"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ReviewRating/RatingForm \u203a Default",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ReviewRating/RatingForm \u203a WithError",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ReviewRating/RatingForm \u203a WithDefaultRating",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ServiceDiscovery/WelperProfileCard \u203a Default",
+      "rules": [
+        "aria-prohibited-attr"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ServiceDiscovery/WelperProfileCard \u203a WithActions",
+      "rules": [
+        "aria-prohibited-attr"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ServiceDiscovery/WelperProfileCard \u203a BackgroundCheckPassed",
+      "rules": [
+        "aria-prohibited-attr"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/ServiceDiscovery/WelperProfileCard \u203a BackgroundCheckNotPassed",
+      "rules": [
+        "aria-prohibited-attr"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/BookingScheduling/BookingCalendar \u203a Default",
+      "rules": [
+        "aria-required-children",
+        "aria-required-parent"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/UserManagement/AccountRecoveryForm \u203a Loading",
+      "rules": [
+        "button-name"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/UserManagement/PasswordChangeForm \u203a Loading",
+      "rules": [
+        "button-name"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/DisputeResolution/DisputeForm \u203a Default",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/DisputeResolution/DisputeForm \u203a WithError",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Platform/UserManagement/PasswordReset \u203a Loading",
+      "rules": [
+        "button-name"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Components/Callout \u203a Variants",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Components/Callout \u203a WithIcon",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Components/Tooltip \u203a Default",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    },
+    {
+      "story": "Components/Tooltip \u203a WithText",
+      "rules": [
+        "color-contrast"
+      ],
+      "finalStatus": "passed"
+    }
+  ]
+}

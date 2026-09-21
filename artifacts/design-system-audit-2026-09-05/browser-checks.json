@@ -1,0 +1,378 @@
+{
+  "password": {
+    "type": "password",
+    "togglePressed": "true"
+  },
+  "chatDraftAfterRejectedSend": "",
+  "pageErrors": [
+    "Simulated send failure"
+  ],
+  "dialog": {
+    "insideStoryRoot": false,
+    "documentViolations": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": [
+          [
+            ".rt-variant-solid"
+          ]
+        ]
+      }
+    ]
+  },
+  "stories": [
+    {
+      "id": "platform-bookingscheduling-bookingform--default",
+      "theme": "light",
+      "width": 375,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-bookingscheduling-recurringbookingform--default",
+      "theme": "light",
+      "width": 375,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-communication-conversationlist--default",
+      "theme": "light",
+      "width": 375,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-reviewrating-ratingform--default",
+      "theme": "light",
+      "width": 375,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                ".rt-variant-solid"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.03 (foreground color: #ffffff, background color: #46a758, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-servicediscovery-searchfilters--default",
+      "theme": "light",
+      "width": 375,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "aria-input-field-name",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                ".rt-SliderThumb"
+              ],
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-servicediscovery-welperprofilecard--default",
+      "theme": "light",
+      "width": 375,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                "span[data-accent-color=\"green\"]"
+              ],
+              "summary": "Fix all of the following:\n  aria-label attribute cannot be used on a span with no valid role attribute."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-usermanagement-loginform--default",
+      "theme": "light",
+      "width": 375,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-bookingscheduling-bookingform--default",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-bookingscheduling-recurringbookingform--default",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-communication-conversationlist--default",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-reviewrating-ratingform--default",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                ".rt-variant-solid"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.03 (foreground color: #ffffff, background color: #46a758, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-servicediscovery-searchfilters--default",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "aria-input-field-name",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                ".rt-SliderThumb"
+              ],
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-servicediscovery-welperprofilecard--default",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                "span[data-accent-color=\"green\"]"
+              ],
+              "summary": "Fix all of the following:\n  aria-label attribute cannot be used on a span with no valid role attribute."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-usermanagement-loginform--default",
+      "theme": "light",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-bookingscheduling-bookingform--default",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-bookingscheduling-recurringbookingform--default",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-communication-conversationlist--default",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-reviewrating-ratingform--default",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                ".rt-variant-solid"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.03 (foreground color: #ffffff, background color: #46a758, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-servicediscovery-searchfilters--default",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "aria-input-field-name",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                ".rt-SliderThumb"
+              ],
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-servicediscovery-welperprofilecard--default",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                "span[data-accent-color=\"green\"]"
+              ],
+              "summary": "Fix all of the following:\n  aria-label attribute cannot be used on a span with no valid role attribute."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-usermanagement-loginform--default",
+      "theme": "dark",
+      "width": 375,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-bookingscheduling-bookingform--default",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-bookingscheduling-recurringbookingform--default",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-communication-conversationlist--default",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    },
+    {
+      "id": "platform-reviewrating-ratingform--default",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                ".rt-variant-solid"
+              ],
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.03 (foreground color: #ffffff, background color: #46a758, font size: 12.0pt (16px), font weight: normal). Expected contrast ratio of 4.5:1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-servicediscovery-searchfilters--default",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "aria-input-field-name",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                ".rt-SliderThumb"
+              ],
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-servicediscovery-welperprofilecard--default",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false,
+      "violations": [
+        {
+          "id": "aria-prohibited-attr",
+          "impact": "serious",
+          "nodes": [
+            {
+              "target": [
+                "span[data-accent-color=\"green\"]"
+              ],
+              "summary": "Fix all of the following:\n  aria-label attribute cannot be used on a span with no valid role attribute."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platform-usermanagement-loginform--default",
+      "theme": "dark",
+      "width": 1440,
+      "overflow": false,
+      "violations": []
+    }
+  ]
+}

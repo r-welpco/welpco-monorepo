@@ -1,5 +1,7 @@
 "use client";
 
+import { VisuallyHidden } from "@radix-ui/themes";
+
 import { Badge } from "@welpco/ui/badge";
 import { Tooltip } from "@welpco/ui/tooltip";
 
@@ -28,10 +30,10 @@ export function MinorTrustBadge({
         variant="soft"
         highContrast
         size={size}
-        aria-label={tooltip}
         style={{ cursor: "default" }}
       >
         {label}
+        <VisuallyHidden>{`: ${tooltip}`}</VisuallyHidden>
       </Badge>
     </Tooltip>
   );

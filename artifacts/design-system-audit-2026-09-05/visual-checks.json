@@ -1,0 +1,67 @@
+[
+  {
+    "id": "platform-servicediscovery-welperprofilecard--default",
+    "width": 375,
+    "theme": "light",
+    "file": "platform-servicediscovery-welperprofilecard--default-375-light.png",
+    "overflow": false,
+    "font": "-apple-system, \"system-ui\", \"Segoe UI (Custom)\", Roboto, \"Helvetica Neue\", \"Open Sans (Custom)\", system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+    "bodyFont": "Geist, -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Helvetica Neue\", sans-serif",
+    "button": {
+      "color": "rgba(0, 0, 0, 0)",
+      "bg": "rgba(0, 0, 0, 0.1)"
+    }
+  },
+  {
+    "id": "platform-reviewrating-ratingform--default",
+    "width": 375,
+    "theme": "dark",
+    "file": "platform-reviewrating-ratingform--default-375-dark.png",
+    "overflow": false,
+    "font": "-apple-system, \"system-ui\", \"Segoe UI (Custom)\", Roboto, \"Helvetica Neue\", \"Open Sans (Custom)\", system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+    "bodyFont": "Geist, -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Helvetica Neue\", sans-serif",
+    "button": {
+      "color": "rgba(0, 0, 0, 0)",
+      "bg": "rgba(0, 0, 0, 0.1)"
+    }
+  },
+  {
+    "id": "platform-profilemanagement-availabilitycalendar--default",
+    "width": 375,
+    "theme": "light",
+    "file": "platform-profilemanagement-availabilitycalendar--default-375-light.png",
+    "overflow": true,
+    "font": "-apple-system, \"system-ui\", \"Segoe UI (Custom)\", Roboto, \"Helvetica Neue\", \"Open Sans (Custom)\", system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+    "bodyFont": "Geist, -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Helvetica Neue\", sans-serif",
+    "button": {
+      "color": "rgba(0, 0, 0, 0)",
+      "bg": "rgba(0, 0, 0, 0.1)"
+    }
+  },
+  {
+    "id": "components-dialog--mobile",
+    "width": 375,
+    "theme": "light",
+    "file": "components-dialog--mobile-375-light.png",
+    "overflow": false,
+    "font": "-apple-system, \"system-ui\", \"Segoe UI (Custom)\", Roboto, \"Helvetica Neue\", \"Open Sans (Custom)\", system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+    "bodyFont": "Geist, -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Helvetica Neue\", sans-serif",
+    "button": {
+      "color": "rgba(0, 0, 0, 0)",
+      "bg": "rgba(0, 0, 0, 0.1)"
+    }
+  },
+  {
+    "id": "components-button--default",
+    "width": 1440,
+    "theme": "light",
+    "file": "components-button--default-1440-light.png",
+    "overflow": false,
+    "font": "-apple-system, \"system-ui\", \"Segoe UI (Custom)\", Roboto, \"Helvetica Neue\", \"Open Sans (Custom)\", system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\"",
+    "bodyFont": "Geist, -apple-system, \"system-ui\", \"Segoe UI\", Roboto, Oxygen, Ubuntu, Cantarell, \"Helvetica Neue\", sans-serif",
+    "button": {
+      "color": "rgba(0, 0, 0, 0)",
+      "bg": "rgba(0, 0, 0, 0.1)"
+    }
+  }
+]

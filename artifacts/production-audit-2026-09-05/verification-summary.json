@@ -1,0 +1,40 @@
+{
+  "commit": "6827dc90a46b4db9b3c14c8dd81607891947b419",
+  "date": "2026-09-05",
+  "production_accessed": false,
+  "node22_executable": "/Users/rabie/.volta/tools/image/node/22.21.1/bin/node",
+  "pinned_builds": {
+    "web": "pass",
+    "admin": "pass",
+    "bff": "pass"
+  },
+  "unit_tests": {
+    "passed": 733,
+    "failed": 4,
+    "passed_suites": 70,
+    "failed_suites": 2
+  },
+  "typecheck": "pass",
+  "lint": {
+    "errors": 0,
+    "warnings": 1436
+  },
+  "migrations": {
+    "postgres": "16.6",
+    "discovered": 79,
+    "applied": 76,
+    "failed": "AddSpanishTutoringAndBasketballLessons20260723000001",
+    "runtime": "26.8.1",
+    "disposable_container_removed": true
+  },
+  "findings": {
+    "P1": 9,
+    "P2": 8
+  },
+  "limits": [
+    "No deployed environment inspection",
+    "No full browser E2E or live provider calls",
+    "Secret scan excludes git history",
+    "No live load/accessibility measurements"
+  ]
+}

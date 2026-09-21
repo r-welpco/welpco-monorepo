@@ -5,19 +5,19 @@ import { Flex, Text } from '@radix-ui/themes';
 
 const meta = {
   title: 'Components/CheckboxGroup',
-  component: CheckboxGroup,
+  component: CheckboxGroup.Root,
   parameters: {
     layout: 'centered',
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof CheckboxGroup>;
+} satisfies Meta<typeof CheckboxGroup.Root>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => (
-    <CheckboxGroup>
+    <CheckboxGroup.Root>
       <Flex direction="column" gap="2">
         <Text as="label" size="2">
           <Checkbox defaultChecked /> Option 1
@@ -29,13 +29,13 @@ export const Default: Story = {
           <Checkbox /> Option 3
         </Text>
       </Flex>
-    </CheckboxGroup>
+    </CheckboxGroup.Root>
   ),
 };
 
 export const WithLabels: Story = {
   render: () => (
-    <CheckboxGroup>
+    <CheckboxGroup.Root>
       <Flex direction="column" gap="3">
         <Text as="label" size="2">
           <Checkbox defaultChecked /> Email notifications
@@ -50,7 +50,7 @@ export const WithLabels: Story = {
           <Checkbox /> Marketing emails
         </Text>
       </Flex>
-    </CheckboxGroup>
+    </CheckboxGroup.Root>
   ),
 };
 

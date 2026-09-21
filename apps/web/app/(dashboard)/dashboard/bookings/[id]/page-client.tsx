@@ -337,6 +337,8 @@ export default function BookingDetailClient({
   const [billingOutLocal, setBillingOutLocal] = useState("");
   const [receiptNotes, setReceiptNotes] = useState("");
   const [confirmKind, setConfirmKind] = useState<ConfirmKind | null>(null);
+  const [checkInWindowReachedForBooking, setCheckInWindowReachedForBooking] =
+    useState<string | null>(null);
   const [previewCustomerId, setPreviewCustomerId] = useState<string | null>(null);
   const [previewCustomerFallback, setPreviewCustomerFallback] = useState<{
     name: string;
@@ -412,6 +414,57 @@ export default function BookingDetailClient({
     [welperDetail],
   );
   const actions = booking?.availableActions ?? [];
+  const showCheckIn = isWelper && booking?.status === "accepted";
+  const backendAllowsCheckIn = actions.includes("check-in");
+  const checkInWindowReached =
+    booking?.id === checkInWindowReachedForBooking;
+  const canCheckIn = backendAllowsCheckIn || checkInWindowReached;
+
+  useEffect(() => {
+    if (
+      !showCheckIn ||
+      backendAllowsCheckIn ||
+      !booking?.id ||
+      !booking.checkInAvailableAt
+    ) {
+      return;
+    }
+
+    const availableAtMs = Date.parse(booking.checkInAvailableAt);
+    if (Number.isNaN(availableAtMs)) return;
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const updateAvailability = () => {
+      const remainingMs = availableAtMs - Date.now();
+      if (remainingMs <= 0) {
+        setCheckInWindowReachedForBooking(booking.id);
+        return;
+      }
+      timer = setTimeout(
+        updateAvailability,
+        Math.min(remainingMs + 250, 2_147_000_000),
+      );
+    };
+
+    timer = setTimeout(updateAvailability, 0);
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [
+    backendAllowsCheckIn,
+    booking?.checkInAvailableAt,
+    booking?.id,
+    showCheckIn,
+  ]);
+
+  const checkInHint = canCheckIn
+    ? welperDetail.checkInArrivalHint
+    : booking?.checkInAvailableAt
+      ? welperDetail.checkInAvailableAt(
+          booking.checkInAvailableAt,
+          booking.timezoneName,
+        )
+      : welperDetail.checkInTooEarly;
 
   const { data: receiptDraft, isLoading: receiptDraftLoading } = useServiceReceiptDraft(bookingId, {
     enabled: receiptDialogOpen && isWelper && actions.includes("check-out"),
@@ -1070,7 +1123,7 @@ export default function BookingDetailClient({
         </Card>
 
         {/* Quick actions — first for welper/customer task focus */}
-        {actions.length > 0 && (
+        {(actions.length > 0 || showCheckIn) && (
           <Card size="3" variant="surface">
             <Flex direction="column" gap="4">
               <Flex direction="column" gap="2">
@@ -1081,9 +1134,9 @@ export default function BookingDetailClient({
                   {welperDetail.quickActionsHint}
                 </Text>
               </Flex>
-              {isWelper && actions.includes("check-in") && (
-                <Text as="p" size="2" color="gray">
-                  {welperDetail.checkInArrivalHint}
+              {showCheckIn && (
+                <Text id="check-in-availability-hint" as="p" size="2" color="gray">
+                  {checkInHint}
                 </Text>
               )}
               <Flex gap="3" justify="end" wrap="wrap">
@@ -1120,13 +1173,16 @@ export default function BookingDetailClient({
                     </Button>
                   </>
                 )}
-                {actions.includes("check-in") && isWelper && (
+                {showCheckIn && (
                   <Button
                     size="3"
-                    color={SEMANTIC_COLOR.info}
-                    variant="solid"
-                    onClick={() => setConfirmKind("check-in")}
-                    disabled={checkInMutation.isPending}
+                    color={canCheckIn ? SEMANTIC_COLOR.info : "gray"}
+                    variant={canCheckIn ? "solid" : "soft"}
+                    onClick={() => {
+                      if (canCheckIn) setConfirmKind("check-in");
+                    }}
+                    disabled={!canCheckIn || checkInMutation.isPending}
+                    aria-describedby="check-in-availability-hint"
                   >
                     {welperDetail.checkIn}
                   </Button>

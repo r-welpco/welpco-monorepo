@@ -1,26 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Dialog, DialogTrigger, DialogContent } from '@welpco/ui/dialog';
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '@welpco/ui/dialog';
 import { Button } from '@welpco/ui/button';
 import { TextField } from '@welpco/ui/text-field';
 import { FORM_SPACING } from '@welpco/ui/tokens';
-import { Flex, Box, Text } from '@radix-ui/themes';
-import { useState } from 'react';
+import { Flex, Box, Text, VisuallyHidden } from '@radix-ui/themes';
+import { useRef, useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 const meta = {
   title: 'Components/Dialog',
   component: Dialog,
   parameters: {
     layout: 'centered',
-    a11y: {
-      // Demo story — showcases Radix variants at every contrast level including
-      // decorative low-contrast options (ghost / outline / soft). Production
-      // code is still checked by bible §5.3 and the a11y addon panel. axe's
-      // color-contrast rule is disabled here so variant-exploration stories
-      // don't pollute the CI baseline.
-      config: {
-        rules: [{ id: 'color-contrast', enabled: false }],
-      },
-    },
   },
   tags: ['autodocs'],
 } satisfies Meta<typeof Dialog>;
@@ -29,6 +20,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const screen = within(canvasElement.ownerDocument.body);
+    const trigger = canvas.getByRole('button', { name: 'Open Dialog' });
+    await userEvent.click(trigger);
+    await waitFor(() => expect(screen.getByRole('dialog', { name: 'Edit Profile' })).toBeVisible());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(trigger).toHaveFocus());
+    await userEvent.click(trigger);
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeVisible());
+  },
   render: () => {
     const [open, setOpen] = useState(false);
     return (
@@ -62,6 +64,10 @@ export const Default: Story = {
 };
 
 export const WithoutTitle: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Open Dialog' }));
+    await waitFor(() => expect(within(canvasElement.ownerDocument.body).getByRole('dialog', { name: 'Information' })).toBeVisible());
+  },
   render: () => {
     const [open, setOpen] = useState(false);
     return (
@@ -69,8 +75,9 @@ export const WithoutTitle: Story = {
         <DialogTrigger>
           <Button>Open Dialog</Button>
         </DialogTrigger>
-        <DialogContent>
-          <Text>This dialog doesn't have a title or description — just a close button.</Text>
+        <DialogContent aria-describedby={undefined}>
+          <VisuallyHidden asChild><DialogTitle>Information</DialogTitle></VisuallyHidden>
+          <Text>This dialog has an accessible title without a visible heading.</Text>
           <Flex gap="3" justify="end" mt={FORM_SPACING.submitGap}>
             <Button variant="soft" onClick={() => setOpen(false)}>
               Close
@@ -88,7 +95,7 @@ export const Confirmation: Story = {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger>
-          <Button color="red">Delete Account</Button>
+          <Button color="red" highContrast>Delete Account</Button>
         </DialogTrigger>
         <DialogContent
           title="Delete Account"
@@ -173,5 +180,63 @@ export const LongContent: Story = {
         </DialogContent>
       </Dialog>
     );
+  },
+};
+
+/** Mirrors controlled consumers that keep an operation open until completion. */
+export const PendingDismissalGuard: Story = {
+  render: () => {
+    const [open, setOpen] = useState(false);
+    const [pending, setPending] = useState(true);
+    return <Dialog open={open} onOpenChange={(next) => { if (!pending || next) setOpen(next); }}>
+      <DialogTrigger><Button>Changer de rôle</Button></DialogTrigger>
+      <DialogContent title="Confirmer le changement de rôle de votre compte"
+        description="Votre demande est en cours de traitement."
+        closeButtonLabel="Fermer la fenêtre"
+        onEscapeKeyDown={(event) => { if (pending) event.preventDefault(); }}
+        onInteractOutside={(event) => { if (pending) event.preventDefault(); }}>
+        <Button disabled={!pending} onClick={() => setPending(false)}>Terminer la demande</Button>
+      </DialogContent>
+    </Dialog>;
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const screen = within(canvasElement.ownerDocument.body);
+    const trigger = canvas.getByRole('button', { name: 'Changer de rôle' });
+    await userEvent.click(trigger);
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeVisible());
+    await expect(screen.getByRole('dialog')).toContainElement(canvasElement.ownerDocument.activeElement as HTMLElement);
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(screen.getByRole('button', { name: 'Fermer la fenêtre' }));
+    await expect(screen.getByRole('dialog')).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Terminer la demande' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Fermer la fenêtre' }));
+    await waitFor(() => expect(trigger).toHaveFocus());
+  },
+};
+
+export const ConsumerFocusHandlers: Story = {
+  render: () => {
+    const input = useRef<HTMLInputElement>(null);
+    const destination = useRef<HTMLButtonElement>(null);
+    return <>
+      <Button ref={destination}>Return here</Button>
+      <Dialog>
+        <DialogTrigger><Button>Custom focus</Button></DialogTrigger>
+        <DialogContent title="Custom focus handling" aria-describedby={undefined}
+          onOpenAutoFocus={(event) => { event.preventDefault(); input.current?.focus(); }}
+          onCloseAutoFocus={(event) => { event.preventDefault(); destination.current?.focus(); }}>
+          <TextField.Root ref={input} aria-label="Initial focus" />
+        </DialogContent>
+      </Dialog>
+    </>;
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const screen = within(canvasElement.ownerDocument.body);
+    await userEvent.click(canvas.getByRole('button', { name: 'Custom focus' }));
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Initial focus' })).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'Return here' })).toHaveFocus());
   },
 };

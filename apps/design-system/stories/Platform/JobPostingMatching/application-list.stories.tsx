@@ -18,7 +18,7 @@ const sampleApplications = [
     hourlyRate: '$120/hr',
     submittedAt: '1 hour ago',
     coverLetter: 'I have 5 years of experience in moving and furniture handling. I am reliable and have all necessary equipment.',
-    status: 'new' as const,
+    status: 'pending' as const,
   },
   {
     candidateName: 'Jane Smith',
@@ -26,7 +26,7 @@ const sampleApplications = [
     hourlyRate: '$150/hr',
     submittedAt: '2 hours ago',
     coverLetter: 'Available this weekend and have all necessary equipment. I specialize in delicate items.',
-    status: 'shortlist' as const,
+    status: 'accepted' as const,
   },
 ];
 

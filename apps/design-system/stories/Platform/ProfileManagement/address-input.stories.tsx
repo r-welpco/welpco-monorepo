@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AddressInput } from '@welpco/ui/platform/profile-management';
 import { useState } from 'react';
+import type { AddressValues } from '@welpco/ui/platform/profile-management';
 
 const meta = {
   title: 'Platform/ProfileManagement/AddressInput',
@@ -14,7 +15,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: () => {
-    const [values, setValues] = useState({
+    const [values, setValues] = useState<AddressValues>({
       streetAddress: '',
       city: '',
       stateProvince: '',
@@ -35,7 +36,7 @@ export const Default: Story = {
 
 export const WithDefaultValues: Story = {
   render: () => {
-    const [values, setValues] = useState({
+    const [values, setValues] = useState<AddressValues>({
       streetAddress: '123 Main Street',
       city: 'Toronto',
       stateProvince: 'ON',
@@ -56,7 +57,7 @@ export const WithDefaultValues: Story = {
 
 export const Optional: Story = {
   render: () => {
-    const [values, setValues] = useState({
+    const [values, setValues] = useState<AddressValues>({
       streetAddress: '',
       city: '',
       stateProvince: '',
@@ -77,7 +78,7 @@ export const Optional: Story = {
 
 export const WithErrors: Story = {
   render: () => {
-    const [values, setValues] = useState({
+    const [values, setValues] = useState<AddressValues>({
       streetAddress: '12',
       city: '',
       stateProvince: '',
@@ -104,7 +105,7 @@ export const WithErrors: Story = {
 
 export const Loading: Story = {
   render: () => {
-    const [values, setValues] = useState({
+    const [values, setValues] = useState<AddressValues>({
       streetAddress: '123 Main Street',
       city: 'Montreal',
       stateProvince: 'QC',

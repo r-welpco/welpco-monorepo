@@ -542,6 +542,7 @@ describe('BookingService', () => {
       const result = await service.findById('b1', 'w1', 'welper');
 
       expect(result.availableActions).not.toContain('check-in');
+      expect(result.checkInAvailableAt).toBe('2026-06-20T12:30:00.000Z');
     });
 
     it('should show check-in at the 60-minute boundary', async () => {
@@ -564,6 +565,7 @@ describe('BookingService', () => {
       const result = await service.findById('b1', 'w1', 'welper');
 
       expect(result.availableActions).toContain('check-in');
+      expect(result.checkInAvailableAt).toBe('2026-06-20T12:30:00.000Z');
     });
 
     it('should still offer customer cancel on pending requests', async () => {

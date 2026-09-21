@@ -105,6 +105,7 @@ export interface BookingItem {
   updatedAt: string;
 
   availableActions?: string[];
+  checkInAvailableAt?: string | null;
 
   paymentPhase?:
     | "none"

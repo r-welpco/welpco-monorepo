@@ -9,7 +9,7 @@ const meta = {
 } satisfies Meta<typeof ServiceOfferingList>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof ServiceOfferingList>;
 
 export const Default: Story = {
   render: () => (

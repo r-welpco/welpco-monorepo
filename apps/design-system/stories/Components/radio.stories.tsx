@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Radio } from '@welpco/ui/radio';
-import { RadioGroup } from '@welpco/ui/radio-group';
 import { Flex, Text } from '@radix-ui/themes';
 
 const meta = {
@@ -13,87 +12,87 @@ const meta = {
 } satisfies Meta<typeof Radio>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof Radio>;
 
 export const Default: Story = {
   render: () => (
-    <RadioGroup defaultValue="option1">
+    <fieldset style={{ border: 0, padding: 0 }}>
       <Flex direction="column" gap="2">
         <Text as="label" size="2" htmlFor="radio-default-1">
           <Flex gap="2" align="center">
-            <Radio id="radio-default-1" value="option1" />
+            <Radio id="radio-default-1" name="default" value="option1" defaultChecked />
             <Text>Option 1</Text>
           </Flex>
         </Text>
         <Text as="label" size="2" htmlFor="radio-default-2">
           <Flex gap="2" align="center">
-            <Radio id="radio-default-2" value="option2" />
+            <Radio id="radio-default-2" name="default" value="option2" />
             <Text>Option 2</Text>
           </Flex>
         </Text>
         <Text as="label" size="2" htmlFor="radio-default-3">
           <Flex gap="2" align="center">
-            <Radio id="radio-default-3" value="option3" />
+            <Radio id="radio-default-3" name="default" value="option3" />
             <Text>Option 3</Text>
           </Flex>
         </Text>
       </Flex>
-    </RadioGroup>
+    </fieldset>
   ),
 };
 
 export const WithLabels: Story = {
   render: () => (
-    <RadioGroup defaultValue="email">
+    <fieldset style={{ border: 0, padding: 0 }}>
       <Flex direction="column" gap="3">
         <Text as="label" size="2" htmlFor="radio-notifications-email">
           <Flex gap="2" align="center">
-            <Radio id="radio-notifications-email" value="email" />
+            <Radio id="radio-notifications-email" name="notifications" value="email" defaultChecked />
             <Text>Email notifications</Text>
           </Flex>
         </Text>
         <Text as="label" size="2" htmlFor="radio-notifications-sms">
           <Flex gap="2" align="center">
-            <Radio id="radio-notifications-sms" value="sms" />
+            <Radio id="radio-notifications-sms" name="notifications" value="sms" />
             <Text>SMS notifications</Text>
           </Flex>
         </Text>
         <Text as="label" size="2" htmlFor="radio-notifications-push">
           <Flex gap="2" align="center">
-            <Radio id="radio-notifications-push" value="push" />
+            <Radio id="radio-notifications-push" name="notifications" value="push" />
             <Text>Push notifications</Text>
           </Flex>
         </Text>
         <Text as="label" size="2" htmlFor="radio-notifications-none">
           <Flex gap="2" align="center">
-            <Radio id="radio-notifications-none" value="none" />
+            <Radio id="radio-notifications-none" name="notifications" value="none" />
             <Text>No notifications</Text>
           </Flex>
         </Text>
       </Flex>
-    </RadioGroup>
+    </fieldset>
   ),
 };
 
 export const Colors: Story = {
   render: () => (
     <Flex gap="6" direction="column">
-      <RadioGroup defaultValue="blue">
+      <fieldset style={{ border: 0, padding: 0 }}>
         <Flex direction="column" gap="2">
           <Text as="label" size="2" htmlFor="radio-color-blue">
             <Flex gap="2" align="center">
-              <Radio id="radio-color-blue" value="blue" color="blue" />
+              <Radio id="radio-color-blue" name="color" value="blue" defaultChecked color="blue" />
               <Text>Blue</Text>
             </Flex>
           </Text>
           <Text as="label" size="2" htmlFor="radio-color-green">
             <Flex gap="2" align="center">
-              <Radio id="radio-color-green" value="green" color="green" />
+              <Radio id="radio-color-green" name="color" value="green" color="green" />
               <Text>Green</Text>
             </Flex>
           </Text>
         </Flex>
-      </RadioGroup>
+      </fieldset>
     </Flex>
   ),
 };

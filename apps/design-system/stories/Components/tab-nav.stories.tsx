@@ -97,7 +97,7 @@ export const Sizes: Story = {
         <TabNavLink href="#">Tab</TabNavLink>
         <TabNavLink href="#">Nav</TabNavLink>
       </TabNav>
-      <TabNav size="3">
+      <TabNav size="2">
         <TabNavLink href="#" active>
           Large
         </TabNavLink>

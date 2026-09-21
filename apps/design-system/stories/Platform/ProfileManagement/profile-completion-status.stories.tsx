@@ -9,7 +9,7 @@ const meta = {
 } satisfies Meta<typeof ProfileCompletionStatus>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof ProfileCompletionStatus>;
 
 export const CustomerIncomplete: Story = {
   render: () => (

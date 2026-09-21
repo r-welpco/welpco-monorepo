@@ -35,9 +35,9 @@ export const PasswordField = forwardRef<
     return (
       <TextField.Root
         ref={ref}
-        type={visible ? "text" : "password"}
         disabled={disabled}
         {...props}
+        type={visible ? "text" : "password"}
       >
         <TextField.Slot side="right">
           <IconButton

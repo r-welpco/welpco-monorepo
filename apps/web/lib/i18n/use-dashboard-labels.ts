@@ -528,6 +528,7 @@ export function useWelperBookingsLabels() {
 export function useCustomerPreviewLabels() {
   const t = useTranslations("dashboard.customerPreview");
   return {
+    close: t("close"),
     unknownName: t("unknownName"),
     statsHeading: t("statsHeading"),
     loadFailed: t("loadFailed"),
@@ -968,6 +969,16 @@ export function useWelperBookingDetailLabels() {
     },
     checkInFailed: t("checkInFailed"),
     checkInTooEarly: t("checkInTooEarly"),
+    checkInAvailableAt: (value: string, timeZone?: string | null) => {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return t("checkInTooEarly");
+      const dateTime = new Intl.DateTimeFormat(cadLocale, {
+        dateStyle: "medium",
+        timeStyle: "short",
+        ...(timeZone ? { timeZone } : {}),
+      }).format(date);
+      return t("checkInAvailableAt", { dateTime });
+    },
     checkInArrivalHint: t("checkInArrivalHint"),
     paymentReleasedPayoutNote: t("paymentReleasedPayoutNote"),
     receiptDialog: {

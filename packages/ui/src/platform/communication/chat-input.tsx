@@ -6,7 +6,7 @@ import { IconButton } from "@welpco/ui/icon-button";
 import { Flex } from "@welpco/ui/flex";
 import { Text } from "@welpco/ui/text";
 import { SEMANTIC_COLOR } from "@welpco/ui/tokens";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Paperclip } from "lucide-react";
 
 /**
@@ -32,6 +32,8 @@ export interface ChatInputProps {
   sending?: boolean;
   onSend?: (message: string) => void | Promise<void>;
   onAttachment?: () => void;
+  /** Localized recovery message when onSend throws or rejects. */
+  sendErrorMessage?: string;
 }
 
 export function ChatInput({
@@ -41,8 +43,13 @@ export function ChatInput({
   sending,
   onSend,
   onAttachment,
+  sendErrorMessage = "Message couldn't be sent. Your draft is saved here. Try sending again.",
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
+  const [pending, setPending] = useState(false);
+  const [sendFailed, setSendFailed] = useState(false);
+  const inFlight = useRef(false);
+  const draftRevision = useRef(0);
 
   const trimmedLength = message.trim().length;
   const overLimit = message.length > CHAT_MESSAGE_MAX_LENGTH;
@@ -51,13 +58,24 @@ export function ChatInput({
   const remaining = CHAT_MESSAGE_MAX_LENGTH - message.length;
 
   const sendDisabled =
-    disabled || loading || sending || trimmedLength === 0 || overLimit;
+    disabled || loading || sending || pending || !onSend || trimmedLength === 0 || overLimit;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (sendDisabled) return;
-    onSend?.(message.trim());
-    setMessage("");
+    if (sendDisabled || inFlight.current || !onSend) return;
+    const submittedRevision = draftRevision.current;
+    inFlight.current = true;
+    setPending(true);
+    setSendFailed(false);
+    try {
+      await onSend(message.trim());
+      if (draftRevision.current === submittedRevision) setMessage("");
+    } catch {
+      setSendFailed(true);
+    } finally {
+      inFlight.current = false;
+      setPending(false);
+    }
   };
 
   return (
@@ -69,7 +87,7 @@ export function ChatInput({
               type="button"
               variant="ghost"
               onClick={onAttachment}
-              disabled={disabled || loading || sending}
+              disabled={disabled || loading || sending || pending}
               aria-label="Attach file"
             >
               <Paperclip size={16} aria-hidden="true" />
@@ -81,6 +99,7 @@ export function ChatInput({
             value={message}
             maxLength={CHAT_MESSAGE_MAX_LENGTH}
             onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+              draftRevision.current++;
               setMessage(event.currentTarget.value);
             }}
             disabled={disabled || loading}
@@ -95,9 +114,14 @@ export function ChatInput({
             color={SEMANTIC_COLOR.primary}
             disabled={sendDisabled}
           >
-            {sending ? "Sending..." : "Send"}
+            {sending || pending ? "Sending..." : "Send"}
           </Button>
         </Flex>
+        {sendFailed && (
+          <Text size="1" color={SEMANTIC_COLOR.danger} role="alert">
+            {sendErrorMessage}
+          </Text>
+        )}
         {showCounter && (
           <Text
             size="1"

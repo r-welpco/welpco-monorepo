@@ -530,6 +530,7 @@ export default function JobDetailPageClient({ jobId }: JobDetailPageClientProps)
 
       <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
         <DialogContent
+          closeButtonLabel={labels.detail.cancel}
           title={labels.detail.applyDialogTitle}
           description={
             applyStep === "review"

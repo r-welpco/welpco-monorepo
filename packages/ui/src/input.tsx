@@ -26,7 +26,7 @@ export interface InputProps
 const Input = React.forwardRef<
   React.ElementRef<typeof TextField.Root>,
   InputProps
->(({ label, error, helper, size = "2", id, ...props }, ref) => {
+>(({ label, error, helper, size = "2", id, type, ...props }, ref) => {
   const generatedId = React.useId();
   const inputId = id || generatedId;
   const errorId = error ? `${inputId}-error` : undefined;
@@ -62,10 +62,10 @@ const Input = React.forwardRef<
           )}
         </Text>
       )}
-      {props.type === "password" ? (
+      {type === "password" ? (
         <PasswordField {...fieldProps} />
       ) : (
-        <TextField.Root {...fieldProps} />
+        <TextField.Root {...fieldProps} type={type} />
       )}
       {error ? (
         <Text
