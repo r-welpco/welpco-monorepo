@@ -26,6 +26,10 @@ import { computeTotalsFromLines } from './payout-batch-totals.util';
 import { StripeOperationsService } from './stripe-operations.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationCategory } from '../notification/entities';
+import {
+  buildDashboardActionUrl,
+  getFrontendBaseUrl,
+} from '../notification/notification-locale.helper';
 import { getSmsBody } from '@welpco/sms';
 
 export type PayoutBatchLineDto = {
@@ -736,15 +740,22 @@ export class PayoutBatchService {
         (await this.notificationService.resolveLocaleForUser(welperId)) === 'fr'
           ? 'fr'
           : 'en';
-      await this.notificationService.emitForUser(welperId, {
+      const accountUrl = buildDashboardActionUrl(
+        getFrontendBaseUrl(),
+        '/dashboard/profile',
+        locale,
+      );
+      await this.notificationService.send({
+        userId: welperId,
         category: NotificationCategory.PAYMENT,
-        title: locale === 'fr' ? 'Paiement envoyé' : 'Payment sent',
+        title: locale === 'fr' ? 'Votre paiement est en route' : 'Your payment is on its way',
         body:
           locale === 'fr'
-            ? 'Votre paiement a été envoyé à votre compte Stripe.'
-            : 'Your payment has been sent to your Stripe account.',
+            ? 'Votre paiement a été traité et est en route vers votre compte bancaire via Stripe.'
+            : 'Your payment has been processed and is on its way to your bank account through Stripe.',
         smsBody: getSmsBody('welper_payment_sent', locale),
-        metadata: { kind: 'payout_transferred' },
+        payoutSentEmail: { accountUrl },
+        metadata: { kind: 'payout_transferred', actionUrl: accountUrl },
       });
     } catch (err) {
       this.logger.warn(

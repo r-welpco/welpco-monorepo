@@ -8,8 +8,26 @@ import {
   getBookingEmailSubject,
   getContactAckHtml,
   getContactNotificationHtml,
+  getJobLifecycleEmailHtml,
+  getJobLifecycleEmailSubject,
+  getNewMessageEmailHtml,
+  getNewMessageEmailSubject,
   getPasswordResetEmailHtml,
+  getPaymentEmailHtml,
+  getPaymentEmailSubject,
+  getPayoutSentEmailHtml,
+  getPayoutSentEmailSubject,
+  getPortfolioRejectedEmailHtml,
+  getPortfolioRejectedEmailSubject,
+  getReviewReceivedEmailHtml,
+  getReviewReceivedEmailSubject,
+  getStripeConnectedEmailHtml,
+  getStripeConnectedEmailSubject,
   getVerificationEmailHtml,
+  getWelcomeEmailHtml,
+  getWelcomeEmailSubject,
+  getDisputeEmailHtml,
+  getDisputeEmailSubject,
   sendMail,
 } from "../src";
 
@@ -30,6 +48,7 @@ async function main() {
       html: getVerificationEmailHtml({
         code: "123456",
         verificationUrl: `${publicAppUrl}/verification?email=test@welpco.com`,
+        firstName: "Alex",
         publicAppUrl,
       }),
     },
@@ -42,8 +61,25 @@ async function main() {
       subject: "[smoke] password reset",
       html: getPasswordResetEmailHtml({
         resetUrl: `${publicAppUrl}/forgot-password?token=abc`,
+        firstName: "Alex",
         publicAppUrl,
       }),
+    },
+    transport,
+  );
+
+  await sendMail(
+    {
+      to,
+      subject: `[smoke] ${getWelcomeEmailSubject("en")}`,
+      html: getWelcomeEmailHtml(
+        "Alex",
+        `${publicAppUrl}/dashboard`,
+        "en",
+        publicAppUrl,
+        undefined,
+        "customer",
+      ),
     },
     transport,
   );
@@ -74,19 +110,252 @@ async function main() {
     transport,
   );
 
-  const bookingType = "booking_created" as const;
+  const bookingVars = {
+    customerName: "Jane Customer",
+    welperName: "Alex Welper",
+    serviceName: "Housekeeping",
+    scheduledDate: "2026-05-20",
+    startTime: "09:00",
+    endTime: "11:00",
+    bookingUrl: `${publicAppUrl}/dashboard/bookings`,
+    firstName: "Alex",
+  };
+
+  for (const type of [
+    "booking_created",
+    "booking_accepted",
+    "booking_accepted_welper",
+    "booking_declined",
+    "booking_service_receipt",
+    "booking_service_submitted",
+  ] as const) {
+    await sendMail(
+      {
+        to,
+        subject: `[smoke] ${getBookingEmailSubject(type)}`,
+        html: getBookingEmailHtml({
+          type,
+          variables: bookingVars,
+          publicAppUrl,
+        }),
+      },
+      transport,
+    );
+  }
+
   await sendMail(
     {
       to,
-      subject: `[smoke] ${getBookingEmailSubject(bookingType)}`,
+      subject: `[smoke] ${getBookingEmailSubject("booking_cancelled")}`,
       html: getBookingEmailHtml({
-        type: bookingType,
+        type: "booking_cancelled",
         variables: {
-          customerName: "Jane Customer",
-          serviceName: "Housekeeping",
-          scheduledDate: "2026-05-20",
+          ...bookingVars,
+          cancelledByRole: "customer",
+          cancelRecipientRole: "welper",
+          cancelWithinFreeWindow: "false",
+        },
+        publicAppUrl,
+      }),
+    },
+    transport,
+  );
+
+  for (const type of [
+    "job_published",
+    "job_application_received",
+    "job_application_sent",
+    "job_application_accepted",
+    "job_application_not_selected",
+  ] as const) {
+    await sendMail(
+      {
+        to,
+        subject: `[smoke] ${getJobLifecycleEmailSubject(type)}`,
+        html: getJobLifecycleEmailHtml({
+          type,
+          variables: {
+            firstName: "Alex",
+            jobTitle: "Lawn care",
+            actionUrl: `${publicAppUrl}/dashboard/marketplace`,
+          },
+          publicAppUrl,
+        }),
+      },
+      transport,
+    );
+  }
+
+  await sendMail(
+    {
+      to,
+      subject: `[smoke] ${getPaymentEmailSubject("payment_captured_customer")}`,
+      html: getPaymentEmailHtml({
+        type: "payment_captured_customer",
+        variables: {
+          firstName: "Alex",
+          amount: "50.00",
+          currency: "CAD",
           bookingUrl: `${publicAppUrl}/dashboard/bookings`,
         },
+        publicAppUrl,
+      }),
+    },
+    transport,
+  );
+
+  await sendMail(
+    {
+      to,
+      subject: `[smoke] ${getPaymentEmailSubject("payment_failed")}`,
+      html: getPaymentEmailHtml({
+        type: "payment_failed",
+        variables: {
+          firstName: "Alex",
+          bookingUrl: `${publicAppUrl}/dashboard/payments`,
+        },
+        publicAppUrl,
+      }),
+    },
+    transport,
+  );
+
+  await sendMail(
+    {
+      to,
+      subject: `[smoke] ${getNewMessageEmailSubject()}`,
+      html: getNewMessageEmailHtml({
+        firstName: "Alex",
+        messagesUrl: `${publicAppUrl}/dashboard/messages`,
+        publicAppUrl,
+      }),
+    },
+    transport,
+  );
+
+  await sendMail(
+    {
+      to,
+      subject: `[smoke] ${getReviewReceivedEmailSubject()}`,
+      html: getReviewReceivedEmailHtml({
+        firstName: "Alex",
+        reviewUrl: `${publicAppUrl}/dashboard/bookings`,
+        publicAppUrl,
+      }),
+    },
+    transport,
+  );
+
+  await sendMail(
+    {
+      to,
+      subject: `[smoke] ${getStripeConnectedEmailSubject()}`,
+      html: getStripeConnectedEmailHtml({
+        firstName: "Alex",
+        accountUrl: `${publicAppUrl}/dashboard/payments`,
+        publicAppUrl,
+      }),
+    },
+    transport,
+  );
+
+  await sendMail(
+    {
+      to,
+      subject: `[smoke] ${getPayoutSentEmailSubject()}`,
+      html: getPayoutSentEmailHtml({
+        firstName: "Alex",
+        accountUrl: `${publicAppUrl}/dashboard/payments`,
+        publicAppUrl,
+      }),
+    },
+    transport,
+  );
+
+  for (const type of [
+    "dispute_filed",
+    "dispute_resolved",
+    "dispute_withdrawn",
+    "refund_decision_recorded",
+  ] as const) {
+    await sendMail(
+      {
+        to,
+        subject: `[smoke] ${getDisputeEmailSubject(type)}`,
+        html: getDisputeEmailHtml({
+          type,
+          variables: {
+            firstName: "Alex",
+            subject: "Housekeeping",
+            disputeUrl: `${publicAppUrl}/dashboard/disputes`,
+            resolutionSummary: "A refund has been issued for your booking.",
+          },
+          publicAppUrl,
+        }),
+      },
+      transport,
+    );
+  }
+
+  await sendMail(
+    {
+      to,
+      subject: `[smoke] ${getPaymentEmailSubject("payment_refund")}`,
+      html: getPaymentEmailHtml({
+        type: "payment_refund",
+        variables: {
+          firstName: "Alex",
+          amount: "50.00",
+          currency: "CAD",
+          bookingUrl: `${publicAppUrl}/dashboard/bookings`,
+        },
+        publicAppUrl,
+      }),
+    },
+    transport,
+  );
+
+  await sendMail(
+    {
+      to,
+      subject: `[smoke] ${getPaymentEmailSubject("payment_captured_welper")}`,
+      html: getPaymentEmailHtml({
+        type: "payment_captured_welper",
+        variables: {
+          firstName: "Alex",
+          amount: "40.00",
+          currency: "CAD",
+          bookingUrl: `${publicAppUrl}/dashboard/bookings`,
+        },
+        publicAppUrl,
+      }),
+    },
+    transport,
+  );
+
+  for (const type of ["booking_checked_in", "booking_payment_released", "booking_completed"] as const) {
+    await sendMail(
+      {
+        to,
+        subject: `[smoke] ${getBookingEmailSubject(type)}`,
+        html: getBookingEmailHtml({
+          type,
+          variables: bookingVars,
+          publicAppUrl,
+        }),
+      },
+      transport,
+    );
+  }
+
+  await sendMail(
+    {
+      to,
+      subject: `[smoke] ${getPortfolioRejectedEmailSubject()}`,
+      html: getPortfolioRejectedEmailHtml({
+        firstName: "Alex",
+        profileUrl: `${publicAppUrl}/dashboard/profile`,
+        rejectionReason: "Image too blurry",
         publicAppUrl,
       }),
     },

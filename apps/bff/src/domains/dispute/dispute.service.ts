@@ -179,7 +179,16 @@ export class DisputeService {
       try {
         const locale = await this.notificationService.resolveLocaleForUser(userId);
         const actionUrl = buildBookingActionUrl(getFrontendBaseUrl(), booking.id, locale);
-        const variables = { serviceName: 'Service', bookingUrl: actionUrl };
+        const variables = {
+          serviceName: 'Service',
+          bookingUrl: actionUrl,
+          cancelledByRole: 'admin' as const,
+          cancelRecipientRole:
+            userId === booking.customerId
+              ? ('customer' as const)
+              : ('welper' as const),
+          cancelWithinFreeWindow: 'true' as const,
+        };
         const copy = getBookingNotificationCopy(emailType, locale, variables);
         await this.notificationService.send({
           userId,

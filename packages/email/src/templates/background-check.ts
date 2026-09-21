@@ -48,7 +48,7 @@ export function getBackgroundCheckInviteEmailText(
   }
 
   return [
-    `Hi ${name},`,
+    `Hello ${name},`,
     "",
     "Thank you for completing your profile! We're excited to have you join the Welpco community.",
     "",
@@ -88,7 +88,7 @@ export function getBackgroundCheckInviteEmailHtml(
           "Merci,<br>L\u2019\u00e9quipe Welpco",
         ]
       : [
-          `Hi ${name},`,
+          `Hello ${name},`,
           "Thank you for completing your profile! We\u2019re excited to have you join the Welpco community.",
           "To complete the background check you chose, use the link below. Your payment has already been processed:",
           "Once we receive the results (typically within 48 hours), we\u2019ll review them and update your profile accordingly.",

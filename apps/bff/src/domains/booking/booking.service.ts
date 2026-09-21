@@ -52,10 +52,11 @@ import { getDisputeReportDeadlineAt } from './dispute-report-window';
 import { customerProfileAddressToBookingRecord } from './booking-address.util';
 import { resolveServiceTaxAddress } from '../payment/booking-tax-address.util';
 import type { Address } from '../../common/types';
-import { getBookingNotificationCopy, type BookingEmailType } from '@welpco/email';
+import { getBookingNotificationCopy, type BookingEmailType, type BookingEmailVariables } from '@welpco/email';
 import { getSmsBody, type SmsTemplateType } from '@welpco/sms';
 import {
   buildBookingActionUrl,
+  buildDashboardActionUrl,
   getFrontendBaseUrl,
 } from '../notification/notification-locale.helper';
 import { JobPostingService } from '../job-posting/job-posting.service';
@@ -974,9 +975,19 @@ export class BookingService {
     await Promise.all([
       this.notifyBookingEvent(saved, saved.customerId, 'booking_cancelled', {
         cancellationReason: saved.cancellationReason ?? undefined,
+        cancelledByRole: 'admin',
+        cancelRecipientRole: 'customer',
+        cancelWithinFreeWindow: 'true',
+        welperName: await this.resolvePersonDisplayName('welper', saved.welperId),
+        customerName: await this.resolvePersonDisplayName('customer', saved.customerId),
       }, undefined, 'booking_cancelled'),
       this.notifyBookingEvent(saved, saved.welperId, 'booking_cancelled', {
         cancellationReason: saved.cancellationReason ?? undefined,
+        cancelledByRole: 'admin',
+        cancelRecipientRole: 'welper',
+        cancelWithinFreeWindow: 'true',
+        welperName: await this.resolvePersonDisplayName('welper', saved.welperId),
+        customerName: await this.resolvePersonDisplayName('customer', saved.customerId),
       }, undefined, 'booking_cancelled'),
     ]);
 
@@ -1093,6 +1104,7 @@ export class BookingService {
 
     this.logger.log(`Booking ${bookingId} accepted by welper ${welperId}`);
     const welperName = await this.resolvePersonDisplayName('welper', saved.welperId);
+    const customerName = await this.resolvePersonDisplayName('customer', saved.customerId);
     await this.notifyBookingEvent(
       saved,
       saved.customerId,
@@ -1100,6 +1112,14 @@ export class BookingService {
       welperName ? { welperName } : {},
       undefined,
       'booking_accepted',
+    );
+    await this.notifyBookingEvent(
+      saved,
+      saved.welperId,
+      'booking_accepted_welper',
+      customerName ? { customerName } : {},
+      undefined,
+      'booking_accepted_welper',
     );
     return this.toResponse(saved, welperId, 'welper');
   }
@@ -1117,7 +1137,10 @@ export class BookingService {
     });
     this.logger.log(`Booking ${bookingId} declined by welper ${welperId}`);
     await this.paymentService.onBookingCanceled(saved.id);
-    await this.notifyBookingEvent(saved, saved.customerId, 'booking_declined', { declineReason: reason ?? undefined }, undefined, 'booking_declined');
+    await this.notifyBookingEvent(saved, saved.customerId, 'booking_declined', {
+      declineReason: reason ?? undefined,
+      welperName: await this.resolvePersonDisplayName('welper', saved.welperId),
+    }, undefined, 'booking_declined');
     return this.toResponse(saved, welperId, 'welper');
   }
 
@@ -1392,13 +1415,17 @@ export class BookingService {
 
     this.logger.log(`Booking ${bookingId} completed with service receipt by welper ${welperId}`);
     const totalDollars = (totalCents / 100).toFixed(2);
+    const [customerName, welperName] = await Promise.all([
+      this.resolvePersonDisplayName('customer', savedBooking.customerId),
+      this.resolvePersonDisplayName('welper', savedBooking.welperId),
+    ]);
     await this.notifyBookingEvent(
       savedBooking,
       savedBooking.customerId,
       'booking_service_receipt',
       {
         totalPrice: totalDollars,
-        receiptTotalCents: String(totalCents),
+        welperName,
       },
       undefined,
       'booking_service_receipt',
@@ -1407,7 +1434,7 @@ export class BookingService {
       savedBooking,
       savedBooking.welperId,
       'booking_service_submitted',
-      { totalPrice: totalDollars },
+      { totalPrice: totalDollars, customerName },
       undefined,
       'booking_service_submitted',
     );
@@ -1504,11 +1531,25 @@ export class BookingService {
       );
     }
     const notifyUserId = userId === savedBooking.customerId ? savedBooking.welperId : savedBooking.customerId;
+    const cancelRecipientRole =
+      notifyUserId === savedBooking.customerId ? ('customer' as const) : ('welper' as const);
+    const withinFreeWindow = !this.isLateCancellation(savedBooking, timezoneOffsetMinutes);
+    const [customerName, welperName] = await Promise.all([
+      this.resolvePersonDisplayName('customer', savedBooking.customerId),
+      this.resolvePersonDisplayName('welper', savedBooking.welperId),
+    ]);
     await this.notifyBookingEvent(
       savedBooking,
       notifyUserId,
       'booking_cancelled',
-      { cancellationReason: reason ?? undefined },
+      {
+        cancellationReason: reason ?? undefined,
+        cancelledByRole: role,
+        cancelRecipientRole,
+        cancelWithinFreeWindow: withinFreeWindow ? 'true' : 'false',
+        customerName,
+        welperName,
+      },
       undefined,
       'booking_cancelled',
     );
@@ -1521,13 +1562,14 @@ export class BookingService {
     booking: BookingRequest,
     userId: string,
     emailType: BookingEmailType,
-    extraVars: Record<string, string | undefined> = {},
+    extraVars: BookingEmailVariables = {},
     offering?: { serviceDescription?: string; hourlyRate?: number | null },
     kind?: string,
   ): Promise<void> {
     const locale = await this.notificationService.resolveLocaleForUser(userId);
     const baseUrl = getFrontendBaseUrl();
     const actionUrl = buildBookingActionUrl(baseUrl, booking.id, locale);
+    const searchUrl = buildDashboardActionUrl(baseUrl, '/dashboard/marketplace', locale);
     let serviceName = offering?.serviceDescription?.slice(0, 80) || 'Service';
     if (!offering && booking.serviceOfferingId) {
       try {
@@ -1540,14 +1582,21 @@ export class BookingService {
     const addressStr = booking.address && typeof booking.address === 'object'
       ? [booking.address.street, booking.address.city, booking.address.region, booking.address.postalCode].filter(Boolean).join(', ')
       : undefined;
-    const variables: Record<string, string | undefined> = {
+    const firstName = await this.resolvePersonFirstName(
+      userId === booking.customerId ? 'customer' : 'welper',
+      userId,
+    );
+    const variables: BookingEmailVariables = {
       serviceName,
       scheduledDate: booking.scheduledDate ?? undefined,
       startTime: booking.scheduledStartTime ? this.normalizeTime(booking.scheduledStartTime) ?? undefined : undefined,
       endTime: booking.scheduledEndTime ? this.normalizeTime(booking.scheduledEndTime) ?? undefined : undefined,
       totalPrice: booking.totalPrice != null ? String(booking.totalPrice) : undefined,
       bookingUrl: actionUrl,
+      searchUrl,
+      reviewUrl: actionUrl,
       address: addressStr,
+      firstName,
       ...extraVars,
     };
     const copy = getBookingNotificationCopy(emailType, locale, variables);
@@ -1590,6 +1639,8 @@ export class BookingService {
         return 'welper_booking_request';
       case 'booking_accepted':
         return 'customer_booking_accepted';
+      case 'booking_accepted_welper':
+        return undefined;
       case 'booking_declined':
         return 'customer_booking_declined';
       case 'booking_checked_in':
@@ -1694,6 +1745,40 @@ export class BookingService {
       throw new ForbiddenException('You are not authorized to manage this booking');
     }
     return booking;
+  }
+
+  private isLateCancellation(
+    booking: BookingRequest,
+    timezoneOffsetMinutes?: number,
+  ): boolean {
+    if (!booking.scheduledDate || !booking.scheduledStartTime) {
+      return false;
+    }
+    const offset = timezoneOffsetMinutes ?? booking.timezoneOffsetMinutes ?? null;
+    const scheduledUtcMs = scheduledTimeToUtcMs(
+      booking.scheduledDate,
+      booking.scheduledStartTime,
+      offset,
+      booking.timezoneName ?? null,
+    );
+    const hoursUntil = (scheduledUtcMs - Date.now()) / (1000 * 60 * 60);
+    return hoursUntil < FREE_CANCELLATION_HOURS && hoursUntil >= 0;
+  }
+
+  private async resolvePersonFirstName(
+    role: 'customer' | 'welper',
+    id: string,
+  ): Promise<string | undefined> {
+    try {
+      if (role === 'customer') {
+        const p = await this.customerProfileService.findByCustomerId(id);
+        return p.firstName?.trim() || undefined;
+      }
+      const p = await this.welperProfileService.findByWelperId(id);
+      return p.firstName?.trim() || undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   private async resolvePersonDisplayName(

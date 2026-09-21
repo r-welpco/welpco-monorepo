@@ -24,7 +24,7 @@ export function getGuardianReviewEmailHtml(params: GuardianReviewEmailParams): s
   const greeting =
     locale === "fr"
       ? `Bonjour ${params.guardianName},`
-      : `Hi ${params.guardianName},`;
+      : `Hello ${params.guardianName},`;
   const intro =
     locale === "fr"
       ? `${minorName || "Votre enfant"} souhaite créer un compte Welper sur Welpco. Welpco est une plateforme qui met en relation des clients et des jeunes prestataires de services locaux.`
@@ -78,7 +78,7 @@ export function getGuardianReviewEmailText(params: GuardianReviewEmailParams): s
     ].join("\n");
   }
   return [
-    `Hi ${params.guardianName},`,
+    `Hello ${params.guardianName},`,
     "",
     `${minorName || "Your child"} wants to create a Welper account on Welpco.`,
     "Review and approve the request:",

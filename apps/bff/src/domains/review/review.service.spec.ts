@@ -67,11 +67,11 @@ describe('ReviewService', () => {
     save: jest.fn(),
   };
 
-  // NOTIFICATIONS-001 (Day 16 dispatch 2): ReviewService now emits a
-  // notification on `create`. The mock returns null (skipped) by default so
-  // existing happy-path specs that don't care about the emit still pass.
+  // NOTIFICATIONS-001 (Day 16 dispatch 2): ReviewService emits on `create`.
+  // Customer→welper uses branded S6 via `send`; welper→customer uses emitForUser.
   const mockNotificationService = {
     emitForUser: jest.fn().mockResolvedValue(null),
+    send: jest.fn().mockResolvedValue(null),
     resolveLocaleForUser: jest.fn().mockResolvedValue('en'),
   };
 
@@ -281,13 +281,12 @@ describe('ReviewService', () => {
     it('emits a REVIEW notification to the welper when a customer reviews them', async () => {
       await service.create(BOOKING_ID, CUSTOMER_ID, 'Customer', { rating: 5, comment: 'great' });
 
-      expect(mockNotificationService.emitForUser).toHaveBeenCalledTimes(1);
-      const [recipient, params] = mockNotificationService.emitForUser.mock.calls[0]!;
-      expect(recipient).toBe(WELPER_ID);
+      expect(mockNotificationService.send).toHaveBeenCalledTimes(1);
+      const [params] = mockNotificationService.send.mock.calls[0]!;
+      expect(params.userId).toBe(WELPER_ID);
       expect(params.category).toBe(NotificationCategory.REVIEW);
-      expect(params.title).toContain('review');
-      expect(params.body).toContain('5-star');
-      expect(params.link).toContain(`/dashboard/bookings/${BOOKING_ID}`);
+      expect(params.title.toLowerCase()).toContain('review');
+      expect(params.reviewReceivedEmail?.reviewUrl).toContain(`/dashboard/bookings/${BOOKING_ID}`);
       expect(params.metadata).toMatchObject({ bookingId: BOOKING_ID });
     });
 
@@ -300,7 +299,7 @@ describe('ReviewService', () => {
     });
 
     it('does not crash when the notification emit fails — review write still succeeds', async () => {
-      mockNotificationService.emitForUser.mockRejectedValueOnce(new Error('email service down'));
+      mockNotificationService.send.mockRejectedValueOnce(new Error('email service down'));
 
       await expect(
         service.create(BOOKING_ID, CUSTOMER_ID, 'Customer', { rating: 5 }),

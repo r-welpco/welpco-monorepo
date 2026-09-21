@@ -50,6 +50,10 @@ import { WelperProfileService } from '../profile-management/welper-profile/welpe
 import { CategoriesService } from '../content-management/categories/categories.service';
 import { NotificationService } from '../notification/notification.service';
 import { getSmsBody } from '@welpco/sms';
+import {
+  getJobLifecycleNotificationCopy,
+  type JobLifecycleEmailType,
+} from '@welpco/email';
 import { NotificationCategory } from '../notification/entities';
 import { GEOCODE_SERVICE } from '../geocode/geocode.interface';
 import type { IGeocodeService } from '../geocode/geocode.interface';
@@ -64,22 +68,38 @@ type JobNotifyKind =
   | 'job_cancelled'
   | 'booking_request_sent'
   | 'new_booking_from_job'
-  | 'application_not_selected';
+  | 'application_not_selected'
+  | 'job_published'
+  | 'application_sent';
+
+function jobNotifyToLifecycle(kind: JobNotifyKind): JobLifecycleEmailType | undefined {
+  switch (kind) {
+    case 'job_published':
+      return 'job_published';
+    case 'new_application':
+      return 'job_application_received';
+    case 'application_sent':
+      return 'job_application_sent';
+    case 'new_booking_from_job':
+      return 'job_application_accepted';
+    case 'application_not_selected':
+      return 'job_application_not_selected';
+    default:
+      return undefined;
+  }
+}
 
 function jobNotificationCopy(
   kind: JobNotifyKind,
   locale: 'en' | 'fr',
   jobTitle: string,
 ): { title: string; body: string } {
+  const lifecycle = jobNotifyToLifecycle(kind);
+  if (lifecycle) {
+    return getJobLifecycleNotificationCopy(lifecycle, locale, { jobTitle });
+  }
   const fr = locale === 'fr';
   switch (kind) {
-    case 'new_application':
-      return {
-        title: fr ? 'Nouvelle candidature' : 'New job application',
-        body: fr
-          ? `Un Welper a postulé à votre demande « ${jobTitle} ».`
-          : `A welper applied to your job "${jobTitle}".`,
-      };
     case 'job_cancelled':
       return {
         title: fr ? 'Demande annulée' : 'Job cancelled',
@@ -94,19 +114,10 @@ function jobNotificationCopy(
           ? `Votre demande de réservation pour « ${jobTitle} » a été envoyée au Welper.`
           : `Your booking request for "${jobTitle}" was sent to the welper.`,
       };
-    case 'new_booking_from_job':
+    default:
       return {
-        title: fr ? 'Nouvelle demande de réservation' : 'New booking request',
-        body: fr
-          ? `Vous avez reçu une demande de réservation pour une offre à laquelle vous avez postulé : « ${jobTitle} ».`
-          : `You received a booking request from a job you applied to: "${jobTitle}".`,
-      };
-    case 'application_not_selected':
-      return {
-        title: fr ? 'Candidature non retenue' : 'Application not selected',
-        body: fr
-          ? `Un autre Welper a été sélectionné pour « ${jobTitle} ».`
-          : `Another welper was selected for "${jobTitle}".`,
+        title: fr ? 'Mise à jour' : 'Update',
+        body: fr ? 'Vous avez une mise à jour.' : 'You have an update.',
       };
   }
 }
@@ -223,6 +234,7 @@ export class JobPostingService {
     });
 
     const saved = await this.jobRepo.save(job);
+    await this.notifyCustomer(customerId, 'job_published', saved.title, saved.id);
     return this.toOwnerResponse(saved);
   }
 
@@ -527,6 +539,7 @@ export class JobPostingService {
     });
 
     await this.notifyCustomer(job.customerId, 'new_application', job.title, job.id);
+    await this.notifyWelper(welperId, 'application_sent', job.title, job.id);
 
     return this.toApplicationResponse(savedApp);
   }
@@ -990,15 +1003,28 @@ export class JobPostingService {
         ? 'fr'
         : 'en';
     const copy = jobNotificationCopy(kind, locale, jobTitle);
+    const link = buildDashboardActionUrl(getFrontendBaseUrl(), `${path}/${entityId}`, locale);
+    const lifecycle = jobNotifyToLifecycle(kind);
+    let firstName: string | undefined;
+    try {
+      const profile = await this.customerProfileService.findByCustomerId(customerId);
+      firstName = profile.firstName?.trim() || undefined;
+    } catch {
+      /* optional */
+    }
     await this.notificationService.emitForUser(customerId, {
       category: NotificationCategory.JOB,
       title: copy.title,
       body: copy.body,
-      link: buildDashboardActionUrl(getFrontendBaseUrl(), `${path}/${entityId}`, locale),
+      link,
       smsBody:
         kind === 'new_application'
           ? getSmsBody('customer_job_application', locale)
           : undefined,
+      jobLifecycleEmailType: lifecycle,
+      jobLifecycleEmailVariables: lifecycle
+        ? { firstName, jobTitle, actionUrl: link }
+        : undefined,
       metadata: { jobPostingId: entityId, kind },
     });
   }
@@ -1015,11 +1041,24 @@ export class JobPostingService {
         ? 'fr'
         : 'en';
     const copy = jobNotificationCopy(kind, locale, jobTitle);
+    const link = buildDashboardActionUrl(getFrontendBaseUrl(), `${path}/${entityId}`, locale);
+    const lifecycle = jobNotifyToLifecycle(kind);
+    let firstName: string | undefined;
+    try {
+      const profile = await this.welperProfileService.findByWelperId(welperId);
+      firstName = profile.firstName?.trim() || undefined;
+    } catch {
+      /* optional */
+    }
     await this.notificationService.emitForUser(welperId, {
       category: NotificationCategory.JOB,
       title: copy.title,
       body: copy.body,
-      link: buildDashboardActionUrl(getFrontendBaseUrl(), `${path}/${entityId}`, locale),
+      link,
+      jobLifecycleEmailType: lifecycle,
+      jobLifecycleEmailVariables: lifecycle
+        ? { firstName, jobTitle, actionUrl: link }
+        : undefined,
       metadata: { jobPostingId: entityId, kind },
     });
   }

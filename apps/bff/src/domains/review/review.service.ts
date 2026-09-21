@@ -140,13 +140,28 @@ export class ReviewService {
         ? `Vous avez reçu un avis ${dto.rating} étoiles pour une réservation récente. Ouvrez la réservation pour le lire.`
         : `You received a ${dto.rating}-star review for a recent booking. Open the booking to read it.`;
     try {
-      await this.notificationService.emitForUser(revieweeId, {
-        category: NotificationCategory.REVIEW,
-        title,
-        body,
-        link,
-        metadata: { bookingId: booking.id, reviewId: saved.id },
-      });
+      if (isCustomer) {
+        // S6 — branded review-received email for the welper
+        await this.notificationService.send({
+          userId: revieweeId,
+          category: NotificationCategory.REVIEW,
+          title: locale === 'fr' ? 'Vous avez reçu un nouvel avis' : 'You received a new review',
+          body:
+            locale === 'fr'
+              ? 'Les avis aident à bâtir la confiance avec les futurs clients et peuvent vous aider à recevoir plus de réservations.'
+              : 'Reviews help build trust with future customers and can help you receive more bookings.',
+          metadata: { bookingId: booking.id, reviewId: saved.id, actionUrl: link },
+          reviewReceivedEmail: { reviewUrl: link },
+        });
+      } else {
+        await this.notificationService.emitForUser(revieweeId, {
+          category: NotificationCategory.REVIEW,
+          title,
+          body,
+          link,
+          metadata: { bookingId: booking.id, reviewId: saved.id },
+        });
+      }
     } catch (err) {
       this.logger.warn(
         `Failed to emit review notification for ${revieweeId}: ${(err as Error).message}`,

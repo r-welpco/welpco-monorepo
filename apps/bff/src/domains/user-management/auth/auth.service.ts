@@ -146,6 +146,7 @@ export class AuthService {
           savedUser.email,
           undefined,
           savedUser.preferredLocale,
+          savedUser.accountType,
         );
         await this.notificationService.getPreferences(savedUser.id);
       } catch (err) {

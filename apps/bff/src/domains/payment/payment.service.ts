@@ -803,6 +803,9 @@ export class PaymentService {
           bookingEmailVariables: {
             serviceName: 'Service',
             cancellationReason: body,
+            cancelledByRole: 'system',
+            cancelRecipientRole: userId === booking.welperId ? 'welper' : 'customer',
+            cancelWithinFreeWindow: 'true',
           },
           smsBody: getSmsBody(smsType, locale),
           metadata: {

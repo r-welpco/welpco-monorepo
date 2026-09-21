@@ -3,12 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   getDisputeNotificationCopy,
+  getJobLifecycleNotificationCopy,
   getPaymentNotificationCopy,
 } from '@welpco/email';
 import type {
+  BookingEmailType,
+  BookingEmailVariables,
   DisputeEmailType,
   DisputeEmailVariables,
   EmailLocale,
+  JobLifecycleEmailType,
+  JobLifecycleEmailVariables,
   PaymentEmailType,
   PaymentEmailVariables,
 } from '@welpco/email';
@@ -44,12 +49,26 @@ export interface SendNotificationParams {
   emailSubject?: string;
   emailHtml?: string;
   /** When set, sends the booking email template (respects email preference). */
-  bookingEmailType?: string;
-  bookingEmailVariables?: Record<string, string | undefined>;
+  bookingEmailType?: BookingEmailType;
+  bookingEmailVariables?: BookingEmailVariables;
   paymentEmailType?: PaymentEmailType;
   paymentEmailVariables?: PaymentEmailVariables;
   disputeEmailType?: DisputeEmailType;
   disputeEmailVariables?: DisputeEmailVariables;
+  jobLifecycleEmailType?: JobLifecycleEmailType;
+  jobLifecycleEmailVariables?: JobLifecycleEmailVariables;
+  /** Branded new-message email (S3). */
+  newMessageEmail?: { messagesUrl: string; firstName?: string };
+  /** Branded review-received email (S6) for welper reviewee. */
+  reviewReceivedEmail?: { reviewUrl: string; firstName?: string };
+  /** Branded payout-sent email (W9.1). */
+  payoutSentEmail?: { accountUrl?: string; firstName?: string };
+  /** Branded portfolio rejection email (extra). */
+  portfolioRejectedEmail?: {
+    profileUrl: string;
+    rejectionReason?: string;
+    firstName?: string;
+  };
   /** Plain SMS body. When set (and smsEnabled), sends via Twilio/stub. */
   smsBody?: string;
   metadata?: Record<string, unknown>;
@@ -88,6 +107,8 @@ export interface EmitForUserParams {
   paymentEmailVariables?: PaymentEmailVariables;
   disputeEmailType?: DisputeEmailType;
   disputeEmailVariables?: DisputeEmailVariables;
+  jobLifecycleEmailType?: JobLifecycleEmailType;
+  jobLifecycleEmailVariables?: JobLifecycleEmailVariables;
 }
 
 export interface IEmailNotificationService {
@@ -102,9 +123,28 @@ export interface IEmailNotificationService {
       category?: NotificationCategory;
     },
   ): Promise<void>;
-  sendBookingEmailForUser?(userId: string, type: string, variables: Record<string, string | undefined>): Promise<void>;
+  sendBookingEmailForUser?(
+    userId: string,
+    type: BookingEmailType,
+    variables: BookingEmailVariables,
+  ): Promise<void>;
   sendPaymentEmailForUser?(userId: string, type: PaymentEmailType, variables: PaymentEmailVariables): Promise<void>;
   sendDisputeEmailForUser?(userId: string, type: DisputeEmailType, variables: DisputeEmailVariables): Promise<void>;
+  sendJobLifecycleEmailForUser?(
+    userId: string,
+    type: JobLifecycleEmailType,
+    variables: JobLifecycleEmailVariables,
+  ): Promise<void>;
+  sendNewMessageEmailForUser?(userId: string, messagesUrl: string, firstName?: string): Promise<void>;
+  sendReviewReceivedEmailForUser?(userId: string, reviewUrl: string, firstName?: string): Promise<void>;
+  sendPayoutSentEmailForUser?(userId: string, accountUrl?: string, firstName?: string): Promise<void>;
+  sendStripeConnectedEmailForUser?(userId: string, accountUrl: string, firstName?: string): Promise<void>;
+  sendPortfolioRejectedEmailForUser?(
+    userId: string,
+    profileUrl: string,
+    rejectionReason?: string,
+    firstName?: string,
+  ): Promise<void>;
   resolveLocaleForUser?(userId: string): Promise<EmailLocale>;
 }
 
@@ -143,6 +183,8 @@ export class NotificationService {
       paymentEmailVariables,
       disputeEmailType,
       disputeEmailVariables,
+      jobLifecycleEmailType,
+      jobLifecycleEmailVariables,
       smsBody,
     } = params;
 
@@ -152,6 +194,7 @@ export class NotificationService {
 
     let paymentVars = paymentEmailVariables ? { ...paymentEmailVariables } : undefined;
     let disputeVars = disputeEmailVariables ? { ...disputeEmailVariables } : undefined;
+    let jobVars = jobLifecycleEmailVariables ? { ...jobLifecycleEmailVariables } : undefined;
 
     const bookingId = metadata?.bookingId as string | undefined;
     const disputeId = metadata?.disputeId as string | undefined;
@@ -172,6 +215,11 @@ export class NotificationService {
       title = copy.title;
       body = copy.body;
       if (actionLink) disputeVars.disputeUrl = actionLink;
+    } else if (jobLifecycleEmailType && jobVars) {
+      const copy = getJobLifecycleNotificationCopy(jobLifecycleEmailType, locale, jobVars);
+      title = copy.title;
+      body = copy.body;
+      if (actionLink) jobVars.actionUrl = actionLink;
     }
 
     const mergedMeta: Record<string, unknown> = {
@@ -191,6 +239,8 @@ export class NotificationService {
         paymentEmailVariables: paymentVars,
         disputeEmailType,
         disputeEmailVariables: disputeVars,
+        jobLifecycleEmailType,
+        jobLifecycleEmailVariables: jobVars,
         smsBody,
         metadata: mergedMeta,
       });
@@ -216,6 +266,12 @@ export class NotificationService {
       paymentEmailVariables,
       disputeEmailType,
       disputeEmailVariables,
+      jobLifecycleEmailType,
+      jobLifecycleEmailVariables,
+      newMessageEmail,
+      reviewReceivedEmail,
+      payoutSentEmail,
+      portfolioRejectedEmail,
       smsBody,
       metadata,
     } = params;
@@ -254,6 +310,44 @@ export class NotificationService {
           await this.emailNotificationService.sendPaymentEmailForUser(userId, paymentEmailType, paymentEmailVariables);
         } else if (disputeEmailType && disputeEmailVariables && this.emailNotificationService.sendDisputeEmailForUser) {
           await this.emailNotificationService.sendDisputeEmailForUser(userId, disputeEmailType, disputeEmailVariables);
+        } else if (
+          jobLifecycleEmailType &&
+          jobLifecycleEmailVariables &&
+          this.emailNotificationService.sendJobLifecycleEmailForUser
+        ) {
+          await this.emailNotificationService.sendJobLifecycleEmailForUser(
+            userId,
+            jobLifecycleEmailType,
+            jobLifecycleEmailVariables,
+          );
+        } else if (newMessageEmail && this.emailNotificationService.sendNewMessageEmailForUser) {
+          await this.emailNotificationService.sendNewMessageEmailForUser(
+            userId,
+            newMessageEmail.messagesUrl,
+            newMessageEmail.firstName,
+          );
+        } else if (reviewReceivedEmail && this.emailNotificationService.sendReviewReceivedEmailForUser) {
+          await this.emailNotificationService.sendReviewReceivedEmailForUser(
+            userId,
+            reviewReceivedEmail.reviewUrl,
+            reviewReceivedEmail.firstName,
+          );
+        } else if (payoutSentEmail && this.emailNotificationService.sendPayoutSentEmailForUser) {
+          await this.emailNotificationService.sendPayoutSentEmailForUser(
+            userId,
+            payoutSentEmail.accountUrl,
+            payoutSentEmail.firstName,
+          );
+        } else if (
+          portfolioRejectedEmail &&
+          this.emailNotificationService.sendPortfolioRejectedEmailForUser
+        ) {
+          await this.emailNotificationService.sendPortfolioRejectedEmailForUser(
+            userId,
+            portfolioRejectedEmail.profileUrl,
+            portfolioRejectedEmail.rejectionReason,
+            portfolioRejectedEmail.firstName,
+          );
         } else if (
           title &&
           body &&

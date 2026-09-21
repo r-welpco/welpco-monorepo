@@ -3,8 +3,13 @@ import {
   getBookingNotificationCopy,
   getDisputeEmailSubject,
   getDisputeNotificationCopy,
+  getJobLifecycleEmailSubject,
+  getJobLifecycleNotificationCopy,
   getPaymentEmailSubject,
   getPaymentNotificationCopy,
+  getPortfolioRejectedEmailSubject,
+  getWelcomeEmailSubject,
+  resolveCancellationVariant,
 } from '@welpco/email';
 import {
   buildBookingActionUrl,
@@ -12,9 +17,11 @@ import {
 } from './notification-locale.helper';
 
 describe('localized notification templates', () => {
-  it('returns French booking email subjects', () => {
-    expect(getBookingEmailSubject('booking_accepted', 'fr')).toContain('acceptée');
+  it('returns French booking email subjects from briefs', () => {
+    expect(getBookingEmailSubject('booking_accepted', 'fr')).toContain('Confirmation');
+    expect(getBookingEmailSubject('booking_accepted_welper', 'en')).toContain('confirmation');
     expect(getBookingEmailSubject('booking_payment_released', 'fr')).toContain('finalisée');
+    expect(getBookingEmailSubject('booking_service_receipt', 'en')).toContain('review');
   });
 
   it('returns French booking in-app copy', () => {
@@ -26,8 +33,32 @@ describe('localized notification templates', () => {
     expect(copy.body).toContain('Marie');
   });
 
+  it('selects cancellation variants from actor and window', () => {
+    expect(
+      resolveCancellationVariant({
+        cancelledByRole: 'customer',
+        cancelRecipientRole: 'customer',
+        cancelWithinFreeWindow: 'true',
+      }),
+    ).toBe('customer_self_free');
+    expect(
+      resolveCancellationVariant({
+        cancelledByRole: 'welper',
+        cancelRecipientRole: 'customer',
+        cancelWithinFreeWindow: 'false',
+      }),
+    ).toBe('customer_welper_late');
+    expect(
+      resolveCancellationVariant({
+        cancelledByRole: 'admin',
+        cancelRecipientRole: 'welper',
+      }),
+    ).toBe('generic');
+  });
+
   it('returns French payment and dispute subjects', () => {
     expect(getPaymentEmailSubject('payment_refund', 'fr')).toContain('Remboursement');
+    expect(getPaymentEmailSubject('payment_failed', 'en')).toContain('Payment issue');
     expect(getDisputeEmailSubject('dispute_filed', 'fr')).toContain('signalement');
   });
 
@@ -36,7 +67,7 @@ describe('localized notification templates', () => {
       amount: '50.00',
       currency: 'CAD',
     });
-    expect(copy.body).toContain('50.00 CAD');
+    expect(copy.body.toLowerCase()).toContain('paiement');
   });
 
   it('returns French dispute notification copy', () => {
@@ -44,6 +75,25 @@ describe('localized notification templates', () => {
       subject: 'retard',
     });
     expect(copy.title).toBe('Signalement retiré');
+  });
+
+  it('returns portfolio rejection subject', () => {
+    expect(getPortfolioRejectedEmailSubject('en')).toContain('portfolio');
+    expect(getPortfolioRejectedEmailSubject('fr')).toContain('portfolio');
+  });
+
+  it('returns job lifecycle subjects and copy', () => {
+    expect(getJobLifecycleEmailSubject('job_published', 'en')).toContain('published');
+    expect(getJobLifecycleEmailSubject('job_application_sent', 'fr')).toContain('candidature');
+    const copy = getJobLifecycleNotificationCopy('job_application_accepted', 'en', {
+      jobTitle: 'Lawn care',
+    });
+    expect(copy.body).toContain('Lawn care');
+  });
+
+  it('returns welcome subject from brief', () => {
+    expect(getWelcomeEmailSubject('fr')).toBe('Bienvenue chez Welpco');
+    expect(getWelcomeEmailSubject('en')).toBe('Welcome to Welpco');
   });
 });
 

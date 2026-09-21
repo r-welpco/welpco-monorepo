@@ -107,6 +107,7 @@ describe('DisputeService', () => {
   // shape where it's the contract under test.
   const mockNotificationService = {
     emitForUser: jest.fn().mockResolvedValue(null),
+    resolveLocaleForUser: jest.fn().mockResolvedValue('en'),
   };
 
   const createDto = {
@@ -119,10 +120,13 @@ describe('DisputeService', () => {
     jest.clearAllMocks();
     // Reset presigner defaults — individual cases override as needed.
     mockS3Presigner.isConfigured.mockReturnValue(false);
-    mockS3Presigner.getTtlSeconds.mockReturnValue(900);
     mockS3Presigner.presignGet.mockResolvedValue(null);
     mockS3Presigner.presignGetMany.mockResolvedValue([]);
     mockS3Presigner.presignPut.mockResolvedValue(null);
+    mockS3Presigner.getTtlSeconds.mockReturnValue(900);
+    mockNotificationService.resolveLocaleForUser.mockResolvedValue('en');
+    mockNotificationService.emitForUser.mockResolvedValue(null);
+    mockApplicationSettings.getDisputeReportWindowMinutes.mockResolvedValue(1440);
     mockQueryRunner.connect.mockResolvedValue(undefined);
     mockQueryRunner.startTransaction.mockResolvedValue(undefined);
     mockQueryRunner.commitTransaction.mockResolvedValue(undefined);
@@ -486,8 +490,9 @@ describe('DisputeService', () => {
       } as BookingRequest;
 
       setupTxMocks({ booking });
+      // Window mock is 1440 minutes (24h); close the window just after that.
       jest.useFakeTimers();
-      jest.setSystemTime(new Date('2026-05-30T10:11:00.000Z'));
+      jest.setSystemTime(new Date('2026-05-31T10:01:00.000Z'));
 
       await expect(service.create('booking-1', 'cust-1', 'Customer', createDto)).rejects.toThrow(BadRequestException);
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();

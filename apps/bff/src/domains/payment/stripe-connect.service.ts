@@ -3,6 +3,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,6 +16,12 @@ import {
   E2E_STRIPE_CONNECT_ACCOUNT_PREFIX,
   signupE2eBypassAllowed,
 } from '../../common/signup-e2e-bypass';
+import { EmailNotificationService } from '../notification/email-notification.service';
+import {
+  buildDashboardActionUrl,
+  getFrontendBaseUrl,
+} from '../notification/notification-locale.helper';
+import { emailLocaleForUser } from '../user-management/auth/user-locale.helper';
 
 export interface StripeConnectLinkOptions {
   e2eBypass?: boolean;
@@ -38,6 +45,8 @@ export class StripeConnectService {
     private readonly welperProfileRepo: Repository<WelperProfile>,
     @InjectRepository(UserAccount)
     private readonly userRepo: Repository<UserAccount>,
+    @Optional()
+    private readonly emailNotificationService?: EmailNotificationService,
   ) {}
 
   private stripe() {
@@ -191,6 +200,31 @@ export class StripeConnectService {
     }
     profile.payoutMethodChoice = PayoutMethodChoice.STRIPE;
     await this.welperProfileRepo.save(profile);
+    await this.sendStripeConnectedEmail(profile);
+  }
+
+  private async sendStripeConnectedEmail(profile: WelperProfile): Promise<void> {
+    if (!this.emailNotificationService?.sendStripeConnectedEmailForUser) {
+      return;
+    }
+    try {
+      const user = await this.userRepo.findOne({ where: { id: profile.welperId } });
+      const locale = user ? emailLocaleForUser(user) : 'en';
+      const accountUrl = buildDashboardActionUrl(
+        this.config.get<string>('FRONTEND_URL') || getFrontendBaseUrl(),
+        '/dashboard/profile',
+        locale,
+      );
+      await this.emailNotificationService.sendStripeConnectedEmailForUser(
+        profile.welperId,
+        accountUrl,
+        profile.firstName?.trim() || undefined,
+      );
+    } catch (err) {
+      this.logger.warn(
+        `Stripe connected email failed for welper ${profile.welperId}: ${(err as Error).message}`,
+      );
+    }
   }
 
   private async requireWelperProfile(userId: string): Promise<WelperProfile> {

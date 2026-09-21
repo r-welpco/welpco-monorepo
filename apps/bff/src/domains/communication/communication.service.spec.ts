@@ -84,9 +84,10 @@ describe('CommunicationService', () => {
   };
 
   // NOTIFICATIONS-001 + NOTIFICATIONS-002 (Day 16 dispatch 2): sendMessage
-  // now emits a MESSAGE notification to the OTHER party in the thread.
+  // emits a MESSAGE notification (with S3 branded email) to the OTHER party.
   const mockNotificationService = {
     emitForUser: jest.fn().mockResolvedValue(null),
+    send: jest.fn().mockResolvedValue(null),
     resolveLocaleForUser: jest.fn().mockResolvedValue('en'),
   };
 
@@ -94,6 +95,16 @@ describe('CommunicationService', () => {
     jest.clearAllMocks();
     mockWelperProfileService.findByWelperId.mockRejectedValue(new Error('not welper'));
     mockCustomerProfileService.findByCustomerId.mockRejectedValue(new Error('not customer'));
+    mockBookingRepo.findOne.mockResolvedValue({
+      id: BOOKING_ID,
+      customerId: CUSTOMER_ID,
+      welperId: WELPER_ID,
+      status: BookingRequestStatus.IN_PROGRESS,
+    });
+    mockApplicationSettings.getDisputeReportWindowMinutes.mockResolvedValue(1440);
+    mockNotificationService.resolveLocaleForUser.mockResolvedValue('en');
+    mockNotificationService.send.mockResolvedValue(null);
+    mockNotificationService.emitForUser.mockResolvedValue(null);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -381,13 +392,13 @@ describe('CommunicationService', () => {
         content: 'Need a hand at 3?',
       });
 
-      expect(mockNotificationService.emitForUser).toHaveBeenCalledTimes(1);
-      const [recipient, params] = mockNotificationService.emitForUser.mock.calls[0]!;
-      expect(recipient).toBe(WELPER_ID); // OTHER party
+      expect(mockNotificationService.send).toHaveBeenCalledTimes(1);
+      const [params] = mockNotificationService.send.mock.calls[0]!;
+      expect(params.userId).toBe(WELPER_ID); // OTHER party
       expect(params.category).toBe(NotificationCategory.MESSAGE);
       expect(params.title).toBe('New message');
       expect(params.body).toBe('Need a hand at 3?');
-      expect(params.link).toContain(`/dashboard/messages/${BOOKING_ID}`);
+      expect(params.newMessageEmail?.messagesUrl).toContain(`/dashboard/messages/${BOOKING_ID}`);
       expect(params.metadata).toMatchObject({
         bookingId: BOOKING_ID,
         threadId: THREAD_ID,
@@ -411,8 +422,8 @@ describe('CommunicationService', () => {
 
       await service.sendMessage(BOOKING_ID, WELPER_ID, 'Welper', { content: 'On my way' });
 
-      const [recipient] = mockNotificationService.emitForUser.mock.calls[0]!;
-      expect(recipient).toBe(CUSTOMER_ID);
+      const [params] = mockNotificationService.send.mock.calls[0]!;
+      expect(params.userId).toBe(CUSTOMER_ID);
     });
 
     it('throws BadRequestException when the post-completion messaging window has closed', async () => {
@@ -426,8 +437,9 @@ describe('CommunicationService', () => {
         updatedAt: new Date('2026-05-30T10:00:00.000Z'),
       });
 
+      // Window mock is 1440 minutes (24h); close the window just after that.
       jest.useFakeTimers();
-      jest.setSystemTime(new Date('2026-05-30T10:11:00.000Z'));
+      jest.setSystemTime(new Date('2026-05-31T10:01:00.000Z'));
 
       await expect(
         service.sendMessage(BOOKING_ID, CUSTOMER_ID, 'Customer', { content: 'Hello' }),

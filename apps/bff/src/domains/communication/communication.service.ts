@@ -427,12 +427,13 @@ export class CommunicationService {
       // the bell, but don't leak long content into email subject lines.
       const preview = saved.content.length > 80 ? `${saved.content.slice(0, 80)}…` : saved.content;
       try {
-        await this.notificationService.emitForUser(recipientId, {
+        await this.notificationService.send({
+          userId: recipientId,
           category: NotificationCategory.MESSAGE,
           title: locale === 'fr' ? 'Nouveau message' : 'New message',
           body: preview,
-          link,
-          metadata: { bookingId, messageId: saved.id, threadId: thread.id },
+          metadata: { bookingId, messageId: saved.id, threadId: thread.id, actionUrl: link },
+          newMessageEmail: { messagesUrl: link },
         });
       } catch (err) {
         this.logger.warn(

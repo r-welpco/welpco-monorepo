@@ -4,6 +4,8 @@ import { GuardianConsentStatus } from '../safety-verification/entities/minor-gua
 import { AccountType } from '../user-management/entities/user-account.entity';
 
 describe('EmailNotificationService guardian copies', () => {
+  const emptyProfileRepo = { findOne: jest.fn().mockResolvedValue(null) };
+
   it('sends the guardian copy in the minor preferred language', async () => {
     const emailService = {
       sendEmail: jest.fn().mockResolvedValue(undefined),
@@ -32,6 +34,8 @@ describe('EmailNotificationService guardian copies', () => {
       emailService as never,
       userRepo as never,
       guardianConsentRepo as never,
+      emptyProfileRepo as never,
+      emptyProfileRepo as never,
     );
 
     await service.sendBookingEmailForUser(
@@ -44,7 +48,7 @@ describe('EmailNotificationService guardian copies', () => {
       1,
       expect.objectContaining({
         to: 'minor@example.com',
-        subject: expect.stringContaining('Nouvelle demande'),
+        subject: expect.stringContaining('nouvelle demande'),
       }),
     );
     expect(emailService.sendEmail).toHaveBeenNthCalledWith(
@@ -80,6 +84,8 @@ describe('EmailNotificationService guardian copies', () => {
           status: GuardianConsentStatus.APPROVED,
         }),
       } as never,
+      emptyProfileRepo as never,
+      emptyProfileRepo as never,
     );
 
     await expect(

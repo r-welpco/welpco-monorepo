@@ -65,6 +65,7 @@ describe('PortfolioService', () => {
   const mockNotificationService = {
     resolveLocaleForUser: jest.fn().mockResolvedValue('en'),
     emitForUser: jest.fn().mockResolvedValue(null),
+    send: jest.fn().mockResolvedValue(null),
   };
 
   const maxSortQueryBuilder = {
@@ -188,7 +189,7 @@ describe('PortfolioService', () => {
       });
       expect(result.status).toBe(PortfolioPhotoStatus.APPROVED);
       expect(result.rejectionReason).toBeNull();
-      expect(mockNotificationService.emitForUser).not.toHaveBeenCalled();
+      expect(mockNotificationService.send).not.toHaveBeenCalled();
     });
 
     it('rejects with a reason and notifies the welper', async () => {
@@ -201,10 +202,13 @@ describe('PortfolioService', () => {
       });
       expect(result.status).toBe(PortfolioPhotoStatus.REJECTED);
       expect(result.rejectionReason).toBe('Blurry photo');
-      expect(mockNotificationService.emitForUser).toHaveBeenCalledWith(
-        'welper-1',
+      expect(mockNotificationService.send).toHaveBeenCalledWith(
         expect.objectContaining({
+          userId: 'welper-1',
           body: expect.stringContaining('Blurry photo'),
+          portfolioRejectedEmail: expect.objectContaining({
+            rejectionReason: 'Blurry photo',
+          }),
         }),
       );
     });
@@ -212,7 +216,7 @@ describe('PortfolioService', () => {
     it('swallows notification failures — moderation still succeeds', async () => {
       mockPhotoRepo.findOne.mockResolvedValue(pendingPhoto());
       mockPhotoRepo.save.mockImplementation(async (p: WelperPortfolioPhoto) => p);
-      mockNotificationService.emitForUser.mockRejectedValueOnce(new Error('smtp down'));
+      mockNotificationService.send.mockRejectedValueOnce(new Error('smtp down'));
 
       const result = await service.moderate('photo-1', {
         status: PortfolioPhotoStatus.REJECTED,

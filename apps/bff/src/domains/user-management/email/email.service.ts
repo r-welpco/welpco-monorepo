@@ -136,6 +136,7 @@ export class EmailService {
     email: string,
     code: string,
     localeInput?: UserPreferredLocale,
+    firstName?: string,
   ): Promise<void> {
     const locale = resolvePreferredLocale(localeInput) as EmailLocale;
     const verificationUrl = `${this.localizedAuthUrl('/verification', locale)}?email=${encodeURIComponent(email)}`;
@@ -145,6 +146,7 @@ export class EmailService {
       verificationUrl,
       locale,
       publicAppUrl: this.publicAppUrl,
+      firstName,
     });
 
     await this.sendEmail({
@@ -158,6 +160,7 @@ export class EmailService {
     email: string,
     token: string,
     localeInput?: UserPreferredLocale,
+    firstName?: string,
   ): Promise<void> {
     const locale = resolvePreferredLocale(localeInput) as EmailLocale;
     const resetUrl = `${this.localizedAuthUrl('/reset-password', locale)}?token=${token}&email=${encodeURIComponent(email)}`;
@@ -166,6 +169,7 @@ export class EmailService {
       resetUrl,
       locale,
       publicAppUrl: this.publicAppUrl,
+      firstName,
     });
 
     await this.sendEmail({

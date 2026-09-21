@@ -18,6 +18,10 @@ import {
 } from '../../../clients/s3/s3-config.util';
 import { NotificationService } from '../../notification/notification.service';
 import { NotificationCategory } from '../../notification/entities';
+import {
+  buildDashboardActionUrl,
+  getFrontendBaseUrl,
+} from '../../notification/notification-locale.helper';
 import { WelperPortfolioPhoto } from '../entities/welper-portfolio-photo.entity';
 import { PortfolioPhotoStatus } from '../entities/portfolio-photo-status.enum';
 import { ServiceOffering } from '../entities/service-offering.entity';
@@ -304,9 +308,8 @@ export class PortfolioService {
   }
 
   /**
-   * Preference-aware in-app/email notify on rejection — same emit convention
-   * as booking/job notifications (plain title/body, localized by the user's
-   * preferred locale).
+   * Preference-aware in-app/email notify on rejection — branded portfolio
+   * rejection email (greeting + CTA), localized by preferred locale.
    */
   private async notifyRejection(photo: WelperPortfolioPhoto): Promise<void> {
     try {
@@ -321,11 +324,21 @@ export class PortfolioService {
         : isFr
           ? 'Une photo de votre portfolio n’a pas été approuvée. Vous pouvez la remplacer depuis votre profil.'
           : 'A portfolio photo wasn’t approved. You can replace it from your profile.';
-      await this.notificationService.emitForUser(photo.welperId, {
+      const profileUrl = buildDashboardActionUrl(
+        getFrontendBaseUrl(),
+        '/dashboard/profile',
+        locale,
+      );
+      await this.notificationService.send({
+        userId: photo.welperId,
         category: NotificationCategory.SYSTEM,
         title,
         body,
-        metadata: { portfolioPhotoId: photo.id },
+        metadata: { portfolioPhotoId: photo.id, actionUrl: profileUrl },
+        portfolioRejectedEmail: {
+          profileUrl,
+          rejectionReason: reason?.trim() || undefined,
+        },
       });
     } catch (err) {
       // Notification failure must never fail the moderation action.
