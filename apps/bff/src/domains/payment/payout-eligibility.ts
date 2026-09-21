@@ -1,7 +1,7 @@
 /** Payout scheduling uses America/Toronto (Welpco primary market). */
 export const PAYOUT_TIMEZONE = 'America/Toronto';
 
-export const PAYOUT_HOLD_HOURS = 48;
+export const PAYOUT_HOLD_HOURS = 24;
 
 /** Format a Date as YYYY-MM-DD in the payout timezone. */
 export function formatDateInPayoutTz(date: Date): string {
@@ -49,7 +49,7 @@ export function getUpcomingPayoutDate(from: Date = new Date()): string {
   return formatDateInPayoutTz(from);
 }
 
-/** A ledger row becomes eligible after 48 complete elapsed hours. */
+/** A ledger row becomes eligible after 24 complete elapsed hours. */
 export function isEligibleForPayout(
   paymentReleasedAt: Date,
   asOf: Date = new Date(),

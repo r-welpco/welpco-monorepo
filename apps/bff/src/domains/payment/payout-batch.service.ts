@@ -511,7 +511,7 @@ export class PayoutBatchService {
           !isEligibleForPayout(line.paymentReleasedAt)
         ) {
           throw new BadRequestException(
-            `Booking ${line.bookingId} has not met the 48-hour hold for ${lockedBatch.payoutDate}`,
+            `Booking ${line.bookingId} has not met the 24-hour hold for ${lockedBatch.payoutDate}`,
           );
         }
         const booking = await bookingRepo.findOne({

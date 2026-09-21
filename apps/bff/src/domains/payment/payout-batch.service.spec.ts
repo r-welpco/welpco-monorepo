@@ -213,11 +213,11 @@ describe('PayoutBatchService', () => {
       expect(transfersCreate).not.toHaveBeenCalled();
     });
 
-    it('rejects a payout line before the 48-hour hold has elapsed', async () => {
+    it('rejects a payout line before the 24-hour hold has elapsed', async () => {
       const payoutDate = payoutEligibility.getUpcomingPayoutDate();
       const recentLine = {
         ...scheduledLine,
-        paymentReleasedAt: new Date(Date.now() - 47 * 60 * 60 * 1000),
+        paymentReleasedAt: new Date(Date.now() - 23 * 60 * 60 * 1000),
       };
       mockBatchRepo.findOne.mockResolvedValue({
         id: 'batch-1',
@@ -227,7 +227,7 @@ describe('PayoutBatchService', () => {
       mockApproveTransaction([recentLine], payoutDate);
       mockLedgerRepo.find.mockResolvedValue([recentLine]);
 
-      await expect(service.approveAndExecute('batch-1', 'admin-1')).rejects.toThrow(/48-hour hold/);
+      await expect(service.approveAndExecute('batch-1', 'admin-1')).rejects.toThrow(/24-hour hold/);
       expect(transfersCreate).not.toHaveBeenCalled();
     });
 

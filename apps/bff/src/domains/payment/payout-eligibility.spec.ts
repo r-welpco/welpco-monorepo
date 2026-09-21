@@ -8,17 +8,17 @@ import {
 } from './payout-eligibility';
 
 describe('payout-eligibility', () => {
-  it('requires 48 complete elapsed hours after payment release', () => {
+  it('requires 24 complete elapsed hours after payment release', () => {
     const released = new Date('2026-06-06T15:00:00.000Z');
-    expect(isEligibleForPayout(released, new Date('2026-06-08T14:59:59.999Z'))).toBe(false);
-    expect(isEligibleForPayout(released, new Date('2026-06-08T15:00:00.000Z'))).toBe(true);
-    expect(PAYOUT_HOLD_HOURS).toBe(48);
+    expect(isEligibleForPayout(released, new Date('2026-06-07T14:59:59.999Z'))).toBe(false);
+    expect(isEligibleForPayout(released, new Date('2026-06-07T15:00:00.000Z'))).toBe(true);
+    expect(PAYOUT_HOLD_HOURS).toBe(24);
   });
 
-  it('does not treat two calendar dates as 48 elapsed hours', () => {
-    const releasedLateSaturday = new Date('2026-06-07T03:30:00.000Z');
+  it('does not treat two calendar dates as 24 elapsed hours', () => {
+    const releasedLateSunday = new Date('2026-06-08T03:30:00.000Z');
     const mondayMorningToronto = new Date('2026-06-08T13:00:00.000Z');
-    expect(isEligibleForPayout(releasedLateSaturday, mondayMorningToronto)).toBe(false);
+    expect(isEligibleForPayout(releasedLateSunday, mondayMorningToronto)).toBe(false);
   });
 
   it('returns an upcoming Monday date string', () => {
