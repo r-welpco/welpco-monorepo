@@ -29,6 +29,7 @@ import {
   type AdminUserProfile,
 } from "@/lib/services/admin-users-service";
 import { UserActions } from "./user-actions";
+import { WelperShareCards } from "./welper-share-cards";
 
 export const dynamic = "force-dynamic";
 
@@ -354,6 +355,10 @@ export default async function AdminUserDetailPage({ params }: { params: Promise<
             ) : null}
           </DetailTable>
         </Card>
+      ) : null}
+
+      {isWelper ? (
+        <WelperShareCards welperId={user.id} personalized={discoverable} />
       ) : null}
 
       {isWelper ? (
